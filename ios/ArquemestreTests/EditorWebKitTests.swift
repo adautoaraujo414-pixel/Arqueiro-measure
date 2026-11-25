@@ -7946,7 +7946,7 @@ final class EditorWebKitTests: XCTestCase {
                   var clr=function(){S.stones=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=6000;S.RD=3500;S.H=2700;S.m=null};
                   var xs=function(){return S.mods.map(function(m){return m.x}).join(',')};
                   var esq=async function(){[].filter.call(document.querySelectorAll('#tabs [data-t]'),function(x){return /Tamponamento/.test(x.textContent)})[0].click();await W(60);document.querySelector('#bd input[type=checkbox][data-c="tl"]').click();await W(900)};
-                  var caso=async function(nomes,mi,x){clr();nomes.forEach(function(n){newTpl(T(n))});await W(60);if(x!==undefined)S.mods[mi].x=x;S.m=S.mods[mi];draw();panel();await W(900);var a=xs();await esq();var b=xs(),tem=!!S.m.tl;await esq();var c=xs();return 'antes '+a+' · com tamponamento '+b+(tem?'':' (não ligou)')+' · tirou '+c+' · voltou igual '+(c===a)};
+                  var caso=async function(nomes,mi,x){clr();nomes.forEach(function(n){newTpl(T(n))});await W(60);if(x!==undefined)S.mods[mi].x=x;S.m=S.mods[mi];draw();panel();await W(900);var a=xs();await esq();var b=xs(),tem=!!S.m.tl;await esq();/* §12 (Adauto 25/11): fechar as folgas dos OUTROS virou sugestão; a pessoa toca em "Fechar as folgas da fileira" (faz o de antes) */if(window.libSug&&libSug()){libAplicaSug();draw();await W(60)}var c=xs();return 'antes '+a+' · com tamponamento '+b+(tem?'':' (não ligou)')+' · tirou '+c+' · voltou igual '+(c===a)};
                   /* liga e tira o tamponamento esquerdo: o módulo volta pro lugar de antes (não fica vão), sozinho na parede, com vizinho e em fileira */
                   R.sozinhoNaParede=await caso(['Balcão 2 portas'],0);
                   R.comVizinho=await caso(['Balcão 2 portas','Balcão 2 portas'],1);
@@ -12561,7 +12561,7 @@ final class EditorWebKitTests: XCTestCase {
         /* mesmo que chegue um clique de porta geral (projeto antigo, outro caminho): continua caixa da geladeira e a porta fica em cima */
         clk(document.getElementById('bd'),'door','1');await W(40);R.cliqueGeral1=st(m);clk(document.getElementById('bd'),'door','3');await W(40);R.cliqueGeral3=st(m);clk(document.getElementById('bd'),'slide','2');await W(40);R.cliqueCorrer=st(m);clk(document.getElementById('bd'),'door','2');await W(40);
         /* 3) menu do vão (2 toques): portas só no quadro de cima; "frente do vão inteiro" sem porta/correr (o resto continua trocando a caixa, com o aviso) */
-        vmenuOpen(0,0,200,300);await W(60);var d=document.getElementById('vmenu');R.menuVao='gel '+d.querySelectorAll('[data-geln]').length+' · porta inteira '+d.querySelectorAll('[data-vk="door1"],[data-vk="door2"],[data-vk="slide"]').length+' · trocar a caixa '+d.querySelectorAll('[data-vk="drawers"],[data-vk="shelves"],[data-vk="free"]').length;
+        vmenuOpen(0,0,200,300);await W(60);var d=document.getElementById('vmenu');/* MENUS-POR-TIPO (Adauto 25/11): o que não combina não some mais do menu de 2 toques: vai pra "Mais opções"; aqui conta o que fica à vista */var fora_=function(sel){return [].filter.call(d.querySelectorAll(sel),function(b){return !b.closest('[data-vmais]')}).length};R.menuVao='gel '+d.querySelectorAll('[data-geln]').length+' · porta inteira '+fora_('[data-vk="door1"],[data-vk="door2"],[data-vk="slide"]')+' (em Mais opções '+d.querySelectorAll('[data-vmais] [data-vk="door1"],[data-vmais] [data-vk="door2"],[data-vmais] [data-vk="slide"]').length+') · trocar a caixa '+d.querySelectorAll('[data-vk="drawers"],[data-vk="shelves"],[data-vk="free"]').length;
         clk(d,'vk','door1');await W(40);R.menuVao1porta=st(m);vmenuOpen(0,0,200,300);await W(40);clk(document.getElementById('vmenu'),'vk','door2');await W(40);R.menuVao2portas=st(m);
         /* 4) altura do vão de cima (geladeira mais alta) e altura total da torre: a porta segue o vão dela, o tamponamento segue a torre */
         m.v[0].gh=1930;draw();R.vaoDeCimaMenor=st(m);m.v[0].gh=1830;m.h=2700;draw();R.torreMaisAlta=st(m);m.h=2500;draw();
@@ -12587,7 +12587,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cliqueGeral1"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
         XCTAssertEqual(o["cliqueGeral3"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
         XCTAssertEqual(o["cliqueCorrer"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
-        XCTAssertEqual(o["menuVao"] as? String, "gel 3 · porta inteira 0 · trocar a caixa 3")
+        XCTAssertEqual(o["menuVao"] as? String, "gel 3 · porta inteira 0 (em Mais opções 3) · trocar a caixa 3")
         XCTAssertEqual(o["menuVao1porta"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
         XCTAssertEqual(o["menuVao2portas"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2400,2400")
         XCTAssertEqual(o["vaoDeCimaMenor"] as? String, "gel · portas 2 471×552,471×552 · nicho true · tamp 2400,2400")
@@ -13246,7 +13246,7 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         var tab=async function(){[].filter.call(document.querySelectorAll('#tabs [data-t]'),function(x){return /Tamponamento/.test(x.textContent)})[0].click();await W(60)};
-        var usar=async function(mi,c,on){S.m=S.mods[mi];draw();panel();await tab();var cb=document.querySelector('#bd input[type=checkbox][data-c="'+c+'"]');if(cb&&cb.checked!==on){cb.click();await W(700)}return !!cb};
+        var usar=async function(mi,c,on){S.m=S.mods[mi];draw();panel();await tab();var cb=document.querySelector('#bd input[type=checkbox][data-c="'+c+'"]');if(cb&&cb.checked!==on){cb.click();await W(700)}/* §12 (Adauto 25/11): fechar as folgas dos OUTROS virou sugestão; a pessoa toca em "Fechar as folgas da fileira" (faz o de antes) */if(window.libSug&&libSug()){libAplicaSug();draw();await W(60)}return !!cb};
         var pos=function(){return S.mods.map(function(m){return Math.round(m.x)+(m.sup?'s':'')}).join(',')};
         var med=function(){return S.mods.map(function(m){return [m.w,m.h,m.d,m.esp,m.b||0].join('/')}).join(' ')};
         var tp=function(mi,nome){var m=S.mods[mi],p=partsOf(m).filter(function(q){return q.name===nome})[0],cl=cutLines(m).filter(function(l){return (l.names||[]).some(function(n){return n.indexOf(nome)===0})});__build();var bx=__boxes().filter(function(q){return String(q.nm).indexOf(mi+':')===0&&String(q.pk||'').indexOf(nome)===0}),x0=Math.min.apply(null,bx.map(function(q){return q.x0})),x1=Math.max.apply(null,bx.map(function(q){return q.x1}));
@@ -14351,11 +14351,16 @@ final class EditorWebKitTests: XCTestCase {
         pe('pointerdown',re,x,y);await W(30);for(var i=1;i<=10;i++){pe('pointermove',svg,x+tx*i/10,y);await W(15)}pe('pointerup',svg,x+tx,y);await W(300);draw();
         R.encostou='vizinho igual '+(JSON.stringify(S.mods[0])===J0)+' · arrastado '+f(S.mods[1])+' · sugestão '+!!libSug()+' · barra '+!!(document.querySelector('#libsug [data-libsug="ok"]')&&!document.getElementById('libsug').hidden)+' · aviso de tirou '+TL.filter(function(t){return /Tamponamento automático tirado/.test(t)}).length;
         document.querySelector('#libsug [data-libsug="ok"]').click();await W(200);R.aplicou=S.mods.map(f).join(' | ');
+        /* fileira: tirar o tamponamento de UM móvel não fecha mais sozinho as folgas dos outros (rowJoin); sugere; o botão faz o de antes (905 | 1805) */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.mods=[];draw();['Balcão 2 portas','Balcão 2 portas','Balcão 2 portas'].forEach(function(n){S.m=S.mods[S.mods.length-1]||null;atArm();newTpl(T(n));draw()});S.mods[1].x=920;S.mods[2].x=1840;draw();var J1=JSON.stringify(S.mods[1]),J2=JSON.stringify(S.mods[2]);S.m=S.mods[0];tpDesliga(S.mods[0],'tr');draw();await W(80);
+        R.fileira='outros iguais '+(JSON.stringify(S.mods[1])===J1&&JSON.stringify(S.mods[2])===J2)+' · sugestão '+(libSug()?libSug().tipo+' '+libSug().d.length:'-')+' · botão '+((document.querySelector('#libsug [data-libsug="ok"]')||{}).textContent||'-');libAplicaSug();await W(100);R.fileiraAplicou=S.mods.map(function(m){return Math.round(m.x)}).join(' | ');
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["criacao"] as? String, "x600 tl1 tr1 | x2500 tl1 tr1", "criação: os padrões dos Ajustes (tamponamento automático dos lados expostos)")
         XCTAssertEqual(o["encostou"] as? String, "vizinho igual true · arrastado x1560 tl1 tr1 · sugestão true · barra true · aviso de tirou 0", "encostou: nada mudou sozinho, a sugestão aparece")
         XCTAssertEqual(o["aplicou"] as? String, "x600 tl1 tr0 | x1500 tl0 tr1", "o botão aplica exatamente o que o TAMP-JUNTA fazia")
+        XCTAssertEqual(o["fileira"] as? String, "outros iguais true · sugestão fila 2 · botão Fechar as folgas da fileira", "§12: mexer no tamponamento de um móvel não move os outros sozinho")
+        XCTAssertEqual(o["fileiraAplicou"] as? String, "5 | 905 | 1805", "o botão fecha as folgas como antes")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

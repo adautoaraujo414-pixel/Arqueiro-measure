@@ -134,14 +134,15 @@ function cmf(v){v=Math.round((+v||0)/10*100)/100;return String(v).replace('.',',
  function toCm(s){return String(s).replace(/\d+(?:[.,]\d+)?/g,function(t){return sh(t,-1)})}
  function toMm(s){return String(s).replace(/\d+(?:[.,]\d*)?|[.,]\d+/g,function(t){return sh(t,1)})}
  /* texto de um desenho (cota): número solto é medida; #n, n%, n°, R$, "1/1", ×n (quantidade) e número colado em letra não */
- var L_='A-Za-zÀ-ÿ',UNIT=/^\s*(cm|m\b|m²|m2|%|°|un\b|kg|x\b|R\$)/i;
+ var L_='A-Za-zÀ-ÿ',UNIT=/^\s*(cm|m\b|m²|m2|%|°|un\b|kg|x\b|R\$)/i,IDX=/(base|superior|inferior|m[óo]dulo|v[ãa]o|porta|gaveta|prateleira|chapa|coluna|parede|nicho|a[ée]reo|torre|item|pe[çc]a|lado|camada|ala|folha|placa)\s+$/i;
  function conv(s){
   if(!s||!/\d/.test(s))return s;
   var re=/\d+(?:,\d+)?(?:(\s*)×\1\d+(?:,\d+)?)*/g,o='',last=0,m;
   while((m=re.exec(s))){
    var a=m.index,b=a+m[0].length,pre=s.slice(0,a),pc=pre.slice(-1),nx=s.charAt(b),post=s.slice(b),mmS=/^(\s*)mm(?![A-Za-zÀ-ÿ²³])/.exec(post);
    if(/[\d.,#\/:$×]/.test(pc)||new RegExp('['+L_+']').test(pc)||/^[.,:\/]\d/.test(post)||/R\$\s*$/.test(pre))continue;
-   if(!mmS&&(new RegExp('^['+L_+'%°]').test(nx)||UNIT.test(post)||/^\s*×\s*$/.test(post)))continue;
+   if(!mmS&&(new RegExp('^['+L_+'%°]').test(nx)||UNIT.test(post)||(m[0].indexOf('×')<0&&/^\s*×/.test(post))))continue;/* "2 ×" / "1 ×2" = quantidade */
+   if(!mmS&&/^\d{1,2}$/.test(m[0])&&IDX.test(pre))continue;/* "Base 1", "Vão 2", "chapa 1" = número de ordem */
    o+=s.slice(last,a)+m[0].replace(/\d+(?:,\d+)?/g,function(t){return sh(t,-1)});last=b;
    if(mmS){o+=mmS[1]+'cm';last=b+mmS[0].length;re.lastIndex=last}
   }
@@ -189,7 +190,7 @@ function cmf(v){v=Math.round((+v||0)/10*100)/100;return String(v).replace('.',',
  /* sufixo da unidade dentro do campo, em mm e em cm (a unidade fica escrita em todo campo de medida) */
  var sv=function(u){return "url(\"data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="16"><text x="24" y="12" text-anchor="end" font-family="system-ui,sans-serif" font-size="12" fill="#6b7280">'+u+'</text></svg>')+"\")"};
  var st=document.createElement('style');st.textContent='input.unlen{padding-right:28px!important;background-repeat:no-repeat!important;background-position:right 5px center!important}input.unlen[data-un="mm"]{background-image:'+sv('mm')+'!important}input.unlen[data-un="cm"]{background-image:'+sv('cm')+'!important}'
-  +'#untag{position:absolute;left:8px;bottom:6px;z-index:2;font:600 11px system-ui,sans-serif;color:#475467;background:rgba(255,255,255,.85);border:1px solid #d0d5dd;border-radius:6px;padding:1px 6px;pointer-events:none}';
+  +'#untag{position:absolute;left:8px;top:6px;z-index:2;font:600 11px system-ui,sans-serif;color:#475467;background:rgba(255,255,255,.85);border:1px solid #d0d5dd;border-radius:6px;padding:1px 6px;pointer-events:none}';
  (document.head||document.documentElement).appendChild(st);
  /* rótulo da unidade em cada desenho (vista 2D, planta): "Medidas em mm" / "Medidas em cm" */
  function tag(){var s=document.getElementById('svg'),p=s&&s.parentNode;if(!p)return;var t=document.getElementById('untag');if(!t){t=document.createElement('div');t.id='untag';if(getComputedStyle(p).position==='static')p.style.position='relative';p.appendChild(t)}t.textContent='Medidas em '+U}

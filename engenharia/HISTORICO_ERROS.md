@@ -2320,3 +2320,14 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
     - **Abertura do iPhone 10,36 s.** Os 47 s do 690 eram do ambiente: mesmo app, e no run 29 até a 3.0.13 publicada demorou a abrir no mesmo tipo de runner.
     - **Continua aberto: legibilidade no iPad** ("641"/"125" da contra-frente do caixote, guarda-roupa 4 vãos). Correção com o Code 2.
     - As baterias cortaram no limite do passo (o Code 2 subiu o do iPad para 100 min em `8b8e444c`).
+- **`testFaixaDoEspelhoLedApareceDeLongeEEmAngulo` a 430×900 (pior 12 a 13, esperado ≥ 20), 25/11, pendência do Code 1 assumida pelo Code 2.** A causa é a amostragem do teste, não o app.
+  - A 430 o espelho de 700 mm aparece com ~60 px e a faixa jateada de 40 mm fica com 2 a 3 px.
+  - Em todos os pontos que falhavam há pixel aceso da faixa a 1 px, às vezes pra dentro, às vezes pra fora: é o arredondamento da projeção, não deslocamento da faixa.
+  - Nas capturas ampliadas (/tmp, 430 e 1366) a faixa aparece contínua.
+  - Correção no teste:
+    - cada ponto conta se ele ou um vizinho a 1 px estiver aceso;
+    - os mesmos 24 pontos, as mesmas câmeras e qualidades, dia e noite;
+    - o limite ≥ 20 não muda.
+  - Prova de que o teste continua pegando o defeito: com a faixa desligada no app, dá 0 de 24 a 430 e a 1366.
+  - Antes: 12–13 a 430 (falha). Depois: passa a 430 e a 1366, e os 15 testes de espelho passam nos dois tamanhos.
+  - Visto de passagem e NÃO alterado: a linha de contorno escura do vidro de dentro passa na borda interna da faixa e, de longe, come parte dela. A faixa é jateada no mesmo vidro, então essa linha não existe de verdade. Fica registrado como possível melhoria.

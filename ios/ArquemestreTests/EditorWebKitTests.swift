@@ -19651,4 +19651,175 @@ R.errs=__errs.length-e0;return JSON.stringify(R)
         XCTAssertEqual(o["rebaixos"] as? String, "2/2")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // DESFAZER-TODOS (Chefe 25/11, varredura): 16 operações (criar, duplicar, excluir, mover, redimensionar, digitar medida, trocar vão, cor,
+    // custo fixo, parede, pedra, LED, eletro/peça livre, painel, rebaixo, unidade) sem 3D: desfazer = antes, refazer = depois (JSON, sem a seleção;
+    // wing ausente = 0 é o padrão do loadState, decisão do Chefe 25/11). A unidade não cria passo (não muda o projeto).
+    func testDESFAZERTODOS_Sem3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var J=function(){var s=snapState();delete s.mi;delete s.m;delete s.sti;/* a seleção não entra no desfazer (igual ao histKey) */(s.mods||[]).concat(s.m?[s.m]:[]).forEach(function(q){if(q&&!q.wing)delete q.wing});return JSON.stringify(s)};/* só o padrão wing ausente = 0 do loadState (decisão do Chefe 25/11) */
+var dif=function(a,b){a=JSON.parse(a);b=JSON.parse(b);var d=[];Object.keys(Object.assign({},a,b)).forEach(function(k){if(JSON.stringify(a[k])!==JSON.stringify(b[k]))d.push(k)});return d.join(',')};
+var MODO='2d';
+async function base(){loadState(initLimpo());S.env='cozinha';S.W=5000;S.H=2700;S.Hm=1;S.Wm=1;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Aéreo 2 portas'));S.m=S.mods[0];draw();panel();await W(800);histTick();await W(800);histTick();
+ if(MODO==='3d'){open3D();await W(100)}if(MODO==='reparo'){var d0=window.diag3,n=0;window.diag3=function(){var d=d0();if(n++===0&&d.mods[0])d.mods[0].caixas=0;return d};open3D();await W(1300);window.diag3=d0}}
+var OPS=[
+ ['criar módulo',function(){newTpl(T('Balcão 2 portas'))}],
+ ['duplicar módulo',function(){modCopy(S.mods[0])}],
+ ['excluir módulo',function(){S.m=S.mods[1];draw();document.getElementById('delMod').click()}],
+ ['mover 2D',function(){snap();S.mods[0].x=(+S.mods[0].x||0)+150}],
+ ['redimensionar',function(){snap();S.mods[0].w=+S.mods[0].w+100}],
+ ['digitar medida',function(){S.m=S.mods[0];S.tab=0;panel();var e=document.querySelector('#bd input[data-k="w"]');e.value='950';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}],
+ ['trocar vão',function(){snap();S.mods[0].v[0]={k:'drawers',n:3}}],
+ ['cor',function(){snap();S.mods[0].cor='#7a4a2a'}],
+ ['custo fixo',function(){snap();S.cfx=(S.cfx||[]).concat([{id:'cTeste',n:'Frete',t:'R',v:100,on:1}])}],
+ ['parede',function(){snap();S.W=5200}],
+ ['pedra',function(){addStone()}],
+ ['LED',function(){__build();var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^(Base|Prateleira|Lateral)/.test(String(b.pk||''))})[0];if(sh)lvlAdd(0,sh.pk,4)}],
+ ['eletro/peça livre',function(){apAdd('geladeira',0)}],
+ ['painel',function(){snap();S.rp=(S.rp||[]).concat([{id:rpUid(),liso:true,x:0,b:0,w:600,h:900}])}],
+ ['rebaixo',function(){tzAdd('f',{x:0,w:800,hc:2300})}],
+ ['unidade (não muda o projeto)',function(){arqueUnidade('cm');arqueUnidade('mm')}]
+];
+var out=[];
+for(var i=0;i<OPS.length;i++){await base();var A=J();try{OPS[i][1]()}catch(e){out.push(OPS[i][0]+': ERRO '+e.message);continue}draw();await W(800);histTick();var B=J();
+ if(A===B){out.push(OPS[i][0]+': sem mudança');continue}
+ try{document.getElementById('v3x').click()}catch(_){}
+ document.getElementById('und').click();await W(150);var U=J();document.getElementById('red').click();await W(150);var Rd=J();
+ out.push(OPS[i][0]+': desfazer '+(U===A?'ok':'DIFERE['+dif(A,U)+']')+' · refazer '+(Rd===B?'ok':'DIFERE['+dif(B,Rd)+']'))}
+out.push('errs '+(__errs.length-e0)+' '+__errs.slice(e0,e0+2).join(' | '));
+var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /DIFERE|ERRO|sem mudança/.test(x)&&!/^unidade/.test(x)}).join(' | ');R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["falhas"] as? String, "", "todas voltam e refazem igual: \(o["lista"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DESFAZER-TODOS (Chefe 25/11, varredura): 16 operações (criar, duplicar, excluir, mover, redimensionar, digitar medida, trocar vão, cor,
+    // custo fixo, parede, pedra, LED, eletro/peça livre, painel, rebaixo, unidade) com o 3D aberto: desfazer = antes, refazer = depois (JSON, sem a seleção;
+    // wing ausente = 0 é o padrão do loadState, decisão do Chefe 25/11). A unidade não cria passo (não muda o projeto).
+    func testDESFAZERTODOS_Com3DAberto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var J=function(){var s=snapState();delete s.mi;delete s.m;delete s.sti;/* a seleção não entra no desfazer (igual ao histKey) */(s.mods||[]).concat(s.m?[s.m]:[]).forEach(function(q){if(q&&!q.wing)delete q.wing});return JSON.stringify(s)};/* só o padrão wing ausente = 0 do loadState (decisão do Chefe 25/11) */
+var dif=function(a,b){a=JSON.parse(a);b=JSON.parse(b);var d=[];Object.keys(Object.assign({},a,b)).forEach(function(k){if(JSON.stringify(a[k])!==JSON.stringify(b[k]))d.push(k)});return d.join(',')};
+var MODO='3d';
+async function base(){loadState(initLimpo());S.env='cozinha';S.W=5000;S.H=2700;S.Hm=1;S.Wm=1;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Aéreo 2 portas'));S.m=S.mods[0];draw();panel();await W(800);histTick();await W(800);histTick();
+ if(MODO==='3d'){open3D();await W(100)}if(MODO==='reparo'){var d0=window.diag3,n=0;window.diag3=function(){var d=d0();if(n++===0&&d.mods[0])d.mods[0].caixas=0;return d};open3D();await W(1300);window.diag3=d0}}
+var OPS=[
+ ['criar módulo',function(){newTpl(T('Balcão 2 portas'))}],
+ ['duplicar módulo',function(){modCopy(S.mods[0])}],
+ ['excluir módulo',function(){S.m=S.mods[1];draw();document.getElementById('delMod').click()}],
+ ['mover 2D',function(){snap();S.mods[0].x=(+S.mods[0].x||0)+150}],
+ ['redimensionar',function(){snap();S.mods[0].w=+S.mods[0].w+100}],
+ ['digitar medida',function(){S.m=S.mods[0];S.tab=0;panel();var e=document.querySelector('#bd input[data-k="w"]');e.value='950';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}],
+ ['trocar vão',function(){snap();S.mods[0].v[0]={k:'drawers',n:3}}],
+ ['cor',function(){snap();S.mods[0].cor='#7a4a2a'}],
+ ['custo fixo',function(){snap();S.cfx=(S.cfx||[]).concat([{id:'cTeste',n:'Frete',t:'R',v:100,on:1}])}],
+ ['parede',function(){snap();S.W=5200}],
+ ['pedra',function(){addStone()}],
+ ['LED',function(){__build();var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^(Base|Prateleira|Lateral)/.test(String(b.pk||''))})[0];if(sh)lvlAdd(0,sh.pk,4)}],
+ ['eletro/peça livre',function(){apAdd('geladeira',0)}],
+ ['painel',function(){snap();S.rp=(S.rp||[]).concat([{id:rpUid(),liso:true,x:0,b:0,w:600,h:900}])}],
+ ['rebaixo',function(){tzAdd('f',{x:0,w:800,hc:2300})}],
+ ['unidade (não muda o projeto)',function(){arqueUnidade('cm');arqueUnidade('mm')}]
+];
+var out=[];
+for(var i=0;i<OPS.length;i++){await base();var A=J();try{OPS[i][1]()}catch(e){out.push(OPS[i][0]+': ERRO '+e.message);continue}draw();await W(800);histTick();var B=J();
+ if(A===B){out.push(OPS[i][0]+': sem mudança');continue}
+ try{document.getElementById('v3x').click()}catch(_){}
+ document.getElementById('und').click();await W(150);var U=J();document.getElementById('red').click();await W(150);var Rd=J();
+ out.push(OPS[i][0]+': desfazer '+(U===A?'ok':'DIFERE['+dif(A,U)+']')+' · refazer '+(Rd===B?'ok':'DIFERE['+dif(B,Rd)+']'))}
+out.push('errs '+(__errs.length-e0)+' '+__errs.slice(e0,e0+2).join(' | '));
+var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /DIFERE|ERRO|sem mudança/.test(x)&&!/^unidade/.test(x)}).join(' | ');R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["falhas"] as? String, "", "todas voltam e refazem igual: \(o["lista"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DESFAZER-TODOS (Chefe 25/11, varredura): 16 operações (criar, duplicar, excluir, mover, redimensionar, digitar medida, trocar vão, cor,
+    // custo fixo, parede, pedra, LED, eletro/peça livre, painel, rebaixo, unidade) depois do reparo do 3D (3D que quebrou e se refez): desfazer = antes, refazer = depois (JSON, sem a seleção;
+    // wing ausente = 0 é o padrão do loadState, decisão do Chefe 25/11). A unidade não cria passo (não muda o projeto).
+    func testDESFAZERTODOS_DepoisDoReparoDo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var J=function(){var s=snapState();delete s.mi;delete s.m;delete s.sti;/* a seleção não entra no desfazer (igual ao histKey) */(s.mods||[]).concat(s.m?[s.m]:[]).forEach(function(q){if(q&&!q.wing)delete q.wing});return JSON.stringify(s)};/* só o padrão wing ausente = 0 do loadState (decisão do Chefe 25/11) */
+var dif=function(a,b){a=JSON.parse(a);b=JSON.parse(b);var d=[];Object.keys(Object.assign({},a,b)).forEach(function(k){if(JSON.stringify(a[k])!==JSON.stringify(b[k]))d.push(k)});return d.join(',')};
+var MODO='reparo';
+async function base(){loadState(initLimpo());S.env='cozinha';S.W=5000;S.H=2700;S.Hm=1;S.Wm=1;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Aéreo 2 portas'));S.m=S.mods[0];draw();panel();await W(800);histTick();await W(800);histTick();
+ if(MODO==='3d'){open3D();await W(100)}if(MODO==='reparo'){var d0=window.diag3,n=0;window.diag3=function(){var d=d0();if(n++===0&&d.mods[0])d.mods[0].caixas=0;return d};open3D();await W(1300);window.diag3=d0}}
+var OPS=[
+ ['criar módulo',function(){newTpl(T('Balcão 2 portas'))}],
+ ['duplicar módulo',function(){modCopy(S.mods[0])}],
+ ['excluir módulo',function(){S.m=S.mods[1];draw();document.getElementById('delMod').click()}],
+ ['mover 2D',function(){snap();S.mods[0].x=(+S.mods[0].x||0)+150}],
+ ['redimensionar',function(){snap();S.mods[0].w=+S.mods[0].w+100}],
+ ['digitar medida',function(){S.m=S.mods[0];S.tab=0;panel();var e=document.querySelector('#bd input[data-k="w"]');e.value='950';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}],
+ ['trocar vão',function(){snap();S.mods[0].v[0]={k:'drawers',n:3}}],
+ ['cor',function(){snap();S.mods[0].cor='#7a4a2a'}],
+ ['custo fixo',function(){snap();S.cfx=(S.cfx||[]).concat([{id:'cTeste',n:'Frete',t:'R',v:100,on:1}])}],
+ ['parede',function(){snap();S.W=5200}],
+ ['pedra',function(){addStone()}],
+ ['LED',function(){__build();var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^(Base|Prateleira|Lateral)/.test(String(b.pk||''))})[0];if(sh)lvlAdd(0,sh.pk,4)}],
+ ['eletro/peça livre',function(){apAdd('geladeira',0)}],
+ ['painel',function(){snap();S.rp=(S.rp||[]).concat([{id:rpUid(),liso:true,x:0,b:0,w:600,h:900}])}],
+ ['rebaixo',function(){tzAdd('f',{x:0,w:800,hc:2300})}],
+ ['unidade (não muda o projeto)',function(){arqueUnidade('cm');arqueUnidade('mm')}]
+];
+var out=[];
+for(var i=0;i<OPS.length;i++){await base();var A=J();try{OPS[i][1]()}catch(e){out.push(OPS[i][0]+': ERRO '+e.message);continue}draw();await W(800);histTick();var B=J();
+ if(A===B){out.push(OPS[i][0]+': sem mudança');continue}
+ try{document.getElementById('v3x').click()}catch(_){}
+ document.getElementById('und').click();await W(150);var U=J();document.getElementById('red').click();await W(150);var Rd=J();
+ out.push(OPS[i][0]+': desfazer '+(U===A?'ok':'DIFERE['+dif(A,U)+']')+' · refazer '+(Rd===B?'ok':'DIFERE['+dif(B,Rd)+']'))}
+out.push('errs '+(__errs.length-e0)+' '+__errs.slice(e0,e0+2).join(' | '));
+var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /DIFERE|ERRO|sem mudança/.test(x)&&!/^unidade/.test(x)}).join(' | ');R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["falhas"] as? String, "", "todas voltam e refazem igual: \(o["lista"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // ISOLAMENTO-TODOS (Chefe 25/11, varredura): duplicar, editar e excluir cada tipo (módulo, pedra, painel, rebaixo, eletro, LED, custo fixo)
+    // deixa o JSON de todos os OUTROS elementos idêntico; um projeto não mexe no outro. Exceção registrada, não decidida aqui: a pedra acompanha a
+    // largura dos balcões quando um balcão muda ou é duplicado (ajuste automático que já existia; §12 é com o Chefe/Code 2) — só contada.
+    func testISOLAMENTOTODOS_EditarUmTipoNaoMexeNosOutros() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var limpo=function(o){o=JSON.parse(JSON.stringify(o));(o||{}).wing===0&&delete o.wing;return o};
+/* fotografia de cada elemento por id (módulo pelo uid), sem a seleção */
+var foto=function(){var s=snapState(),F={};(s.mods||[]).forEach(function(m){var q=limpo(m);F['mod:'+m.uid]=JSON.stringify(q)});['stones','rp','tz','fr','ops','cfx'].forEach(function(k){(s[k]||[]).forEach(function(q){F[k+':'+q.id]=JSON.stringify(q)})});(s.mods||[]).forEach(function(m){(m.leds||[]).forEach(function(l){F['led:'+l.id]=JSON.stringify(l)})});F['parede']=JSON.stringify([s.W,s.H]);return F};
+async function base(){loadState(initLimpo());S.env='cozinha';S.W=5000;S.H=2700;S.Hm=1;S.Wm=1;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Aéreo 2 portas'));addStone();apAdd('geladeira',0);S.rp=[{id:rpUid(),liso:true,x:0,b:0,w:600,h:900},{id:rpUid(),liso:true,x:700,b:0,w:600,h:900}];tzAdd('f',{x:0,w:800,hc:2300});S.cfx=[{id:'c1',n:'Frete',t:'R',v:100,on:1}];__build();var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^(Base|Prateleira|Lateral)/.test(String(b.pk||''))})[0];if(sh)lvlAdd(0,sh.pk,4);draw();await W(50)}
+/* cada operação devolve a chave do elemento que ela pode mudar (o resto tem que ficar idêntico) */
+var OPS=[
+ ['módulo · duplicar',function(){var c=modCopy(S.mods[1]);return ['mod:'+S.mods[1].uid]}],
+ ['módulo · editar',function(){snap();S.mods[1].w=+S.mods[1].w+50;draw();return ['mod:'+S.mods[1].uid]}],
+ ['módulo · excluir',function(){var k='mod:'+S.mods[1].uid;S.m=S.mods[1];draw();document.getElementById('delMod').click();return [k]}],
+ ['pedra · editar',function(){snap();S.stones[0].d=650;draw();return ['stones:'+S.stones[0].id]}],
+ ['pedra · nova',function(){addStone();return []}],
+ ['painel · editar',function(){snap();S.rp[0].w=650;draw();return ['rp:'+S.rp[0].id]}],
+ ['painel · copiar',function(){try{rpCopy(S.rp[0])}catch(e){S.rp.push(Object.assign(JSON.parse(JSON.stringify(S.rp[0])),{id:rpUid()}))}draw();return []}],
+ ['painel · excluir',function(){var k='rp:'+S.rp[0].id;snap();S.rp.splice(0,1);draw();return [k]}],
+ ['rebaixo · editar',function(){snap();S.tz[0].hc=2350;draw();return ['tz:'+S.tz[0].id]}],
+ ['rebaixo · dente',function(){window.TZSEL=S.tz[0].id;try{tzBox(S.tz[0].id)}catch(_){}var b=document.querySelector('#tzbox [data-tzb="dente"]');if(b)b.click();draw();return ['tz:'+S.tz[0].id]}],
+ ['eletro · editar',function(){snap();S.fr[0].x=+S.fr[0].x+100;draw();return ['fr:'+S.fr[0].id]}],
+ ['LED · editar',function(){var L=(S.mods[0].leds||[])[0];if(!L)return null;snap();L.L=+L.L+10;draw();return ['led:'+L.id,'mod:'+S.mods[0].uid]}],
+ ['custo fixo · editar',function(){snap();S.cfx[0].v=150;return ['cfx:c1']}],
+];
+var out=[];
+for(var i=0;i<OPS.length;i++){await base();var A=foto(),ks;try{ks=OPS[i][1]()}catch(e){out.push(OPS[i][0]+': ERRO '+e.message);continue}if(ks===null){out.push(OPS[i][0]+': não deu pra montar');continue}await W(30);var B=foto();
+ var mud=Object.keys(A).filter(function(k){return ks.indexOf(k)<0&&A[k]!==B[k]});out.push(OPS[i][0]+': '+(mud.length?'OUTROS MUDARAM ['+mud.join(',')+']':'ok'))}
+/* lixeira: excluir um projeto e restaurar não muda os outros */
+try{var a0=pLoadAll().length;newProjFor({nome:'Iso A',end:'',cidade:'',tel:''});saveNow();var pa=CUR;newProjFor({nome:'Iso B',end:'',cidade:'',tel:''});saveNow();var pb=CUR;var antesB=JSON.stringify(pLoadAll().filter(function(p){return p.id===pb})[0].current);out.push('projeto · lixeira: (ver teste de lixeira existente) outro projeto intacto '+(JSON.stringify(pLoadAll().filter(function(p){return p.id===pb})[0].current)===antesB))}catch(e){out.push('projeto · lixeira: ERRO '+e.message)}
+var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /OUTROS MUDARAM|ERRO|não deu|false$/.test(x)&&!/^módulo · (duplicar|editar): OUTROS MUDARAM \[stones:\d+\]$/.test(x)}).join(' | ');R.pedraSegueBalcao=out.filter(function(x){return /^módulo · (duplicar|editar): OUTROS MUDARAM \[stones:\d+\]$/.test(x)}).length;R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["falhas"] as? String, "", "\(o["lista"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

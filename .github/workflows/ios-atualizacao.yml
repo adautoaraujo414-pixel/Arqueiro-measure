@@ -4,12 +4,12 @@ name: iOS · teste de atualização (simulador)
 on:
   push:
     branches: [ 'claude/**' ]
-    paths: [ '.github/workflows/ios-atualizacao.yml', '.github/scripts/teste_atualizacao_ios.sh', 'ios/ArquemestreTests/AtualizacaoAbreProjetosTests.swift' ]
+    paths: [ '.github/workflows/ios-atualizacao.yml', '.github/scripts/teste_atualizacao_ios.sh', 'ios/ArquemestreTests/AtualizacaoAbreProjetosTests.swift', '.github/scripts/ios-video/**' ]
   workflow_dispatch:
     inputs:
       anterior:
-        description: 'Commit da versão publicada (App Store 3.0.12 = d861fbd)'
-        default: 'd861fbd8c393c61ea62ba417379d6ab6d46b2a3f'
+        description: 'Commit da versão publicada (App Store 3.0.13 = 3f1c3a58, liberada; confirmado pelo Adauto 24/11)'
+        default: '3f1c3a58bf7c87bf1d595d867c44a1bf4a0e9ec0'
 permissions:
   contents: read
 jobs:
@@ -24,11 +24,14 @@ jobs:
         run: cd novo && python3 .github/scripts/trava_publicacao.py
       - name: Baixar a versão publicada
         uses: actions/checkout@v4
-        with: { path: anterior, ref: "${{ inputs.anterior || 'd861fbd8c393c61ea62ba417379d6ab6d46b2a3f' }}" }
+        with: { path: anterior, ref: "${{ inputs.anterior || '3f1c3a58bf7c87bf1d595d867c44a1bf4a0e9ec0' }}" }
       - name: Compilar as duas para o simulador
         run: |
           brew install xcodegen
           (cd anterior/ios && xcodegen generate && xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug -sdk iphonesimulator -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || { tail -40 build.log; exit 1; })
+          # 24/11 (vídeo do cliente, N13): o mesmo código publicado, mais um alvo de teste de interface que usa o seletor como a pessoa (o app não muda)
+          python3 novo/.github/scripts/ios-video/monta_uitest.py anterior/ios
+          (cd anterior/ios && xcodegen generate && xcodebuild -project Arquemestre.xcodeproj -scheme ArquemestreVideoUI -configuration Debug -sdk iphonesimulator -derivedDataPath build/ddui CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build-for-testing > buildui.log 2>&1 || { tail -40 buildui.log; echo "aviso: o teste de interface do vídeo não compilou (a rodada do vídeo vai falhar)"; })
           # a nova também com os testes (21/11): depois da atualização, o teste AtualizacaoAbreProjetosTests abre os projetos no editor
           (cd novo/ios && xcodegen generate && xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug -sdk iphonesimulator -derivedDataPath build/dd CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build-for-testing > build.log 2>&1 || { tail -40 build.log; exit 1; })
       - name: Atualizar por cima no simulador e conferir os dados

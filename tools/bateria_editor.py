@@ -13,6 +13,8 @@ Não grava nada nos dados do app: os testes usam uma ponte "ArqueApp" em memóri
 Precisa do pacote websocket-client (pip install websocket-client).
 """
 import argparse, json, os, re, sys, time, urllib.request
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from swift_expr import confere_expr  # asserts com expressão Swift (antes só conferidos no iOS)
 
 PONTE = r"""
 /* cada teste começa sem nada guardado do teste anterior (ao sair da página o editor grava o que estava pendente) */
@@ -26,14 +28,44 @@ window.__files={};window.__shared=null;
   listFiles:function(){return JSON.stringify(Object.keys(__files))},companyName:function(){return 'Marcenaria Teste'},
   shareCut:function(c,n,t){__shared={code:c,name:n,title:t}},shareClient:function(c,n,t){window.__sharedCl={code:c,name:n,title:t}},listNotes:function(){return '[]'},
   contextNote:function(){return ''},linkNote:function(){},openNoteOf:function(){},shareUpdate:function(){},shareStart:function(){},
-  makeQuote:function(){},quotePhotos:function(){},openTrena:function(){},tourResult:function(){},close:function(){window.__closed=(window.__closed||0)+1}};
+  makeQuote:function(){},quotePhotos:function(){},openTrena:function(){},tourResult:function(){},close:function(){window.__closed=(window.__closed||0)+1},
+  /* igual à ponte do app do Windows (Browser.kt): CSV e DXF saem pelo shareFile, nunca por download do navegador (o JCEF do app de teste caía às vezes no download de blob) */
+  shareFile:function(n,t,m){window.__sharedFile={name:n,len:String(t||'').length,mime:m}}};
   /* a ponte de verdade do app (que grava em arquivo) é posta depois: aqui ela é ignorada, os testes ficam só na memória */
   try{Object.defineProperty(window,'ArqueApp',{configurable:true,get:function(){return A},set:function(){}})}catch(e){window.ArqueApp=A}})();
 """
 
 
+def _estaticos(src):
+    """private static let nome = #\"\"\"...\"\"\"# (JS guardado fora da função e montado no run)"""
+    return {m.group(1): m.group(2) for m in re.finditer(r'static let (\w+) = #"""\n(.*?)\n\s*"""#', src, re.S)}
+
+
+def _monta(expr, est):
+    """run(web, Self.a + "var X=0;\\n" + Self.b): junta os pedaços (só Self.nome e string comum); None se não der"""
+    js = ''
+    for p in re.findall(r'Self\.\w+|"(?:[^"\\]|\\.)*"|\+|\S+', expr):
+        if p == '+':
+            continue
+        if p.startswith('Self.'):
+            if p[5:] not in est:
+                return None
+            js += est[p[5:]]
+        elif p.startswith('"'):
+            if '\\(' in p:
+                return None
+            try:
+                js += json.loads(p)
+            except Exception:
+                return None
+        else:
+            return None
+    return js
+
+
 def testes(swift):
     src = open(swift, encoding='utf-8').read()
+    est = _estaticos(src)
     partes = re.split(r'\n    func (test\w+)\(\)', src)
     out = []
     for i in range(1, len(partes), 2):
@@ -41,6 +73,13 @@ def testes(swift):
         m = re.search(r'run\(web, #"""\n(.*?)\n\s*"""#\)', corpo, re.S)
         if m:
             out.append((nome, m.group(1), corpo))
+            continue
+        # JS montado com o que está em static let (ex.: os 3 terços do catálogo na parede esquerda): antes esses ficavam fora da bateria
+        m = re.search(r'try await run\(web, ((?:Self\.\w+|"(?:[^"\\]|\\.)*")(?:\s*\+\s*(?:Self\.\w+|"(?:[^"\\]|\\.)*"))*)\)', corpo)
+        if m:
+            js = _monta(m.group(1), est)
+            if js is not None:
+                out.append((nome, js, corpo))
     return out
 
 
@@ -100,6 +139,37 @@ def confere(corpo, o):
         if o[k] is not quer:
             f.append('%s: veio %s · esperado %s' % (k, json.dumps(o[k]), 'true' if quer else 'false'))
     return f
+
+
+_RX_ANTIGOS = [
+    r'XCTAssertEqual\(o\["(\w+)"\] as\? (\w+)(?:\?\.(\w+))?(?: \?\? [^,()]+)?, ("(?:[^"\\]|\\.)*"|true|false|-?[\d.]+)[,)]',
+    r'XCTAssert(LessThanOrEqual|LessThan|GreaterThanOrEqual|GreaterThan)\(o\["(\w+)"\] as\? \w+(?: \?\? [^,()]+)?, (-?[\d.]+)[,)]',
+    r'XCTAssertEqual\(o\["(\w+)"\] as\? \w+, o\["(\w+)"\] as\? \w+',
+    r'XCTAssert(True|False)\(\(o\["(\w+)"\] as\? String \?\? ""\)\.contains\(("(?:[^"\\]|\\.)*")\)',
+    r'XCTAssert(True|False)\(o\["(\w+)"\] as\? Bool (?:\?\? (?:true|false)|== (true|false))',
+]
+
+
+def _antigo(trecho):
+    """o regex de sempre (confere) pega este assert? (o esperado com "\\(…)" ele pula: não conta)"""
+    for rx in _RX_ANTIGOS:
+        m = re.search(rx, trecho)
+        if m and '\\(' not in m.group(0):
+            return True
+    return False
+
+
+def conta_antigos(corpo):
+    n = 0
+    for rx in _RX_ANTIGOS:
+        for m in re.finditer(rx, corpo):
+            if '\\(' not in m.group(0):
+                n += 1
+    return n
+
+
+def conta_asserts(corpo):
+    return len(re.findall(r'\bXCTAssert\w*\(', corpo))
 
 
 class Cdp:
@@ -180,7 +250,8 @@ def main():
     ap.add_argument('--so', default='', help='só os testes cujo nome casa com esta expressão')
     ap.add_argument('--url', default='', help='endereço do editor (padrão: o que o app abriu, em português)')
     ap.add_argument('--tempo', type=int, default=300, help='limite por teste, em segundos')
-    ap.add_argument('--janela', default='1366x768', help='tamanho da área do editor nos testes (notebook comum); vazio = o tamanho real da janela')
+    ap.add_argument('--sem-expr', action='store_true', help='não avaliar os asserts com expressão Swift (só o regex de sempre)')
+    ap.add_argument('--janela', default='1366x768', help='tamanho da área do editor nos testes (notebook comum), LxA ou LxAxDENSIDADE (ex.: 430x900x2, como um celular); vazio = o tamanho real da janela')
     a = ap.parse_args()
     os.makedirs(a.saida, exist_ok=True)
     T = [t for t in testes(a.swift) if not a.so or re.search(a.so, t[0])]
@@ -195,12 +266,15 @@ def main():
     if a.janela:
         # mesma área em qualquer computador de teste (a tela do GitHub é pequena: 1024×768)
         try:
-            w, h = [int(x) for x in a.janela.lower().split('x')]
-            c.chama('Emulation.setDeviceMetricsOverride', {'width': w, 'height': h, 'deviceScaleFactor': 0, 'mobile': False}, 20)
+            # 24/11: um 3º número opcional é a densidade da tela (430x900x2 = celular; o iOS roda os mesmos testes a 430×900 com densidade 3)
+            pz = [float(x) for x in a.janela.lower().split('x')]
+            w, h, dz = int(pz[0]), int(pz[1]), (pz[2] if len(pz) > 2 else 0)
+            c.chama('Emulation.setDeviceMetricsOverride', {'width': w, 'height': h, 'deviceScaleFactor': dz, 'mobile': False}, 20)
         except Exception as e:
             print('não deu pra fixar o tamanho da área (%s): os testes usam o tamanho real da janela' % str(e)[:120], flush=True)
     info = {}
     falhas, passou, rel, sem3d = [], 0, [], []
+    cont, nao_lista = {'antigos': 0, 'expr': 0, 'nao': 0, 'todos': 0}, []
     usa3d = re.compile(r'open3D|org3api|__cam\(|__boxes|re3\(|fx3api|ah3api|paintTap|__sel3|__size3|tap3|demoScene|v3x|#v3')
     t00 = time.time()
     for nome, js, corpo in T:
@@ -247,6 +321,18 @@ def main():
                 f = confere(corpo, o)
             except Exception as e:
                 f = ['resultado não é JSON: %s' % str(res)[:200]]
+            if o is not None and isinstance(o, dict) and not a.sem_expr:
+                # asserts com expressão Swift (antes só no iOS): o que o avaliador não entende fica "não conferido", nunca "ok"
+                try:
+                    fe, ce, ne = confere_expr(corpo, o, _antigo)
+                except Exception as e:
+                    fe, ce, ne = [], 0, [('(teste inteiro)', 'avaliador: %s' % str(e)[:80])]
+                f = f + ['[expr] ' + x for x in fe]
+                cont['expr'] += ce
+                cont['nao'] += len(ne)
+                nao_lista.append((nome, ne))
+        cont['antigos'] += conta_antigos(corpo)
+        cont['todos'] += conta_asserts(corpo)
         dt = round(time.time() - t0, 1)
         open(os.path.join(a.saida, nome + '.json'), 'w', encoding='utf-8').write(res if isinstance(res, str) else json.dumps({'erro': erro}, ensure_ascii=False))
         if f and info and not info.get('webgl') and usa3d.search(js):
@@ -265,8 +351,15 @@ def main():
             print('ok    %s (%ss)' % (nome, dt), flush=True)
         rel.append({'teste': nome, 'ok': not f, 'segundos': dt, 'falhas': f})
     tot = round(time.time() - t00)
-    json.dump({'motor': info, 'testes': len(T), 'passaram': passou, 'falharam': len(falhas), 'sem3d': len(sem3d), 'segundos': tot, 'lista': rel}, open(os.path.join(a.saida, 'relatorio.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    asserts = {'no_swift': cont['todos'], 'conferidos_regex': cont['antigos'], 'conferidos_expr': cont['expr'], 'nao_conferidos_expr': cont['nao']}
+    json.dump({'motor': info, 'testes': len(T), 'passaram': passou, 'falharam': len(falhas), 'sem3d': len(sem3d), 'segundos': tot, 'asserts': asserts, 'lista': rel}, open(os.path.join(a.saida, 'relatorio.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    with open(os.path.join(a.saida, 'nao_conferidos.txt'), 'w', encoding='utf-8') as fq:
+        for nome, ne in nao_lista:
+            for st, mot in ne:
+                fq.write('%s\t%s\t%s\n' % (nome, mot, re.sub(r'\s+', ' ', st)))
     print('\nBATERIA DO EDITOR · %d testes · passaram %d · falharam %d%s · %d s' % (len(T), passou, len(falhas), (' · %d não conferidos (precisam do 3D e este computador de teste não tem WebGL)' % len(sem3d)) if sem3d else '', tot), flush=True)
+    print('ASSERTS · %d no Swift · conferidos %d (regex de sempre %d + expressão Swift %d) · não conferidos pela expressão %d (lista em nao_conferidos.txt)'
+          % (cont['todos'], cont['antigos'] + cont['expr'], cont['antigos'], cont['expr'], cont['nao']), flush=True)
     for nome, f in falhas:
         print('  FALHA ' + nome + ': ' + ' | '.join(f[:3]), flush=True)
     sys.exit(1 if falhas else 0)

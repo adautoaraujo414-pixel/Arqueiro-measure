@@ -5,12 +5,12 @@ name: Windows · teste de atualização
 on:
   # roda sozinho só quando o próprio teste muda (o GitHub precisa disso pra liberar o disparo manual numa branch)
   push:
-    paths: [ '.github/workflows/windows-atualizacao.yml', '.github/scripts/teste_atualizacao_windows.ps1' ]
+    paths: [ '.github/workflows/windows-atualizacao.yml', '.github/scripts/teste_atualizacao_windows.ps1', '.github/scripts/video_cdp.py' ]
   workflow_dispatch:
     inputs:
       anterior:
-        description: 'Release da versão anterior (padrão: win-143, a publicada em 17/11)'
-        default: 'win-143'
+        description: 'Release da versão anterior (padrão: win-166, a publicada em 22/11 (c561120))'
+        default: 'win-166'
 
 permissions:
   contents: read
@@ -50,7 +50,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = '${{ inputs.anterior }}'; if (-not $tag) { $tag = 'win-143' }
+          $tag = '${{ inputs.anterior }}'; if (-not $tag) { $tag = 'win-166' }
           gh release download $tag -p 'Arquemestre-Windows.msi' -D anterior -R ${{ github.repository }}
           Get-ChildItem anterior
 
@@ -63,4 +63,4 @@ jobs:
         if: always()
         run: |
           Write-Host "(resultado no log acima; listas em atualizacao/)"
-          Get-ChildItem atualizacao -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "---- $($_.Name)"; Get-Content $_.FullName | Select-Object -First 40 }
+          Get-ChildItem atualizacao -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "---- $($_.Directory.Name)/$($_.Name)"; Get-Content $_.FullName | Select-Object -First 40 }

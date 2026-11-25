@@ -5,12 +5,12 @@ name: Android · teste de atualização (emulador)
 on:
   # roda sozinho só quando o próprio teste muda (o GitHub precisa disso pra liberar o disparo manual numa branch)
   push:
-    paths: [ '.github/workflows/android-atualizacao.yml', '.github/scripts/teste_atualizacao_android.sh' ]
+    paths: [ '.github/workflows/android-atualizacao.yml', '.github/scripts/teste_atualizacao_android.sh', '.github/scripts/video_cdp.py' ]
   workflow_dispatch:
     inputs:
       anterior:
-        description: 'Release da versão anterior (padrão: apk-636, a publicada em 17/11)'
-        default: 'apk-636'
+        description: 'Release da versão anterior (padrão: apk-660, a publicada em 22/11 (c561120))'
+        default: 'apk-660'
 
 permissions:
   contents: read
@@ -52,7 +52,7 @@ jobs:
       - name: Baixar a versão anterior publicada
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release download "${{ inputs.anterior || 'apk-636' }}" -p ArqueMeasure-debug.apk -O anterior.apk
+        run: gh release download "${{ inputs.anterior || 'apk-660' }}" -p ArqueMeasure-debug.apk -O anterior.apk
 
       - name: Ativar aceleração do emulador (KVM)
         run: |

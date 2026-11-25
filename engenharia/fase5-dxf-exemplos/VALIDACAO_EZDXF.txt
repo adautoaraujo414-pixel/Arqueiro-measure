@@ -1,0 +1,47 @@
+aereo-concha.dxf: versão AC1009 · erros auditoria 0 · contornos 9 (fechados 9)
+   CAVILHA_D8_P12_F1            CIRCLE    8
+   CAVILHA_D8_P12_F2            CIRCLE    8
+   ETIQUETA                     TEXT      9
+   FURO_DOBRADICA_D35_P13       CIRCLE    4
+   FURO_PUXADOR_D5_P15          CIRCLE    4
+   FURO_TOPO_CAVILHA_D8_P25     CIRCLE    16
+balcao-e-gaveteiro-base-corrida.dxf: versão AC1009 · erros auditoria 0 · contornos 45 (fechados 45)
+   CAVA_30_P12                  POLYLINE  5
+   ETIQUETA                     TEXT      45
+   FURO_DOBRADICA_D35_P13       CIRCLE    4
+   REBAIXO_L6_P6                POLYLINE  6
+balcao-sozinho-projeto.dxf: versão AC1009 · erros auditoria 0 · contornos 19 (fechados 19)
+   CAVA_30_P12                  POLYLINE  2
+   CAVILHA_D8_P12_F1            CIRCLE    10
+   ETIQUETA                     TEXT      19
+   FURO_DOBRADICA_D35_P13       CIRCLE    4
+   FURO_TOPO_CAVILHA_D8_P25     CIRCLE    10
+base-com-cavilhas.dxf: versão AC1009 · erros auditoria 0 · contornos 1 (fechados 1)
+   CAVILHA_D8_P12_F1            CIRCLE    10
+   ETIQUETA                     TEXT      1
+cozinha-exemplo-projeto.dxf: versão AC1009 · erros auditoria 0 · contornos 142 (fechados 142)
+   CAVA_30_P12                  POLYLINE  19
+   CAVILHA_D8_P12_F1            CIRCLE    64
+   CAVILHA_D8_P12_F2            CIRCLE    34
+   ETIQUETA                     TEXT      142
+   FURO_DOBRADICA_D35_P13       CIRCLE    38
+   FURO_TOPO_CAVILHA_D8_P25     CIRCLE    98
+   REBAIXO_L6_P6                POLYLINE  6
+guarda-roupa-sistema32.dxf: versão AC1009 · erros auditoria 0 · contornos 27 (fechados 27)
+   CAVA_30_P12                  POLYLINE  4
+   CAVILHA_D8_P12_F1            CIRCLE    15
+   CAVILHA_D8_P12_F2            CIRCLE    15
+   ETIQUETA                     TEXT      27
+   FURO_DOBRADICA_D35_P13       CIRCLE    20
+   FURO_S32_D5_P12              CIRCLE    414
+   FURO_TOPO_CAVILHA_D8_P25     CIRCLE    30
+lateral-com-cavilhas-no-topo.dxf: versão AC1009 · erros auditoria 0 · contornos 1 (fechados 1)
+   ETIQUETA                     TEXT      1
+   FURO_TOPO_CAVILHA_D8_P25     CIRCLE    5
+lateral-de-gaveta-rebaixo.dxf: versão AC1009 · erros auditoria 0 · contornos 1 (fechados 1)
+   ETIQUETA                     TEXT      1
+   REBAIXO_L6_P6                POLYLINE  1
+porta-com-dobradicas.dxf: versão AC1009 · erros auditoria 0 · contornos 1 (fechados 1)
+   CAVA_30_P12                  POLYLINE  1
+   ETIQUETA                     TEXT      1
+   FURO_DOBRADICA_D35_P13       CIRCLE    2

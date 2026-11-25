@@ -125,6 +125,7 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
 - **Relatado:** 16/11 às 00:55 ("erro gravíssimo").
 - **Verificado:** todos os módulos do catálogo, mais o caso do balcão com forno, mantêm o tamponamento por fora (`testTamponamentoSempreForaDoModuloEmTodosOsModelosComReguasDe80`).
 - **Status:** não reproduzido. Falta saber em qual módulo e de que lado.
+- **Atualização 22/11:** reproduzido no tamponamento de **25 mm** (ver TAMP-25-3D). O teste de 16/11 só usava 30.
 
 ## FORNO-3MM: folga em cima do forno embutido
 - **Relatado:** 16/11 às 00:55 e 01:02. A folga entre a parte de cima e o forno tem que ser de 3 mm.
@@ -714,10 +715,28 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Não mexido:** botões escolhidos (`.sel`), contorno do módulo no 2D e tamponamento. Se o azul forte for outro, um print resolve.
 - **Teste:** só visual (imagens antes e depois no relatório). Nenhum teste da bateria depende dessas opacidades.
 
+## PLANO DE CORTE (Adauto 17/11): peça tirada por identidade, toque longo, rodapé fora do corte (opção A) e brancos juntos — branch `claude/arquemestre-plano-corte`
+- **Como era (versão pública):**
+  - "− tirar" guardava em `S.cutOff` só tipo|material|cor|nome|medida com uma contagem. Duas peças iguais (a lateral de dois balcões iguais) não tinham como sair uma específica: saía "uma delas".
+  - Não havia toque longo nem clique direito na peça do plano.
+  - Não havia como tirar o rodapé do corte. O rodapé contínuo (módulos encostados) é uma peça só, ligada a todos os módulos do trecho.
+  - Cor de fora branca (ex.: Branco Supremo) ia para chapas separadas da caixa branca (`sameFin` era calculado e não usado).
+- **Identidade (PC-ID, decisão do Adauto: uma só, compartilhada):** `uid` do módulo (o `m.uid` que já existia, usado no empilhamento) + `pk` da peça + nº da ocorrência dessa `pk` no módulo (o fundo grande de guarda-roupa sai em 2 peças com o mesmo `pk`: achado em 6 modelos do catálogo). Sem índice de módulo. Cópia de módulo com o mesmo `uid`: só o primeiro fica com ele (mesma regra do `stkSync`) e a cópia não herda o que foi tirado. O `uid` só é criado quando a pessoa tira uma peça (nenhum projeto muda ao abrir).
+- **`S.cutOff` reaproveitado:** chave nova `@uid|pk|n` (valor 1) ao lado das chaves antigas de contagem, que continuam valendo. Mesmo `offAdd`, mesmo "Fora do plano · ↩ Voltar". Passa pelo desfazer (histórico por estado). Orçamento usa `sheetPlan(1)`, que já ignora o que foi tirado: não muda.
+- **Toque longo (PC-TOQUE):** 1,5 s parado (até 10 px) abre o menu com a peça, o módulo, 🗑 Remover peça (pede confirmação) e Cancelar; o clique direito abre o mesmo menu. Rolar, arrastar ou soltar antes não abre; o "click" depois do toque longo não vira 3D nem "cortada".
+- **Rodapé (PC-ROD, opção A):** aba Estrutura › Rodapé: "Incluir no plano de corte · todos os rodapés deste módulo" e, com um rodapé escolhido no 2D ou no 3D, "· só este". Rodapé contínuo com o trecho de um módulo fora: o corte fica com os trechos que sobraram (3 balcões 800+600+700: 2100 → 800 e 700), frente e trás separados. 2D, 3D e medidas não mudam.
+- **Brancos (PC-BRANCO):** peça de cor branca (qualquer branco, pelo nome) vai para as chapas da caixa quando a caixa é branca; sem caixa branca, os brancos de cor se juntam entre si. As chaves antigas de "− tirar" continuam com o tipo original (não reaparecem peças tiradas).
+- **Testes (falham na versão pública e passam agora):** `testPlanoDeCorteToqueLongoTiraSoAquelaPecaPelaIdentidade`, `testPlanoDeCorteRodapeForaDoCorteRodapeContinuoFicaSoComOsTrechos`, `testPlanoDeCortePecaBrancaDeQualquerBrancoVaiProMesmoGrupoDaCaixaBranca`. Os 4 testes antigos do plano de corte passam nas duas versões.
+- **Pendente / risco:** rodapé corrido das fileiras em L (`cutGroups_lr`): tirar um trecho só tira o rodapé inteiro quando todos os trechos estão fora (não divide). Peça grande dividida em partes ("em n partes"): cada parte tem a própria ocorrência.
+
 ## TESTE-RECUO: testes novos não compilavam no iOS (CI 604, 17/11)
 - **Erro:** `insufficient indentation of next N lines in multi-line string literal`. O JavaScript dos testes novos começava na coluna 0; no Swift, o texto entre `#"""` e `"""#` tem que estar pelo menos tão recuado quanto o `"""#`. A bateria do Windows/Chromium lê o JS direto e não acusa.
 - **Correção:** só recuo (8 espaços) nas linhas do JS dos testes novos. Nenhuma conferência mudou.
 - **Prevenção:** conferir o recuo dos blocos `#"""` antes de cada commit de teste (script na pasta de rascunho da sessão).
+- **Bateria do Windows (run 41, 17/11):** 349/351.
+  - `testTamponamentoNo2D…` também falha na versão pública.
+  - `testOpcaoMarcadaSempreMudaAlgumaCoisa` acusou o "Incluir no plano de corte" do rodapé como opção que não muda nada. Esse teste só olhava peças, `cutLines` e custo, e a opção muda o plano de corte (`S.cutOff`).
+  - **Expectativa adaptada (pedido do Adauto 17/11):** o teste também olha o `S.cutOff`. Continua exigindo que toda opção marcada mude algo. Passa nas duas versões.
 
 ## F3-SEL-REGRESSÃO: 2 pares de toques viravam 4 toques (podia travar o módulo) e a divisória não pegava logo depois de arrastar (achado na bateria final da Fase 3, 17/11)
 - **Testes que pegaram:** `testDoisToquesNoVaoDeCimaAteOTetoRipadoPainelOuFechamento` (versão pública 3/3; F3-SEL 0 a 1 de 3, intermitente) e `testDivisoriaArrastaComODedoEmQualquerProjetoECaminho` (12 px do lado não arrastava).
@@ -1340,3 +1359,852 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Correção:** o teste foi dividido em 4: o catálogo em 3 terços (`i%3`, mínimo de 167 itens por terço, somando o catálogo inteiro) e o resto num teste próprio. As conferências e as expectativas são as mesmas (commits `8e50530` e `3f1c3a5`). O `8e50530` deixou um fechamento `"""#)` duplicado que quebrou a compilação no CI 650, corrigido no `3f1c3a5`.
 - **Validação:** local, 4 de 4 passaram, com cerca de 12 s cada. iOS CI 651: 470 testes (397 do editor), 0 falhas no iPhone e no iPad, nenhum teste repetido, StoreKit OK.
 - **Prevenção:** teste que percorre o catálogo inteiro tem que caber em menos de 2 min no simulador. Medir no Chrome e multiplicar por cerca de 4.
+## FT-REBAIXO — fita de 0,8 mm do rebaixo da lateral desenhada dentro da travessa frontal no 3D (17/11/2026)
+- **Pedido:** Adauto, 17/11: correção cirúrgica só do defeito visual, com teste antes e depois.
+- **Causa:** o `build_ft` põe uma tira de 0,8 mm na frente de cada caixa da lateral. A caixa de cima (o rebaixo, z até 551) ganha a tira de 551 a 551,8, dentro da travessa (de 551 a 566). Sobreposição de 15 × 70 × 0,8 mm.
+- **Correção:** a tira que cairia dentro de uma Travessa, Travessão ou Frontal do mesmo módulo não é desenhada. Peças, lista e corte iguais aos da versão publicada (assinaturas no teste `testFitaDoRebaixoNaoFicaDentroDaTravessaNo3DEPecasECorteNaoMudam`).
+- **Bateria local completa:** 347/349.
+  - `testTamponamentoNo2D…` é a falha antiga; a correção dela está na branch do P0.
+  - `testToPecaQueO3DOfereceApagarSaiDe2D3DListaECorteSemFantasma` **aguarda decisão do Adauto**:
+    - O teste confere pelo **total de caixas** do módulo no 3D. Com a correção há 2 caixas a menos (as tiras escondidas), então "caixas 65 → 64" vira "63 → 62".
+    - Ao apagar a travessa, a frente do rebaixo fica descoberta e as 2 tiras voltam a aparecer. O total cai menos do que o teste espera, e ele acusa "saiu da lista e ficou no 3D".
+    - Conferido peça a peça: depois de apagar, a travessa sai do 3D (0 caixas) e as duas versões ficam **idênticas** (112 caixas, 5 tiras).
+    - **O teste não foi alterado.**
+
+## FT-PORTA — fita de 0,8 mm desenhada dentro da porta/frente fechada no 3D (17/11/2026)
+- **Pedido:** Adauto, 17/11: investigar e corrigir cirurgicamente só a representação visual. Separado da branch da travessa e do frontal.
+- **Reproduzido** na versão publicada `7c939bc`:
+  - a frente do corpo fica em z = profundidade + 6, e a porta/frente fechada começa exatamente ali;
+  - a tira de topo (`build_ft`) é desenhada de z1 a z1 + 0,8, ou seja, dentro da folha;
+  - as tiras afetadas: 3 no Balcão 2 portas, 4 no Aéreo 2 portas, 6 no Guarda-roupa 3 vãos (laterais, bases, divisórias).
+- **Causa:** desenho só. A posição da porta não considera a espessura da fita, e mudar a posição da porta está fora do escopo.
+- **Correção (`editor.html`, `ftClipAll`, depois do `build_ft`):**
+  - uma passada por desenho, agrupada por módulo;
+  - recorta das tiras a parte que fica atrás de uma folha fechada (Porta, Frente ou Basculante, com pelo menos 50 × 50 × 10 mm);
+  - a parte que aparece continua;
+  - com a porta aberta, a folha sai da frente e a tira volta inteira; ao fechar, o recorte volta.
+- **O que não muda:** peças, lista, corte, medidas, posição e movimento das portas. As assinaturas do teste são da versão publicada.
+- **Teste novo:** `testFitaNaoFicaDentroDaPortaOuFrenteFechadaNo3D`. Falha na publicada e passa depois. Confere:
+  - 7 módulos, com a área da tira visível idêntica;
+  - abrir e fechar pelo toque.
+- **Desempenho** (40 módulos, `__build`, Chromium headless): mediana de 52 ms passou para 56–61 ms. A primeira versão, que filtrava as caixas por tira, ia a ~127 ms e foi descartada.
+- **Efeito num teste existente: aguarda decisão do Adauto.**
+  - `testFitaDaBaseEmbaixoDaPortaPintaPeloToque` pega a **primeira** caixa da fita da base (`[0]`). Com o recorte, essa é a lasca de 9 mm na ponta, então o teste toca outro lugar.
+  - No mesmo ponto real (centro da tirinha embaixo da porta), o app faz igual nas duas versões: pega a fita da base e oferece "Era a peça «Porta»?".
+  - Com o teste escolhendo o pedaço embaixo do centro da porta, **todas as conferências dele passam** na correção.
+  - **O teste não foi alterado.**
+  - Na publicada, ele continua com a falha instável antiga (linha 13, `click` em `null`).
+- **Fora do escopo, só registrado:** canto em L (prateleira/base de um braço dentro da do outro braço, base superior dentro da moldura).
+- **Bateria local completa (`1454596`):** 346/349.
+  - `testTamponamentoNo2D…`: falha antiga. A correção está na branch do P0.
+  - `testFitaDaBaseEmbaixoDaPortaPintaPeloToque`: o teste pega a primeira caixa da tira, que agora é a lasca da ponta. **Aguarda decisão do Adauto.**
+  - `testToPecaQueO3DOfereceApagar…`: total de caixas 65 → 71, porque as tiras viram pedaços. Corrigido **só no teste**, com a mesma mudança autorizada para a branch da fita do rebaixo (`288e0e2`, `1a499eb`, por cherry-pick): conferência pela identidade da peça e totais tirados da geometria da versão testada. Passa nesta branch.
+
+## Junção FT-REBAIXO + FT-PORTA (Etapa 3, 19/11/2026) · expectativas de 2 testes ajustadas (aprovado pelo Adauto, opção a)
+- **Bateria da junção 2 (`829d64b`):** 378/380. As 2 falhas vinham das duas correções juntas, cada teste calibrado na sua branch sem a outra. O app não muda.
+- **Conferido pela geometria** (variante temporária com só o corte do FT-REBAIXO desligado, fora do repositório):
+  - sem o corte: nos 3 módulos com travessa (Balcão 2 portas, Gaveteiro 3 gavetas, Balcão porta + gavetas) há 2 tiras dentro da travessa, Lateral esquerda e direita, 15 × 70 × 0,8 mm, 1050 mm² visíveis cada = 2100 mm²;
+  - com o corte: 0 tiras dentro da travessa e a área visível exatamente 2100 mm² menor; aéreos, guarda-roupa e torre iguais;
+  - assinaturas de peças+corte idênticas nas duas e iguais às da versão publicada guardadas nos testes.
+- **`testFitaNaoFicaDentroDaPortaOuFrenteFechadaNo3D`:** m0 22360 → 20260, m1 15320,5 → 13220,5, m6 21750,5 → 19650,5; abrir/fechar (Lateral esquerda do Balcão 2 portas) 6630/10350/6630 → 5580/9300/5580, −1050 mm² = a tira do rebaixo dessa lateral, atrás da travessa com a porta aberta ou fechada.
+- Na 1ª leitura só vi o começo das mensagens de falha (cortadas); a lista completa saiu do JSON da bateria e foi conferida com a mesma geometria.
+- **`testFitaDoRebaixoNaoFicaDentroDaTravessaNo3D…`:** número de caixas de fita m0 3 → 7, m1 4 → 12, m2 3 → 9, m3 4 → 8, m4 4 → 7, m5 8 → 11, m6 6 → 24, m7 igual (o FT-PORTA corta a mesma tira em pedaços em volta das folhas fechadas).
+- Nenhuma conferência saiu; o motivo está no comentário de cada teste.
+
+## ETAPA 3 (nova) · integração e auditoria de 22/11/2026 · ramo `claude/arquemestre-etapa3-precisao` (base `d7d9ee3` = app publicado `c561120`)
+- **Junções recuperadas da antiga Etapa 3:**
+  - FT-REBAIXO: `b12b6e0`.
+  - FT-PORTA: `72c36d0`.
+  - PC-ID, PC-TOQUE, PC-ROD e PC-BRANCO: `35a1d7b`.
+  - Conflitos resolvidos mantendo os dois lados (encaixe do móvel livre + corte da fita).
+  - Bateria local completa no `c7429ea`: 399/399.
+- **LAT-MEIO (junção 4) não integrada:** muda regra de fabricação, e as perguntas 2, 3 e 4 de 17/11 continuam sem resposta.
+
+### PC-ESQ · plano de corte da parede esquerda
+- **Defeito 1 (rótulo):** no móvel novo da parede esquerda (`espE`), o plano mostrava o nome guardado ("Tamponamento esquerdo") e a lista mostrava o de quem olha ("direito").
+  - Também acontece na versão publicada. Só o nome; as medidas estão certas.
+- **Defeito 2 (identidade):** peça tirada do plano pela identidade (PC-ID) voltava ao plano quando o móvel antigo era desespelhado (38 → 39 peças).
+- **Causa:**
+  - o `sheetPlan` monta o rótulo pelo pk;
+  - o `vira()` remapeava `po` e `xp`, mas não o `S.cutOff` (uid|pk|ocorrência).
+- **Correção:**
+  - `pcNomeVe` deixa o rótulo com o nome de quem olha; a chave da contagem antiga continua com o nome guardado;
+  - o `vira()` passa a remapear também o `S.cutOff` do módulo.
+- **Teste:** `testPlanoDeCorteParedeEsquerdaNomeDeQuemOlhaEPecaTiradaSegueAoDesespelhar` (`c6419b9`, falha antes) · correção `c7429ea`.
+
+### PX-SEL · bolinha do puxador engolia o toque
+- **Defeito:** com o puxador bola ou externo, tocar no puxador de um móvel não escolhido não o escolhia (só o aviso "Segure a bolinha…"). Os 2 toques em cima dele não abriam o menu do vão.
+  - Afeta 68 de 138 modelos com o puxador bola; no padrão, as 6 torres que já usam bola.
+- **Causa:** o círculo de arrastar (raio ≥ 13 px) parava o pointerdown e o pointerup. O desenho não escolhia o módulo nem contava os toques.
+- **Correção:**
+  - o toque curto escolhe o módulo dono da bolinha (`data-gm`) e segue para o desenho;
+  - arrastar continua igual;
+  - com o móvel escolhido, o toque curto continua só avisando.
+  - Ficam de fora os pontos em cima da área da divisória: lá o toque escolhe a divisória (regra de 18/11).
+- **Testes:**
+  - `testPuxadorBolaNaoEngoleOToqueNemOsDoisToquesDoMovel` (`c2dce6e`, falha 5 de 5 antes) · correção `d54721d`;
+  - `testPuxadorArrastaABolinha…` adaptado (pedido 22/11).
+
+### VAO-ESQ · numeração dos vãos do móvel novo da parede esquerda
+- **Defeito:** "Vão 1" era o vão da direita de quem olha. Aparecia no painel, no menu dos 2 toques, no Editar só ele, nos títulos de prateleiras e divisórias do vão e nos avisos.
+- **Causa:** os dados do móvel novo ficam guardados virados (PAREDE-ESQ-NOVO), e a tela numerava pelo índice guardado.
+- **Correção:** `vaoN(m,i)` = N − i quando `espE`, com os botões na ordem de quem olha. Só a tela muda. Fundo, lados e móvel antigo ficam iguais.
+- **Teste:** `testParedeEsquerdaMovelNovoNumeraOsVaosDaEsquerdaPraDireitaDeQuemOlha` (`f9588eb`) · correção `f46fae7`.
+
+### GAV-TORRE e GAV-FUNDO · gaveta no 3D diferente do corte
+- **Auditoria corte × 3D:** a lista de corte final comparada com a geometria 3D de cada peça em 284 cenários (catálogo em cozinha e quarto, 7826 peças).
+- **GAV-TORRE:** na torre com gavetas (`v.tw`), as laterais das gavetas estavam no corte e não no 3D.
+  - Causa: o passo da torre renumerava o `dq` (`j*10+dq`) e não o `cgDq` da contra-frente. O 3D não achava as laterais da gaveta e montava a caixa sem elas.
+- **GAV-FUNDO:** o fundo da gaveta no 3D era 3 mm mais estreito que a peça (526 × 529).
+  - Causa: o 3D não usava o "a mais por lado" dos Ajustes (regra de 09/11).
+  - Correção: usa a largura da própria peça (`partsOf`).
+- Corte e medidas não mudam.
+- **Teste:** `testLateralDeGavetaDoCorteApareceNo3DEmTodoOCatalogoTambemNaTorre` (`97f515f`, falha antes: 4 laterais e 74 fundos) · correção `aa2060f`.
+- **Achados da mesma auditoria ainda abertos:**
+  - fundo do lado do canto do Canto L guarda-roupa: corte 2400 × 3D 2300 (pergunta ao Adauto);
+  - "Sapateira · aparador": está no corte e não no 3D (depende da pergunta da prateleira inclinada);
+  - gaveta interna desenhada como bloco (já conhecida).
+
+### Auditoria de colisões
+- 2208 cenários: paredes do fundo, esquerda (novo e antigo) e direita; móvel livre a 0°, 90°, 180° e 270°; portas fechadas e abertas.
+- Nenhuma porta, gaveta ou peça do corpo entra em outra.
+- Só a ferragem da dobradiça (o braço reto) passa 1 mm pelo canto da frente da lateral ou da divisória (A05).
+  - É cosmético, sem peça nem corte.
+- **Desfazer 3× e refazer 3×** em 142 modelos: corte igual. A única diferença nos dados é `wing` vazio → `0`, tratados igual em todo o código.
+## CANTO-FOLHA: folha do lado do canto em L não cobria a lateral do fim (fotos do Adauto, 17/11)
+- **Reproduzir (versão pública, Canto em L (aéreo) · esquerdo 700×750×350):** no 3D, a lateral do fim ocupa z 685–700. A folha do lado (319) vai de z 359 a 678: começa 3 mm atrás da frente da caixa do fundo e para 7 mm antes da lateral. A borda de 15 mm da lateral fica à mostra.
+- **Causa:** a regra antiga da folha do lado era "vão − 10, vai até 3 mm do armário" (`partsOf0`, porta de canto). No 3D, `z0 = D + 3`.
+- **Correção (pedido do Adauto):** a folha do lado começa 4 mm atrás da frente da caixa do fundo e cobre 5 mm da lateral do fim.
+  - Largura: `vão + 1`. No exemplo: 330 (360 → 690). Canto de baixo: 309 → 320.
+  - No 3D: `z0 = D + 4`.
+  - A folha do fundo não muda: 3 mm da folha do lado.
+- **Família:** os 4 cantos em L de cozinha (aéreo e baixo, esquerdo e direito; altura < 1500). O **canto do guarda-roupa** pegava a mesma conta e foi deixado como estava (416 + 419).
+- **Abrir:** as duas folhas abrem 165/165 sem bater (teste de colisão do 3D).
+- **Expectativas atualizadas (pedido do Adauto 17/11, comentário em cada teste):**
+  - `testPortaDeCantoMarcacao…`;
+  - `testPortasDeCantoRobocop…`: lado 320; começa 4 mm;
+  - `testArmarioDeCantoFolgaDe3mm…`: baixo 306 + 320, aéreo 316 + 330, guarda-roupa igual;
+  - `testCantoEmLProfundidade…`: Porta 326.
+  - Elas falham na versão pública e passam agora. Os outros 12 testes de canto passam nas duas.
+
+- **Junção 6 (22/11/2026), branch `claude/arquemestre-juncao6`, base `db35ceb`:**
+  - Integração: testes c6b1975 (4 falham na base, 13 de canto passam); código 3e33ec2.
+  - **Risco achado na integração e corrigido:** como foi escrita em 17/11, a regra mudava a folha do lado de **todo** canto de cozinha, inclusive de projeto antigo. Ficava 309 → 320 no corte, sem aviso.
+    - Isso contraria a regra do Adauto de 22/11: "projetos antigos … só recebem as novas medidas mediante confirmação do usuário".
+  - **Correção (b8b5399):** a regra nova vale só para o canto criado a partir desta versão, que leva a marca `m.cnP` (`newTpl` e `mkCorner`).
+    - O canto antigo continua com vão − 10.
+    - Ele mostra o aviso "Canto de antes da atualização" com as duas medidas e o botão "Atualizar portas do canto", que tem desfazer; o aviso mostra o antes e o depois de cada peça de porta que muda (ex.: folha do lado 309×650 → 320×650).
+  - **Teste:** `testCantoFolhaNovaSoNoCantoNovoOAntigoAvisaEAtualizaComConfirmacao` (864c52c). No 3e33ec2 o canto antigo ia sozinho a 320.
+    - Cobre: novo pelo catálogo e pelo botão; antigo igual e com aviso; botão; desfazer; salvar e reabrir; guarda-roupa inalterado.
+  - **Marca e botão únicos (acordo Code 1 + Code 2 pedido pelo Code 3, 22/11):** `m.cnP` e "Atualizar portas do canto" (`window.cnPAtualiza`, `#cnpbox`, `[data-cnpup]`) servem para TODAS as regras novas das portas do canto; o antes/depois é calculado comparando `partsOf` com e sem a marca.
+  - **Coordenação:** o Code 2 prepara a correção completa das portas do canto (altura, cava, textura, painel cego, dobradiça) em branch isolada, sobre esta junção.
+    - O botão e a marca podem ser os mesmos.
+
+
+## TAMP-JUNTA — tamponamento automático escondido entre dois módulos encostados (22/11/2026)
+- **Relatado:** Adauto 22/11, com foto: balcão aberto (sem porta) à esquerda do balcão do forno embutido, com pedra, e 4 faixas verticais na junta. Confirmou que o tamponamento apareceu sozinho (automático).
+- **Módulo:** tamponamento automático (`autoTamp`, `tlAuto`/`trAuto`), todos os módulos de parede.
+- **Como reproduzir:** forno sozinho em x=1500 (ganha o automático no lado esquerdo exposto); balcão aberto pelo catálogo, longe à esquerda; levar o aberto até o forno (arraste no 2D ou posição digitada), arrastar o forno no 3D até o aberto, ou encaixar na parede um móvel livre do 3D (`__mv3.encaixa`) encostado no forno.
+- **Causa raiz (comprovada):** o automático só era decidido na criação do módulo (`ATGO`, armado no `newTpl`). Mudar o módulo de lugar não reavaliava a junta:
+  - 2D: `pointerup`, `gapJoinDir`;
+  - 3D: fim do `MDRG`, `gapJoin`;
+  - posição digitada: `setv('x')`, o B05 só tirava o automático do próprio módulo;
+  - encaixe do 3D: `encaixa`.
+  O lado que tinha ficado exposto continuava com o automático depois de encostar.
+- **As 4 faixas:** face de 15 do tamponamento esquerdo do forno + réguas de 80 (engrosso), por fora do forno (não entram no módulo).
+  - São peças reais: `partsOf`, lista (`cutLines`: face 720×585 + réguas 720×80 e 425×80), plano de corte, 3D e orçamento (2,61 m de fita por tamponamento).
+  - No arraste e no encaixe ficavam os dois automáticos na junta (60–62 mm).
+  - Digitando a posição, o aberto era empurrado de 900 pra 870.
+- **Correção:** `tampJunta(m,dir,x0)` ao lado do `autoTamp`, chamada no fim de cada movimento feito pela pessoa (2D, 3D, posição digitada, encaixe):
+  - encostou → sai o automático dos dois lados da junta (`tampNbOf`, mesma regra de vizinho da criação);
+  - o módulo arrastado encosta no vizinho, fechando só a folga do tamponamento que saiu (o vizinho não anda; se entraria em outro, fica onde soltou);
+  - separou → volta o automático no lado que ficou exposto (`tampExposed`);
+  - nunca mexe em manual (`tlM`/`trM`), do modelo, travado, canto, nicho, painel de TV, livre, nem com o ajuste "automático" desligado;
+  - projeto aberto não muda; aviso na tela quando tira ou põe.
+- **Decisões:** DECISOES_TECNICAS 22/11 (~20:25, ~21:10 e ~21:40 UTC).
+- **Família conferida:** aéreos (sai), torre quente + balcão (o tamponamento do modelo da torre fica, o automático do balcão sai), guarda-roupas (do modelo, não muda), remover e recolocar pelo catálogo.
+- **Testes:** `testTamponamentoAutomaticoSaiDaJuntaQuandoOModuloEncostaNoOutroEOManualFica` (84fb89c, ampliado em fd72cce) · correção a6712f1.
+  - Falha antes em 8 conferências.
+  - Cobre 2D, 3D, digitado, encaixe, manual, aviso, orçamento (só os dois tamponamentos), desfazer/refazer, salvar e reabrir, separar, projeto antigo.
+- **Pendente:** aparelho real; CI das 3 plataformas na branch `claude/arquemestre-tamp-junta` (não integrada à candidata).
+
+## TAMP-25-3D — engrosso do tamponamento de 25 mm entrando 5 mm no módulo no 3D (22/11/2026)
+- **Achado:** na investigação do TAMP-JUNTA (provável origem do TAMP-ENGROSSO de 16/11).
+- **Causa raiz (comprovada):** o 3D (`build_eng3`) dividia em camadas de 15 qualquer tamponamento de 25 a 45 mm (`n=round(th/15)`).
+  - O de 25 virava face 15 + réguas 15 = 30, dentro de uma caixa de 25.
+  - As réguas ficavam em 990..1005, com a lateral do módulo em 1000.
+  - O corte é chapa única de 25: o 3D mostrava réguas que não estão no corte.
+- **Correção:** o 3D só divide quando a espessura é múltipla de 15, a mesma regra do corte (`mat%15===0`). O de 30 continua face + moldura, duas de 15.
+- **Regra (Adauto 22/11):** tamponamento só de 15, 25 (chapa única) e 30 (duas de 15). Não existe 35 (pedido de 35 cancelado pelo Adauto; nada de 35 entrou no código).
+- **Teste:** `testTamponamentoDe25No3DIgualAoCorteSemEntrarNoModulo` (fd72cce, falha antes: 975..1005, entra no módulo) · correção a6712f1.
+
+## CPAN-DUPLO — "Panelas no cooktop" e "Panelas e louça" com o mesmo atributo no ＋ Criar (23/11/2026, relato do Code 2)
+- **Reproduzir:** Balcão 2 portas + pedra + cooktop → 3D → ＋ Criar.
+- **Defeito:**
+  - "🍲 Panelas no cooktop" punha um item decorativo (`S.fr` +1) e não ligava as panelas do cooktop;
+  - a seção "Panelas e louça" sumia quando havia cooktop.
+- **Causa:**
+  - os dois usavam `data-cpan`, com o cooktop em `"1"` e a louça com o índice do item;
+  - o tratador da louça, em captura com `stopImmediatePropagation`, pegava o toque do cooktop;
+  - a guarda da seção da louça ("se já tem `[data-cpan]` não monta") achava o do cooktop e não montava.
+- **Correção (001bf4e):** a louça passa a usar `data-clou`. O `data-cpan` fica só no cooktop. Nenhum botão some.
+- **Família (§11):** varridos os 33 `data-*` do `#crp3`. Os repetidos são valores da mesma ferramenta; não há outra colisão entre ferramentas diferentes.
+- **Teste:** `testFASE4_PanelasDoCooktopEPanelasELoucaNoMenuCriarSemConflito` (6905651, falha antes).
+
+## FASE4 · M1 — menu ＋ Criar em 2×3 (23/11/2026)
+- **Pedido:** Adauto, com a imagem `engenharia/referencias/menu-criar-aprovado-2026-11-22.jpg`. Plano do Code 2 (PLANO_MENU_CRIAR_ESPELHOS_LED.md §2/§7/§8).
+- **Feito (8657f4d):** um bloco no fim do `editor.html` mais um `MutationObserver` no `#crp3`. Não mexe no `crpRender` nem nos 12 embrulhos.
+  - **Grade 2×3:** Móveis | LED · Espelhos | Pedras · Paredes | Outros, com cartão preto, botões #242424 e o "+" de Outros em cinza.
+  - **Categoria:** cada uma abre as ferramentas dela com "‹ Voltar".
+  - **🔎:** procura em todas as categorias.
+  - **Classificação:** pelo título da seção. O que não casa cai em Outros, então nada some.
+  - **Pedras:** recebe "Só a pedra" (o mesmo botão, movido), ilha/península e cozinha viva.
+  - **Espelhos:** o espelho que já existe na folha de correr (`slideCfgOpen`). Sem porta de correr no projeto, oferece criar o guarda-roupa de correr.
+  - **Outros:** sofás e consultório.
+- **Conferido:**
+  - 34 `data-*` iguais em 3 ciclos de abrir e fechar;
+  - 0 `__build` ao abrir e ao trocar de categoria;
+  - a ferramenta funciona a 1 toque;
+  - capturas em iPhone 390, iPad 820, Tab S9 FE 800 e Windows 1366 (Chromium, não aparelho real).
+- **Diferença para a imagem:** o título continua "＋ Criar no 3D", com ▁ e ✕ (regra §0, não tirar nada). A imagem tem "+ Criar" com chevron.
+- **Teste:** `testFASE4_MenuCriarSeisCategoriasNenhumaFerramentaSome` (69a6002, falha antes).
+
+## FASE3 · móvel livre: câmera, Planta, 3D e ilha (23/11/2026, branch `claude/fase3-editor-livre`, base `3b99c01`)
+- **Pedido:** Adauto, 23/11: Fase 3, editor livre (mover e girar sem afetar os outros, câmera 2D que nunca mexe móvel, 3D na hora, preservar os vínculos e a regra de nada entrar em nada).
+- **Levantamento:** o que já existia — `lv*` (Etapa B), `isl*`, `__mv3`, Planta e câmera pelo viewBox. A partir dele foram achados e **comprovados** 6 defeitos.
+- **CAM-MOVE:** na Planta, o arrasto do livre (`DG`) não olhava o `pointerId`.
+  - Efeito: um segundo dedo (pinça ou arraste da vista) movia o móvel (659 mm no teste).
+  - Correção: o segundo dedo cancela o arrasto e devolve o móvel.
+- **LV-3D-ARRASTO:** no 3D, segurar e arrastar um livre caía no arrasto de módulo de parede (`MDRG`).
+  - Efeito: mexia só no `m.x` interno (2675), e o móvel não andava.
+  - Correção: um bloco próprio leva o livre pelo chão, com `lvTenta` (colisão e ímã). O de parede fica igual.
+- **PL-FANTASMA:** o desenho de parede da Planta (`plantaSvg`, função `TF` sem o ramo `'L'`) e o `plExtrude3` desenhavam o livre também como módulo de parede (`[data-pm]`).
+  - Na Planta plana: 1 polígono no lugar antigo da parede. Na Planta em ângulo: 76 faces marcadas como de parede.
+  - Esse fantasma respondia ao arrasto de parede.
+  - Correção: a Planta plana pula o livre; em ângulo, as faces dele viram `[data-lv]`.
+- **PL-ANGULO:** o arrasto do livre na Planta em ângulo não desfazia a inclinação, e o móvel fugia do dedo. Correção: usar `px()`, a mesma conta do resto da Planta.
+- **PL-SEGURA:** segurar 2 s no livre da Planta não abria o menu, porque só procurava `[data-pm]`. Correção: aceita também `[data-lv]`.
+- **LV-ILHA:** a ilha (`S.isl`) não entrava em `solidos()`.
+  - Efeito: o livre entrava dentro da ilha, e a ilha arrastada (`IDRG`) passava por cima do livre.
+  - Correção: a ilha passa a ser sólida para o livre (colisão e ímã). A ilha para no último lugar livre.
+- **Testes:**
+  - `testFASE3_MovelLivreCameraNaoMexePlantaSemFantasmaArrastoNo3DESegurar` (0004c96, falha antes) · correção 191eb5b;
+  - `testFASE3_MovelLivreNaoEntraNaIlhaNemAIlhaNele` (f032fa5, falha antes) · correção c5862be.
+- **Não mexido:** `partsOf`, `build`/`cornerBoxes`, `snapState`/`loadState`, plano de corte.
+- **Pendente:**
+  - rotação em ângulo livre (hoje só 90°; aguarda o Adauto escolher entre 45° e qualquer ângulo);
+  - teste em aparelho real (pinça com dedos de verdade).
+
+## FASE3 · ROTAÇÃO 45° e ângulo livre do móvel livre (23/11/2026, branch `claude/fase3-rotacao`, base `f8e40ab`)
+- **Pedido (Adauto, 23/11):** "Preservar os comandos atuais de 90° e acrescentar 45° e rotação livre de 0° a 360°, com campo para digitar o ângulo exato… respeitando colisões e limites do ambiente. Não movimentar outros móveis automaticamente."
+- **Antes:** o livre só girava de 90 em 90 (`lvGira`, `lvFoot`, `lvX` arredondavam cos/sin). Não existia `lvAng` nem botão de 45°.
+- **Implementado:**
+  - Planta: barra do livre com ⟲/⟳ 90° (os de sempre), ⟲/⟳ 45° e campo do ângulo (`[data-lvang]` + "° Girar").
+  - 3D: menu do segurar com ↺/↻ 45° e o campo (`[data-l3ang]`), só no móvel livre; o de parede fica igual.
+  - `window.lvAng(m,graus)`: ângulo exato, pelo mesmo `lvGira` (mesma colisão, mesmo centro).
+  - Ângulo oblíquo (não múltiplo de 90): `lvFt/lvLoc/lvX` usam o caminho de 0°, e um envoltório do `build` dentro do fechamento do 3D gira todas as caixas do módulo com `rotY` em volta de (lx, lz). Múltiplos de 90 seguem o caminho de sempre (0 caixas giradas).
+  - Colisão do oblíquo pelo contorno real girado (`__lvPoly`, teste SAT): pode encostar a quina a 2 mm do balcão; 60 mm pra dentro bloqueia; parede, pedra, ilha e outros móveis bloqueiam; nada é empurrado. Sem ímã no oblíquo.
+  - Planta desenha o oblíquo como polígono (frente em vermelho). Sem alça ↕ fantasma de esticar no livre selecionado (família PL-FANTASMA).
+- **Peças:** `partsOf` igual em qualquer ângulo (rotação é só posição).
+- **Testes:** `testFASE3_MovelLivreGira45EAnguloExatoSemBaterNemMexerNosOutros` e `testFASE3_MovelLivreBotoes45ECampoDeAnguloNaPlantaENo3D` (3190a88, falham antes: `lvAng` não existe; botão 45° não existe) · implementação c6cda87.
+- **Não mexido:** `partsOf`, `cornerBoxes`, `snapState`/`loadState` (o `m.rot` já era salvo), plano de corte.
+- **Risco identificado:** versões publicadas antes desta arredondam ângulo que não é de 90 ao abrir o projeto (só o desenho; peças iguais). Projeto com livre a 45° aberto num app antigo aparece girado errado.
+- **Pendente:** aparelho real (iPhone, Tab S9 FE).
+
+## FASE4 · ESPELHO NA PAREDE (23/11/2026, branch `claude/fase4-espelhos-parede`, base `6341a22`)
+- **Pedido (Adauto, 23/11):** "Implementar espelhos independentes nas paredes, com largura, altura, espessura e posição editáveis, visualização correta em 2D/3D e persistência no projeto. Preservar integralmente os espelhos existentes nas portas de correr."
+- **Formato:** item da parede em `S.fr` (`t:'espelho'`, `w`, `h`, `d` = espessura, `x`, `b`, `wall` 'e'/'d' ou sem = fundo). `S.fr` já vai no `snapState`/`loadState`, no desfazer e na vista 2D de cada parede: não foi preciso mexer em salvar/abrir.
+- **Implementado:**
+  - `APM.espelho` com 4 modelos (60×90, 50×70, 80×120, corpo inteiro 50×160 a 300 do chão); nasce no meio da parede.
+  - 3D (`espW3`, via `ap3model`): placa de vidro `#d3dde3` (`mir`) com borda lapidada, igual ao espelho da folha de correr; na parede lateral vira com `frWall3` de sempre.
+  - 2D: mesmo desenho do espelho da folha (`slMir2d`), com rótulo e medidas.
+  - Editor de medidas (3D e 2D): "Espessura (mm)" no lugar de profundidade, passo de 1 mm, de 2 a 50 mm (o mínimo de 20 dos eletros não vale para o espelho). Parede: fundo, esquerda, direita. Sem girar e sem acabamento.
+  - ＋ Criar · Espelhos: nova seção "Espelho na parede" (um botão por modelo); a seção do espelho da porta de correr continua igual.
+- **Testes:** `testFASE4_EspelhoNaParedeMedidasParede2D3DSalvarEPortaDeCorrerIntacta` (666b222, falha antes: botão não existe) · implementação 42a33eb.
+- **Regressão pega pela bateria e corrigida:** o catálogo monta um item por modelo de `APM`, e a regra do catálogo é todo item com foto (`testCatalogoComFotoDeCadaModuloEEletro`: 7 sem foto, máximo 3). Correção 2ce6c40: o espelho de parede fica fora do catálogo; entra pelo ＋ Criar · Espelhos e pela aba Eletrodomésticos.
+- **Comportamento correto (não é erro):** o Desfazer junta mudanças feitas em menos de 0,7 s (`histTick`, vale para todos os itens).
+- **ESP-APP-ANTIGO (erro comprovado e corrigido, 23/11):**
+  - **Medição** (pedido do Chefe, no editor publicado c561120, links gerados no editor novo): com `t:'espelho'` em `fr`, o link de corte e o de cliente **não abrem**. Aparece "Não consegui abrir o plano de corte", o modo corte não liga, e o `draw` quebra em `APM[t].n` (o módulo some do 2D). Os mesmos links sem espelho abrem normal.
+  - **Causa:** o app antigo desenha todo item de `fr` e lê `APM[f.t].n`, que não existe pra tipo novo.
+  - **Correção evolutiva:** envoltório de `snapState`/`loadState` no fim do arquivo (padrão dos outros, sem mexer no corpo). Salvo, o espelho vai em `frx`, campo que o app antigo não lê; ao abrir no app novo, volta pro `S.fr` (sem duplicar). Projeto com espelho dentro do `fr` continua abrindo. Na memória nada muda.
+  - **Depois, no c561120:** corte e cliente com espelho abrem normal (modo corte ligado, 2D e 3D ok, peças iguais, 0 erro), só sem o espelho. No app novo os links trazem os 2 espelhos. Salvar, fechar e reabrir mantém as medidas e a parede.
+  - **Limite conhecido:** projeto aberto e salvo de novo num app antigo perde o `frx` naquela cópia (o app antigo não conhece o campo). Não trava nem estraga o resto.
+  - **Teste:** `testFASE4_EspelhoNaParedeSalvoForaDoFrPraAppAntigoEVoltaAoAbrir` (1fd4a2e, falha antes) · correção ccd2274.
+- **Não mexido:** espelho da folha de correr (`v.esp`, `slideCfgOpen`), `partsOf`, plano de corte. `snapState`/`loadState` só ganharam o envoltório do `frx`.
+- **Sugestão (não feita):** espelho de parede na lista de materiais e no orçamento (m²), como o da porta de correr.
+- **Pendente:** aparelho real (iPhone, Tab S9 FE).
+
+## FASE3 · PL-ANG-GIRADO — móvel girado com peças sobrepostas na Planta "Ângulo" (23/11/2026, branch `claude/fase3-rotacao`)
+- **Relato:** print do Adauto (23/11): gaveteiro livre a 45° na Planta "Ângulo" com gavetas, laterais e caixa em blocos sobrepostos. O 3D estava certo. Na captura `rot45_planta_angulo` da entrega da rotação o defeito já aparecia, e eu não percebi.
+- **Causa raiz (comprovada):**
+  - `plExtrude3` só sabia desenhar caixa reta e contorno girado (`pf`). O prisma do `rotY` (`b.gp`: base `a` + vetor `d`) caía no caso da caixa reta e virava a caixa em volta de cada peça (488 de 488 arestas alinhadas com a sala).
+  - `plDepthSort` ordenava pela mesma caixa reta.
+- **Correção:**
+  - `plExtrude3` desenha as faces do prisma (lados visíveis pela mesma regra `fv` e o topo, de trás pra frente).
+  - `plDepthSort` separa peça girada pelo contorno real no chão (`pdHull`/`pdProj`, eixos das arestas das duas peças). Peça reta com peça reta continua na conta de antes.
+- **Família conferida:** a geladeira na parede direita (prisma do `frWall3`) e os módulos da parede esquerda (`wingX`) passam pelo mesmo caminho. Comparação antes/depois numa cozinha em L: só alguns pixels de borda na geladeira; o desenho é o mesmo.
+- **Não mexido:** medidas, `partsOf`, plano de corte, DXF, 3D.
+- **Teste:** `testFASE3_PlantaAnguloDesenhaMovelGiradoPelaFormaRealSemSobrepor` (68a8543, falha antes: 488 arestas alinhadas) · correção 17d8418. Confere forma, frente de gaveta por cima da lateral e salvar/reabrir.
+- **Evidência:** antes = print do Adauto; depois = captura do Chromium. Aparelho real pendente.
+
+## DIG-TECLADO + DIG-SAIDA — valor digitado perdido / preço zerado (23/11/2026, branch `claude/digitacao-toques`, base `8ec9118`)
+- **Pedido:** Adauto, 23/11, "AUDITORIA GERAL DE DIGITAÇÃO" (prioridade crítica): "ao adicionar um módulo e tentar digitar um número no campo de dimensões, a edição fecha automaticamente".
+- **Reprodução do relato:** a imagem citada não chegou. O fluxo descrito foi refeito com toque emulado de tablet (Chromium): adicionar pelo catálogo, no 2D e no ＋ Criar do 3D, e digitar logo em seguida (250 ms) no teclado do app e no físico. Nesse ambiente o campo **não fechou**. **Não foi possível verificar** no iPhone/iPad/Tab S9 FE.
+- **Auditoria automática** (Playwright, digitação de verdade, uma tecla por vez, conferindo a cada tecla se o campo é o mesmo, tem o foco e acumula o valor; Tab no fim e conferência se o valor chegou ao projeto ou aos ajustes):
+  - painel 2D (todas as abas, 2 tipos de módulo, seções abertas): 55 campos;
+  - janelas Cliente, Valores, ArqueCut, Trena, Ajustes e caixa do eletro: 136;
+  - 3D (caixa do módulo, peça, geladeira, móvel livre): 15;
+  - total: **206 campos**, 0 perdendo foco nem fechando durante a digitação.
+- **Erro comprovado 1 · DIG-TECLADO (teclado físico: Windows, tablet com teclado):**
+  - Efeito: o valor digitado se perdia ao sair do campo (Tab ou toque em outro campo) e o Enter não confirmava.
+  - Medido antes: 51 de 55 campos do painel 2D; Valores 6 de 8; Ajustes 84 de 106; ArqueCut (chapa, serra).
+  - Causa: o teclado do app segura o `input` de cada tecla (pra não aplicar 7 → 75 → 750). O `change` de verdade do navegador (Tab/Enter) zerava o "pendente" achando que já tinha aplicado. O painel 2D aplica no `input`, então nada era aplicado, e ao sair do campo não havia mais nada pendente.
+  - Correção: o `change` de verdade com valor pendente fica pendente e é aplicado ao sair, pelo mesmo `commit` do OK. Enter = OK.
+- **Erro comprovado 2 · DIG-SAIDA (preço zerado):**
+  - Efeito: nos preços do Ajustes (`data-stdp`), digitar e tocar no campo de baixo sem OK (teclado do app) **zerava o preço** (PR = 0, campo vazio). Com teclado físico + Tab, idem.
+  - Causa: o "saiu do campo" do preço (`money(PR[...])`) rodava antes do "saiu do campo" do teclado e voltava o valor antigo antes de aplicar.
+  - Correção: o do teclado roda na captura, antes dos outros.
+- **Comportamento correto (conferido):**
+  - valor inválido continua recusado com aviso (ex.: altura 123 mm, "mínimo 290");
+  - eletrodoméstico com medida do modelo ("troque o modelo");
+  - geladeira presa pela regra da pedra;
+  - Cliente/Trena/peça avulsa do ArqueCut aplicam no botão.
+- **Testes:** `testDigitacaoTecladoFisicoTabEnterEPrecoAoSairDoCampoNaoPerdeValor` (4dd6540, falha antes) · correção 68f13ff · bateria 431/431.
+- **Observação (não mexido):** a geladeira volta sozinha pro fim da parede quando o valor digitado a colocaria embaixo da pedra, sem aviso. É a regra física de sempre; fica a sugestão de avisar.
+
+## TOQ-TAMP — tamponamento quase impossível de tocar com o dedo (23/11/2026, mesma branch)
+- **Pedido:** Adauto, 23/11, "precisão absoluta na seleção… tamponamentos confundidos com outros elementos".
+- **Medição:**
+  - com a parede inteira no 2D, o tamponamento de 15 mm tem 4,7 px na tela;
+  - toque a até 3 px do centro acerta;
+  - a 6 px pra dentro cai na porta; a 6 px pra fora cai no fundo vazio;
+  - arrastar a 8 px pra fora não fazia nada.
+- **Causa:** o 2D escolhe pelo elemento embaixo do ponto (sem tolerância) e o alvo é menor que a ponta do dedo.
+- **Correção:** o toque que cairia no **fundo vazio** (nada tocável embaixo) a até 12 px de um tamponamento é repassado pra ele, e segue o TAMP-2D-ALVO de sempre (não escolhido só escolhe; escolhido muda só a altura). Dentro do móvel nada muda: porta, frente e vão continuam com prioridade.
+- **Conferido sem mudança (comportamento correto):**
+  - pinça em cima do módulo escolhido só dá zoom; peças e seleção ficam;
+  - 1 dedo arrastando + 2º dedo vira pinça sem mover nada;
+  - arrastar a porta de módulo escolhido move o módulo (regra F3-TOQUE).
+- **Testes:** `testToqueNoTamponamentoFinoTemToleranciaSoPraForaSemMexerEmOutraPeca` (e9cb775, falha antes) · correção d96a38d.
+- **Pendente:** aparelho real (dedo de verdade); toque no 3D não auditado nesta etapa.
+
+## CODE 2 · registro consolidado das correções de 22–23/11/2026 (CLAUDE.md §8.9/§11.1)
+Cada item: pedido → causa → correção → teste (falha antes) → evidência. Lista completa com status em `ENTREGA_CODE2_2026-11-23.md`.
+- **CANTO-PORTA-L (22–23/11, Adauto 23:01):** porta do canto em L com 650 mm (retas 705), sem cobrir a travessa, cava sem chanfro no 3D. Causa: a folha do canto não usava a regra vertical das retas. Correção `f9c5cc7`/`e130848`: mesma regra (705, sobe 5 mm, cava), canto novo com `m.cnP`, antigo com aviso + prévia + botão (estrutura única da junção 6 do Code 1). Teste `testPortasDoCantoEmLAlinhadasComAsRetasNovoEAntigo`.
+- **PAINEL-CEGO (23/11 00:38):** painel cego tratado como porta (dobradiça Ø35, altura da porta). Correção `f7a242f`: peça fixa alinhada com a porta ao lado, sem furo; antigo só confirmando. Teste `testPainelCegoAlinhadoComAPortaSemFuroDeDobradicaNovoEAntigo`.
+- **FASE2 gaveta (gf6):** fundo de gaveta 2 × 1,5 mm mais largo que o rebaixo de 6 (entrava 7,5 em cada lateral). Correção `bf2abf6`/`78e05ab`: módulo novo (`m.gf6`, por todo caminho de criação e ilha) entra exatamente o rebaixo; antigo e ilha antiga com aviso + prévia + "Atualizar fundo das gavetas" + desfazer. Testes `testFASE2_*`. iOS CI 674: expectativa calculada em Swift ainda era caixa − 15 → `68783b4` (novo − 18, antigo − 15).
+- **FASE2 rodapé do encontro:** rodapé lateral do encontro entre balcões com rodapé contínuo saía do corte/3D mas ficava na lista (orçamento). Correção `bf2abf6`: sai do `partsOf`. Nenhuma exportação lê o `partsOf0` cru (conferido 23/11; não existe exportação CSV).
+- **FASE5 DXF:** exportador novo (contornos, furos, rasgos, cavilhas, camadas por operação; não inventa furação). `a923d59`; `testFASE5_*`; validação ezdxf em `FASE5_DXF_CNC.md`. Aspire não validado.
+- **3D-ACABAMENTO (z-fighting):** fita de 0,8 mm desenhada dentro de outro sólido (só recortada atrás de porta ≥ 50 mm do mesmo módulo) e fundo de gaveta coplanar dentro da lateral. Correção `5080d78` (FT-GLOBAL + rebaixo desenhado), `4a56268` (peça girada `gp` fora do recorte). Testes `test3D_SemSolidoDentroDeOutroFitaERebaixo`, `test3D_CatalogoSemCaixaInvalidaSelecaoTexturaEGirado` (591 modelos: 0 caixa inválida/invertida, toda peça com chave, textura com medida real, móvel 45° com textura).
+- **PEDRA-L-2D (23/11 07:11):** a elevação da parede lateral não mostrava o braço da pedra em L. Causa: na vista de parede só entravam as pedras daquela parede. Correção `235f4f7`/`5c838a6`: trecho que encosta na parede pelas mesmas contas do 3D, com saia, rodobanca, lateral, cuba e textura real; também nas Vistas. Teste `testPedraEmLApareceNaParedeDoLado2DIgualAo3D`.
+- **ID-PAREDE (intermitente `testPaineisDiferentesEmCadaParede…`):** id novo de painel/eletro na vista de parede só conferido contra a lista daquela parede → podia repetir o de outra (peça na parede errada no 3D, projeto com id duplicado). Correção `278e643`: confere todas as paredes. Teste `testIdNovoNaVistaDaParedeNaoRepeteODeOutraParede` (relógio fixo: falha sempre antes).
+- **GEL-LAT (23/11 09:31):** caixa da geladeira com a lateral do armário descendo até o chão junto com o tamponamento. Correção `b45a408`: com tamponamento, a lateral fica só no aéreo; caixa antiga com aviso + prévia + botão + desfazer. Teste `testCaixaDaGeladeiraLateralSoNoAereoTamponamentoAteOChao`.
+- **MED-PAREDE (23/11 10:11):** trena do 2D na parede esquerda ia pro lado do espelho ao arrastar/soltar (redesenho fora do `#wvmir`) e a do fundo aparecia espelhada na esquerda. Correção `d8173fe`: entra no grupo espelhado; medidas por parede. Teste `testTrenaNaParedeEsquerdaEspelhadaECadaParedeComAsMedidasDela`.
+- **ÁREA MOLHADA (AM-1..4) e PIA-1 (pedido 16/11 14:41, especificação de 16/11):** placa lisa mais escura por cima da pedra ("mancha"), sem degrau, cilindros/frisos fictícios, rebaixo padrão 8; cantos do furo da cuba sem textura. Correção `775fcf0`: mesma pedra rebaixada o dp guardado (novo 20; antigo fica), cantos de pedra, cuba no nível de baixo, aviso se o rebaixo não cabe; canto do furo no grupo `stc`. Teste `testAreaMolhadaMesmaPedraRebaixadaComDegrauECantoDoFuroComTextura`. Pendente com o Adauto: rebaixo maior que a pedra e faixa do campo.
+- **VAO-LIVRE (D27):** editor normal não mostrava a medida livre do vão. `59129eb`; teste `testVaoEscolhidoMostraAMedidaLivreReal`.
+- **Conferidos sem defeito (com teste):** textura da folha do canto e das portas na parede lateral (`f32837f`, `testPortaDoCantoEDaParedeLateralComATexturaRealDasRetas`: a auditoria suspeitava do `matTx`, mas o `pfFill` usa `woodT`); rodapé fora do corte em L (`testPlanoDeCorteRodapeForaDoCorteNaCozinhaEmL`); projetos montados sem sobreposição (`FASE2_LEVANTAMENTO_MONTADOS_2026-11-23.md`).
+- **Ferramenta:** bateria do Chromium confere asserts com expressão Swift e os testes com JS em `static let` (`8f21fa0`: 3728 → 4166 asserts conferidos).
+- **PAREDES A–F (23/11, "Faça todos"):** abertura com peitoril (antes: vão com "do chão" > 0 deixava buraco embaixo no 3D), meia parede com altura editável (antes fixa 1100), remover/restaurar fundo e laterais (antes o 🗑 da lateral apagava as portas dela; o fundo não saía), menu EDITAR PAREDE, Soltar sem mexer. Detalhes, commits e testes em `PAREDES_ETAPAS_A_F_2026-11-23.md`; compatibilidade com o app publicado medida (nada se perde ao salvar no app antigo).
+- **JUNÇÃO 5 · TRAVESSÃO (23/11):** `a849a43`, `testJuncao5TravessaoDuasReguasDe80PorCimaDasLaterais`. Regra do a862927 (Code 1, 17/11) refeita sem depender da LAT-MEIO; padrão 80 mm.
+
+## Pendências da candidata 5bd11f5 (23/11/2026, branch `claude/abertos-1`)
+- **testFASE3_PlantaAngulo (298 × 274 arestas):** a contagem depende de quantas caixas o 3D gera, e subiu com a auditoria do 3D do Code 2. O teste passa a conferir "desenhadas · alinhadas 0" e reabrir com as mesmas arestas. Continua falhando antes da PL-ANG-GIRADO. Commit 9d0c48a.
+- **iOS CI 674, testFASE3_MovelLivreCameraNaoMexe… — "embaixo do dedo false": comportamento correto, não é defeito.**
+  - Reproduzido em 390×844 (tela do iPhone): 80 px de dedo dão 1620 mm. O móvel bate na parede direita e para ("ele entraria na parede direita").
+  - Medido: dedo 80,40 px; móvel 50,25 px.
+  - O teste passa a arrastar 40% da largura do móvel na tela.
+  - O arrasto 3D confere andou/b/rot/m.x, sem o ponto exato.
+  - Conferido em 390×844, 375×667, 820×1180, 1024×1366 e 1366×768. Commit 31e55b7.
+- **Revisão dos testes do Code 1 nas telas do iPhone e do iPad** (verificador que extrai o JS e as asserções do Swift e roda com Playwright): FASE3_* e FASE4_* passam. O testToqueNoTamponamento (claude/digitacao-toques) dependia da tela e foi corrigido no 6d6ab18.
+- **CANTO-ESPELHO (erro comprovado, achado pelo Code 2):**
+  - Efeito: na parede esquerda, o `cantoEncosta` redesenhava pelo `d0` guardado antes do envoltório PAREDE-ESPELHADA. O 2D ficava sem espelho e o `WVMIRX` velho, e o toque convertia errado.
+  - Repro: balcão no canto, `wvGo('e')`, módulo novo em x=606 → encosta em 630 → `#wvmir` some.
+  - Correção: redesenhar por `window.draw`, com `busy`.
+  - Teste `testCantoEncostaNaParedeEsquerdaMantemOEspelhoDo2D` (7670248, falha antes) · correção 9fd337d.
+- **testFornoDaTorrePorVaosAbreNoToqueEmQualquerPonto (intermitente): era do teste, não do app.**
+  - Medido: com 60 ms entre fechar e tocar, o toque caía no meio da animação de fechar (ângulo ~0,85). Com a máquina carregada, fechar + toque se anulavam (ângulo ficava 1).
+  - Em todas as rodadas o toque mudou o forno.
+  - O teste agora espera fechar (até 3 s), toca e espera abrir (até 3 s). Continua falhando se o toque não abrir.
+  - 6/6 rodadas (antes 1/6). Commit 2f52a83.
+- **GEL-TAMP (23/11, "Só o tamponamento"):** caixa nova da geladeira já nasce com tamponamento dos dois lados terminando 100 mm acima do piso. `5a48d40`; `testCaixaDaGeladeiraNovaComTamponamentoCemMilimetrosAcimaDoPiso`. Caixa antiga não muda sozinha.
+- **CSV (23/11):** não existia exportação CSV. `988986e`: botão no plano de corte, mesmas linhas do PDF (lê o `partsOf`, não o cru), UTF-8 com BOM, ";" e compartilhar nativo. `testPlanoDeCorteListaEmCSVMesmasLinhasDoPDF`.
+- **CHURRASQUEIRA QUADRADA (pedido 16/11, padrões aprovados 23/11):** não existia o modelo. `2cc652d`: 900 × pé-direito × 600, boca 680 × 520, moldura 45°, 2D/3D/quadro pela mesma geometria. Defeito achado no caminho: `apSvg` chama `churSvg` com `f=null` e desenhava a forma padrão → procura pelo nome. `testChurrasqueiraQuadradaDeEmbutirComMolduraA45`.
+- **MOLDURA/FRONTAL (23/11):** painel na ordem Moldura → Travessão → Frontal e 3D = corte. `0714b18`; `testMolduraTravessaoFrontalTresDIgualCorteEOrdemNoPainel`.
+- **PINTAR COMPACTO (D44, decisão 17/11):** cabeçalho alto, sem cor, opções sem rolagem própria, "#1" sempre visível. `e314a8b`: cabeçalho fixo em 2 linhas com a cor, rolagem interna, 2 colunas a partir de 700 px, "#1" só some da tela quando a peça é única; ordem dinâmica e todas as opções iguais. `testPintarCompactoCabecalhoDuasLinhasRolagemEDuasColunasSemPerderOpcao` (falha antes). Ajustado `testAcabamentoNaoMudaAoAbrirPortaEFitaPeloToque` (título sem o "#1").
+- **FITA 1 mm · CORTE × ACABADA (decisão 17/11):** o quadro da peça só mostrava uma medida. `a283ce6`: corte do MDF (igual ao plano, sem desconto) e acabada com a fita de 1 mm por borda (MDF 560 + 1 = 561). `testQuadroDaPecaMostraCorteEAcabadaComFitaDe1mmSemMudarOCorte` (falha antes).
+- **AQRENDER (23/11, "Acabamento realista", opção desligada):** `4445cf2`. Defeitos achados ao trazer o protótipo de 16/11: o motor passou a usar buffers tipados (`F.concat is not a function` → convertido), a luz de lado fazia a parede lateral sombrear o móvel em diagonal (luz quase de frente) e a parede de raspão ficava listrada (sombra some em `ndl` baixo). Desligado o 3D é idêntico (imagem igual byte a byte no teste). `testAcabamentoRealistaOpcaoDesligadaPorPadraoSoMudaAAparencia`.
+
+## ESP-FORMAS · ESP-VAO · LED-LIVRE (23/11/2026, branch `claude/espelhos-d33`, base `d33886f`)
+- **Pedido:** Adauto, 23/11: "LED completo e o resto dos espelhos (formatos, espelho no vão, girar, acabamentos, orçamento de vidro)", confirmado direto com ele: fazer agora.
+- **Respostas dele (23/11):**
+  - LED: os modelos de LED que já existem, barra de 2 m; o LED de hoje fica igual (o novo é a mais); fonte por botão, rasgo deixa no mínimo 3 mm, usinagem por metro (R$ 0).
+  - Espelhos: preços em branco; ornamental quando ele mandar o desenho.
+- **ESP-FORMAS** (94095e3 teste · 7555e0f código):
+  - espelho de parede (`S.fr` t:'espelho') com formato retangular/quadrado, redondo/oval ou arco (contorno de verdade, 72 pontos no oval);
+  - girar 0/90/180/270 ou ângulo digitado;
+  - prata, bronze ou fumê; borda lapidada ou bisotê; moldura 3 ou 5 cm atrás do vidro (sem faces no mesmo plano);
+  - duplicar;
+  - 2D desenha o contorno;
+  - orçamento de vidraçaria separado do MDF: m² pela área real por acabamento; lapidação, bisotê e moldura por metro; 6 preços novos no Ajustes (R$ 0). Não entra no plano de corte.
+  - Espelho sem as opções novas desenha igual.
+- **ESP-VAO** (2fd941a teste · 60e5dc8 código):
+  - "Espelho no vão escolhido" no ＋ Criar;
+  - medida e lugar vêm do vão: `vaoRanges`, base de baixo/de cima e frente do fundo pelas caixas do 3D, menos o recuo 0/10/20/50;
+  - preso ao módulo pelo `uid` (outro módulo entrando ou saindo não troca o dono);
+  - anda e acompanha a medida; não muda peça; "Soltar do vão" deixa ele solto na parede;
+  - por enquanto só módulos da parede do fundo (avisa nos outros).
+- **LED-LIVRE** (e4202d3 teste · ddfb3b7 código):
+  - "Adicionar LED numa peça" no ＋ Criar · LED: toque na peça → o LED vai na face tocada, preso pelo `pk` (anda com o módulo);
+  - quadro com lado, comprimento, posições, girar 90°, sobreposto/embutido, cor, perfil, acender, duplicar e tirar;
+  - embutido: rasgo de 12 mm anotado na peça (deixa ≥ 3 mm); a medida da peça não muda;
+  - orçamento: perfil em barras de 2 m, fita, fonte (1 por botão / 1 por módulo), usinagem (m);
+  - o LED de sempre não muda (os 4 testes antigos de LED passam).
+- **Testes:** os 3 falham antes. A expectativa do ＋ Criar passou de 35 para 37 chaves (`data-cespv`, `data-cledl`), com comentário; nenhuma antiga saiu.
+- **Não feito (fica registrado):**
+  - espelho ornamental (aguarda desenho);
+  - espelho em painel/ripado e espelho com LED;
+  - espelho no vão de módulo de parede lateral;
+  - LED magnético (não há perfil magnético entre os modelos de hoje);
+  - zonas proibidas de ferragem (dobradiça, corrediça, sistema 32) na colisão do LED;
+  - LED livre em peça girada (gp) do móvel livre.
+- **Compatibilidade:** app antigo ignora `m.leds` (abre o projeto sem o LED livre; salvar de novo naquela cópia perde ele). Os campos novos do espelho vão dentro do item, já salvo em `frx`.
+- **POLÍTICA B · LED livre e espelho (bloqueador pedido pelo Adauto, 23/11):**
+  - O link do cortador e o do cliente de projeto com LED livre ou espelho saem como `arque-corte-v2`/`arque-cliente-v2`. A versão publicada recusa ("Não consegui abrir"), em vez de abrir sem o LED, sem o rasgo do embutido ou sem o espelho.
+  - Antes de mandar aparece a mesma janela de confirmação das peças livres. Este app abre normal. Sem LED livre nem espelho, nada muda.
+  - **Limite que não tem como corrigir:** projeto copiado à mão (backup/arquivo) pra um aparelho com app antigo ainda abre sem o LED. App antigo não pode ser mudado; a saída é atualizar.
+  - Teste `testPoliticaBLedLivreEEspelhoNaoAbremEmVersaoAntigaSemAviso` (4ee3da8, falha antes) · correção 316d3c8.
+- **JUNÇÃO 4 · LAT-MEIO (Adauto 23/11):** `21daeffd` (sobre a LAT-MEIO do Code 1, `3991175`). Travessa em uma peça por vão (7,5 mm de cada lado do rebaixo, mm inteiro com a folga no encontro); montante junto das gavetas vira lateral inteira; recuo traseiro mantido. Achado: a peça com décimo quebrava a regra do corte em mm inteiro (testes do catálogo) → corrigido antes do commit. `testJuncao4TravessaEmPecasRebaixoMeioAMeioRecuoMontanteSemSobreposicao`.
+- **BATENTE CAVA (23/11):** `9dde42f5`. Régua por régua, batente superior, conferência pela geometria (5 mm mínimo, sem colisão nova), restaurar a automática do modelo, editor por vãos (não tinha campo). `testBatenteCavaReguaPorReguaComLimitesRestaurarEEditorPorVaos`.
+- **BASE INTEIRA/DIVIDIDA/PERSONALIZADA (23/11):** `a9049cd3`. `testBaseInteiraDivididaOuPersonalizadaPorModuloComDivisoriaDescendo`.
+- **GAVETAS QUE NÃO CABEM (23/11):** colisão que já existia (cava com muitas gavetas num vão baixo: caixa/régua na travessa ou na outra caixa). `b07085a4`: o + não aceita, módulo antigo avisa com botão. `testGavetasQueNaoCabemNaoEntramEModuloAntigoAvisaComBotao`.
+- **Ferramenta:** rodar sonda ou teste no mesmo Chromium em que a bateria completa está rodando derruba testes aleatórios (a bateria pega a 1ª aba do editor). Sempre um navegador só pra bateria.
+
+## AUDITORIA GERAL · espelhos e LED (23/11/2026, branch `claude/auditoria-1`, base `bfae688`)
+Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `e341bef` (falham antes) · código `d9fc207`.
+- **AUD-ESP-SOLIDO — espelho atravessando móvel (ponto 1, erro comprovado).**
+  - Reproduzir: espelho de parede com altura/posição que cai sobre um módulo → antes ficava dentro do módulo.
+  - Causa: `itSet`/troca de parede/formato/giro/moldura e `espWallAdd` não conferiam colisão com as caixas dos módulos.
+  - Correção: `espBate(f)` (caixas do espelho × caixas do 3D; espelho no vão fica fora de propósito). Edição que levaria pra dentro volta e avisa ("Nada mudou"); espelho que já estava dentro pode ser editado. Criação nasce no lugar de sempre e, se cair num módulo, só avisa qual (CLAUDE.md §4 — a 1ª versão subia/removia sozinha e quebrava 3 testes antigos; trocada no mesmo dia).
+- **AUD-LED-GIRO — LED livre no móvel livre girado (ponto 8, erro comprovado).**
+  - Causa: `lvlHost` pulava peças `gp` (prisma girado) → LED sumia/não achava face.
+  - Correção: `lvlRot`/`lvlDesgira` desfazem o giro, `lvlDraw1` desenha reto e gira junto; `lvlPickFace` aceita peça girada.
+- **AUD-LED-FERRAGEM — LED atravessando dobradiça/corrediça (ponto 7, erro comprovado).**
+  - Correção: `lvlFerragem` na face de dentro da lateral: faixa das corrediças (altura das laterais de gaveta) e faixa da dobradiça (porta do lado, 95 mm da frente). Recusa com aviso ao criar e ao mudar campo.
+- **AUD-ANGULO-ENTER — ângulo digitado só valia no botão (ponto 6, erro comprovado).** Espelho, móvel livre na Planta e no 3D aplicam no Enter/ao sair.
+- **Comportamento correto:** reflexo não invertido (2); toque/seleção do espelho (5); digitação nos quadros novos (6).
+- **Defeitos repassados ao Code 2:** espelho em parede lateral sem reflexo e com linha escura (9); espelho redondo jateado com emenda vertical (3).
+- **Compatibilidade (10):** Política B cobre LED livre e espelho nos links; backup copiado à mão pra app antigo perde o LED (não corrigível, aviso registrado).
+- **Não verificado:** FPS/memória em aparelho real, iPhone/iPad/Android/Windows reais (só Chromium e viewports).
+
+## PROJ-SEM-MODULO — abrir projeto sem módulo apagava obra e esquadro ao salvar (23/11/2026, branch `claude/loadstate-sem-modulo`)
+- **Achado na auditoria final da candidata 20c11b0**; já existia na versão publicada `c561120`. Classificação: erro comprovado (perda de dado do projeto, CLAUDE.md §3).
+- **Reproduzir:** projeto sem módulo (só espelho, pedra…) com trava de obra (`S.obra`) e esquadro do ambiente (`S.amb`) → abrir pela lista de projetos → salvar → `obra` some e `amb` vira `{}`.
+- **Causa:** `loadState` fazia `defs(S.m)` e `S.m.sup` sem módulo → TypeError no meio; as camadas seguintes do `loadState` (obra, amb, pxm, Hm/Wm, pxk/pxo, tz, pw/RDw/deco…) e o `showBox/draw/panel` não rodavam; o salvamento seguinte gravava sem eles.
+- **Correção:** guarda mínima (`if(S.m)defs(S.m)`, `S.m&&S.m.sup`). Projeto com módulo não muda. Efeito: `newProjFor`/`arqueNewProject` agora chegam ao `ATGO=2` (com 0 módulo o autoTamp não faz nada).
+- **Teste:** `testAbrirProjetoSemModuloNaoPerdeObraNemAmbiente` (d80c925, falha antes) · correção a4148a2.
+- **Autorização:** Adauto 23/11 ("Sim, colocar agora") para entrar nesta candidata.
+
+
+## PROVENÇAL e CONCHA (23/11/2026, branch `claude/portas-provencal-concha`, base `28e24535`)
+- **Pedido:** Adauto, 23/11 14:40, com 6 fotos (ver `REFERENCIAS.md`): portas provençais e puxador concha.
+- **Entrega inicial:** `057f8722`.
+  - Estilos de porta na aba Portas. Régua ou moldura aplicadas viram peças reais de MDF 6 mm; CNC vira frisos no DXF.
+  - Concha com 7 modelos e furação pelo modelo.
+  - Testes: `testPortaProvencalReguasAplicadasPecasReaisCorteEDxf`, `testPortaProvencalUsinadaCncFrisosNoDxfEConflitoComDobradica`, `testEstilosDePortaPreviaAplicarEmMassaUmDesfazerESalvar`, `testConchaSeteModelosFuracaoPorModeloECorPorEscopo`.
+- **PROV-BORDA (print das 15h21):** "réguas na borda direta, sem essa interferência".
+  - **Causa:** padrão de 50/40 mm de distância da borda. Era escolha minha, não do pedido.
+  - **Correção:** `09f18b40`. Distância padrão 0; veio deitado nas réguas horizontais (`pfFill`, `vr`); portas de canto em L pela medida real da folha (`estCanto`).
+  - **Teste:** `testProvencalNaBordaConchaDesviradaEPortasDeCantoAlinhadas`.
+- **PROV-TOPO (print das 15h37):** "até o topo em cima também".
+  - **Causa:** do lado da cava usinada a régua começava a 21 mm, para não cobrir a cava.
+  - **Correção:** `a34e2d9e`. Vai até a borda; a nota avisa que cobre a cava. Teste do CNC atualizado.
+- **CONCHA-DESVIRADA (print das 15h21):** "puxadores estão invertido, é contrário".
+  - **Antes:** borda reta em cima e arco embaixo, que é o que as fotos 1, 2 e 4 mostram.
+  - **Correção:** `09f18b40` passou para arco em cima e borda reta embaixo. Parafusos na altura dos furos do DXF; antes ficavam 0,16 × altura acima do centro, um desvio entre 3D e fabricação achado nessa mesma correção.
+  - **⚠ Pendente:** confirmar com o Adauto. O pedido dele sobre o print contraria as fotos de referência (ver `REFERENCIAS.md`).
+- **CONCHA-ESCOPO:** a cor "só este puxador" ficava presa quando o vão trocava para outro puxador. Achado no meu código, antes de entregar.
+  - **Correção:** `09f18b40`. O escopo vale só na concha.
+  - **Teste:** `testEscopoDaCorSoNaConchaEPortaEscolhidaDentroDoVao`.
+- **Arquivos:** `app/src/main/assets/editor.html`. Módulo PORTAS PROVENÇAIS no fim, mais ganchos em `px3` (5 chamadas), `cornerBoxes`, `pfFill`, linha do 2D e `pxSvg`.
+- **Status:** resolvido na bateria (485/485 em `8eab70a3`). Orientação da concha pendente de confirmação. **Não testado em aparelho real.**
+
+## PASSANTE (23/11/2026)
+- **Pedido:** Adauto, 23/11: "puxador passante… em configurações… o quanto a pessoa coloca passando do módulo".
+- **Implementado:** `b1a167ba`.
+  - Novo tipo "Passante", sem ferragem.
+  - `pasAplica` no `partsOf`: a porta passa da borda do módulo o tanto de `pasMm` (Configurações › Puxadores). No balcão e na torre passa em cima; no aéreo, embaixo. No gaveteiro só a frente da ponta passa.
+  - Desenho vetorial do botão em `PXF.passante`.
+- **Defeito achado no caminho:** a primeira conta media o excesso a partir da borda normal da porta (que já fica uns mm dentro), e não da borda do módulo. Corrigido antes do commit.
+- **Padrão `pasMm = 20`:** foi escolha minha e o **Adauto confirmou em 23/11** (via Code 1). Cada marceneiro ainda pode mudar em Configurações › Puxadores.
+- **Testes:**
+  - `testPuxadorPassantePortaPassaDoModuloPeloAjuste` (novo);
+  - `testGolaVerticalEHorizontalEDesenhoDeCadaPuxador`: lista de puxadores +1, com comentário.
+- **Status:** resolvido na bateria; padrão confirmado.
+
+## PEÇA LIVRE: 2 toques, Duplicar, ímã e puxador no 3D (23/11/2026)
+- **Pedidos do Adauto, 23/11:**
+  - "ao clicar duas vezes na peça… duplicar… arrastar… imã alinhado as faces";
+  - "Duplicar no 3D… barra minimizar";
+  - "dois cliques sobre o puxador, reposicionar… reposicionando um reposiciona todos";
+  - "ao selecionar qualquer peça… duplicar".
+- **Implementado:**
+  - `8a678565`: 2D com menu Duplicar / Medidas / Apagar e ímã de 15 mm. Porta e frente só servem de ímã se a peça estiver na frente delas.
+  - `c15faffc`: 3D com ⧉ Duplicar na barra e 2 toques no puxador de barra, bola ou concha (`S.pxa`, todas seguem).
+  - `e4f0528c`: Duplicar em qualquer peça; a cópia vira peça livre de MDF 15 com a medida de corte.
+- **Defeito IMÃ-ENCOSTO, achado pela bateria completa:**
+  - `testEstruturaPeca15SegurarCriaArrastaEncostaEMedidaExata` deu "encostou 5, esperado 0": a peça parava encostada na parede e o ímã puxava 5 mm para a borda do módulo.
+  - **Correção:** `8eab70a3`. O ímã só age no eixo em que a peça chegou onde foi solta.
+  - No mesmo teste, "arrasta 100" passou a dar 99: a borda da peça encaixou na borda da porta, a 1 mm. Expectativa mudada, com comentário (aceita pelo Code 1).
+- **Defeito do teste:** o 2 toques numa peça livre caía no puxador de cava atrás dela (`pickFace` com filtro). Corrigido para usar a face da frente e só puxadores que mudam de lugar.
+- **Setas de mover no 3D:** feitas em `cf4c9aae` e **tiradas a pedido do Adauto** (revert `0cf24e8f`). Retirada confirmada por ele em 23/11 (via Code 1).
+- **Testes:** `testPecaLivreDoisToquesDuplicarEImaAlinhaAsFaces`, `testNo3DDuplicarPecaEDoisToquesNoPuxadorReposicionaTodos`, `testNo3DDuplicarQualquerPecaViraPecaLivre`.
+- **Arquivos:** `editor.html`, no bloco PEÇA LIVRE (fim), em `e3Render` (barra do 3D) e no despacho de toques do 3D (`lastTap.pxm`).
+- **Status:** resolvido na bateria.
+
+## ESP-FAIXA: faixa jateada do espelho LED sumia de longe e em ângulo (auditoria do Code 1, 23/11)
+- **Relatado:** Code 1, na candidata 20c11b0. Com zoom 1,05 e yaw −0,5 a faixa ficava cinza. Valia de dia e à noite, nas 3 qualidades.
+- **Reproduzir:** S.W 4600, `espWallAdd(4)`, `a.x = 150`, `__cam(-.5,.12,1.05)`. Dá 0 de 24 pontos da faixa acesos.
+- **Causa raiz:** o passe normal desenha com `polygonOffset(+1,+1)`, que empurra a faixa para trás conforme a inclinação. O vidro do espelho vai no passe do espelho, depois e sem empurrão, e ganhava a profundidade.
+  - Não era a espessura de 0,3 mm: subir a resolução de profundidade não resolveu.
+  - Tirar o corpo do vidro resolvia, o que confirma a causa.
+- **Correção:** `13419b70`. A faixa (`espLed`='fr'/'frs') vai no passe puxado para a câmera (o do gola, −1,−2). O espelho não sai do lugar e nenhuma medida muda.
+- **Teste:** `testFaixaDoEspelhoLedApareceDeLongeEEmAngulo`. Pior caso 0/24 antes e 24/24 depois, em dia/noite × auto/equil/alta × 4 vistas.
+- **Status:** resolvido na bateria. Falta o Code 1 reauditar a cena com balcão e 2 espelhos à noite.
+
+## ESP-LEVE e RECUO SWIFT (23/11)
+- **ESP-LEVE:** `85411be3`.
+  - **Relatado:** achados do Chefe no CI. O iOS foi barrado no `appstore_check` pela palavra "Android" na regex de celular. O WebView2 sem GPU caiu na bateria do Windows.
+  - **Correção:** regex `/Andr[o]id|…/`; no automático, sem reflexo planar com renderizador por software ou depois de perder o contexto WebGL.
+  - A causa da queda do WebView2 **não foi comprovada**: a mudança é uma proteção.
+  - **Teste:** `testEspelhoLeveNoAutomaticoSemGpuEContextoPerdido`. Os 3 testes de reflexo pedem 'equil', com comentário.
+- **RECUO SWIFT:**
+  - **Relatado:** achado do Chefe. Em `testBatenteCavaReguaPorRegua…`, uma linha começava na coluna 0 dentro de `#"""…"""#`. O iOS não compila; o Chromium não pega.
+  - **Correção:** `2ec82605` em `claude/juncao4-batente`.
+  - **Prevenção:** daqui pra frente, verificador de recuo antes de cada entrega.
+
+## CONCHA-PRUMO e ESCOLHA POR PUXADOR (Adauto, prompt oficial de 23/11, via Code 1)
+- **Pedido:**
+  - concha com a parte reta EM CIMA, curva embaixo, abertura por baixo, como nas fotos;
+  - porta EM PÉ perto da lateral que abre; gaveta deitada e no meio;
+  - "respeitar a orientação física correta de cada modelo";
+  - escolha individual de modelo, cor, posição, orientação e medidas, aplicando só na peça ou em todas as compatíveis com confirmação;
+  - mudar a cor de um puxador não muda os outros;
+  - DXF sem furação inventada.
+- **Erro corrigido:** a 09f18b40 tinha virado a concha (arco em cima) por causa do print das 15h21. Estava de cabeça para baixo em relação às fotos.
+- **Decisão sem resposta do Adauto: para que lado vai a parte reta na porta em pé.**
+  - Decidi pela construção física.
+  - A parte reta é o lado fechado da concha (onde a chapa encosta e os dedos fazem força). A curva é a boca, por onde os dedos entram.
+  - Abrindo a porta, o puxador anda num arco em volta da dobradiça: primeiro para fora, depois para o lado da dobradiça. A mão puxa a parede fechada para esse lado.
+  - Então **a parte reta fica do lado da dobradiça e a boca do lado que abre**. A mão chega pelo lado que abre, que é o natural.
+  - **Fontes consultadas** (guias de instalação; nenhuma norma diz o lado da boca na vertical):
+    - os puxadores vão no lado oposto à dobradiça;
+    - na vertical, a concha fica no meio do montante;
+    - na horizontal, a boca fica para baixo para os dedos engancharem.
+  - Links: housedigest.com "The Right Way To Mount Cup Pulls…", vandykes.com "How to Execute Cabinet Hardware Placement", onton.com "Cabinet knob and pull placement", kitchencabinetkings.com/guides/cabinet-pull-placement.
+  - **A confirmar com o Adauto quando ele puder.** Se for o contrário, é inverter o sinal `O.sg` em `chmOri`.
+- **Correções:**
+  - `7fe0047a`:
+    - geometria num sistema próprio (`conchaPartes3` + `chmOri`), posta em pé ou deitada;
+    - parafusos na linha dos furos do DXF;
+    - porta com régua aplicada: concha no meio do montante quando cabe;
+    - por puxador: automática / deitada / em pé, modelo, cor e medidas;
+    - padrão "Apenas este puxador"; os outros escopos pedem confirmação com a contagem (só concha);
+    - 3D: "Só este puxador" (`v.chuQ`) ou "Todas as portas" (com confirmação).
+  - `f9507178`: o DXF só fura a concha com a furação confirmada. Os entre-furos 64/96/76 dos modelos eram escolha minha (medidas comerciais comuns), o que é furação sem especificação. Até confirmar: sem furo e FALTA no aviso.
+- **Testes:**
+  - `testConchaRetaEmCimaEmPeNaPortaDeitadaNaGavetaEEscolhaIndividual` (novo, falha na 3933f94f).
+  - Atualizados com comentário, todos desta mesma entrega e ainda não homologados: ConchaSete (modelos conferidos deitados e com furação confirmada; escopos com confirmação), ProvencalNaBorda (reta em cima), No3DDuplicar… ("Todas as portas" + confirmação).
+- **Arquivos:** `editor.html`, nos blocos CONCHA e escolha por puxador (módulo das provençais), `px3Panel` (lugar de um puxador) e o despacho dos 2 toques (`PXSEL`).
+- **Status:** resolvido na bateria. Falta o Adauto confirmar o lado da parte reta na porta em pé.
+
+## PB-PORTAS — link de projeto com portas provençais/puxadores novos abria na versão antiga sem eles (23/11/2026, branch `claude/politica-b-portas`)
+- **Achado na auditoria do Code 1** da integração 259fef0 + `claude/portas-provencal-concha` b3cf2f3 (erro comprovado, mesma família do bloqueador do LED livre).
+- **Reproduzir:** projeto com régua/moldura provençal (`v.est`/`v.estQ`), concha com modelo (`v.chm`/`v.chmQ`), porta passante (`px:'passante'`) ou cor de um puxador só (`v.pxcQ`, `v.chuQ`) → `cutEncode(cutPayload())` saía `arque-corte`. A versão publicada abriria e recalcularia as peças sem as réguas (8 peças de MDF 6 mm num balcão 2 portas) e com a porta passante na medida antiga (705 em vez de 735).
+- **Causa:** a Política B do LED/espelho só contava `m.leds` e espelhos.
+- **Correção:** `conta` da Política B também conta vãos com porta/puxador novo (`portaNova`); link sai `arque-corte-v2`/`arque-cliente-v2` e a mesma janela avisa antes ("Projeto com portas e puxadores novos"). Concha sem modelo, porta lisa e puxadores de sempre: tipo de sempre, sem janela. Este app abre o link novo com tudo.
+- **Teste:** `testPoliticaBPortasProvencaisEPuxadoresNovosNaoAbremEmVersaoAntiga` (falha antes).
+- **Limite (igual ao LED):** backup copiado à mão pra app antigo abre sem esses campos; app antigo não tem como ser corrigido.
+
+## CONCHA-GAVETA (Adauto, print das 19:56 de 23/11)
+- **Relatado:** "Puxador concha as gavetas estão de cabeça pra baixo, rês usar isso, opção de mexer somente neles, colocar inverter e movimentar". Os prints mostram as gavetas com a parte reta em cima e a curva embaixo (versão 7fe0047a).
+- **Conflito registrado:** o prompt oficial (via Code 1) pedia "reta em cima" para a concha. Olhando o app, o Adauto disse que **nas gavetas** isso está de cabeça para baixo. Vale a instrução mais nova, só para as gavetas. As portas em pé não mudam (ele não reclamou delas).
+- **Correção:** `2885dcc8`.
+  - Frente de gaveta deitada vem invertida: curva em cima, reta embaixo.
+  - ⇅ Inverter por puxador (`md.inv`), na aba (escopos de sempre + "Todas as gavetas", com confirmação) e no 3D (só ele).
+  - Os 2 toques no puxador da gaveta abrem a bolinha para mover (antes só porta): só este, ou todas as gavetas com confirmação.
+  - Os furos do DXF continuam no centro da concha.
+- **Achado no caminho:** o puxador da frente de gaveta aparece na aba **Internos** (id 2), não em Portas. É comportamento de sempre do app, mantido.
+- **Teste:** `testConchaDaGavetaInverterEMoverSoElas` (falha na b3cf2f3b). A expectativa da gaveta em `testConchaRetaEmCima…` foi atualizada, com comentário.
+- **Status:** resolvido na bateria. Falta o Adauto conferir no aparelho.
+
+## PEÇA-2TOQUES-ARRASTE (Code 3 no CI iOS da candidata 5c56454, via Code 1, 24/11)
+- **Relatado:** `testEstruturaPeca15SegurarCriaArrastaEncostaEMedidaExata` falhou no iPhone e no iPad com "encostou 154, esperado 0". Android e Windows passaram. No Chromium reproduz com `--janela 430x900`.
+- **Efeito real:** no celular, arrastar a peça livre, soltar e pegar de novo em menos de meio segundo abria o menu de 2 toques em vez de arrastar.
+- **Causa raiz:** `8a678565`. O 1º toque (`TQ`) era gravado em todo pointerdown, mesmo quando aquele toque virava arraste. Na tela de 430 px os 99 mm andados viram ~7 px (< 14), então o 2º pointerdown contava como 2º toque, abria o menu (preventDefault) e a peça não andava.
+- **Correção:** o toque fica armado no pointerdown, cai se o dedo andar mais de 4 px e só vale quando solta parado. O 2º toque tem que vir até 450 ms depois de soltar. As duas funções ficam (arrastar e 2 toques); o teste antigo não mudou.
+- **Mesmo mecanismo conferido:**
+  - os 2 toques do 3D (puxador de porta e gaveta, peça) contam no pointerup e só com menos de 10 px de movimento: arraste e giro de câmera não contam;
+  - o ímã não usa toque.
+- **Teste:** `testPecaLivreArrastarDeNovoLogoNaoAbreMenuEDoisToquesParadosAbrem`. Falha antes ("true false", menu aberto) e passa depois, em 1366 e em 430×900.
+- **Nota de processo:** nas rodadas parciais no mesmo navegador, a página antiga pode ficar em cache. Desde agora uso a URL com `&v=<hora>`. As baterias completas sempre rodaram num perfil novo.
+
+## FECHAMENTO CODE 1 (24/11/2026, ramo `claude/fechamento-code1`, base `ed041eb`) — ordem do Adauto via Chefe: fechar tudo, corrigir na hora (§0, §11)
+- **B21 — 3D aberto atrasado** (erro comprovado, sonda s23: parede, vão em gavetas e apagar módulo).
+  - Causa: o 3D só remontava nos comandos que chamavam `re3`; os que só redesenham (`draw`) deixavam o 3D velho.
+  - Correção: com o 3D aberto, o `draw` agenda uma montagem (≤ 1 por quadro; pula se o comando já montou). 3D fechado: nada muda.
+  - Teste `testB21Com3DAbertoParedeGavetasEApagarAtualizamNaHora` (29bc3ba/3f7e893, falha antes) · código f91429c · s23: 11/11 na hora.
+- **B24 — digitar posição e voltar não devolvia igual** (erro comprovado, s27: 70 modelos).
+  - Causa: o wrapper do B05 tirava o tamponamento automático dos dois lados antes de aplicar a posição e só devolvia quando um vizinho se afastava.
+  - Correção: depois de aplicar, o automático que já existia volta no lado que continua exposto (regra da criação). Nada novo liga sozinho; manual e TAMP-JUNTA iguais. `tampExposed` exposto em `window`.
+  - Teste `testB24DigitarPosicaoEVoltarDevolveOTamponamentoAutomaticoDoLadoExposto` (eddb30d, falha antes) · código 700a81c · s27: 0 diferenças de verdade (o texto difere só na ordem das chaves).
+- **B23 — módulo novo entrando no vizinho** (erro comprovado, s20 I7: 12).
+  - Causa: o `autoTamp` da criação chamava `rowJoin` na fileira inteira e fechava vãos ≤ 70 mm andando com móveis que ninguém tocou (a sapateira andou 100 mm e entrou embaixo do aéreo). Achado junto: com vão do tamanho do tamponamento, o `tampExposed` oscilava a cada desenho.
+  - Correção: `rowJoin`/`wingJoin` com âncora opcional (`fixo`): no `autoTamp` só anda quem teve o tamponamento decidido e o recém-criado; `tampExposed` vê o vizinho como se o tamponamento daquele lado já estivesse (igual à parede).
+  - Teste `testB23CriarModuloNovoNaoAndaComOsQueJaExistem` (44e5781 + a23584c, falha antes) · código 17df4a5 + 8a19010 · s20: I7 0, I2 0.
+- **N14 — Android: cópia antes-de-usar só no onStop** (risco P0, achado 17/11).
+  - Correção: `DataBackup.versionCopyIfNew` também no `onCreate` (thread; só acrescenta zip em Download). onStop igual.
+  - Teste: `.github/scripts/teste_atualizacao_android.sh` confere a cópia ao abrir (0614832) · código 414b523 · roda no workflow `android-atualizacao.yml` (disparo manual).
+- **B05** confirmado pelos caminhos da pessoa: digitar 25 → 25 (s13, s06 com setv); arrastar até a parede → 35 com tamponamento preenchendo. O "5→35 sem tamponamento" do s06 vem de `a.x=` direto (não é caminho do app).
+- **B22** confirmado: o novo nasce com a medida do catálogo; em parede cheia não cria e avisa (s29). Achados: aviso duplicado "não tem espaço" + "foi ajustado pra caber (170 mm)" quando não cria (texto, risco); "Balcão com laterais até o piso" 870 no catálogo nasce 820 (pergunta ao Adauto).
+
+## AUDITORIA TÉCNICA COMPLETA — Code 1 (24/11/2026, ramo `claude/fechamento-code1`)
+- **PRECOS-RESTAURO (P0, perda de dados do cliente; já existia na publicada 3f1c3a58/c561120).**
+  - Reproduzir: aparelho novo com o backup restaurado (arquivos lá, banco do navegador vazio) → abrir o editor → o `prices.json` do backup é sobrescrito com os padrões (4192 → 2600 bytes): preços e "Meus modelos" somem.
+  - Causa: a inicialização (`STD0_`) chama `prSave()` antes da leitura do `prices.json`; o `prSave` grava no banco e no arquivo.
+  - Correção: o 1º `prSave` da sessão, com o banco vazio, lê o arquivo antes de gravar (arquivo por cima dos padrões — a regra da leitura de sempre). Uso normal (banco cheio) igual.
+  - Teste `testBackupRestauradoNaoPerdePrecosNemMeusModelosNaAbertura` (falha antes) · código 70f5130. Prova: com os arquivos do backup rico, publicada e ed041eb mudam o prices.json ao abrir; a candidata deixa os 4 arquivos iguais.
+- **AUD-INT-GAVETA (erro nº 10 do protocolo).** Vão de portas com internos (caixote, maleiro, cabideiro) trocado pra gavetas continuava gerando os internos (4 frentes de caixote + 8 corrediças no corte, dentro das gavetas). Correção no `partsOf`: com o vão em gavetas os internos não entram; os dados ficam e voltam com as portas. Teste `testVaoDePortasComCaixoteViraGavetasSemCaixoteFantasmaEVoltaAoTrocar` · 8e8522a.
+- **AUD-RODAPE-TRASEIRO (toque).** No 2D de frente o rodapé traseiro era desenhado por cima do da frente (mesma camada) e o toque no rodapé que se vê escolhia o de trás (51 modelos, 1366 e 430). Peça traseira vai pra camada do fundo. Teste `testToqueNoRodapeDaFrenteEscolheEleEnaoOTraseiroEmTodoOCatalogo` · 514fa78.
+- **2 toques no 3D nos testes (instabilidade investigada).** `testNo3DDuplicarPecaEDoisToques…` falhou 1× na bateria. Com a CPU 4× mais lenta: o ajudante do teste esperava 80 ms DEPOIS do 1º toque terminar (145–183 ms) → 2º toque a 470–520 ms > janela de 420 ms; a base falha igual. O app usa `e.timeStamp` (não sofre isso no aparelho). Correção só nos 3 testes (intervalo contado do início do 1º toque), expectativas iguais · 9964d11, 596f7d6.
+- **Passante (Code 2), crítico:** 2P+Gav Ext com passante: frente de gaveta virava 585×1944; dobradiça entrava na travessa. Enviado ao Code 2 com repro.
+- **Preservação na atualização:** backup de referência rico gerado pelo editor publicado (tests/backup-referencia-rico); Android, iOS (iPhone e iPad) e Windows conferem os dois backups; `testProjetoGravadoPelaVersaoPublicadaAbreComOMesmoPlanoDeCorte` em toda CI; sonda s45 (139 projetos, corte igual contra as duas publicadas) · 843213f, d413b48.
+- **Conferido sem defeito:** catálogo inteiro (142 modelos, 907 verificações) com portas/gavetas iguais por vão, sem sobreposição nem frente entrando na caixa, mm inteiro, DXF = lista; lado de abertura das portas; digitação (foco, décimo, vazio e texto inválido); abertura a frio 0,4 s (CPU 6×: 2,7 s); desempenho (draw 13 ms, 3D 23 ms, 2039 caixas) igual à base.
+
+## PASSANTE-PONTA (auditoria técnica do Code 1 em ed041eb, 24/11)
+- **Relatado:**
+  1. Na torre "2P+Gav Ext 600mm" com passante, a frente de gaveta de baixo ia de 585 × 167 para 585 × 1944 e entrava nas portas no 3D.
+  2. No "Balcão 2 portas", a dobradiça de cima subia com a porta e entrava na travessa frontal.
+- **Causa raiz (`b1a167ba`):**
+  - `pasAplica` esticava a 1ª frente de cada vão até a borda do módulo, mesmo com o vão longe da borda (gavetas embaixo das portas, nicho aberto acima, moldura do rack).
+  - O furo da dobradiça (`p.fur.pos`) é medido da borda de cima da porta. A porta crescia em cima e o furo ia junto: 3D e DXF.
+- **Correção:**
+  - Só passa a frente da ponta: sem outra frente entre ela e a borda, e rente à borda. No catálogo as frentes das pontas ficam de −5 a 10 mm da borda; o rack com moldura fica a 32, o nicho aberto a 1053. O limite é 15.
+  - A frente que não passa fica como estava e a nota diz por quê.
+  - A porta que cresce em cima leva o furo junto (+d). Assim o copo fica no mesmo lugar da caixa, no 3D e no DXF.
+  - No aéreo, que cresce embaixo, nada muda: o furo já ficava no lugar.
+- **Não é defeito do passante:** as outras frentes de gaveta passarem de 167 para 181 (e a contra-frente de 66 para 99) é a regra de sempre de puxador sem cava. É igual com "toque" e "nenhum".
+- **Teste:** `testPassanteCatalogoInteiroSoAFrenteDaBordaCresceDobradicaNoLugarE3DIgualCorte`. Percorre os 142 modelos e compara passante × toque nos 3 invariantes do Code 1, mais o caso da torre, a dobradiça × travessa e o DXF. Falha antes. Na mesma varredura achou também:
+  - portas das torres de forno uma dentro da outra;
+  - frentes das torres por vãos fora do corte.
+
+  Passa depois: 168 frentes passam, 147 portas com furo no lugar, 0 em cada invariante.
+
+## SANBASE (B25 / defeito 82, auditoria 24/11) e a regressão que a bateria pegou
+- **Defeito:**
+  - virar aéreo (sup) apagava a travessa;
+  - voltar pra baixo não devolvia (sonda s05, "Módulo livre baixo · montar do zero").
+- **Correção (`14ef6aac`):** o sanBase guarda `_travSB` quando apaga a travessa por ser aéreo e devolve ao voltar. Só pela troca de aéreo; módulo alto que fica baixo continua como antes.
+- **Regressão no mesmo commit, achada na bateria completa do ramo de auditoria:**
+  - o commit também "devolvia" travessa e moldura do rack suspenso sempre que as duas estavam desligadas;
+  - isso religava a travessa de rack que não tem (Rack de TV erguido);
+  - falharam `testBasculanteComCavaSemEngrossoFolga4NoTopo` (60 ≠ 4), `testMedidaDePecaSemDecimo…` (6315 ≠ 6308) e `testPlanoDeCorteTodaPeca…` (12844 ≠ 12836).
+  - Bisseção pelos 5 commits: entrou em `14ef6aac`.
+- **Correção da regressão:**
+  - a parte do rack saiu;
+  - o liga/desliga do "rack" da s05 não tem caminho pela tela (só o catálogo liga o rack), então ficou como era;
+  - o teste passou a `testAereoIdaEVoltaDevolveATravessa`;
+  - os 3 testes voltam a passar.
+## VIS-MAT — acabamentos do 3D padrão (Adauto, revisão visual completa da biblioteca 3D, 24/11)
+- **Pedido:** mais realismo nos acabamentos (metais, eletros, puxadores, pedras, madeira, estofados) sem pesar o app e sem mudar medida, geometria, posição, furação ou corte.
+- **O que entrou:**
+  - programa WebGL à parte (`__GPV`, e `__GPRV` no reflexo), com shader enxuto, só para as peças classificadas por `vizMat`;
+  - **metal**: aspereza pelo acabamento do puxador (cromado 0, prata .12, dourado .2, inox .32, grafite .55, preto fosco .92…), reflexo do ambiente e dois brilhos;
+  - **eletros** (geladeira, forno, micro-ondas, coifa, depurador, lava-louças, airfryer, churrasqueira, lixeira, TV): inox escovado; painel e vidro preto brilhante;
+  - torneira cromada; perfil gola e alumínio anodizado;
+  - **tecido** em sofá, poltrona e cama;
+  - **veio** em mesa, cadeira e banco de madeira;
+  - **pedra** da bancada com brilho de polida.
+  - Sem textura nova: nenhuma imagem, nenhum arquivo, nenhum byte de download.
+- **Fica igual:**
+  - parede, piso, MDF dos módulos, foto do padrão, vidro e espelho;
+  - o "Acabamento realista" (AQ), que tem caminho próprio.
+  - O teste confere: pixel da parede igual, caixas do 3D com as mesmas coordenadas, peças e corte iguais.
+- **Erros achados no caminho:**
+  - 1ª versão com os ramos novos no shader comum: quadro de 113 → 176 ms (+55%) no renderizador por software (Windows sem GPU). Por isso o programa separado.
+  - Coifa com pintinha de pedra: as faces laterais (`pfFill`) zeravam o tipo.
+  - Cromado mais escuro que antes: ambiente baixo demais na metade de baixo da tela. Base recentrada em 1,0.
+  - Tabela de aspereza vazia: `hex()` não é global e o `try` engolia o erro. Todo puxador caía no padrão .35. Agora com leitor de cor próprio.
+- **Desempenho** (SwiftShader, pior caso, cozinha com 761 caixas, 10 rodadas alternadas):
+  - quadro: base 130,7 ms → 135,6 ms (≈ +4%, dentro da variação de ±10 ms entre rodadas);
+  - montagem: 5,7–9,3 ms nas duas;
+  - heap JS: 15–18 MB nas duas.
+- **Teste:** `testAcabamentoVisualMetalTecidoMadeiraPedraSemMudarGeometria`. Falha antes (`vizMat` não existe) e passa depois.
+- **Capturas:** `diagnosticos/visual_materiais_3d_2026-11-24/` (antes em cima, depois embaixo).
+
+## TESTE-2TOQUES-CARGA (pedido do Code 1, 24/11): `testPedraVistaDeCima…` e `testDoisToquesNaPontaDoTamponamento…` falharam na bateria de 430 do VIS-MAT e passavam sozinhos
+- **Protocolo**, a 430, na base `ed041eb2` e no VIS-MAT `13bb4e47`, alternados:
+  - 5× sozinhos;
+  - 5× com os 30 testes anteriores da bateria;
+  - CPU 4× (5×) e 10× (3×).
+- **Resultado:**
+  - CPU 4× e 10×: 0 falhas, nas duas versões.
+  - Com vizinhos: a **base** falhou uma vez (`testDoisToquesNaPontaDoTamponamento…`, mesmo erro da bateria, `Cannot read properties of null (reading 'click')`: o menu de 2 toques não abriu).
+  - A rodada 4 do VIS-MAT com vizinhos não vale: rodei uma sonda no mesmo navegador ao mesmo tempo ("socket is already closed").
+  - **Não é o VIS-MAT.**
+- **Causa (mesmo padrão que o Code 1 achou em 3 testes de 2 toques do 3D):**
+  - o ajudante dos 2 toques esperava 120 ms **depois** de o 1º toque terminar;
+  - com a máquina carregada, o tempo do 1º toque soma no intervalo e o 2º pode sair da janela de 450 ms do app;
+  - no aparelho o intervalo vem do `e.timeStamp` do toque.
+- **Correção, só no teste:**
+  - o intervalo conta do início do 1º toque: `W(max(0, 120 − tempo do 1º toque))`;
+  - as expectativas são as mesmas e nenhum limite aumentou;
+  - os dois passam em 1366 e 430.
+
+## DECISÕES DO ADAUTO 24/11 (itens 1, 2, 4, 5, 6, 8 e 9; Code 2, ramo `claude/decisoes-2411-code2`)
+- **1 · forno/micro-ondas (`aac3afb5`):**
+  - o 🗑 não tira "Corte do forno", "Nicho do forno (aberto)", "Corte do micro-ondas" nem "Nicho do micro-ondas (aberto)" sozinhos, e mostra o motivo;
+  - tocar de novo em até 4 s tira o conjunto: no balcão o vão fica livre, na torre fica "sem", na torre por vãos sai o vão dele;
+  - catálogo: 17 peças, 0 "só a peça".
+- **2 · rodapé e travessa (`aac3afb5`, teste `2ee42fbc`):**
+  - o 🗑 é o mesmo que desmarcar a caixinha do módulo, e as peças dependentes recalculam (base de cima, moldura e porta, como na caixinha);
+  - a travessa que segura módulo sem base de cima não sai;
+  - o teste antigo do 🗑 na travessa (regra de 17/11, "outras iguais") agora confere que as outras ficam **iguais às da caixinha**.
+- **4 · dobradiça (`dcd57685`), só no 3D:**
+  - o caneco ficava 1 mm dentro da peça que a porta cobre: 1178 partes em 74 modelos;
+  - com a porta fechada, o caneco é cortado depois da montagem (`cupTrim`);
+  - furação, medida e DXF iguais.
+  - Achado: o caso "16 modelos na divisória" de 16/11 já não existia; o que restava era o caneco na lateral, na divisória e no montante.
+- **5 e 8 · perfis × caixa (`0976fb27`):**
+  - o rebaixo sai das caixas reais do 3D que desenham o perfil (`pxCarve`): o tamanho exato da parte do perfil em cada peça;
+  - G: travessa 440 × 37 × 1,5 (a "pendência 1" da especificação). GV: travessa e base. Facetado: 300 × 10,5 × 10, mais as ponteiras;
+  - a nota vai na peça (lista), a camada `REBAIXO_P…` no DXF, e a medida de corte fica igual;
+  - móvel de antes (sem `rbP`): aviso e botão, nada muda sozinho;
+  - varredura dos 9 puxadores × 142 modelos: 0 interseção nova (antes: facetado 236, G 549, GV 349, perfil 1).
+  - `testPerfilGAfastamentoERebaixo…` passa de "entra 1,5 mm" para "entra 0 mm".
+  - **Desempenho:** a 1ª versão montava o 3D dentro do `draw()` (desenho 11 → 37 ms). Agora o desenho 2D não monta o 3D, e lista/corte/DXF montam uma vez. Desenho e montagem ficam iguais à base.
+- **6 · fita do aéreo:** sem mudança de código. Já resolvido: 0 de 1629 fitas dentro de porta ou frente; porta na posição de fabricação.
+- **9 · curvos:** adiados pelo Adauto (checklist N25).
+
+## CUSTOS FIXOS (pedido do Adauto 24/11, via Chefe; Code 2)
+- **Pedido:** cadastrar custos fixos no orçamento.
+  - Nome, descrição e valor; vários; recorrentes reaproveitados; editar, excluir, ativar e desativar.
+  - Entram no valor sem duplicar. PDF discriminado ou embutido. Persistência.
+  - Mais 5 garantias: biblioteca não mexe em projeto existente; R$ e %; base explícita; interno nunca aparece; a margem não muda.
+- **Feito:** ver `DECISOES_TECNICAS.md` (24/11, custos fixos). Tela: Valores do projeto › "Custos fixos deste orçamento" e "Custos recorrentes (biblioteca)".
+- **Conferido:**
+  - Projeto sem custos: os mesmos números da versão de antes, até o float sem arredondar. Margem 2, campos antigos, desconto de 7% e valor fechado: `[889.6282213822807, 1145.1282213822806, 1064.97, 1064.97, "640.7/504.43", 3000, 3000]` nas duas.
+  - PDF: embutido 773,43 + 608,94 = 1382,37; discriminado 577,61 + 454,76 + 350,00 = 1382,37.
+  - Os testes "nada de enfeite" pediram resposta no toque da opção que já está escolhida (aviso curto).
+- **Testes:**
+  - `testCustosFixosAdicionarEditarDesativarExcluirRecorrenteSalvarReabrirEDuplicar`;
+  - `testCustosFixosPdfDiscriminadoEmbutidoMesmoTotalInternoNuncaApareceNoPdfNemNoLink`;
+  - `testCustosFixosSemDuplicidadeComCamposAntigosProjetoAntigoMesmoValorEBibliotecaNaoMudaProjeto`.
+
+  Os três falham antes e passam depois.
+- **Nota de ambiente:** `testDigitacaoTecladoFisico…` e `testMaoDeObra…` falharam no navegador de sondas (aba extra aberta toma o foco). Falham igual em todas as versões, inclusive nas que passaram na bateria. Num navegador novo passam.
+
+## DECISÕES DO ADAUTO 24/11 — parte do Code 1 (ramo `claude/fechamento-code1`)
+Pedido via Chefe: itens 3 e 7, arrasto confinado, B26, D23, o quarto item aberto e as 3 falhas de 430 da base. Cada um: teste que falha antes, família, projeto antigo intacto, sem limite aumentado.
+
+### TOQUE-430 (falha de 430 da base: testSegurarOMovel2Segundos…) — erro comprovado, do app
+- **Reproduzir:** 430×900, Planta com 5 módulos: o guarda-roupa (y 328–351) fica embaixo dos botões flutuantes 🔓 🗑 🧮 (até y 344) e não pega o toque ("sem módulo na planta").
+- **Causa:** a margem de cima do desenho (OY 50 unidades) vale 21 px em 430 (0,42 px/unidade); os botões ocupam 42 px.
+- **Correção (ed3571b):** `topoLivre()` mede até onde vão os botões; frente e planta descem só o que cabe no espaço vazio de baixo. Em 1366 a conta dá menos que a margem: nada muda (mesmas posições conferidas).
+- **Teste:** o próprio `testSegurarOMovel2Segundos…` (falha antes em 430, passa depois).
+
+### TRENA-ESCALA (falha de 430 da base: testTrenaNaParedeEsquerda…) — defeito do teste, com prova
+- Texto da trena igual nas duas larguras ("820 mm", girado 90°, sem espelhar). Matriz na tela: [0, 0.423, −0.423, 0] em 430 e [0, 1.086, −1.086, 0] em 1366. A regra comparava |b| com 0,5 absoluto (depende de px por unidade).
+- **Correção (d6d5c97, só teste):** mesma regra normalizada pela escala. Expectativa igual.
+
+### LED-DENSIDADE (falha de 430 da base: testFaixaDoEspelhoLed…) — risco identificado (não é do app nos aparelhos)
+- Com densidade 1 em 430×900 a faixa jateada tem ~1,3 px e some em 6 de 24 ângulos (12/24 no ponto exato; 18/24 lendo a largura da faixa). Com densidade 2 (todo celular; o iOS roda a mesma bateria a 430×900 com densidade 3) e em 1366: 24/24 em todos os casos. Sonda radial: a faixa está acesa nas 8 direções nas duas densidades.
+- **Sem mudança no teste nem no app.** A bateria passou a aceitar a densidade (`--janela 430x900x2`, f23373b). Densidade 1 em 430 só existe em janela de computador estreitada: registrado como risco.
+
+### FITA-BASE-MIRA (defeito 89) — decisão do Adauto 24/11: tocar na porta pega a porta; fita só no modo ▭ Fita
+- **Antes:** fora do modo Fita, toque até 8 px da fita da base pegava a fita (mesmo em cima da porta).
+- **Correção (ff41ff3):** `paintPick` fora do modo Fita devolve a peça (se o raio bateu na fita, a peça dela). No modo Fita nada muda. É o que o botão já dizia ("Fita desligado · o toque pega a peça inteira").
+- **Testes (ec2296a):** `testFitaDaBaseEmbaixoDaPortaPintaPeloToque` ganhou a conferência sem o modo Fita (4, 12, 40 mm e meio da porta → Porta, sem oferecer fita; falha antes) e liga o modo Fita nas conferências de fita; `testCavaSemFaixaPreta…` idem. Expectativas mudadas por decisão (comentário no teste).
+
+### ARRASTO-CONFINADO (B15 / defeito 45, parte do arrasto) — erro comprovado em 2D e 3D
+- **Reproduzir (2D):** parede encolhida pra 800 (regra: o ambiente não mexe nos móveis); arrastar o balcão de 900 → ficava com 730 (`confine`: `m.w=room`). Com dois módulos e a parede encolhida, arrastar o que ficou fora → era puxado pra dentro por cima do outro (265..1195 sobre 150..1050) pelo `noOverlap('m')` do `snapMod` e pelo `confine` do desenho.
+- **Reproduzir (3D):** o mesmo no soltar do arrasto do 3D (`tidy → noOverlap`, `confineAll`): 565..1465 sobre 5..905.
+- **Correção (b1fa11e, 8b0bf44):** no arrasto do módulo (2D: `drag.t==='m'` no `S.m`; 3D: `window.__ARR` só durante o soltar) o `confine` não encolhe e trazer pra dentro da parede não pode sobrepor (fica onde estava). Fora do arrasto nada muda (criação e tamponamento que desloca a fileira: 5 testes conferidos).
+- **Testes (bcd3603, afd988a):** `testArrastoFicaNoAmbienteSemMudarMedidaNemEntrarEmOutro` (balcão, gaveteiro, aéreo, torre, guarda-roupa; falhava em 4 das 5) e `testArrastoNo3DFicaNoAmbienteSemMudarMedidaNemEntrarEmOutro` (falha antes: "SOBREPÔS"). Família: 20 testes de arrasto passando.
+
+### B26 (peça flutuante) — investigado: nenhuma peça de fabricação solta
+- Sonda no 3D do catálogo inteiro (138 modelos, 15.654 caixas): toda peça de corte encosta em outra, no chão ou na parede. O que apareceu solto é desenho de eletro (moldura do forno/micro-ondas, `noCut`) e o cabideiro do "Armário sem laterais", que entre dois guarda-roupas se apoia nas laterais dos vizinhos (conferido).
+- **Validação nova:** `testNenhumaPecaDeFabricacaoFicaSoltaNo3DEmTodoOCatalogo` (bcd3603).
+
+### A31 — decisão do Adauto 24/11: altura da régua espaçadora do canto e do rodapé editável dentro do limite construtivo
+- **Reproduzir:** régua (8 modelos): a seta de altura do 3D não mexia (a altura vinha sempre da porta; a régua é montada depois do passo que aplica o ajuste `po`). Rodapé (qualquer módulo com pedestal, inclusive "laterais até o piso"): a seta esticava só a peça (até 340), que entrava na base (100–115), e as portas ficavam iguais.
+- **Correção (d51fa62):** régua: `poOne` aplicado nela; não sai do módulo; mínimo 50; corte acompanha. Rodapé: `rodPoFix` converte a seta de altura em `rodMm` do módulo (base sobe, portas e gavetas recalculam); limite = o que o app já exige pra caixa (folga + 3 espessuras + travessa + 60), mínimo 1. Só na ação da pessoa: projeto antigo não muda sozinho.
+- **Teste (a22988f):** `testA31AlturaDaReguaEspacadoraEDoRodapePelaSetaDo3D` (falha antes nos dois).
+
+### Quarto item aberto do checklist = defeito 45 (GEO-AVISA), parte "painéis até o teto" — depende do Adauto
+- As 4 linhas ABERTO do checklist: B15, B26, D23 e o defeito 45 ("igual à B15"). Do 45 sobra o `wallFollow` dos painéis: mudar o pé-direito/parede muda a altura/largura do painel que ia até o teto/parede (com aviso "Parede mudou: N painel até o teto acompanhou").
+- **Conflito de regras aprovadas:** a regra de 16/11 ("o ambiente não modifica os móveis") × pedidos explícitos em que o painel acompanha o teto e o gesso (`testRebaixoDoTeto…`, "o gesso morre na altura digitada e os painéis acompanham"). Não mudei: pergunta objetiva ao Adauto no relatório.
+
+### D23 (identidade única de módulo e peça) — não feito nesta rodada
+- Mudança de arquitetura (identidade persistente em editor, 3D, corte, duplicar, salvar/reabrir, desfazer e projeto antigo). Exige migração de dados com backup e teste de projeto antigo (§3). Não cabia com segurança nesta rodada; segue pendente.
+
+### Vídeo do cliente na atualização (N13) — pedido do Chefe
+- **Windows (70f7782):** coberto no CI (25a6867): win-166 gravou pelo seletor do editor, atualizou por cima, `video_*.json` igual byte a byte, o editor novo acha, lista e toca.
+- **Android (dc4892b):** CDP no WebView do apk-660 (debug). 1ª rodada: botões em inglês no emulador (corrigido); 2ª: falha de infraestrutura (download do emulador). Reexecutado.
+- **iOS (69aca94):** teste de interface montado só na compilação do simulador em cima de 3f1c3a58 (o app não muda). 1ª rodada: chegou à Fototeca e tocou na aba "Vídeos" do editor em vez do item do seletor (corrigido).
+
+## A05-GIRADO (achado na bateria completa do ramo de decisões, 24/11)
+- **Falhou:** `testMovelLivreNoMeioDaSalaGiraArrastaSalvaENaoMexeEmNinguem`, "3D fora" no giro de 180°. Passava na base.
+- **Causa:** o recorte do caneco (`dcd57685`) corta no eixo x e no sentido da porta. No móvel girado (livre, ou na parede do lado), as caixas já estão giradas: o corte saía no lado errado e o contorno ficava fora do lugar.
+- **Correção:** no móvel girado (`m.wing`) o caneco não é recortado. Lá fica como era antes (1 mm dentro da lateral, só no 3D).
+- **Pendente (registrado):** recorte do caneco também no móvel girado. Teste do móvel livre e da dobradiça: ok em 1366 e em 430.
+
+### Auditoria do Code 1 — CUSTOS FIXOS (Code 2, ca930f4; pedido do Adauto 24/11 + 5 garantias)
+Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encontrado**.
+- **Sem custo novo, mesmo valor (garantia 5):** cozinha de exemplo com preços de chapa, fita e dobradiça; 4 cenários (padrão, 3 campos antigos 350,55/120,33/77,77, margem 2,37, desconto 7,5%) — `sale0`, `sale`, total e itens do orçamento **idênticos** entre b9f4476 (antes) e a versão nova.
+- **Centavos:** 6 custos (R$ 123,456 → 123,46; R$ 250; 7,33% dos materiais; 3,17% do preço com margem; 5,55% e 2,2% do valor final). Soma das linhas = total dos custos; valor = preço com margem + extras; os % do valor final batem ao centavo com o valor final (525,17 e 208,18), sem conta circular. Embutido = discriminado = 9.462,52 (soma dos itens do discriminado também); com desconto 8.752,83 nos dois.
+- **Margem dos itens:** `sale0` igual antes e depois de pôr os custos.
+- **Sigilo (garantia 4):** nome e descrição dos custos internos não aparecem no orçamento embutido, no discriminado nem no link do cliente (`clientPayload`). O CSV do editor é o do plano de corte (sem preço).
+- **Biblioteca (garantia 1):** mudar o valor na biblioteca não muda o orçamento que já tem a cópia.
+- **Salvar/reabrir/desfazer/desativar:** reabrir pelo estado salvo dá o mesmo valor e os 7 custos; Desfazer tira o custo; desativar tira o valor (e os % do valor final se recalculam).
+- **Limite:** % do valor final somando ≥ 90% → aviso e esses custos não entram (observação: todos os de % do valor final saem juntos, com aviso na tela).
+- **430×900 (densidade 2):** tocar em "+ Adicionar custo fixo", digitar "150,75", Salvar — campos visíveis, valor certo, gravado no projeto.
+- **Não verificado nesta sonda:** botão Duplicar clicado (o custo está no estado salvo do projeto, que é o que a duplicação copia); PDF renderizado em aparelho.
+
+## D23 · IDENTIDADE ÚNICA (Code 2, 24/11; ramo `claude/d23-identidade` a partir de `claude/fechamento-code1`)
+- **Feito:** ver `DECISOES_TECNICAS.md` (24/11, D23).
+- **Conferido:**
+  - **s45 (139 projetos gravados pela publicada `3f1c3a58`):** corte igual em todos; lista igual em 138. A diferença conhecida é a cozinha de exemplo (rodapé lateral do encontro, FASE2), a mesma de antes.
+  - **Editor PUBLICADO (`3f1c3a58`) abrindo projeto com `uid` nos módulos:** 142 modelos; peças e corte iguais com e sem `uid`; o `uid` continua depois do `snapState` dele; 0 erros (roteiro em `diagnosticos/d23_identidade/publicado_abre_uid.js`).
+  - `testAbrirProjetoSemMexerNaoRegrava…`, `testProjetoGravadoPelaVersaoPublicada…`, plano de corte, histórico, Meus modelos e backup: ok.
+- **Achado no caminho:** abrir projeto com id repetido. O `loadState` desenha por dentro e o `stkSync` trocava o id da 2ª cópia sozinho. Agora o id repetido que vem do arquivo fica, com aviso.
+- **Teste:** `testIdentidadeUnicaModuloEPecaMesmaChaveNo3DListaCorteEDxfCopiaSalvarDesfazer`. Falha antes, passa depois.
+
+- **Atualização (Chefe, 24/11):** o pendente de cima foi resolvido.
+  - Juntei o MOVEL-GIRADO do Code 1 (`78e7d62`: no módulo girado, o corte vai no eixo da largura da porta, do lado oposto à peça que encosta).
+  - O contorno do caneco (`pf.pts`) agora também é cortado no mesmo eixo. Antes, a 90° e 270° só a borda era cortada.
+  - A trava de `a79780b7` (sem recorte no móvel girado) saiu.
+  - Varredura de 81 modelos com porta × (livre a 0/90/180/270° + paredes esquerda e direita) = 486 cenas: 11.404 → 0.
+  - `testMovelLivre…`, `testCanecoDaDobradicaIgualEmQualquerParede` (do Code 1) e `testDobradicaNoMovelGiradoENasParedesLateraisVarreduraZeroInterseccao` passam juntos.
+- **Custos fixos × link do cliente (Chefe, 24/11):** o link do cliente não leva valor nenhum, nem total (é assim desde antes: "ele só vê, não vê valores").
+  - Não existe total do link para divergir.
+  - O teste confere: tela = PDF ao centavo, com e sem desconto, embutido e discriminado, com custos internos R$ e %. E o link sem preço, desconto, custo ou total.
+
+- **Bateria completa do `d687d0a9`:** 1366 527/528 e 430 526/528.
+  - A falha nova nas duas foi `testMoverNo3DEncaixaNaParede…` ("vizinho mudou"). O teste comparava o vizinho da cena 5 com o da cena 1. Com o D23, cada módulo novo tem o seu id, então o vizinho de outra cena nunca é igual.
+  - **Correção, só no teste:** o vizinho é comparado com ele mesmo, na mesma cena, antes e depois do encaixe. É a intenção do teste ("sem mexer em ninguém"), igualmente estrita.
+  - O outro de 430 (`testFaixaDoEspelhoLed…`) é da base.
+
+## INTEGRAÇÃO FINAL DO CODE 1 (24/11, ramo `claude/fechamento-code1`)
+- **Juntado e auditado:** decisões do Code 2 (`7d257c1`, `3ae2216`), D23 (`e6e95ba`), giro do caneco + contorno (`c0865d3` e correção), teste do vizinho (`dae8a33`).
+  - No merge do `33b6512` o editor veio inteiro do outro lado e perdeu correções minhas (4 testes vermelhos). Refeito: o meu editor + só o bloco do contorno `pf.pts` do Code 2. Sem teste repetido.
+  - Teste do vizinho (`d0a715db`): compara o mesmo módulo, na mesma cena, antes e depois. Mesma força do anterior.
+- **FASE4 (achado na bateria 1366 do `78e7d62`, 526/527):** `testFASE4_EspelhoNaParede…` falhava às vezes. O botão de minimizar do painel (`qmn`) só aparece no quadro seguinte ao abrir. O teste perguntava no mesmo quadro (diagnóstico: `qmn 0→1`).
+  - **Correção, só no teste (`3dbbd50`):** espera 2 quadros depois de abrir. A expectativa (37) não mudou. Não foi aumento de tempo limite.
+- **Baterias completas, editor `7835d4b390bd` (= HEAD), Swift do `3dbbd50`:** 1366 528/529 e 430 528/529.
+  - A única falha nas duas é `testMoverNo3DEncaixaNaParede…`, da versão do teste anterior ao `d0a715db`.
+  - Rodado de novo no HEAD, junto com FASE4, caneco, giro e D23: 11/11 em 1366 e 11/11 em 430.
+- **Vídeo na atualização do iOS: ainda não coberto.**
+  - Dados: iPhone e iPad iguais (8/8 e 4/4), projetos abrem iguais.
+  - Vídeo (run 19, `ee1e152`): iPhone e iPad chegam ao seletor e tocam no vídeo. O seletor fecha, mas o editor publicado não grava (nenhum `video_*.json`).
+  - Causa ainda não comprovada. Hipótese: o `app.tap()` no meio da tela fecha o balão do iPad antes da escolha.
+  - Rodada `7751eeb`: sem esse toque, com a tela registrada no seletor aberto e depois do toque.

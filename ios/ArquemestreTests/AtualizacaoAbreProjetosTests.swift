@@ -153,4 +153,54 @@ final class AtualizacaoAbreProjetosTests: XCTestCase {
             XCTAssertEqual(med(l2), med(lista), "se o editor regravar a lista ao abrir, as medidas são as mesmas")
         }
     }
+
+    /// Vídeo do cliente (N13; auditoria final 24/11): o vídeo que a versão PUBLICADA gravou pelo seletor (VideoGravarUITests, no
+    /// teste de atualização) volta no editor da versão nova pelo caminho do app (video_<id>.json → EditorMediaBackup → banco do
+    /// editor), igual byte a byte ao que ela gravou (ARQ_VIDEO_SHA, conferido pelo script no arquivo) e toca.
+    @MainActor
+    func testVideoGravadoPelaVersaoPublicadaVoltaIgualETocaNoEditorNovo() async throws {
+        guard ProcessInfo.processInfo.environment["ARQ_VIDEO"] == "1" else { throw XCTSkip("só roda no teste de atualização do vídeo (ARQ_VIDEO=1)") }
+        let esperado = ProcessInfo.processInfo.environment["ARQ_VIDEO_SHA"] ?? ""
+        let dir = AppPaths.moveis
+        let arqs = ((try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []).filter { $0.hasPrefix("video_") && $0.hasSuffix(".json") }
+        XCTAssertEqual(arqs.count, 1, "o vídeo gravado pela versão publicada está nos arquivos do app")
+        let cfg = WKWebViewConfiguration()
+        cfg.websiteDataStore = .nonPersistent()
+        cfg.mediaTypesRequiringUserActionForPlayback = []
+        cfg.allowsInlineMediaPlayback = true
+        cfg.setURLSchemeHandler(BundleSchemeHandler(), forURLScheme: "arque")
+        let uc = WKUserContentController()
+        uc.addUserScript(WKUserScript(source: "window.__errs=[];window.addEventListener('error',function(e){__errs.push(String(e.message||e))});", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        uc.addUserScript(WKUserScript(source: MoveisWeb.bridgeJS, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        let media = try XCTUnwrap(Bundle.main.url(forResource: "EditorMediaBackup", withExtension: "js"), "EditorMediaBackup.js tem que ir dentro do app")
+        uc.addUserScript(WKUserScript(source: try String(contentsOf: media, encoding: .utf8), injectionTime: .atDocumentEnd, forMainFrameOnly: true))
+        let host = Host(dir: dir), sink = Sink()
+        sink.host = host
+        uc.add(sink, name: "arque")
+        cfg.userContentController = uc
+        let w = WKWebView(frame: CGRect(x: 0, y: 0, width: 430, height: 900), configuration: cfg)
+        w.navigationDelegate = host
+        w.uiDelegate = host
+        if let win = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first?.windows.first { win.addSubview(w) }
+        hold = [w, host, sink]
+        let ready = expectation(description: "editor aberto pelo esquema do app")
+        host.ready = ready
+        w.load(URLRequest(url: try XCTUnwrap(URL(string: "arque://app/editor.html?lang=pt&cur=R%24&nosetup=1"))))
+        await fulfillment(of: [ready], timeout: 90)
+        XCTAssertNil(host.failed, "o editor não abriu: \(host.failed ?? "")")
+        let r = try await w.callAsyncJavaScript(#"""
+          var o=null,t0=Date.now();while(Date.now()-t0<20000){var L=await new Promise(function(res){try{phAll(function(X){res((X||[]).filter(function(q){return q.kind==='video'&&q.blob}))})}catch(e){res([])}});if(L.length){o=L[0];break}await new Promise(function(r){setTimeout(r,300)})}
+          if(!o)return JSON.stringify({achou:false,ms:Date.now()-t0,errs:__errs.slice()});
+          var buf=await o.blob.arrayBuffer();var h=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',buf))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+          var el=document.createElement('video');el.muted=true;el.playsInline=true;el.src=URL.createObjectURL(o.blob);document.body.appendChild(el);
+          var toca=await new Promise(function(r){var t=setTimeout(function(){r('sem resposta em 20 s (pronto '+el.readyState+')')},20000);el.onerror=function(){clearTimeout(t);r('erro '+(el.error&&el.error.code))};
+           el.oncanplay=function(){el.play().then(function(){setTimeout(function(){clearTimeout(t);r('tocou até '+el.currentTime.toFixed(2)+' s de '+el.duration.toFixed(2)+' s')},800)},function(e){clearTimeout(t);r('play recusado '+e)})};el.load()});
+          el.remove();return JSON.stringify({achou:true,ms:Date.now()-t0,nome:o.nome,pid:o.pid,tipo:o.blob.type,tam:buf.byteLength,sha:h,toca:toca,errs:__errs.slice()});
+          """#, arguments: [:], in: nil, contentWorld: .page)
+        let o = try XCTUnwrap((try JSONSerialization.jsonObject(with: Data(((r as? String) ?? "{}").utf8))) as? [String: Any])
+        print("ATUALIZACAO-VIDEO: \(o)")
+        XCTAssertEqual(o["achou"] as? Bool, true, "o editor novo acha o vídeo")
+        XCTAssertEqual(o["sha"] as? String, esperado, "o vídeo volta igual byte a byte ao que a versão publicada gravou")
+        XCTAssertTrue(((o["toca"] as? String) ?? "").hasPrefix("tocou"), "o vídeo toca no editor novo: \(o["toca"] ?? "?")")
+    }
 }

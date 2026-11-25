@@ -277,13 +277,20 @@ object DataBackup {
         }.getOrDefault(false)
     }
 
-    private fun datedCopies(ctx: Context) {
+    /** N14 (24/11): cópia "antes-de-usar-a-versao-N" uma vez por versão. Chamada também ao ABRIR o app (antes só no onStop,
+     *  depois de a pessoa já ter usado a versão nova). Só acrescenta um zip em Download; não muda nenhum dado. */
+    @Synchronized
+    fun versionCopyIfNew(ctx: Context) {
         val sp = ctx.getSharedPreferences("arque.backup", Context.MODE_PRIVATE)
         val ver = br.com.arque.measure.BuildConfig.VERSION_CODE
         if (sp.getInt("ver", 0) != ver) {
             datedProjects(ctx, "antes-de-usar-a-versao-$ver")
             sp.edit().putInt("ver", ver).apply()
         }
+    }
+
+    private fun datedCopies(ctx: Context) {
+        versionCopyIfNew(ctx)
         datedProjects(ctx, java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date()))
     }
 

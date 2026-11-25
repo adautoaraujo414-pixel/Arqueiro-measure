@@ -2247,3 +2247,4 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
     - `CoreTests.testDescontoUmaRegraSo…` (iOS);
     - a mesma soma da varredura nos três: 186.251.793.425 centavos.
   - Expectativa alterada com o pedido e a data no comentário: `testMaoDeObra…` (descontoDe10: de valor × 0,9 para a regra do PDF).
+- **ORC-AMB, bateria de 430 (41a0842d):** `testNadaDeEnfeite3DEValoresParteB…` achou a caixinha da lista de projetos sem efeito visível (marcar só valia ao tocar em "Adicionar os marcados"). Agora o botão conta os marcados ("Adicionar 2 marcados"). Teste sem mudança; 10/10 em 1366 e 430.

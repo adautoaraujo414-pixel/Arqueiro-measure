@@ -2541,3 +2541,14 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Cerca de 27 s parado no WebPrivacy sem listas.
   - O editor sozinho leva de 1 a 2 s.
   - Mudança aprovada pelo Chefe: um armazenamento do WebKit compartilhado e limpo antes de cada teste (`WebKitCompartilhado`, com o teste `testISOLAMENTO_…`) e aquecimento do WebKit medido à parte ("ABERTURA-DIAG WebKit frio"). Os mesmos 20 s na 1ª abertura do editor.
+
+## UNIDADE-2 (25/11): medidas que ainda ficavam em mm, sem unidade, no modo cm (achado do Claude 3 na revisão do pre-final 436ac8f2) — Claude 4
+- **Reproduzir:** `?un=cm` (ou `arqueUnidade('cm')`), `loadState(initLimpo());demoScene();draw()`, pedra selecionada.
+  - 2D: cotas da pedra `sT`/`sR`/`sL` = 820 e 865; rótulo da cuba "fundo 100 · frente 106"; "frontão N".
+  - Lista: cabeçalho "Base 1 · 900 × 820 × 560" e a tabela de ferragens "900 × 820 × 560".
+  - 3D: título dos quadros (eletro "616 × 1700 × 691", pedra "2735 × 606", cooktop, cuba, caixa, módulo, paredes/piso), os rótulos de arrastar (largura/altura no 3D, painel, módulo, tamanho) e o texto da parede no 3D.
+- **Causa:** pontos de origem que montavam o texto com o número em mm direto (`m.w+' × '+…`), fora do `UN.num/UN.len` da 1ª rodada.
+- **Correção (na origem, sem mexer em texto pronto):** `UN.med(t)`, que em mm devolve o mesmo texto e em cm converte e escreve "cm". Onde já havia " mm", `UN.len`. Também o card do catálogo, o rótulo da caixa no 2D, "Encostou…", "Editando só…", Meus modelos e os avisos de cópia, nicho e lava-louças.
+- **Em mm nada muda:** o teste confere o texto em mm igual ao de antes.
+- **Teste:** `testUNIDADE_CotasDaPedraCubaListaEQuadrosDo3DEmCmEMmIgualAntes`. No 436ac8f2 falha em todos os pontos (ex.: "820 | 865 → 820 | 865"); agora "820 | 865 → 82 | 86,5". Os 6 `testUNIDADE_*` passam a 1366 e a 430.
+- **Ficou como está (já tem unidade escrita, em mm):** o relatório de medidas da planta (`cmmm`, "… mm") e a nota do rebaixo do perfil na lista. Não convertidos.

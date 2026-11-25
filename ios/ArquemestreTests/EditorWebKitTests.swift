@@ -11479,7 +11479,8 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["cheia"] as? String, "não entrou sozinho · outros iguais · perguntou", "sem espaço: não encolhe, não entra por cima, pergunta")
-        XCTAssertEqual(o["botoes"] as? String, "Usar 1310 mm / Não colocar")
+        // LIB-COMP (pedido do Adauto, 25/11): "Não colocar" passou a se chamar "Cancelar" (mesma ação); "Colocar mesmo assim" é outro botão, conferido no testLiberdadeDeComposicao…
+        XCTAssertEqual(o["botoes"] as? String, "Usar 1310 mm / Cancelar")
         XCTAssertEqual(o["usar"] as? String, "entrou com 1310 · sem sobrepor · outros iguais", "encolher só quando a pessoa escolhe")
         XCTAssertEqual(o["naoColocar"] as? String, "não colocou · fechou")
         XCTAssertEqual(o["livre"] as? String, "1600 · sem pergunta · sem sobrepor", "com espaço: medida do catálogo")
@@ -14031,16 +14032,17 @@ final class EditorWebKitTests: XCTestCase {
         R.lateral=(wg?'tem lateral':'sem lateral')+' '+(S.mods.length===a1.length?'não entrou':'entrou')+' '+bts()+' '+(dims(a1)===d1?'outros iguais':'outros mudaram');fecha();
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["c0"] as? String, "Canto em L (base): vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças iguais às do canto dessa medida na parede vazia | reabrir igual | cheia não entrou Entendi explica o mínimo outros iguais | ok projeto igual")
-        XCTAssertEqual(o["c1"] as? String, "Canto em L (aéreo) · esquerdo: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças iguais às do canto dessa medida na parede vazia | reabrir igual | cheia não entrou Entendi explica o mínimo outros iguais | ok projeto igual")
-        XCTAssertEqual(o["c2"] as? String, "Canto em L (aéreo) · direito: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças iguais às do canto dessa medida na parede vazia | reabrir igual | cheia não entrou Entendi explica o mínimo outros iguais | ok projeto igual")
-        XCTAssertEqual(o["c3"] as? String, "Canto L guarda-roupa · esquerdo: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças iguais às do canto dessa medida na parede vazia | reabrir igual | cheia não entrou Entendi explica o mínimo outros iguais | ok projeto igual")
-        XCTAssertEqual(o["c4"] as? String, "Canto L guarda-roupa · direito: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças iguais às do canto dessa medida na parede vazia | reabrir igual | cheia não entrou Entendi explica o mínimo outros iguais | ok projeto igual")
-        XCTAssertEqual(o["planta"] as? String, "não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais")
+        // LIB-COMP (pedido do Adauto, 25/11): "Não colocar" e "Entendi" da pergunta do canto passaram a se chamar "Cancelar" (mesma ação: nada muda); "Colocar mesmo assim" é outro botão, conferido no testLiberdadeDeComposicao…
+        XCTAssertEqual(o["c0"] as? String, "Canto em L (base): vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Cancelar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças iguais às do canto dessa medida na parede vazia | reabrir igual | cheia não entrou Cancelar explica o mínimo outros iguais | ok projeto igual")
+        XCTAssertEqual(o["c1"] as? String, "Canto em L (aéreo) · esquerdo: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Cancelar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças iguais às do canto dessa medida na parede vazia | reabrir igual | cheia não entrou Cancelar explica o mínimo outros iguais | ok projeto igual")
+        XCTAssertEqual(o["c2"] as? String, "Canto em L (aéreo) · direito: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Cancelar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças iguais às do canto dessa medida na parede vazia | reabrir igual | cheia não entrou Cancelar explica o mínimo outros iguais | ok projeto igual")
+        XCTAssertEqual(o["c3"] as? String, "Canto L guarda-roupa · esquerdo: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Cancelar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças iguais às do canto dessa medida na parede vazia | reabrir igual | cheia não entrou Cancelar explica o mínimo outros iguais | ok projeto igual")
+        XCTAssertEqual(o["c4"] as? String, "Canto L guarda-roupa · direito: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Cancelar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças iguais às do canto dessa medida na parede vazia | reabrir igual | cheia não entrou Cancelar explica o mínimo outros iguais | ok projeto igual")
+        XCTAssertEqual(o["planta"] as? String, "não entrou sozinho Usar espaço disponível (N mm) / Cancelar outros iguais")
         /* o vizinho está a 780 mm da parede contando o tamponamento automático da ponta da fileira (30); ao encostar o canto esse tamponamento sai (regra da ponta), então o canto vai até o corpo: 810 − 5 de folga da parede (limX, igual a todo módulo) = 805 */XCTAssertEqual(o["plantaUsar"] as? String, "entrou 805 outros iguais sem sobrepor")
-        XCTAssertEqual(o["plantaCheia"] as? String, "não entrou Entendi outros iguais")
-        XCTAssertEqual(o["painelCheia"] as? String, "não virou Entendi projeto igual")
-        XCTAssertEqual(o["lateral"] as? String, "tem lateral não entrou Entendi outros iguais")
+        XCTAssertEqual(o["plantaCheia"] as? String, "não entrou Cancelar outros iguais")
+        XCTAssertEqual(o["painelCheia"] as? String, "não virou Cancelar projeto igual")
+        XCTAssertEqual(o["lateral"] as? String, "tem lateral não entrou Cancelar outros iguais")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
@@ -14209,6 +14211,136 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["excluir"] as? String, "pergunta antes · excluiu só ele · outros ficaram")
         XCTAssertEqual(o["travado"] as? String, "travado não sai")
         XCTAssertEqual(o["destaqueSai"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // LIB-COMP · arrasto (regras do Adauto 25/11): o encosto no vizinho continua ajudando; passando dele (mais que 60% da largura, mín. 450 mm)
+    // a pessoa atravessa. Durante o gesto nenhum diálogo (só o sinal "sobreposto"); ao soltar pergunta uma vez. Par aceito (móvel × vizinho,
+    // pelos ids D23) fica guardado no projeto e no desfazer: não pergunta de novo; só com outro móvel.
+    func testLiberdadeDeComposicaoArrastoSemDialogoNoGestoPerguntaAoSoltarParAceitoNaoRepeteEDesfazJunto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},e0=__errs.length,msgs=[],tw=window.toast;window.toast=function(t){if(tw(t)!=='mudo')msgs.push(String(t))};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse',buttons:t==='pointerup'?0:1}))};
+        var dlg=0,aberto=function(){var q=document.getElementById('fitq');return !!(q&&!q.hidden)};
+        var arrasta=async function(mi,dxmm,passos){passos=passos||10;if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}/* pega o móvel num ponto que é dele (não o vizinho por cima, nem as bolinhas de redimensionar da borda) */var re=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]'),rc=re.getBoundingClientRect(),y=rc.top+rc.height*.6,x=rc.left+rc.width*.5,el=re;[.5,.6,.4,.7,.3,.8,.2].some(function(f){var xx=rc.left+rc.width*f,e_=document.elementFromPoint(xx,y),g_=e_&&e_.closest&&e_.closest('#mod');if(g_&&g_.dataset.mi===String(mi)&&e_.tagName.toLowerCase()==='rect'){x=xx;el=e_;return true}});var k=rc.width/S.mods[mi].w;pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=passos;i++){pe('pointermove',svg,x+dxmm*k*i/passos,y);await W(15);if(aberto())dlg++}pe('pointerup',svg,x+dxmm*k,y);await W(250)};
+        var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));S.mods[0].x=5;S.mods[1].x=1500;S.mods[2].x=3000;S.m=null;draw()};
+        var sob=function(i,j){return modOv(S.mods[i],S.mods[j])};var d=function(){return S.mods.map(function(m){return Math.round(m.x)+(m.lvok?'['+m.lvok.length+']':'')}).join(' ')},bt=function(v){var q=document.getElementById('fitq'),b=q&&!q.hidden&&q.querySelector('[data-fitqa="'+v+'"]');if(b)b.click();return !!b};
+        cena();await W(100);await arrasta(1,-300);R.ajuda='sobrepôs '+sob(0,1)+' · andou '+(S.mods[1].x<1500)+' · pergunta '+aberto();
+        cena();await W(100);var J0=JSON.stringify(S.mods[0]);dlg=0;await arrasta(1,-1450);R.atravessa='durante '+dlg+' diálogo · ao soltar '+(aberto()?'pergunta':'sem pergunta')+' · esperando a resposta por cima '+sob(0,1);bt('0');await W(100);R.cancelar=Math.round(S.mods[1].x)+' · vizinho igual '+(JSON.stringify(S.mods[0])===J0);
+        cena();await W(100);await arrasta(1,-1450);bt('1');await W(100);var X1=S.mods[1].x;R.colocar='por cima '+sob(0,1)+' · '+(S.mods[1].lvok||[]).length+' par · par com o id do vizinho '+(S.mods[1].lvok&&S.mods[1].lvok[0]===modUid(S.mods[0],true));
+        dlg=0;var pg=0;/* 20 arrastos de verdade (150 mm: passa da zona morta de 6 px também a 430) com pausa, pra não virar 2 toques */for(var s=0;s<20;s++){await arrasta(1,s%2?150:-150,3);await W(400);if(aberto()){pg++;bt('0')}}R.vinte='diálogos durante '+dlg+' · perguntas '+pg;
+        await W(800);/* o histórico junta mudanças a menos de 700 ms: a pessoa não arrasta duas vezes tão rápido */X1=S.mods[1].x;/* o desfazer volta pra cá (antes do arrasto até o 3º) *//* até passar do encosto no 3º (que fica em 3000): o fim do arrasto em 3300 (a zona morta de 6 px e o passo em px comem uns 150 a 300 mm a 430) */await arrasta(1,3300-S.mods[1].x);R.terceiro=(aberto()?'pergunta':'sem pergunta')+' · esperando a resposta por cima do 3º '+sob(1,2);bt('1');await W(100);R.terceiroAceito=(S.mods[1].lvok||[]).length+' pares · por cima do 3º '+sob(1,2);
+        document.getElementById('und').click();await W(150);draw();R.desfazer=(S.mods[1].lvok||[]).length+' par · no lugar de antes '+(Math.abs(S.mods[1].x-X1)<1);
+        var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();R.salvo=(S.mods[1].lvok||[]).length+' par · '+(Math.abs(S.mods[1].x-X1)<1);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["ajuda"] as? String, "sobrepôs false · andou true · pergunta false", "empurrão curto: o encosto no vizinho continua ajudando")
+        XCTAssertEqual(o["atravessa"] as? String, "durante 0 diálogo · ao soltar pergunta · esperando a resposta por cima false")
+        XCTAssertEqual(o["cancelar"] as? String, "1500 · vizinho igual true", "Cancelar volta pra onde estava antes do arrasto")
+        XCTAssertEqual(o["colocar"] as? String, "por cima true · 1 par · par com o id do vizinho true")
+        XCTAssertEqual(o["vinte"] as? String, "diálogos durante 0 · perguntas 0", "par aceito não pergunta de novo")
+        XCTAssertEqual(o["terceiro"] as? String, "pergunta · esperando a resposta por cima do 3º false", "outro móvel: pergunta uma vez")
+        XCTAssertEqual(o["terceiroAceito"] as? String, "2 pares · por cima do 3º true")
+        XCTAssertEqual(o["desfazer"] as? String, "1 par · no lugar de antes true", "o desfazer volta a confirmação junto")
+        XCTAssertEqual(o["salvo"] as? String, "1 par · true", "a confirmação vai no projeto")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // LIB-COMP · mover no 3D e canto (Chefe/Adauto 25/11): no 3D o mesmo do 2D (o encosto ajuda; passando dele atravessa; nenhum diálogo durante;
+    // pergunta uma vez ao soltar; Cancelar devolve; par aceito não pergunta de novo; desfazer volta junto; 2D = 3D). Canto: o modOv não enxerga
+    // o canto (achado da revisão do B15), mas a colisão de verdade em 3D enxerga: arrastar um balcão pra cima do canto pergunta ao soltar.
+    func testLiberdadeDeComposicaoMoverNo3DECantoPerguntaAoSoltarParAceitoDesfazE2DIgual3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},e0=__errs.length,tw=window.toast;window.toast=function(t){tw(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+        var aberto=function(){var q=document.getElementById('fitq');return !!(q&&!q.hidden)},bt=function(v){var q=document.getElementById('fitq'),b=q&&!q.hidden&&q.querySelector('[data-fitqa="'+v+'"]');if(b)b.click();return !!b};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2600;S.mods=[];draw();['Balcão 2 portas','Balcão 2 portas','Balcão 2 portas'].forEach(function(n){newTpl(tpl(n))});S.mods[0].x=5;S.mods[1].x=1500;S.mods[2].x=3000;S.mods.forEach(function(m){m.lock=false});S.m=S.mods[0];draw();panel();
+        open3D();await W(900);__cam(0,0.25,1);await W(200);__build();var cv=document.querySelector('#v3 canvas'),M_=document.getElementById('v3');
+        var ev=function(tp,x,y,el){(el||cv).dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,pointerType:'touch',button:0,buttons:tp==='pointerup'?0:1,isPrimary:true}))};
+        var ctr=function(i,fx){var bb=null;__boxes().forEach(function(q){if(String(q.nm||'').indexOf(i+':')!==0||/Rodapé|Base inferior/.test(q.nm))return;if(!bb)bb={x0:q.x0,x1:q.x1,y0:q.y0,y1:q.y1,z0:q.z0,z1:q.z1};else{bb.x0=Math.min(bb.x0,q.x0);bb.x1=Math.max(bb.x1,q.x1);bb.y0=Math.min(bb.y0,q.y0);bb.y1=Math.max(bb.y1,q.y1);bb.z1=Math.max(bb.z1,q.z1)}});/* perto do topo do móvel (no celular a barra do 3D cobre a parte de baixo da tela) */var p=__p3(fx?bb.x0+(bb.x1-bb.x0)*fx:(bb.x0+bb.x1)/2,bb.y1-120,bb.z1),rc=cv.getBoundingClientRect();return [rc.left+p[0],rc.top+p[1]]};
+        var dlg=0,drag=async function(i,dx,n,fx){n=n||10;__build();var c=ctr(i,fx);ev('pointerdown',c[0],c[1]);await W(420);for(var s=1;s<=n;s++){ev('pointermove',c[0]+dx*s/n,c[1],s>1?M_:cv);if(aberto())dlg++}ev('pointerup',c[0]+dx,c[1],M_);await W(250)};
+        var px=function(mm){var a=__p3(0,700,600),b=__p3(mm,700,600);return b[0]-a[0]},sob=function(i,j){return libColide(S.mods[i]).indexOf(S.mods[j])>=0};
+        var J0=JSON.stringify(S.mods[0]);dlg=0;await drag(1,px(-1400));R.atravessa='durante '+dlg+' · ao soltar '+(aberto()?'pergunta':'sem pergunta')+' · esperando a resposta por cima '+sob(1,0);bt('0');await W(100);R.cancelar=Math.round(S.mods[1].x)+' · vizinho igual '+(JSON.stringify(S.mods[0])===J0);
+        await W(800);await drag(1,px(-1400));bt('1');await W(100);var X1=S.mods[1].x;R.colocar='por cima '+sob(1,0)+' · '+(S.mods[1].lvok||[]).length+' par';
+        __build();var bx=__boxes().filter(function(b){return String(b.nm).indexOf('1:')===0}),e=extOf(S.mods[1]);R.igual3D=bx.length>0&&Math.abs(Math.min.apply(null,bx.map(function(b){return b.x0}))-e[0])<=1&&Math.abs(Math.max.apply(null,bx.map(function(b){return b.x1}))-e[1])<=1;
+        dlg=0;var pg=0;for(var s=0;s<20;s++){await drag(1,px(s%2?150:-150),3);if(aberto()){pg++;bt('0')}}R.vinte='durante '+dlg+' · perguntas '+pg;
+        /* mais um par (o 3º) e o desfazer volta só essa confirmação */await W(800);/* pega na ponta direita (o meio está por cima do vizinho já aceito) */await drag(1,px(S.mods[2].x+200-S.mods[1].x),10,.93);bt('1');await W(100);R.doisPares=(S.mods[1].lvok||[]).length+' pares';await W(800);document.getElementById('v3x').click();await W(100);document.getElementById('und').click();await W(150);draw();R.desfazer=S.mods.length+' móveis · '+((S.mods[1]||{}).lvok||[]).length+' par';
+        /* canto: arrastar no 2D um balcão pra cima do canto L */loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;draw();newTpl(tpl('Canto L guarda-roupa · esquerdo'));newTpl(tpl('Balcão 2 portas'));var cn=S.mods.filter(function(m){return m.corner})[0],bc=S.mods.filter(function(m){return !m.corner})[0];bc.x=2500;var JC=JSON.stringify(cn);var mi=S.mods.indexOf(bc);S.m=bc;draw();panel();await W(60);
+        var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse',buttons:t==='pointerup'?0:1}))};var re=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]'),rc=re.getBoundingClientRect(),x=rc.left+rc.width*.5,y=rc.top+rc.height*.6,k=rc.width/bc.w;pe('pointerdown',re,x,y);await W(30);for(var i=1;i<=10;i++){pe('pointermove',svg,x-2400*k*i/10,y);await W(15)}pe('pointerup',svg,x-2400*k,y);await W(250);
+        R.canto=(aberto()?'pergunta':'sem pergunta')+' · esperando a resposta por cima do canto '+(libColide(bc).indexOf(cn)>=0);bt('0');await W(100);R.cantoCancelar=Math.round(bc.x)+' · canto igual '+(JSON.stringify(cn)===JC);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["atravessa"] as? String, "durante 0 · ao soltar pergunta · esperando a resposta por cima false", "3D: nenhum diálogo durante; pergunta ao soltar")
+        XCTAssertEqual(o["cancelar"] as? String, "1500 · vizinho igual true")
+        XCTAssertEqual(o["colocar"] as? String, "por cima true · 1 par")
+        XCTAssertEqual(o["igual3D"] as? Bool, true, "o 2D e o 3D mostram o móvel no mesmo lugar")
+        XCTAssertEqual(o["vinte"] as? String, "durante 0 · perguntas 0", "par aceito: 20 passos sem diálogo")
+        XCTAssertEqual(o["doisPares"] as? String, "2 pares")
+        XCTAssertEqual(o["desfazer"] as? String, "3 móveis · 1 par", "o desfazer volta a confirmação junto")
+        XCTAssertEqual(o["canto"] as? String, "pergunta · esperando a resposta por cima do canto false", "canto: a colisão de verdade enxerga")
+        XCTAssertEqual(o["cantoCancelar"] as? String, "2500 · canto igual true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // LIB-COMP · LIBERDADE DE COMPOSIÇÃO (pedido urgente do Adauto, 25/11): o encaixe automático é ajuda, nunca imposição. Sem espaço livre
+    // (colisão de verdade em 3D) ou parede menor que o móvel: "Usar N mm" (só o novo encolhe, como antes), "Colocar mesmo assim" (no tamanho
+    // dele, por cima) e "Cancelar". O mesmo no ⧉ Copiar e na medida digitada. Os que já estão nunca mudam; o aviso de interseção continua.
+    func testLiberdadeDeComposicaoColocarMesmoAssimCancelarUsarVizinhosIguaisCopiaMedidaParede2DIgual3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},e0=__errs.length,W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},msgs=[],tw=window.toast;window.toast=function(t){if(tw(t)!=='mudo')msgs.push(String(t))};
+        /* JSON canônico (chaves em ordem): o conteúdo tem que ser idêntico; a ordem das chaves no objeto não é conteúdo */var CJ=function(v){return JSON.stringify(v,function(k,x){return x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce(function(o,kk){o[kk]=x[kk];return o},{}):x})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var cena=function(W_,lista){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=W_;S.H=2700;S.mods=[];draw();lista.forEach(function(b){S.m=S.mods[S.mods.length-1]||null;newTpl(T(b));draw()});var q=document.getElementById('fitq');if(q)q.hidden=true;msgs=[];/* identidade (D23) é dada na hora em que alguém pede; aqui já antes de guardar o JSON de comparação */S.mods.forEach(function(m){modUid(m,true)});draw();return S.mods.map(function(m){return CJ(m)})};
+        var iguais=function(J){return J.every(function(j,k){return S.mods[k]&&CJ(S.mods[k])===j})};
+        var perg=function(){var q=document.getElementById('fitq');return q&&!q.hidden?q:null};
+        var botoes=function(q){return q?[].map.call(q.querySelectorAll('button'),function(b){return b.textContent.trim()}).join(' / '):'sem pergunta'};
+        var d=function(m){return m?Math.round(m.x)+'+'+Math.round(m.w)+'@'+(+m.b||0):'-'};
+        var AER=['Balcão 2 portas','Balcão da pia (cuba)','Aéreo 2 portas','Aéreo 2 portas'];
+        /* 1. aéreo de 1000 acima dos balcões, sem colisão de verdade: entra sem pergunta, no tamanho dele */var J=cena(6810,['Balcão 2 portas','Balcão 2 portas','Balcão da pia (cuba)','Balcão 2 portas','Balcão porta + gavetas','Balcão 2 gavetas','Balcão aberto (prateleira)','Balcão 1 porta']);S.m=S.mods[2];newTpl(T('Aéreo 2 portas'));draw();await W(80);var n=S.mods[J.length];
+        R.livre=(perg()?'perguntou':'sem pergunta')+' · '+(n?n.w+' sup '+!!n.sup:'não entrou')+' · colide '+(n?libColide(n).length:'-')+' · vizinhos iguais '+iguais(J);
+        /* 2. aéreos cheios: pergunta com as 3 opções */J=cena(3000,AER);S.m=S.mods[1];newTpl(T('Aéreo 2 portas'));await W(80);R.botoes=botoes(perg());
+        /* Colocar mesmo assim: no tamanho dele, por cima; vizinhos idênticos (JSON); fica assim depois de desenhar, 3D, salvar e reabrir */var b=perg()&&perg().querySelector('[data-fitqf]');if(b)b.click();await W(120);n=S.mods[J.length];
+        R.colocar=d(n)+' · lvx '+(n&&n.lvx)+' · colide '+(n?libColide(n).length:'-')+' · vizinhos iguais '+iguais(J)+' · '+(msgs.filter(function(t){return /mesmo assim/.test(t)})[0]||'sem aviso');
+        draw();open3D();await W(300);__build();var bx=__boxes().filter(function(q){return String(q.nm).indexOf(J.length+':')===0}),e=extOf(n);R.igual3D=bx.length>0&&Math.abs(Math.min.apply(null,bx.map(function(q){return q.x0}))-e[0])<=1&&Math.abs(Math.max.apply(null,bx.map(function(q){return q.x1}))-e[1])<=1;document.getElementById('v3x').click();draw();
+        var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();R.reaberto=d(S.mods[J.length])+' · vizinhos iguais '+J.every(function(j,k){var a=JSON.parse(j),c=JSON.parse(JSON.stringify(S.mods[k]));delete a.wing;delete c.wing;return CJ(a)===CJ(c)});
+        /* Cancelar: nada muda */J=cena(3000,AER);var N0=S.mods.length;S.m=S.mods[1];newTpl(T('Aéreo 2 portas'));await W(80);b=perg()&&perg().querySelector('[data-fitq="nao"]');if(b)b.click();await W(120);R.cancelar=(S.mods.length===N0)+' · vizinhos iguais '+iguais(J)+' · avisos '+msgs.length;
+        /* Usar N mm: só o novo encolhe (como antes) */J=cena(3000,AER);S.m=S.mods[1];newTpl(T('Aéreo 2 portas'));await W(80);b=perg()&&perg().querySelector('[data-fitq="usar"]');if(b)b.click();await W(120);n=S.mods[J.length];R.usar=d(n)+' · lvx '+!!(n&&n.lvx)+' · colide '+(n?libColide(n).length:'-');
+        /* 3. parede menor que o móvel: não encolhe sozinho; pergunta; Colocar mesmo assim fica com 1200 */J=cena(900,[]);newTpl(T('Balcão 2 portas + 4 gavetas'));await W(80);R.paredeCurta=(perg()?'perguntou: '+botoes(perg()):'sem pergunta · '+d(S.mods[0]));b=perg()&&perg().querySelector('[data-fitqf]');if(b)b.click();await W(120);draw();R.paredeCurtaColocou=d(S.mods[0]);
+        /* 4. ⧉ Copiar sem lugar livre */J=cena(2000,['Balcão 2 portas','Balcão 2 portas']);var c=modCopy(S.mods[0]);await W(60);R.copia=(c?'copiou sozinho':'')+botoes(perg());b=perg()&&perg().querySelector('[data-fitqc]');if(b)b.click();await W(120);R.copiaColocou=S.mods.map(d).join(' ')+' · vizinhos iguais '+iguais(J)+' · lvx '+!!(S.mods[2]&&S.mods[2].lvx);
+        J=cena(2000,['Balcão 2 portas','Balcão 2 portas']);modCopy(S.mods[0]);await W(60);b=perg()&&perg().querySelector('[data-fitq="nao"]');if(b)b.click();await W(80);R.copiaCancelar=S.mods.length+' · vizinhos iguais '+iguais(J);
+        /* 5. medida digitada que entra no vizinho */J=cena(2000,['Balcão 2 portas','Balcão 2 portas']);S.m=S.mods[0];setv('w',1400);await W(60);R.medida=d(S.mods[0])+' · '+botoes(perg());b=perg()&&perg().querySelector('[data-fitqs]');if(b)b.click();await W(120);draw();R.medidaAplicou=d(S.mods[0])+' · vizinho igual '+(CJ(S.mods[1])===J[1]);
+        J=cena(2000,['Balcão 2 portas','Balcão 2 portas']);S.m=S.mods[0];setv('w',1400);await W(60);b=perg()&&perg().querySelector('[data-fitq="nao"]');if(b)b.click();await W(80);R.medidaCancelar=d(S.mods[0])+' · vizinhos iguais '+iguais(J);
+        /* 5b. canto L sem espaço: "Colocar mesmo assim" (no tamanho dele) e "Cancelar" */J=cena(2000,['Balcão 2 portas','Balcão 2 portas']);newTpl(T('Canto L guarda-roupa · esquerdo'));await W(60);var cq=document.getElementById('cnq');R.canto=cq&&!cq.hidden?[].map.call(cq.querySelectorAll('button'),function(x){return x.textContent.trim()}).join(' / '):'sem pergunta';b=cq&&!cq.hidden&&cq.querySelector('[data-cnqf]');if(b)b.click();await W(120);n=S.mods[J.length];R.cantoColocou=(n?d(n)+' canto '+n.corner+' lvx '+n.lvx:'-')+' · vizinhos iguais '+iguais(J);
+        J=cena(2000,['Balcão 2 portas','Balcão 2 portas']);newTpl(T('Canto L guarda-roupa · esquerdo'));await W(60);cq=document.getElementById('cnq');b=cq&&!cq.hidden&&cq.querySelector('[data-cnq="nao"],[data-cnq="ok"]');if(b)b.click();await W(80);R.cantoCancelar=S.mods.length+' · vizinhos iguais '+iguais(J);
+        /* 6. projeto sem sobreposição: nada novo no projeto (nenhuma marca), corte/orçamento/DXF iguais ao recalcular; projeto antigo abre igual */J=cena(6810,['Balcão 2 portas','Balcão da pia (cuba)','Aéreo 2 portas']);var bud=JSON.stringify(budget()),cut=JSON.stringify(S.mods.map(cutLines)),dx=JSON.stringify(dxfPecas().pecas.map(function(p){return [p.nome,p.L,p.W]}));draw();
+        R.semSobreposicao='marcas '+S.mods.filter(function(m){return m.lvx}).length+' · orçamento '+(JSON.stringify(budget())===bud)+' · corte '+(JSON.stringify(S.mods.map(cutLines))===cut)+' · DXF '+(JSON.stringify(dxfPecas().pecas.map(function(p){return [p.nome,p.L,p.W]}))===dx);
+        loadState(JSON.parse(JSON.stringify(snapState())));draw();var antigo=JSON.stringify(snapState());loadState(JSON.parse(antigo));draw();R.antigo=JSON.stringify(snapState())===antigo;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["livre"] as? String, "sem pergunta · 1000 sup true · colide 0 · vizinhos iguais true", "aéreo acima dos balcões entra direto")
+        XCTAssertEqual(o["botoes"] as? String, "Usar 960 mm / Colocar mesmo assim / Cancelar")
+        XCTAssertEqual(o["colocar"] as? String, "1995+1000@1750 · lvx 1 · colide 1 · vizinhos iguais true · Colocado mesmo assim: fica por cima de 1 móvel (aéreo). Arraste pra ajustar; o aviso de interseção continua.")
+        XCTAssertEqual(o["igual3D"] as? Bool, true, "o 3D mostra o móvel colocado no mesmo lugar e largura do 2D")
+        XCTAssertEqual(o["reaberto"] as? String, "1995+1000@1750 · vizinhos iguais true")
+        XCTAssertEqual(o["cancelar"] as? String, "true · vizinhos iguais true · avisos 0")
+        XCTAssertEqual(o["usar"] as? String, "2005+960@1750 · lvx false · colide 0", "Usar N mm continua: só o novo encolhe")
+        XCTAssertEqual(o["paredeCurta"] as? String, "perguntou: Usar 890 mm / Colocar mesmo assim / Cancelar")
+        XCTAssertEqual(o["paredeCurtaColocou"] as? String, "5+1200@0")
+        XCTAssertEqual(o["copia"] as? String, "Colocar mesmo assim / Cancelar")
+        XCTAssertEqual(o["copiaColocou"] as? String, "5+900@0 905+900@0 905+900@0 · vizinhos iguais true · lvx true")
+        XCTAssertEqual(o["copiaCancelar"] as? String, "2 · vizinhos iguais true")
+        XCTAssertEqual(o["medida"] as? String, "5+900@0 · Aplicar mesmo assim / Cancelar", "a medida não entra sozinha: pergunta")
+        XCTAssertEqual(o["medidaAplicou"] as? String, "5+1400@0 · vizinho igual true")
+        XCTAssertEqual(o["medidaCancelar"] as? String, "5+900@0 · vizinhos iguais true")
+        XCTAssertEqual(o["canto"] as? String, "Colocar mesmo assim / Cancelar")
+        XCTAssertEqual(o["cantoColocou"] as? String, "5+1000@0 canto e lvx 1 · vizinhos iguais true")
+        XCTAssertEqual(o["cantoCancelar"] as? String, "2 · vizinhos iguais true")
+        XCTAssertEqual(o["semSobreposicao"] as? String, "marcas 0 · orçamento true · corte true · DXF true")
+        XCTAssertEqual(o["antigo"] as? Bool, true, "projeto antigo abre igual")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

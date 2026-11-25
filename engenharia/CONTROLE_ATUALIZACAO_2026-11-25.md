@@ -54,3 +54,11 @@ Publicação: só depois da aprovação integral do Code 1 e da homologação fi
 ## Decisões abertas com o Adauto
 - Tamponamento da junção normal: RESPONDIDO pelo §12 (25/11): não muda sozinho o que já existe → TAMP-JUNTA sobre o vizinho vira sugestão com botão.
 - Veio em peças altas: RESPONDIDO pelo §12: informar claramente (aviso "maior que a chapa"), sem modificar o projeto.
+
+## ESTADO PARA CONTINUIDADE (25/11 ~23:45 UTC)
+Autorização do Adauto (25/11): publicar Android, Windows e iOS (revisão Apple, 3.0.14) SEM nova consulta, desde que: aprovação final escrita do Code 1 + homologação das 4 plataformas sem falha conhecida. Proibido: modo publicar/testflight/asc-enviar antes disso; mexer na main; afrouxar teste; mudar projeto existente sozinho.
+- Código definitivo em montagem: claude/pre-final-proximo @ cff643ae (Claude 4). Ainda entram: claude/reg12-criacao 736bddeb (Code 2, bateria rodando), claude/reg12-paineis (Code 2, a fazer: painéis existentes não mudam sozinhos; vira sugestão "Ajustar painéis à parede").
+- Depois: subir em claude/pre-final; disparar ios.yml (testflight=false), android/windows modo=teste, android/windows/ios-atualizacao (anterior apk-660 / win-166 / 3f1c3a58). Resultados em ci/ios-resultados-<ramo>.
+- Publicação (Chefe): android.yml e windows.yml modo=publicar com confirmar "PUBLICAR <7 letras do SHA>"; ios.yml testflight=true; asc-enviar versao=3.0.14, enviar=true, liberar=true. MARKETING_VERSION 3.0.14 no ios/project.yml. novidades.txt da versão (Code 1). AAB do Google Play fica na release; envio ao Play Console é manual.
+- Riscos registrados (não defeito): plano de corte não determinístico sob carga (N11); confineAll/roomClamp escreve-e-desfaz para módulos (guarda); simulador iOS instável após ~70 min (RECURSO-DIAG medindo).
+- Agentes: Code 1 session_016faTeAyG9oh6ZpRkCNgyn1 (aprovação final; contexto quase no limite) · Code 2 session_016faTeBM8Hvnazqmgmojndy · Claude 3 session_016faTeABFwdJx8bqQ1ih4ka · Claude 4 session_016faTeCYt1Jst4HkdGeQzW6 · Chefe session_016faTeEhtYkTpACtvjgfHzo.

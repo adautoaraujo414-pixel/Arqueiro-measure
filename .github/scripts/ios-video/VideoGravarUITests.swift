@@ -92,7 +92,8 @@ final class VideoGravarUITests: XCTestCase {
         var fimAlbum = Date().addingTimeInterval(3600)
         var alvo: XCUIElement? = nil
         var passos = 0
-        let fim = Date().addingTimeInterval(60)
+        // 10ª rodada: cada volta de busca no seletor (outro processo) leva vários segundos; 60 s não bastavam no iPad
+        let fim = Date().addingTimeInterval(120)
         repeat {
             for q in [app.images.matching(pv), app.cells.matching(pv), app.collectionViews.cells, app.scrollViews.images] {
                 for i in 0..<min(q.count, 12) {
@@ -113,7 +114,7 @@ final class VideoGravarUITests: XCTestCase {
             }
             // 9ª rodada no iPad: depois do Close o seletor mostra os álbuns (miniaturas sem nome), não a grade; abre o álbum
             // "Videos" do seletor (o da página é "Vídeos", com acento, e fica de fora)
-            if passos > 0 && !abriuAlbum && Date() > fimAlbum {
+            if passos > 0 && !abriuAlbum && (Date() > fimAlbum || app.images.matching(pv).count == 0) {  // 10ª: sem esperar, se não há miniatura de vídeo
                 abriuAlbum = true
                 let qa = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ OR label == %@", "Videos", "Vídeos"))
                 for i in 0..<min(qa.count, 10) {

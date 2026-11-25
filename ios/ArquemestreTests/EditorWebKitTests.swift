@@ -18932,7 +18932,7 @@ final class EditorWebKitTests: XCTestCase {
          /* com zoom: a mesma conta (o texto escala junto com o desenho) */[].forEach.call(document.querySelectorAll('#cutm svg[data-czs]'),function(s){if(window.cutZoom){var B=s.getBoundingClientRect();cutZoom.zoomAt(s,B.left+B.width*.35,B.top+B.height*.4,4)}});var z=__cutTxtChk(document.getElementById('cutm'));tot.zoomRuins+=z.ruins.length;document.getElementById('cutm').hidden=true};
         for(var i=Math.floor(its.length*0/3);i<Math.floor(its.length*1/3);i++){loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=3000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(its[i])));if(!S.mods.length)continue;draw();await confere(its[i].n)}
         
-        R.cenas=tot.cenas>30;R.pecas=tot.pecas>300;R.textos=tot.textos>1500;R.ruins=tot.ruins;R.semTexto=tot.semTexto;R.zoomRuins=tot.zoomRuins;R.ex=ex.join(' || ');R.errs=__errs.length-e0;return JSON.stringify(R);
+        /* cobertura (Chefe 25/11): os três terços somam pelo menos o do teste inteiro de antes (>100 cenas, >1000 peças, >5000 textos) */R.cenas=tot.cenas>33;R.pecas=tot.pecas>333;R.textos=tot.textos>1666;R.ruins=tot.ruins;R.semTexto=tot.semTexto;R.zoomRuins=tot.zoomRuins;R.ex=ex.join(' || ');R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["cenas"] as? Bool, true)
         XCTAssertEqual(o["pecas"] as? Bool, true)
@@ -18981,7 +18981,7 @@ final class EditorWebKitTests: XCTestCase {
          /* com zoom: a mesma conta (o texto escala junto com o desenho) */[].forEach.call(document.querySelectorAll('#cutm svg[data-czs]'),function(s){if(window.cutZoom){var B=s.getBoundingClientRect();cutZoom.zoomAt(s,B.left+B.width*.35,B.top+B.height*.4,4)}});var z=__cutTxtChk(document.getElementById('cutm'));tot.zoomRuins+=z.ruins.length;document.getElementById('cutm').hidden=true};
         for(var i=Math.floor(its.length*1/3);i<Math.floor(its.length*2/3);i++){loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=3000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(its[i])));if(!S.mods.length)continue;draw();await confere(its[i].n)}
         
-        R.cenas=tot.cenas>30;R.pecas=tot.pecas>300;R.textos=tot.textos>1500;R.ruins=tot.ruins;R.semTexto=tot.semTexto;R.zoomRuins=tot.zoomRuins;R.ex=ex.join(' || ');R.errs=__errs.length-e0;return JSON.stringify(R);
+        /* cobertura (Chefe 25/11): os três terços somam pelo menos o do teste inteiro de antes (>100 cenas, >1000 peças, >5000 textos) */R.cenas=tot.cenas>33;R.pecas=tot.pecas>333;R.textos=tot.textos>1666;R.ruins=tot.ruins;R.semTexto=tot.semTexto;R.zoomRuins=tot.zoomRuins;R.ex=ex.join(' || ');R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["cenas"] as? Bool, true)
         XCTAssertEqual(o["pecas"] as? Bool, true)
@@ -19030,7 +19030,7 @@ final class EditorWebKitTests: XCTestCase {
          /* com zoom: a mesma conta (o texto escala junto com o desenho) */[].forEach.call(document.querySelectorAll('#cutm svg[data-czs]'),function(s){if(window.cutZoom){var B=s.getBoundingClientRect();cutZoom.zoomAt(s,B.left+B.width*.35,B.top+B.height*.4,4)}});var z=__cutTxtChk(document.getElementById('cutm'));tot.zoomRuins+=z.ruins.length;document.getElementById('cutm').hidden=true};
         for(var i=Math.floor(its.length*2/3);i<Math.floor(its.length*3/3);i++){loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=3000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(its[i])));if(!S.mods.length)continue;draw();await confere(its[i].n)}
         loadState(initLimpo());demoScene();await W(300);draw();await confere('cozinha de exemplo');
-        R.cenas=tot.cenas>30;R.pecas=tot.pecas>300;R.textos=tot.textos>1500;R.ruins=tot.ruins;R.semTexto=tot.semTexto;R.zoomRuins=tot.zoomRuins;R.ex=ex.join(' || ');R.errs=__errs.length-e0;return JSON.stringify(R);
+        /* cobertura (Chefe 25/11): os três terços somam pelo menos o do teste inteiro de antes (>100 cenas, >1000 peças, >5000 textos) */R.cenas=tot.cenas>33;R.pecas=tot.pecas>333;R.textos=tot.textos>1666;R.ruins=tot.ruins;R.semTexto=tot.semTexto;R.zoomRuins=tot.zoomRuins;R.ex=ex.join(' || ');R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["cenas"] as? Bool, true)
         XCTAssertEqual(o["pecas"] as? Bool, true)

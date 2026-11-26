@@ -17478,6 +17478,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 
+    // ETAPA 2 · item 4 (Adauto 26/11, R4): o relógio do forno e do micro-ondas mostra a hora do aparelho (antes "12:00" fixo); funciona sem internet.
+    // Com a hora fixada pelo teste (window.__RELOGIO_FIXO), os dígitos acesos no 3D mudam com a hora; o projeto não muda
+    func testE2ITEM4_RelogioDoFornoEMicroComAHoraDoAparelho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==="number"?TPL[it]:it;if(!r&&t&&!t.act&&String(t.n).indexOf(n)===0)r=t})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.mods=[];draw();newTpl(T('Torre forno'));draw();var sv=JSON.stringify(snapState());open3D();await W(400);
+        var dig=function(cor){return __boxes().filter(function(b){return b.em&&b.c&&b.c.join()===cor}).map(function(b){return [b.x0,b.x1,b.y0,b.y1].map(Math.round).join(',')}).sort().join(';')};
+        var foto=async function(h){window.__RELOGIO_FIXO=h;re3();await W(60);return {f:dig('255,184,77'),m:dig('233,241,255')}};
+        var a=await foto('2026-11-26T09:41:00'),b=await foto('2026-11-26T18:07:00'),c=await foto('2026-11-26T12:00:00');
+        R.texto=(window.relogio3?(window.__RELOGIO_FIXO='2026-11-26T09:41:00',relogio3()):'-');
+        R.forno=(a.f!==b.f)+' '+(a.f!==c.f)+' '+(a.f.length>0);R.micro=(a.m!==b.m)+' '+(a.m.length>0);R.projeto=JSON.stringify(snapState())===sv;
+        delete window.__RELOGIO_FIXO;document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["texto"] as? String, "09:41", "relógio: hora e minuto do aparelho")
+        XCTAssertEqual(o["forno"] as? String, "true true true", "os dígitos do forno mudam com a hora (não ficam em 12:00)")
+        XCTAssertEqual(o["micro"] as? String, "true true", "os dígitos do micro-ondas mudam com a hora")
+        XCTAssertEqual(o["projeto"] as? Bool, true, "o relógio não muda o projeto")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // ETAPA 2 · item 3 (Adauto 26/11, R3): a dobradiça (calço, braço, caneco, parafusos) é ferragem de metal: com a porta pintada pela ferramenta Pintar
     // (madeira com textura) a dobradiça continua metálica — antes as 40 caixas de cada porta herdavam o nome/chave da porta e saíam na cor e na textura dela.
     // Balcão e aéreo, porta fechada e aberta: nenhuma caixa da dobradiça dentro de lateral, tampo ou base

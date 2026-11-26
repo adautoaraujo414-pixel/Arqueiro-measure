@@ -17478,6 +17478,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 
+    // ETAPA 2 · item 1 (Adauto 26/11, R1): "Espelhos: equilibrado" sai da barra do 3D e fica só no quadro do espelho (a função é a mesma: preferência do
+    // aparelho, não do projeto); todo espelho com LED tem Jateado liga/desliga dele (sem o campo novo, igual a antes: jateado só com o LED frontal);
+    // botão de toque do LED no vidro (como os reais): tocar nele no 3D liga/desliga o LED daquele espelho, toque longe não pega; orçamento do jateamento
+    // segue o jateado (m² real da faixa)
+    func testE2ITEM1_EspelhoQualidadeNaConfigJateadoLigaDesligaEBotaoDoLEDNoVidro() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var R={},e0=__errs.length;
+        loadState(initLimpo());S.env='banheiro';S.room='banheiro';S.W=3000;S.H=2700;draw();var f=espWallAdd(0);f.w=700;f.h=900;f.x=1100;f.b=900;f.led={fr:1,k:4000,int:80};f.forma='red';draw();
+        var sv0=JSON.stringify(snapState());var d=document.createElement('div');d.innerHTML=espOrgHtml(f);document.body.appendChild(d);
+        R.quadro=[].map.call(d.querySelectorAll('[data-espq]'),function(b){return b.textContent}).join('/')+' · jateado '+[].map.call(d.querySelectorAll('[data-qorg^="jat|"]'),function(b){return b.textContent}).join('/');
+        d.querySelector('[data-espq="equil"]').click();await W(30);R.qualidade=window.ESPQ+' · projeto igual '+(JSON.stringify(snapState())===sv0);d.remove();
+        open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});R.barra3D=!!document.getElementById('v3esq');
+        var cnt=function(k){return __boxes().filter(function(b){return b.espLed===k&&String(b.fr)===String(f.id)}).length};
+        R.botao=cnt('btn');__cam(0,0,.6);await W(150);var G=__boxes().filter(function(b){return b.espLed==='btn'}),p=[(G[0].x0+G[0].x1)/2,(G[0].y0+G[0].y1)/2,Math.max(G[0].z0,G[0].z1)],sp=__p3(p[0],p[1],p[2]);
+        org3api.one(sp[0]+90,sp[1]+90);await W(50);var longe=f.led.on===undefined||f.led.on!==0;org3api.one(sp[0],sp[1]);await W(50);var a=f.led.on;org3api.one(sp[0],sp[1]);await W(50);R.toque='longe nada '+longe+' · '+a+' → '+f.led.on;
+        var j0=espLedQ().espJat;R.padraoFrontal='faixa '+(cnt('fr')+cnt('frs'))+' · m² '+(j0>0);f.jatOn=0;draw();re3();await W(100);R.semJateado='faixa '+(cnt('fr')+cnt('frs'))+' · m² '+espLedQ().espJat;
+        f.led={tr:1,k:3000,int:80};delete f.jatOn;draw();re3();await W(100);R.traseiroPadrao='faixa '+(cnt('fr')+cnt('frs'))+' · m² '+espLedQ().espJat;f.jatOn=1;draw();re3();await W(100);R.traseiroComJateado='faixa '+(cnt('fr')+cnt('frs'))+' · m² '+(espLedQ().espJat>0)+' · botão '+cnt('btn');
+        var g=JSON.parse(JSON.stringify(snapState()));loadState(g);draw();R.reabre=JSON.stringify((S.fr||[]).map(function(q){return [q.jatOn,q.led&&q.led.tr]}));
+        window.ESPQ='';document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["quadro"] as? String, "Automático/Equilibrado/Alto · jateado Com jateado/Sem jateado", "qualidade e jateado no quadro do espelho")
+        XCTAssertEqual(o["qualidade"] as? String, "equil · projeto igual true", "qualidade é do aparelho, não do projeto")
+        XCTAssertEqual(o["barra3D"] as? Bool, false, "o botão saiu da barra do 3D")
+        XCTAssertEqual(o["botao"] as? Int, 2, "botão no vidro: aro e centro")
+        XCTAssertEqual(o["toque"] as? String, "longe nada true · 0 → 1", "tocar no botão desliga e liga; toque longe não pega")
+        XCTAssertEqual(o["padraoFrontal"] as? String, "faixa 7 · m² true", "LED frontal sem o campo novo: com jateado, como antes")
+        XCTAssertEqual(o["semJateado"] as? String, "faixa 0 · m² 0", "jateado desligado: sem faixa no 3D e sem jateamento no orçamento")
+        XCTAssertEqual(o["traseiroPadrao"] as? String, "faixa 0 · m² 0", "LED traseiro sem o campo novo: sem jateado, como antes")
+        XCTAssertEqual(o["traseiroComJateado"] as? String, "faixa 7 · m² true · botão 2", "LED traseiro com o jateado ligado")
+        XCTAssertEqual(o["reabre"] as? String, "[[1,1]]", "salvar e reabrir mantém o jateado")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // ESPELHO-REAL (Adauto 23/11: "espelhos com aparência de espelhos reais, sem prejudicar a velocidade"): reflexo planar de verdade (o balcão vermelho
     // na frente do espelho aparece vermelho dentro dele); prata neutro, bronze quente, fumê escuro; sem recursão entre espelhos; mesma textura reutilizada
     // (câmera parada não refaz); qualidade do aparelho (não vai pro projeto); Acabamento realista e dados do projeto iguais
@@ -17498,7 +17532,7 @@ final class EditorWebKitTests: XCTestCase {
         /* câmera parada: o reflexo é reaproveitado */__cam(.85,0,1.0);R.reaproveita=(window.__mirInfo||{}).feitos===0;
         document.getElementById('v3x').click();R.semBalcao=(function(){var f2=cena(false);open3D();return f2})();await W(400);R.semVermelho=foto(R.semBalcao).ver===0;R.semBalcao=1;
         /* dois espelhos frente a frente (paredes do lado): sem recursão e sem erro */document.getElementById('v3x').click();cena(false);var a=espWallAdd(0);a.wall='e';a.x=600;a.w=800;a.h=1500;a.b=300;var b=espWallAdd(0);b.wall='d';b.x=600;b.w=800;b.h=1500;b.b=300;draw();open3D();await W(400);__cam(.0,.05,1.0);__cam(.3,.05,1.0);R.frenteAFrente=Object.keys(MIRS).length+' planos · erro '+(window.MIRERR||'nenhum');
-        /* qualidade é do aparelho: muda o reflexo, não o projeto */var s1=JSON.stringify(snapState());espqSet('alta');__cam(.3,.05,1.0);var ia=JSON.stringify(window.__mirInfo);espqSet('equil');__cam(.31,.05,1.0);var ie=window.__mirInfo;R.qualidade=(JSON.parse(ia).w>ie.w)+' · projeto igual '+(JSON.stringify(snapState())===s1)+' · botão '+/Espelhos: equilibrado/.test((document.getElementById('v3esq')||{}).textContent||'');espqSet('auto');
+        /* qualidade é do aparelho: muda o reflexo, não o projeto */var s1=JSON.stringify(snapState());espqSet('alta');__cam(.3,.05,1.0);var ia=JSON.stringify(window.__mirInfo);espqSet('equil');__cam(.31,.05,1.0);var ie=window.__mirInfo;R.qualidade=(JSON.parse(ia).w>ie.w)+' · projeto igual '+(JSON.stringify(snapState())===s1)+' · botão '+(function(){/* ESPQ-CONFIG (Adauto 26/11, ETAPA 2 item 1, R1): o botão saiu da barra do 3D e fica só no quadro do espelho; confere ali o "Equilibrado" marcado */var d_=document.createElement('div');d_.innerHTML=espOrgHtml(espWallAdd(0));document.body.appendChild(d_);var ok_=!document.getElementById('v3esq')&&(d_.querySelector('[data-espq="equil"]')||{}).getAttribute&&d_.querySelector('[data-espq="equil"]').getAttribute('aria-pressed')==='true';d_.remove();S.fr.pop();return ok_})();espqSet('auto');
         /* Acabamento realista: espelho como antes (sem o reflexo planar) e sem erro */window.AQERR='';aqSet(1);await W(200);R.aq=Object.keys(MIRS).length+' '+(window.AQERR||'ok');aqSet(0);
         document.getElementById('v3x').click();R.dados=JSON.stringify(cena(true))&&JSON.stringify(snapState()).length>0;R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)

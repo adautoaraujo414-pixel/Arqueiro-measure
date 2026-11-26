@@ -8154,7 +8154,7 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         var clr=function(w){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=w||4200;S.RD=3500;S.H=2700;S.m=null;draw()};
-        var add=async function(n){newTpl(T(n));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}};
+        var add=async function(n){newTpl(T(n));draw();await W(30);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; aqui a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(30)}};
         var pos=function(){return S.mods.map(function(m){return m.x+'–'+(m.x+m.w)}).join(' | ')},ped=function(){return S.stones.map(function(q){return q.x+'–'+(q.x+q.w)}).join(' | ')};
         var pedra=async function(){S.tab=6;panel();await W(30);document.querySelector('#bd [data-stadd]').click();await W(80)};
         /* pedra × peça dos móveis altos e geladeira no 3D: nada da pedra dentro deles */
@@ -8193,7 +8193,7 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;var TO=[];window.toast=function(t){TO.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         var clr=function(w){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=w||4200;S.RD=3500;S.H=2700;S.m=null;draw()};
-        var add=async function(n){newTpl(T(n));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}};
+        var add=async function(n){newTpl(T(n));draw();await W(30);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; aqui a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(30)}};
         var caixa=function(mi,c){S.m=S.mods[mi];S.tab=4;draw();panel();return document.querySelector('#bd input[type=checkbox][data-c="'+c+'"]')},toca=async function(mi,c,on){var cb=caixa(mi,c);if(!cb||cb.disabled)return 'travada';if(cb.checked!==on){cb.click();await W(80)}return S.mods[mi][c]?'ligado':'desligado'};
         var tem=function(m,re){return partsOf(m).filter(function(p){return re.test(p.name)}).length},noCorte=function(m,re){return cutLines(m).filter(function(l){return (l.names||[]).some(function(n){return re.test(n)})}).length};
         var TC=/^Tamponamento de cima/;
@@ -8234,7 +8234,7 @@ final class EditorWebKitTests: XCTestCase {
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
-        var add=async function(n){newTpl(T(n));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}};
+        var add=async function(n){newTpl(T(n));draw();await W(30);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; aqui a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(30)}};
         var maisPedra=async function(){S.tab=6;panel();await W(30);document.querySelector('#bd [data-stadd]').click();await W(90)};
         var lado=function(){return (S.stw||[]).map(function(q){return q.wall+':'+q.x+'–'+(q.x+q.w)+' sai '+q.d}).join(' | ')},mods=function(){return S.mods.map(function(m){return (m.wing||'f')+':'+m.x+'–'+(m.x+m.w)}).join(' | ')};
         var cx3=function(){__build();var B=__boxes().filter(function(q){return q.a>=0.99&&!q.gl}),by={};B.forEach(function(q){var nm=String(q.nm||'');if(/^\d+:/.test(nm)){var mi=parseInt(nm,10);(by[mi]=by[mi]||[]).push(q)}});var ov=function(p,q){return Math.min(p.x1,q.x1)-Math.max(p.x0,q.x0)>2&&Math.min(p.y1,q.y1)-Math.max(p.y0,q.y0)>2&&Math.min(p.z1,q.z1)-Math.max(p.z0,q.z0)>2},mm=0,ks=Object.keys(by);ks.forEach(function(a){ks.forEach(function(b){if(+b<=+a)return;by[a].forEach(function(p){by[b].forEach(function(q){if(ov(p,q))mm++})})})});
@@ -8349,7 +8349,7 @@ final class EditorWebKitTests: XCTestCase {
            function(){var mi=Math.floor(rnd()*S.mods.length);S.m=S.mods[mi];S.tab=0;draw();panel();var i=document.querySelector('#bd input[data-k="w"]');if(i){i.value=String(Math.round(S.m.w+pick([-100,-50,50,100])));i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}))}return 'largura pelo campo'},
            function(){if(S.mods.length<3)return '';S.m=S.mods[Math.floor(rnd()*S.mods.length)];draw();document.getElementById('delMod').click();return 'apagar módulo'}
           ];
-          for(var k=0;k<9;k++){var nome='';try{nome=pick(acts)()}catch(e){nome='EXC '+e}draw();await W(60);if(window.SOLO2){await W(1100);try{soloOff()}catch(_){}await W(60)}draw();await W(900);var f=foto();if(f!==F[F.length-1]){F.push(f);N.push(nome)}}
+          for(var k=0;k<9;k++){var nome='';try{nome=pick(acts)()}catch(e){nome='EXC '+e}draw();await W(60);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; a pessoa toca em "Ajustar vizinhos ao novo módulo" e o passo a passo é O MESMO de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(60)}}if(window.SOLO2){await W(1100);try{soloOff()}catch(_){}await W(60)}draw();await W(900);var f=foto();if(f!==F[F.length-1]){F.push(f);N.push(nome)}}
           /* desfaz tudo, conferindo cada passo; refaz tudo, conferindo cada passo */
           for(var i=F.length-2;i>=0;i--){und.click();await W(70);passos++;if(foto()!==F[i]){var A=JSON.parse(foto()),B=JSON.parse(F[i]),df=[];Object.keys(Object.assign({},A,B)).forEach(function(k){if(JSON.stringify(A[k])===JSON.stringify(B[k]))return;if(k==='mods'||k==='stones'){var n=Math.max((A[k]||[]).length,(B[k]||[]).length);if((A[k]||[]).length!==(B[k]||[]).length)df.push(k+' '+(A[k]||[]).length+'≠'+(B[k]||[]).length);for(var q=0;q<n;q++){var a=(A[k]||[])[q]||{},b=(B[k]||[])[q]||{};Object.keys(Object.assign({},a,b)).forEach(function(kk){if(JSON.stringify(a[kk])!==JSON.stringify(b[kk]))df.push(k+'['+q+'].'+kk+': depois de desfazer '+JSON.stringify(a[kk])+' · era '+JSON.stringify(b[kk]))})}}else df.push(k+': '+String(JSON.stringify(A[k])).slice(0,60)+' · era '+String(JSON.stringify(B[k])).slice(0,60))});ruins.push('cen '+c+': desfazer "'+N[i]+'" (passo '+i+' de '+N.join(' › ')+') → '+df.slice(0,6).join(' ; '));break}}
           if(red){for(var j=1;j<F.length;j++){red.click();await W(70);passos++;if(foto()!==F[j]){ruins.push('cen '+c+': refazer "'+N[j-1]+'" não ficou igual (passo '+j+' de '+N.join(' › ')+')');break}}}}
@@ -8366,7 +8366,7 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;var TO=[];window.toast=function(t){TO.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         var clr=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw()};
-        var add=async function(n){newTpl(T(n));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}};
+        var add=async function(n){newTpl(T(n));draw();await W(30);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; aqui a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(30)}};
         var campo=async function(mi,k,v){S.m=S.mods[mi];S.tab=0;draw();panel();await W(40);var i=document.querySelector('#bd input[data-k="'+k+'"]');i.value=String(v);i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));await W(150)};
         var est=function(){return S.mods.map(function(m){return m.x+'–'+(m.x+m.w)+' alt '+m.h}).join(' | ')+' · pedra '+S.stones.map(function(q){return q.x+'–'+(q.x+q.w)+' a '+q.t}).join(',')};
         /* 1. balcões com pedra em cima: aumentar a altura de um pelo campo → ele fica na altura da pedra, no mesmo lugar; a pedra e o vizinho não mudam; avisa */
@@ -9074,7 +9074,7 @@ final class EditorWebKitTests: XCTestCase {
         /* valor do projeto continua material × multiplicador, e a soma "por módulo" fecha com o material */
         R.valorDoProjeto=Math.abs(b.sale-b.tot*PR.mult)<0.005;R.porModuloFecha=Math.abs(b.rows.reduce(function(s,x){return s+x.c},0)+b.cat.t+(b.rpC||0)-b.tot)<0.01;
         /* chapa cheia (aproveitamento perto de 100%) cobra quase a chapa inteira; mais módulos = mais uso, nunca mais que a chapa */
-        for(var i=0;i<5;i++){newTpl(T('Balcão 2 portas'));draw();await W(20);if(window.SOLO2){soloOff();await W(30)}}
+        for(var i=0;i<5;i++){newTpl(T('Balcão 2 portas'));draw();await W(20);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(30)}}
         var b2=budget(),e2=0,i2=0;b2.plan.groups.forEach(function(g){e2+=g.n*g.use*g.price;i2+=g.n*g.price});R.seisBalcoes='bate com o aproveitamento '+(Math.abs((b2.cB+b2.cC+b2.cF)-e2)<0.005)+' · nunca passa da chapa inteira '+(e2<=i2+0.001)+' · subiu com mais módulos '+(e2>esperado);
         /* Ajustes › Preços: cada linha mostra a quantidade e o total dela (duas linhas de chapa com o mesmo preço não trocam a conta uma da outra) */
         prRender();document.getElementById('prm').hidden=false;await W(300);var La=prAuto(budget()),okA=true,nA=0,vistos={},rep=0;La.forEach(function(r){if(vistos[r[0]])rep++;vistos[r[0]]=1});
@@ -9104,7 +9104,7 @@ final class EditorWebKitTests: XCTestCase {
         var pk0=localStorage.getItem(PRK),KS=['moR','cfR','dxR'];KS.forEach(function(k){delete PR[k]});
         S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;S.preco=0;delete S.desc;S.vlHide=0;S.vlTot=0;draw();
         PR.mdfB=300;PR.mdfC=430;PR.mdfM=430;PR.mdf25=500;PR.fundo=200;PR.fitaB=1.5;PR.fitaC=1.5;PR.dob=8;PR.cor=18;PR.mult=2.5;
-        newTpl(T('Balcão 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Balcão 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}
+        newTpl(T('Balcão 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Balcão 2 portas'));draw();await W(30);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(30)}
         var r2=function(v){return Math.round(v*100)/100},perto=function(a,b){return Math.abs(a-b)<0.006},vis=function(el){return !!el&&getComputedStyle(el).display!=='none'&&el.getClientRects().length>0};
         /* digita pelo teclado do app (o mesmo que a pessoa usa): toca no campo, aperta as teclas e o OK */
         var kb=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}));b.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
@@ -9239,7 +9239,7 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         var limpa=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;S.rpp=null;draw()};
-        var novo=async function(n){newTpl(T(n));draw();await W(40);if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
+        var novo=async function(n){newTpl(T(n));draw();await W(40);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; aqui a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
         var vis=function(el){return !!el&&getComputedStyle(el).display!=='none'&&el.getClientRects().length>0},bd=function(){return document.getElementById('bd')};
         var kb=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}));b.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
         var digita=async function(sel,tx){var i=bd().querySelector(sel);if(!i)return false;i.focus();await W(90);if(document.getElementById('calcbar').hidden)return false;tx.split('').forEach(kb);kb('ok');await W(170);return true};
@@ -9324,7 +9324,7 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&!it.act&&t&&t.n===n)r=t})});if(!r)r=TPL.filter(function(t){return t.n===n})[0];return JSON.parse(JSON.stringify(r))};
         var limpa=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;S.rpp=null;draw()};
-        var novo=async function(n){newTpl(T(n));draw();await W(40);if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
+        var novo=async function(n){newTpl(T(n));draw();await W(40);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; aqui a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
         var vis=function(el){return !!el&&getComputedStyle(el).display!=='none'&&el.getClientRects().length>0},bd=function(){return document.getElementById('bd')};
         var pes=function(m){return partsOf(m).filter(function(p){return p.pe})},rodN=function(m){return partsOf(m).filter(function(p){return /^Rodapé|pedestal/.test(p.name)}).length};
         var abre=async function(m){S.m=m;S.tab=0;draw();panel();await W(80);var s=bd().querySelector('[data-rdsec]');if(s&&s.getAttribute('data-secf')==='1'){s.click();await W(60)}return !!s};
@@ -9385,7 +9385,7 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         var limpa=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;S.rpp=null;draw()};
-        var novo=async function(n){newTpl(T(n));draw();await W(40);if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
+        var novo=async function(n){newTpl(T(n));draw();await W(40);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; aqui a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
         var vis=function(el){return !!el&&getComputedStyle(el).display!=='none'&&el.getClientRects().length>0},bd=function(){return document.getElementById('bd')};
         var rod=function(m){return partsOf(m).filter(function(p){return /^Rodapé/.test(p.name)}).map(function(p){return p.name.replace(/ \(pedestal\)/,'').replace('Rodapé','R')+' '+Math.round(p.x)+'→'+Math.round(p.x+p.w)}).join(' | ')};
         var kb=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}));b.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
@@ -9531,7 +9531,7 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&!it.act&&t&&t.n===n)r=t})});if(!r)r=TPL.filter(function(t){return t.n===n})[0];return JSON.parse(JSON.stringify(r))};
         var limpa=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw()};
-        var novo=async function(n){newTpl(T(n));draw();await W(40);if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
+        var novo=async function(n){newTpl(T(n));draw();await W(40);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; aqui a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
         var bd=function(){return document.getElementById('bd')},tecl=function(){return !document.getElementById('calcbar').hidden},lab=function(){return document.getElementById('kplab').textContent.trim()};
         var kb=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}));b.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
         /* 1. editor por vãos (guarda-roupa): digita a largura e, sem dar OK, passa pra altura: o teclado vai pra altura (o painel não é redesenhado debaixo do dedo) */
@@ -9988,7 +9988,7 @@ final class EditorWebKitTests: XCTestCase {
         /* 4. com tamponamento de cima e de lado: fica em cima do tamponamento e pega a largura toda */
         m.tt=true;m.tr=true;draw();R.comTamponamentos=pc(m)+' · 3D '+f3(m)+' · dentro '+dentro(m);m.tt=false;m.tr=false;draw();
         /* 5. módulo em cima do aéreo: o fechamento vai só até ele */
-        newTpl(T('Aéreo 2 portas'));draw();var c=S.mods[2];c.x=m.x;c.w=m.w;c.b=2600;c.h=100;c.d=m.d;draw();R.moduloEmCima=pc(m)+' · 3D '+f3(m)+' · dentro '+dentro(m);S.mods.splice(2,1);S.m=m;draw();
+        newTpl(T('Aéreo 2 portas'));draw();var c=S.mods[2];c.x=m.x;c.w=m.w;c.b=2600;c.h=100;c.d=m.d;draw();/* REG12-CRIACAO (Chefe 25/11): antes do toque, a criação não mexeu no aéreo que já existia (sem o tamponamento dele) */R.moduloEmCimaAntes=pc(m)+' · 3D '+f3(m)+' · dentro '+dentro(m);if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv5_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv5_)sbv5_.click()}R.moduloEmCima=pc(m)+' · 3D '+f3(m)+' · dentro '+dentro(m);S.mods.splice(2,1);S.m=m;draw();
         /* 6. aéreo encostado no teto: não sobra vão, não entra peça */
         m.h=950;draw();R.encostaNoTeto=pc(m);m.h=750;draw();
         /* 7. pé-direito diferente: acompanha */
@@ -10013,7 +10013,11 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["embutir40"] as? String, "x0–1030 y2500–2700 z316–331")
         XCTAssertEqual(o["embutirDemais"] as? String, "x0–1030 y2500–2700 z15–30 · 1030×200 [cor de fora] placa lisa em pé, por cima da base superior, fecha o vão até o teto · embutida 341 mm pra dentro")
         XCTAssertEqual(o["comTamponamentos"] as? String, "1030×170 [cor de fora] placa lisa em pé, por cima do tamponamento de cima, fecha o vão até o teto · rente com a frente das portas · 3D x0–1030 y2530–2700 z356–371 · dentro 0")
-        XCTAssertEqual(o["moduloEmCima"] as? String, "1030×100 [cor de fora] placa lisa em pé, por cima da base superior, fecha o vão até o módulo de cima · rente com a frente das portas · 3D x0–1030 y2500–2595 z356–371 · dentro 0")
+        // REG12-CRIACAO (Chefe 25/11): ANTES do toque a criação não mexe no aéreo que já existia (1000, sem o tamponamento). DEPOIS do toque, 1030 com o
+        // tamponamento e 95 de altura: o módulo de cima, posto aqui por atribuição direta, passava 5 mm do teto (2600 + 105 > 2700) e o redesenho do toque o
+        // encaixa em 2595 (ele ainda é o recém-criado desta ação). O 100 de antes só saía porque a criação antiga não redesenhava depois
+        XCTAssertEqual(o["moduloEmCimaAntes"] as? String, "1000×100 [cor de fora] placa lisa em pé, por cima da base superior, fecha o vão até o módulo de cima · rente com a frente das portas · 3D x0–1000 y2500–2595 z356–371 · dentro 0")
+        XCTAssertEqual(o["moduloEmCima"] as? String, "1030×95 [cor de fora] placa lisa em pé, por cima da base superior, fecha o vão até o módulo de cima · rente com a frente das portas · 3D x0–1030 y2500–2595 z356–371 · dentro 0")
         XCTAssertEqual(o["encostaNoTeto"] as? String, "nenhum")
         XCTAssertEqual(o["peDireito2600"] as? String, "1030×100 [cor de fora] placa lisa em pé, por cima da base superior, fecha o vão até o teto · rente com a frente das portas")
         XCTAssertEqual(o["desmarcar"] as? String, "ligado false · nenhum · corte nenhum · 3D nada")
@@ -11518,7 +11522,7 @@ final class EditorWebKitTests: XCTestCase {
         /* parede cheia */cena(2700);var antes=S.mods.slice(),d0=dims(antes);newTpl(T('Balcão 3 portas + 4 gavetas'));draw();await W(100);var q=document.getElementById('fitq');
         R.cheia=(S.mods.length===antes.length?'não entrou sozinho':'entrou ('+S.mods[S.mods.length-1].w+')')+' · '+(dims(antes)===d0?'outros iguais':'outros mudaram')+' · '+(q&&!q.hidden?'perguntou':'sem pergunta');
         R.botoes=q?[].map.call(q.querySelectorAll('[data-fitq]'),function(b){return b.textContent.trim()}).join(' / '):'';
-        /* a pessoa escolhe usar o espaço livre */var bu=q&&q.querySelector('[data-fitq="usar"]');if(bu)bu.click();await W(100);var nv=S.mods.filter(function(m){return antes.indexOf(m)<0})[0];R.usar=(nv?'entrou com '+nv.w:'não entrou')+' · '+sobrepoe()+' · '+(dims(antes)===d0?'outros iguais':'outros mudaram');
+        /* a pessoa escolhe usar o espaço livre */var bu=q&&q.querySelector('[data-fitq="usar"]');if(bu)bu.click();await W(100);/* REG12-CRIACAO (Chefe 25/11): o N do "Usar" conta o tamponamento do vizinho NO LUGAR; sem tocar em nada, o novo cabe sem sobrepor e o vizinho não muda */var nv=S.mods.filter(function(m){return antes.indexOf(m)<0})[0];R.usar=(nv?'entrou com '+nv.w:'não entrou')+' · '+sobrepoe()+' · '+(dims(antes)===d0?'outros iguais':'outros mudaram');
         /* "Não colocar" */cena(2700);antes=S.mods.slice();newTpl(T('Balcão 3 portas + 4 gavetas'));draw();await W(100);q=document.getElementById('fitq');var bn=q&&q.querySelector('[data-fitq="nao"]');if(bn)bn.click();R.naoColocar=(S.mods.length===antes.length?'não colocou':'colocou')+' · '+(q&&q.hidden?'fechou':'aberta');
         /* parede livre: medida do catálogo, sem pergunta */cena(8000);antes=S.mods.slice();newTpl(T('Balcão 3 portas + 4 gavetas'));draw();await W(100);nv=S.mods.filter(function(m){return antes.indexOf(m)<0})[0];q=document.getElementById('fitq');R.livre=(nv?nv.w:'-')+' · '+(q&&!q.hidden?'perguntou':'sem pergunta')+' · '+sobrepoe();
         R.errs=__errs.length-e0;return JSON.stringify(R);
@@ -14417,6 +14421,37 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // REG12-CRIACAO (Adauto 25/11, via Chefe: "nunca deslocar, diminuir ou modificar automaticamente os móveis existentes para acomodar um novo"):
+    // criar ao lado deixa os vizinhos IDÊNTICOS sem o toque; a sugestão "Ajustar vizinhos ao novo módulo" faz o mesmo de antes (igual a criar tudo
+    // numa ação só, que é o jeito de antes) num passo e com um desfazer; abrir um projeto salvo não mexe em nada
+    func testReg12CriarAoLadoNaoMudaOsVizinhosSemOToqueEOToqueFazODeAntes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        /* compara o conteúdo (campos em ordem alfabética): a ordem dos campos no objeto não é dado */var can=function(v){if(Array.isArray(v))return v.map(can);if(v&&typeof v==='object'){var r={};Object.keys(v).sort().forEach(function(k){r[k]=can(v[k])});return r}return v};var sig=function(m){var o=JSON.parse(JSON.stringify(m));delete o.uid;return JSON.stringify(can(o))};
+        var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw()};
+        var bt=function(){return document.querySelector('#libsug [data-libsug="ok"]')};
+        var out=[];for(const L of [['Balcão 2 portas','Gaveteiro 3 gavetas'],['Balcão 2 portas','Gaveteiro 3 gavetas','Balcão 1 porta'],['Aéreo 2 portas','Aéreo 2 portas']]){
+         /* jeito de antes: tudo numa ação só */cena();await W(30);L.forEach(function(n){atArm();newTpl(T(n));draw()});await W(30);var A=S.mods.map(sig);
+         /* um por vez: o último criado ao lado dos que já existiam */cena();await W(30);var antes=null;for(var i=0;i<L.length;i++){if(i===L.length-1)antes=S.mods.map(sig);atArm();newTpl(T(L[i]));draw();await W(40);if(i<L.length-1&&libSug()&&bt()){bt().click();await W(40)}}
+         var sem=S.mods.slice(0,-1).map(sig),sg=libSug(),txt=bt()?bt().textContent:'-';/* Chefe 25/11 (§4): o lugar do novo foi o app que escolheu, então sem o toque nada fica dentro de nada */var sob=S.mods.some(function(m){try{return !!modOverlaps(m)}catch(_){return false}}),xn=S.mods[S.mods.length-1].x;await W(800);if(sg&&bt()){bt().click();await W(300)}var B=S.mods.map(sig);
+         document.getElementById('und').click();await W(200);/* o desfazer passa pelo loadState, que só normaliza campos vazios (ex.: wing): confere posição e tamponamento */var pt=function(m){return JSON.stringify([m.x,m.w,m.b,!!m.tl,!!m.tr,m.tlW,m.trW,m.lx,m.lz])};var U=S.mods.slice(0,-1).map(pt),antesP=antes.map(function(j){return pt(JSON.parse(j))});
+         out.push((JSON.stringify(sem)===JSON.stringify(antes)?'sem toque iguais':'sem toque MUDOU')+' · novo em x'+xn+(sob?' SOBREPÕE':' sem sobrepor')+' · '+(sg?sg.tipo:'sem sugestão')+' · '+txt+' · '+(JSON.stringify(A)===JSON.stringify(B)?'com toque igual ao de antes':'com toque DIFERENTE')+' · '+(JSON.stringify(U)===JSON.stringify(antesP)?'um desfazer volta':'desfazer NÃO volta'))}
+        R.criar=out.join(' | ');
+        /* Chefe 25/11: durante a criação o vizinho NÃO é escrito (nem pra testar e voltar): cada campo dele vira um espião que anota qualquer escrita */cena();await W(30);atArm();newTpl(T('Balcão 2 portas'));draw();await W(60);var viz=S.mods[0],escritas=[];Object.keys(viz).concat(['tl','tr','tlAuto','trAuto','x','w']).forEach(function(k){var v=viz[k];try{Object.defineProperty(viz,k,{configurable:true,enumerable:k in viz,get:function(){return v},set:function(n){/* escrever = mudar o valor (normalizar com o mesmo valor, ex.: x=x, não conta) */if(JSON.stringify(n)!==JSON.stringify(v))escritas.push(k);v=n}})}catch(_){}});var dl0=Reflect.deleteProperty;
+        atArm();newTpl(T('Gaveteiro 3 gavetas'));draw();await W(80);R.escritas=escritas.length?'escreveu '+escritas.join(','):'nenhuma escrita';
+        /* abrir um projeto salvo com uma ponta sem tamponamento: nada muda e nada é sugerido */cena();await W(30);atArm();newTpl(T('Balcão 2 portas'));draw();await W(40);var m0=S.mods[0];m0.tl=m0.tr=false;delete m0.tlAuto;delete m0.trAuto;var ST=JSON.stringify(snapState());loadState(JSON.parse(ST));draw();await W(60);var ptL=function(L){return JSON.stringify(L.map(function(m){return [m.x,m.w,m.b,!!m.tl,!!m.tr,m.tlW,m.trW,m.lx,m.lz]}))};/* posição e tamponamento (o loadState só normaliza campos vazios, ex.: wing) */R.abrir=(ptL(snapState().mods)===ptL(JSON.parse(ST).mods)?'igual':'MUDOU')+' · '+(libSug()?'sugeriu':'sem sugestão');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        // Chefe 25/11 (achado do Claude 3, §4): sem o toque o gaveteiro nasce DEPOIS do tamponamento direito do balcão (x935), sem entrar em nada; com o toque fica igual ao publicado
+        let ok = " · viz · Ajustar vizinhos ao novo módulo · com toque igual ao de antes · um desfazer volta"
+        XCTAssertEqual(o["criar"] as? String, "sem toque iguais · novo em x935 sem sobrepor" + ok + " | sem toque iguais · novo em x1535 sem sobrepor" + ok + " | sem toque iguais · novo em x1035 sem sobrepor" + ok, "balcão+gaveteiro, fileira de 3 e aéreos")
+        XCTAssertEqual(o["abrir"] as? String, "igual · sem sugestão", "abrir projeto salvo não mexe em nada")
+        XCTAssertEqual(o["escritas"] as? String, "nenhuma escrita", "o vizinho não é escrito durante a criação (Chefe 25/11: na causa, não desfazendo depois)")
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+    }
+
     // MENUS-POR-TIPO opção (a) (Chefe 25/11, §0 e §12): reordenar e recolher em "Mais opções" nunca pode SUMIR com um controle.
     // Inventário de 44 combinações (Balcão, Aéreo, Guarda-roupa, Despenseiro × cada aba) contra a fotografia de antes: 0 assinatura perdida.
     // As 2 novas são o forno e a porta tempero que voltaram no guarda-roupa do quarto (antes um filtro os escondia fora da cozinha).
@@ -14550,7 +14585,7 @@ final class EditorWebKitTests: XCTestCase {
         pe_('pointerdown',el_,x_,y_);await W(30);/* pra esquerda (na direita ele já encosta na parede), por cima do vizinho já aceito *//* + a zona morta do arrasto (6 px; ~10 px a 430), pro móvel andar mesmo os 95 mm */for(var q_=1;q_<=5;q_++){pe_('pointermove',svg_,x_-95*k_*q_/5-(12*q_/5),y_);await W(15)}pe_('pointerup',svg_,x_-95*k_-12,y_);await W(300);var fq_=perg();if(fq_){var bb_=fq_.querySelector('[data-fitqa="1"]');if(bb_)bb_.click();await W(100)}draw();
         R.arrastou95='andou '+(Math.abs(S.mods[ni].x-xa)>=80)+' · vizinhos iguais '+iguais(J)+' · tr do vizinho '+S.mods[3].tr+'/'+S.mods[3].trAuto;
         /* Cancelar: nada muda */J=cena(3000,AER);var N0=S.mods.length;S.m=S.mods[1];newTpl(T('Aéreo 2 portas'));await W(80);b=perg()&&perg().querySelector('[data-fitq="nao"]');if(b)b.click();await W(120);R.cancelar=(S.mods.length===N0)+' · vizinhos iguais '+iguais(J)+' · avisos '+msgs.length;
-        /* Usar N mm: só o novo encolhe (como antes) */J=cena(3000,AER);S.m=S.mods[1];newTpl(T('Aéreo 2 portas'));await W(80);b=perg()&&perg().querySelector('[data-fitq="usar"]');if(b)b.click();await W(120);n=S.mods[J.length];R.usar=d(n)+' · lvx '+!!(n&&n.lvx)+' · colide '+(n?libColide(n).length:'-');
+        /* Usar N mm: só o novo encolhe (como antes) */J=cena(3000,AER);S.m=S.mods[1];newTpl(T('Aéreo 2 portas'));await W(80);b=perg()&&perg().querySelector('[data-fitq="usar"]');if(b)b.click();await W(120);/* REG12-CRIACAO (Adauto 25/11 via Chefe): o vizinho não é mais ajustado sozinho; a pessoa toca em "Ajustar vizinhos ao novo módulo" e a conferência é A MESMA de antes */R.usarSug=(window.libSug&&libSug()?libSug().tipo:'-');if(R.usarSug==='viz'){var sbu_=document.querySelector('#libsug [data-libsug="ok"]');if(sbu_){sbu_.click();await W(60)}}n=S.mods[J.length];R.usar=d(n)+' · lvx '+!!(n&&n.lvx)+' · colide '+(n?libColide(n).length:'-');
         /* 3. parede menor que o móvel: não encolhe sozinho; pergunta; Colocar mesmo assim fica com 1200 */J=cena(900,[]);newTpl(T('Balcão 2 portas + 4 gavetas'));await W(80);R.paredeCurta=(perg()?'perguntou: '+botoes(perg()):'sem pergunta · '+d(S.mods[0]));b=perg()&&perg().querySelector('[data-fitqf]');if(b)b.click();await W(120);draw();R.paredeCurtaColocou=d(S.mods[0]);
         /* 4. ⧉ Copiar sem lugar livre */J=cena(2000,['Balcão 2 portas','Balcão 2 portas']);var c=modCopy(S.mods[0]);await W(60);R.copia=(c?'copiou sozinho':'')+botoes(perg());b=perg()&&perg().querySelector('[data-fitqc]');if(b)b.click();await W(120);var cp_=S.mods[2];R.copiaColocou=(cp_?'cópia '+cp_.w+' à direita do original '+(cp_.x>=S.mods[0].x+S.mods[0].w-1)+' · por cima do vizinho '+(libColide(cp_).indexOf(S.mods[1])>=0):'sem cópia')+' · vizinhos iguais '+iguais(J)+' · lvx '+!!(cp_&&cp_.lvx);
         J=cena(2000,['Balcão 2 portas','Balcão 2 portas']);modCopy(S.mods[0]);await W(60);b=perg()&&perg().querySelector('[data-fitq="nao"]');if(b)b.click();await W(80);R.copiaCancelar=S.mods.length+' · vizinhos iguais '+iguais(J);
@@ -15280,7 +15315,8 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
         var clr=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw()};
-        var add=async function(n){atArm();newTpl(T(n));draw();await W(40);if(window.SOLO2){soloOff();await W(30)}};
+        /* REG12-CRIACAO (Adauto 25/11 via Chefe: criar não ajusta mais sozinho os vizinhos; vira a sugestão "Ajustar vizinhos ao novo módulo"): aqui a pessoa toca na sugestão depois de cada criação e as conferências são AS MESMAS de antes */var tocaViz=async function(){var sb=document.querySelector('#libsug [data-libsug="ok"]');if(window.libSug&&libSug()&&libSug().tipo==='viz'&&sb){sb.click();await W(40)}};
+        var add=async function(n){atArm();newTpl(T(n));draw();await W(40);await tocaViz();if(window.SOLO2){soloOff();await W(30)}};
         var tp=function(m){return (m.tl?'E'+(m.tlAuto?'auto':'')+(+m.tlW||30):'-')+'/'+(m.tr?'D'+(m.trAuto?'auto':'')+(+m.trW||30):'-')};
         /* peças de tamponamento em todo lugar: partsOf, lista (cutLines), plano de corte (sheetPlan) e 3D */
         var tampPc=function(m){return partsOf(m).filter(function(p){return /^Tamponamento (esquerdo|direito)/.test(p.name)}).length};

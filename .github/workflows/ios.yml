@@ -10,9 +10,14 @@ on:
         description: 'Enviar para o TestFlight (precisa da conta Apple paga e dos segredos ASC_*)'
         type: boolean
         default: false
+      testado_em:
+        description: 'Só com testflight: SHA (40 letras) de uma execução do iOS CI que já passou inteira. Os testes não rodam de novo; o envio confere que o código é o mesmo (só este arquivo pode mudar)'
+        type: string
+        default: ''
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   ios:
@@ -41,13 +46,34 @@ jobs:
           brew install xcodegen
           cd ios && xcodegen generate
 
+      # SO-ENVIAR (Adauto 26/11: "não refaça testes que já foram feitos"): com testado_em, o envio usa os testes de uma execução que já
+      # passou inteira (iPhone A+B, iPad, capturas, StoreKit) e confere que o código é o mesmo. Se não conferir, nada é enviado.
+      - name: Testes já feitos (testado_em)
+        id: ja_testado
+        if: inputs.testado_em
+        env:
+          T: ${{ inputs.testado_em }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          [[ "$T" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::testado_em tem que ser o SHA inteiro (40 letras)"; exit 1; }
+          [ "${{ inputs.testflight }}" = "true" ] || { echo "::error::testado_em só vale com testflight"; exit 1; }
+          git fetch -q --depth=1 origin "$T"
+          if ! git diff --quiet FETCH_HEAD HEAD -- . ':(exclude).github/workflows/ios.yml'; then
+            git diff --stat FETCH_HEAD HEAD -- . ':(exclude).github/workflows/ios.yml'; echo "::error::o código não é o mesmo da execução testada"; exit 1; fi
+          curl -fsS -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/ios.yml/runs?head_sha=$T&status=success&per_page=5" \
+            | python3 -c 'import json,sys;d=json.load(sys.stdin);r=d.get("workflow_runs",[]);[print("execução testada:",x["run_number"],x["html_url"]) for x in r];sys.exit(0 if r else 1)' \
+            || { echo "::error::não achei execução do iOS CI que passou inteira no $T"; exit 1; }
+
       - name: Testar preservação dos vídeos do editor iOS
+        if: ${{ !inputs.testado_em }}
         run: node ios/scripts/test-editor-media-backup.cjs
 
       # BATERIA-2-PASSOS (Chefe 25/11): a bateria inteira não cabe nos 75 min do passo e nenhum limite muda. O iPhone roda em 2 passos com os
       # mesmos 75 min e a mesma tolerância por teste: A (tudo menos a metade B do EditorWebKitTests) e B (a metade B, test-without-building).
       # scripts/metade_testes.py divide pela lista do código e prova a contagem (A + B = todos, sem repetir) antes e depois.
       - name: Compilar e rodar os testes no simulador (iPhone, passo A)
+        if: ${{ !inputs.testado_em }}
         id: build_tests
         timeout-minutes: 75
         run: |
@@ -82,7 +108,7 @@ jobs:
 
       - name: Testes no simulador (iPhone, passo B)
         id: build_tests_b
-        if: always() && (steps.build_tests.outcome == 'success' || steps.build_tests.outcome == 'failure')
+        if: ${{ !inputs.testado_em && (always() && (steps.build_tests.outcome == 'success' || steps.build_tests.outcome == 'failure')) }}
         timeout-minutes: 75
         run: |
           cd ios && mkdir -p build
@@ -117,7 +143,7 @@ jobs:
       # Adauto 21/11 ("não esconda falhas com repetição automática"): todo teste que falhou na 1ª tentativa e só passou
       # na repetição aparece aqui como aviso, com o tempo de abertura do editor medido por fase (ABERTURA-DIAG)
       - name: Testes que só passaram na repetição
-        if: always()
+        if: ${{ !inputs.testado_em && (always()) }}
         run: |
           cd ios && mkdir -p build
           : > build/repetidos.txt
@@ -133,6 +159,7 @@ jobs:
           while read X; do echo "::warning title=Teste repetido::$X"; done < build/repetidos.txt
 
       - name: Compilar para iPhone de verdade (Release, sem assinatura)
+        if: ${{ !inputs.testado_em }}
         run: |
           cd ios && mkdir -p build
           set +e
@@ -146,6 +173,7 @@ jobs:
       # Adauto 24/11: pacote de TESTE do iOS só como artefato do Actions (sem TestFlight, sem App Store, sem release).
       # Sem assinatura ele não instala em iPhone de verdade: o .app do simulador abre no Simulador do Xcode.
       - name: Pacote de TESTE iOS (só artefato do Actions, não é publicação)
+        if: ${{ !inputs.testado_em }}
         run: |
           cd ios && mkdir -p build/pacote-teste
           ditto -c -k --keepParent build/ddrel/Build/Products/Release-iphoneos/Arquemestre.app build/pacote-teste/Arquemestre-TESTE-iphoneos-sem-assinatura.zip
@@ -154,6 +182,7 @@ jobs:
           shasum -a 256 build/pacote-teste/*.zip | tee build/pacote-teste/sha256.txt
 
       - name: Guardar o pacote de TESTE iOS (artefato)
+        if: ${{ !inputs.testado_em }}
         uses: actions/upload-artifact@v4
         with:
           name: Arquemestre-TESTE-ios
@@ -161,12 +190,14 @@ jobs:
           if-no-files-found: error
 
       - name: Capturas de tela (iPhone 6,9" e iPad 13")
+        if: ${{ !inputs.testado_em }}
         run: |
           cd ios
           APP=$(ls -d build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app)
           bash scripts/screenshots.sh "$APP" build/capturas
 
       - name: Capturas não podem sair vazias (tela que não carregou)
+        if: ${{ !inputs.testado_em }}
         run: |
           set -o pipefail
           cd ios
@@ -176,7 +207,7 @@ jobs:
       # então estes testes rodam num simulador iOS até 26.2 (se não tiver no runner, baixa o iOS 26.1).
       - name: Testes da assinatura (StoreKit) num iOS até 26.2
         id: storekit
-        if: always() && steps.build_tests.outcome != 'skipped'
+        if: ${{ !inputs.testado_em && (always() && steps.build_tests.outcome != 'skipped') }}
         timeout-minutes: 40
         run: |
           cd ios && mkdir -p build
@@ -211,7 +242,7 @@ jobs:
           exit $RC
 
       - name: Guardar capturas e resumo dos testes no ramo ci/ios-resultados
-        if: always() && github.event_name != 'pull_request'
+        if: ${{ !inputs.testado_em && (always() && github.event_name != 'pull_request') }}
         run: |
           cd ios
           OUT=$(mktemp -d)
@@ -266,14 +297,14 @@ jobs:
           echo "::notice title=Testes iOS::${T:-sem resumo}"
 
       - name: Resumo dos erros
-        if: failure()
+        if: ${{ !inputs.testado_em && (failure()) }}
         run: |
           cd ios
           M=$( (grep -hE "error:|Failing|failed|XCTAssert" build/*.log 2>/dev/null | head -120) | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
           echo "::error title=Erros do build iOS::$M"
 
       - name: Publicar capturas, testes e logs
-        if: always()
+        if: ${{ !inputs.testado_em && (always()) }}
         uses: actions/upload-artifact@v4
         with:
           name: ios-resultados
@@ -324,6 +355,7 @@ jobs:
   # BATERIA-2-PASSOS / QUEDA-PARALELO (Chefe 25/11): o iPad roda num job próprio (outro Mac), com os mesmos 100 min de antes, autorizados
   # pelo Adauto, e a mesma tolerância por teste. Nunca divide a memória com o iPhone. Os resultados vão pra ci/ios-resultados-<ramo>-ipad.
   ipad:
+    if: ${{ !inputs.testado_em }}
     runs-on: macos-26
     timeout-minutes: 210
     steps:

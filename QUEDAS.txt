@@ -1,0 +1,101 @@
+######## build/xcodebuild-test.log
+######## xcresult (iPhone A)
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "F90353E4-F95D-488C-9F4E-B43F74E385F2",
+        "deviceName" : "iPhone 17 Pro Max",
+        "modelName" : "iPhone 17 Pro Max",
+        "osBuildNumber" : "23F77",
+        "osVersion" : "26.5",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 0,
+      "passedTests" : 375,
+      "skippedTests" : 2,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Arquemestre · Built with macOS 26.7.2",
+  "expectedFailures" : 0,
+  "failedTests" : 0,
+  "finishTime" : 1795697239.256,
+  "passedTests" : 375,
+  "result" : "Passed",
+  "skippedTests" : 2,
+  "startTime" : 1795694632.373,
+  "statistics" : [
+    {
+      "subtitle" : "377 test runs",
+      "title" : "1 configuration ran with test repetitions"
+    }
+  ],
+  "testFailures" : [
+
+  ],
+  "title" : "Test - Arquemestre",
+  "topInsights" : [
+    {
+      "category" : "Longest Test Runs",
+      "impact" : "27% of duration",
+      "text" : "11 longest test runs with outlier durations exceeding 38.11s (three standard deviations)"
+    }
+  ],
+  "totalTestCount" : 377
+}
+######## xcresult (iPhone B)
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "F90353E4-F95D-488C-9F4E-B43F74E385F2",
+        "deviceName" : "iPhone 17 Pro Max",
+        "modelName" : "iPhone 17 Pro Max",
+        "osBuildNumber" : "23F77",
+        "osVersion" : "26.5",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 0,
+      "passedTests" : 294,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Arquemestre · Built with macOS 26.7.2",
+  "expectedFailures" : 0,
+  "failedTests" : 0,
+  "finishTime" : 1795699907.59,
+  "passedTests" : 294,
+  "result" : "Passed",
+  "skippedTests" : 0,
+  "startTime" : 1795697259.588,
+  "statistics" : [
+    {
+      "subtitle" : "294 test runs",
+      "title" : "1 configuration ran with test repetitions"
+    }
+  ],
+  "testFailures" : [
+
+  ],
+  "title" : "Test - Arquemestre",
+  "topInsights" : [
+    {
+      "category" : "Longest Test Runs",
+      "impact" : "26% of duration",
+      "text" : "10 longest test runs with outlier durations exceeding 50.48s (three standard deviations)"
+    }
+  ],
+  "totalTestCount" : 294
+}

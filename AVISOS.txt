@@ -1,0 +1,20 @@
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift:205:20: warning: capture of 's' with non-Sendable type 'Store' in a '@Sendable' closure
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift:326:29: warning: capture of 's' with non-Sendable type 'Store' in a '@Sendable' closure
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift:340:20: warning: capture of 'st' with non-Sendable type 'Store' in a '@Sendable' closure
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift:365:31: warning: capture of 'st' with non-Sendable type 'Store' in a '@Sendable' closure
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift:413:74: warning: capture of 's' with non-Sendable type 'Store' in a '@Sendable' closure
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift:522:20: warning: capture of 's' with non-Sendable type 'Store' in a '@Sendable' closure
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift:530:20: warning: capture of 's' with non-Sendable type 'Store' in a '@Sendable' closure
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift:680:31: warning: capture of 'st' with non-Sendable type 'Store' in a '@Sendable' closure
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift:745:77: warning: capture of 's' with non-Sendable type 'Store' in a '@Sendable' closure
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift:869:20: warning: capture of 's' with non-Sendable type 'Store' in a '@Sendable' closure
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift:875:20: warning: capture of 's' with non-Sendable type 'Store' in a '@Sendable' closure
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/ArquemestreApp.swift:76:10: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/AgendaView.swift:116:10: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/AgendaView.swift:348:95: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/LibraryView.swift:128:10: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/LibraryView.swift:129:10: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/LibraryView.swift:942:10: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/LibraryView.swift:944:10: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/RootView.swift:273:1: warning: extension declares a conformance of imported type 'URL' to imported protocol 'Identifiable'; this will not behave correctly if the owners of 'Foundation' introduce this conformance in the future
+2026-11-26 13:34:17.313 appintentsmetadataprocessor[28926:547691] warning: Metadata extraction skipped. No AppIntents.framework dependency found.

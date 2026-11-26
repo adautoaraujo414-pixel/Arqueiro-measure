@@ -1,0 +1,10 @@
+commit ee6c09034354c0c42d0e3118d2794bf3f0ed8680 · execução 711 · iphone ·     5380 linhas no log
+==== falhas (mensagem completa) ====
+to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=49658, error: (null)
+to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=80107, error: (null)
+==== último teste que começou (se o passo foi interrompido) ====
+Test Case '-[ArquemestreTests.EditorWebKitTests testZoomNoPlanoDeCortePincaRodaBotoesArrastoComLimiteSemDispararToqueEPlanoIgual]' started (Iteration 1 of 2).
+==== totais ====
+	 Executed 294 tests, with 0 failures (0 unexpected) in 2609.335 (2611.408) seconds
+	 Executed 294 tests, with 0 failures (0 unexpected) in 2609.335 (2611.420) seconds
+	 Executed 294 tests, with 0 failures (0 unexpected) in 2609.335 (2611.422) seconds

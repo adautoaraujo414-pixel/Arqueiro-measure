@@ -19587,12 +19587,34 @@ final class EditorWebKitTests: XCTestCase {
             [].forEach.call(s.querySelectorAll('g[data-cp]'),function(g){pecas++;var tem=[].some.call(g.querySelectorAll('text'),function(t){return String(t.textContent||'').trim()}),co=s.querySelector('[data-callout="'+CSS.escape(g.getAttribute('data-cp'))+'"]');if(!tem&&!co)sem.push(g.getAttribute('data-lab'))});
             [].forEach.call(s.querySelectorAll('[data-callout] rect'),function(r){var b=bb(r);red.forEach(function(q){if(ov(b,q))cobre++})})});
           document.getElementById('cutm').hidden=true;return pecas+' peças · sem identificação '+sem.length+(sem.length?' ('+sem.slice(0,2).join(' | ')+')':'')+' · callout em cima de etiqueta '+cobre+' · etiquetas de sobra '+sob};
-        R.normal=await cena(null);R.ipad=await cena({AS:1.16,DS:.30});delete window.__cpMet;
+        /* NOME-IPAD (Chefe 26/11, iOS 708): a normal é forçada (0,95/0,26). Com null, no iPad a medida real já é a do iPad e o cenário "normal" não era o normal; a do iPad medida (1,13/0,26) tem cenário próprio */R.normal=await cena({AS:.95,DS:.26});R.ipad=await cena({AS:1.16,DS:.30});R.ipad113=await cena({AS:1.13,DS:.26,ip:1,MU:.8,MD:.6});delete window.__cpMet;
         R.errs=__errs.length-e0;R.e=__errs.slice(e0,e0+2).join(' | ');return JSON.stringify(R)
         """#)
         XCTAssertEqual(o["normal"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 25", "métrica normal: igual a antes")
         XCTAssertEqual(o["ipad"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 22", "métrica do iPad: a régua 815×30 ganha o callout e só sai a etiqueta da sobra que ficaria embaixo (antes: sem identificação 1)")
+        XCTAssertEqual(o["ipad113"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 23", "métrica do iPad medida (iOS 708): o mesmo que o iPad deu no CI")
         XCTAssertEqual(o["e"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // NOME-IPAD (Chefe 26/11, iOS 708): no iPad o "furo dobradiça" ficava em cima do "705" (Balcão 2 portas) e o "roldana" em cima do "906"
+    // (Guarda-roupa porta de correr). Causa: o cpObs estimava a caixa do rótulo com a métrica fixa do Chromium (0,95 e ±0,62 do texto
+    // centralizado); no iPad a fonte sobe 1,13 e o texto centralizado é maior. Com a métrica do iPad, nenhum texto da peça fica em cima de outro
+    // (caixas calculadas com a mesma métrica que o iPad desenha).
+    func testNOMEIPAD_RotuloDeFuroERoldanaNaoFicaEmCimaDaMedidaNoIPad() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var M={AS:1.13,DS:.26,ip:1,MU:.8,MD:.6};
+        var bx=function(t){var x=+t.getAttribute('x'),y=+t.getAttribute('y'),f=+t.getAttribute('font-size')||12,an=t.getAttribute('text-anchor')||'start',w=cpTw(t.textContent,f,/700|bold/.test(t.getAttribute('font-weight')||'')),mid=t.getAttribute('dominant-baseline')==='middle',x0=an==='middle'?x-w/2:an==='end'?x-w:x,b={x0:x0,x1:x0+w,y0:mid?y-M.MU*f:y-M.AS*f,y1:mid?y+M.MD*f:y+M.DS*f},rt=/rotate\(-90 ([\d.\-]+) ([\d.\-]+)\)/.exec(t.getAttribute('transform')||'');if(rt){var cx=+rt[1],cy=+rt[2],P=[[b.x0,b.y0],[b.x1,b.y0],[b.x0,b.y1],[b.x1,b.y1]].map(function(q){return [cx+(q[1]-cy),cy-(q[0]-cx)]});b={x0:Math.min.apply(null,P.map(function(q){return q[0]})),x1:Math.max.apply(null,P.map(function(q){return q[0]})),y0:Math.min.apply(null,P.map(function(q){return q[1]})),y1:Math.max.apply(null,P.map(function(q){return q[1]}))}}return b},cr=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>.5&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>.5};
+        var cena=async function(met,mk){window.__cpMet=met;loadState(initLimpo());mk();draw();openCut();await W(150);var n=0,ex=[],rot=0;[].forEach.call(document.querySelectorAll('#cutbody svg g[data-cp]'),function(g){var L=[].filter.call(g.querySelectorAll('text'),function(t){return String(t.textContent).trim()});rot+=L.filter(function(t){return /furo dobradiça|roldana/.test(t.textContent)}).length;var B=L.map(function(t){return {t:t.textContent,b:bx(t)}});for(var a=0;a<B.length;a++)for(var b=a+1;b<B.length;b++)if(cr(B[a].b,B[b].b)){n++;if(ex.length<2)ex.push(g.getAttribute('data-cp')+': '+B[a].t.slice(0,16)+' x '+B[b].t.slice(0,16))}});try{closeCut()}catch(_){}return 'rótulos '+rot+' · em cima '+n+(ex.length?' ('+ex.join(' ; ')+')':'')};
+        R.balcao=await cena(M,function(){newTpl(T('Balcão 2 portas'))});R.correr=await cena(M,function(){newTpl(T('Guarda-roupa porta de correr'))});R.demo=await cena(M,function(){demoScene()});delete window.__cpMet;
+        R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["balcao"] as? String, "rótulos 2 · em cima 0", "antes (d8f36ead): furo dobradiça x 705")
+        XCTAssertEqual(o["correr"] as? String, "rótulos 2 · em cima 0", "antes (d8f36ead): roldana x 906 nas 2 portas")
+        XCTAssertEqual(o["demo"] as? String, "rótulos 16 · em cima 0", "antes (d8f36ead): em cima 8")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

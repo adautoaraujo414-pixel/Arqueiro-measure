@@ -94,3 +94,20 @@ Imagens anexadas ao pedido "IMPLEMENTAÇÃO COMPLETA DE PORTAS PROVENÇAIS E PUX
 > - Porta: em pé, perto da lateral que abre. Gaveta: deitada e no meio.
 > - O lado da parte reta na porta em pé não foi respondido. A decisão e a fonte estão em `HISTORICO_ERROS.md`, em CONCHA-PRUMO.
 > - Commit `7fe0047a`.
+## ETAPA 2 (Adauto, 26/11/2026) · 13 fotos e 3 vídeos (descrição; os arquivos não vão pro repositório público)
+- **R1 (foto, iPad):** barra do 3D com "Espelhos: equilibrado" junto de Isométrica/Acabamento realista. Pedido: tirar do 3D, deixar só nas configurações do espelho.
+- **R2 (foto, iPad):** cozinha 3D, balcões com rodapé/base branca embaixo de cada módulo, separados (vão entre as bases). Pedido: juntar as bases lado a lado numa peça só, até 2700 mm; no L a outra base vai atravessada.
+- **R3 (foto, iPad):** balcão com porta aberta: as 2 dobradiças estão da cor da porta (madeira). Têm que ser metálicas.
+- **R4 (foto, iPad):** relógio do forno fixo "12:00". Pedido: hora real do aparelho.
+- **R5 (foto, iPad):** vista de cima do balcão ao lado do forno: travessas superiores brancas e lateral; referência de travessa/encontro.
+- **R6 (foto, iPad):** aba Divisões: hoje "Dividir N por igual" vem em cima; pedido: divisões/divisórias primeiro, dividir por igual mais embaixo.
+- **R7 (foto, iPad):** aba Portas > Modelo da porta (Lisa, Ripada V/H, Usinada V/H, Palha). Pedido: todos os modelos com miniatura, "Usados recentemente", puxadores mais embaixo.
+- **R8 (foto, outro programa):** canto L inferior visto de cima, aberto: travessas superiores — travessa da frente de cada lado e travessa atravessada na junção; montante/lateral de encontro no canto do fundo.
+- **R9 (foto, outro programa):** canto L com as DUAS portas abertas a ~165° (dobradiças nas laterais externas), prateleira em L, montante no canto interno.
+- **R10 (foto, outro programa):** canto L visto de cima com as duas portas abertas: travessa da frente de um lado passa inteira e cruza com a do outro lado; travessas do fundo; portas abertas ~165°.
+- **R11 (foto, outro programa):** Dimensões do canto L: Largura 950, Altura 700, Profundidade 950, Medida A 550 (lados A e B no desenho em L).
+- **R12/R13 (fotos, outro programa):** canto cego (porta + painel cego com régua/batente) frente e vista de cima: travessas da frente e do fundo, régua vertical entre o cego e a porta, porta com 2 dobradiças.
+- **V1 (vídeo 12 s, iPad):** porta do forno abrindo: hoje a porta gira e entra nas laterais/extremidades do forno. Tem que abrir como forno real (eixo embaixo, na frente, sem atravessar).
+- **V2 (vídeo 26 s, outro programa):** colocando cantos L e cantos cegos lado a lado no ambiente, girando a câmera em volta, encaixando um módulo ao lado do outro direto na tela (referência da câmera e edição no 2D).
+- **V3 (vídeo 13 s, outro programa):** câmera girando em volta de canto L e canto cego, portas abertas com dobradiças, travessas de cima, vista de cima e de lado.
+- Quadros dos vídeos e fotos: com o Chefe (sessão 016faTeEhtYkTpACtvjgfHzo). Medida que não está clara nas referências: perguntar ao Adauto antes.

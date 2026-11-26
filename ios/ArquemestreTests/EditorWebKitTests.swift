@@ -19606,6 +19606,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // FRENTE-COMP (Adauto 26/11, ETAPA 2 item 19 · B): no vão de gavetas, v.gf reparte a altura das frentes pela proporção (2 gavetas + gavetão
+    // embaixo = 1:1:2). O total das frentes, as folgas, as réguas do cava e a regra da caixa são os de hoje; a caixa de cada gaveta fica dentro da
+    // frente dela. Sem gf (ou gf que não bate com o número de gavetas) o módulo sai igual ao de antes, peça por peça.
+    func testFRENTECOMP_ProporcaoDasFrentesDoisGavetasEGavetaoSemGfIgualAntes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var r1=function(x){return Math.round(x*10)/10};
+        var cena=function(cava,gf){loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];newTpl(T('Gaveteiro 3 gavetas'));var m=S.mods[0];m.v[0].cava=cava;if(gf)m.v[0].gf=gf;else delete m.v[0].gf;draw();var P=partsOf(m);
+          var F=P.filter(function(p){return p.name==='Frente de gaveta'}).sort(function(a,b){return a.y-b.y}),L=P.filter(function(p){return p.name==='Lateral de gaveta'});
+          var tot=r1(F.reduce(function(a,p){return a+p.h},0)+(F[F.length-1].y+F[F.length-1].h-F[0].y-F.reduce(function(a,p){return a+p.h},0)));
+          var cxs=[0,1,2].map(function(q){return L.filter(function(p){return p.dq===q})[0]}),dentro=cxs.every(function(c,q){return c&&(q===0||cxs[q-1].y+cxs[q-1].h<=c.y+0.01)});
+          var nomes={};P.forEach(function(p){nomes[p.name]=(nomes[p.name]||0)+1});
+          var B=P.filter(function(p){return p.name==='Batente (cava)'}).sort(function(a,b){return a.y-b.y}),bat=B.map(function(b,q){var c=b.y+b.h/2,f0=F[q],f1=F[q+1];return f0&&f1&&c>=f0.y+f0.h-0.01&&c<=f1.y+0.01}).join('/');return {bat:bat,fr:F.map(function(p){return r1(p.h)}),tot:tot,dentro:dentro,cx:L.filter(function(p,k){return k%2===0}).map(function(p){return r1(p.h)}),nomes:Object.keys(nomes).sort().map(function(k){return k+' '+nomes[k]}).join(', '),js:JSON.stringify(P)}};
+        [false,true].forEach(function(cv){var a=cena(cv,null),b=cena(cv,[1,1,2]),z=cena(cv,[1,2]);var k=cv?'cava':'semCava';
+          R[k]='frentes '+a.fr.join('/')+' → '+b.fr.join('/')+' · total '+a.tot+' = '+b.tot+' · caixas '+a.cx.join('/')+' → '+b.cx.join('/')+' · caixas sem se cruzar '+b.dentro+' · mesmas peças '+(a.nomes===b.nomes);
+          if(cv)R.batentes=b.bat;R[k+'Prop']=Math.abs(b.fr[0]-b.fr[1])<=0.11&&Math.abs(b.fr[2]-2*b.fr[0])<=0.25;R[k+'GfInvalido']=z.js===a.js});
+        R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["semCava"] as? String, "frentes 232.3/232.3/232.3 → 174.3/174.3/348.5 · total 705 = 705 · caixas 148/148/148 → 97/97/250 · caixas sem se cruzar true · mesmas peças true", "1:1:2 com o gavetão embaixo; caixa pela regra de hoje (automática até 250)")
+        XCTAssertEqual(o["cava"] as? String, "frentes 218.3/218.3/218.3 → 163.8/163.8/327.5 · total 705 = 705 · caixas 114/114/114 → 71.5/71.5/199 · caixas sem se cruzar true · mesmas peças true")
+        XCTAssertEqual(o["batentes"] as? String, "true/true", "cada régua do cava fica no vão entre as frentes")
+        XCTAssertEqual(o["semCavaProp"] as? Bool, true)
+        XCTAssertEqual(o["cavaProp"] as? Bool, true)
+        XCTAssertEqual(o["semCavaGfInvalido"] as? Bool, true, "gf que não bate com o número de gavetas: igual a antes, peça por peça")
+        XCTAssertEqual(o["cavaGfInvalido"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // TAMP-ORDEM (Adauto 26/11, ETAPA 2 item 12; "pós-cava" = Tamponamento inferior, confirmado pelo Adauto): na aba Tamponamentos a ordem é
     // esquerdo, direito, engrosso cava, inferior (pós-cava), superior e as peças. Só muda a ordem: mesmas seções, mesmos nomes, mesmos controles;
     // nenhuma seção "Pós cava" (testTamponamentoInferiorReconheceACavaSozinhoSemSecaoPosCava continua valendo).

@@ -1,0 +1,11 @@
+commit ee6c09034354c0c42d0e3118d2794bf3f0ed8680 · execução 711 · ipad
+ABERTURA-DIAG WebKit frio: 2.72 s (rede 0.85 s · página em branco pronta) · antes do 1º editor, sem limite
+ABERTURA-DIAG pt: página começou em 3.92 s · DOM pronto em 9.21 s · carregou em 9.28 s · editor sozinho 5.36 s
+ABERTURA-DIAG en: página começou em 1.02 s · DOM pronto em 2.08 s · carregou em 2.10 s · editor sozinho 1.08 s
+ABERTURA-DIAG es: página começou em 0.68 s · DOM pronto em 1.60 s · carregou em 1.62 s · editor sozinho 0.93 s
+ABERTURA-DIAG pt: página começou em 0.63 s · DOM pronto em 1.60 s · carregou em 1.63 s · editor sozinho 1.00 s
+ABERTURA-DIAG pt: página começou em 0.62 s · DOM pronto em 1.40 s · carregou em 1.41 s · editor sozinho 0.80 s
+ABERTURA-DIAG bateria: -[EditorWebKitTests testAssistenteDeAjustesAplicaNosModulosPlantaOpacaECompletarFileira] abriu o editor em 10.73 s
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.025 (0.026) seconds
+	 Executed 671 tests, with 2 tests skipped and 0 failures (0 unexpected) in 4585.826 (4588.111) seconds
+	 Executed 671 tests, with 2 tests skipped and 0 failures (0 unexpected) in 4585.826 (4588.112) seconds

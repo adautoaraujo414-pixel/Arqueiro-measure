@@ -1,0 +1,9 @@
+commit ee6c09034354c0c42d0e3118d2794bf3f0ed8680 · execução 711 · ipad ·     4235 linhas no log
+==== falhas (mensagem completa) ====
+ RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=18314, error: (null)
+==== último teste que começou (se o passo foi interrompido) ====
+Test Case '-[ArquemestreTests.ZipBackupTests testZipIdaEVolta]' started (Iteration 1 of 2).
+==== totais ====
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.025 (0.026) seconds
+	 Executed 671 tests, with 2 tests skipped and 0 failures (0 unexpected) in 4585.826 (4588.111) seconds
+	 Executed 671 tests, with 2 tests skipped and 0 failures (0 unexpected) in 4585.826 (4588.112) seconds

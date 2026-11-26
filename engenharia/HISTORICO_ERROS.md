@@ -2687,3 +2687,11 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - com o iPad simulado: 2826, contra 2743 no 71915d90 e 2817 no 955db9b0;
   - peças que perdem o nome em relação ao 71915d90: 0, tanto no normal quanto no iPad.
 - **Teste novo:** `testNOMEIPAD_ComAMetricaDoIPadOsNomesDasPecasNaoSomem` (métrica 1,00/0,30 e 1,13/0,30 com `ip`). No 955db9b0 falha: 246 com nome e "Lateral de gaveta" perdida. Com a correção: 271, sem perda.
+- **iOS 708 (d8f36ead): o iPad falhou em 3 testes.** O iPhone passou nos passos A e B.
+  - **1 e 2.** "furo dobradiça" em cima de "705" (Balcão 2 portas) e "roldana" em cima de "906" (porta de correr), nos terços 1 e 2 (mm e cm).
+    - **Causa:** o `cpObs` calcula as caixas que a medida precisa evitar. Para os textos do desenho, ele usava a métrica fixa do Chromium: subida 0,95 e ±0,62 no texto centralizado. Mesmo no Chromium, o rótulo centralizado mede 0,65 para cima e 0,48 para baixo. No iPad a fonte sobe 1,13, e com os nomes em letra menor a medida passou a caber justo no espaço que, pela conta errada, estava livre.
+    - **Correção (só no iPad, `ip`):** o `cpMet` mede também a subida e a descida do texto centralizado (MU/MD) nas mesmas escalas pequenas. O `cpObs` recebe a métrica da chapa e usa AS/DS/MU/MD. Fora do iPad, continua 0,95 e ±0,62 (SVG do Chromium igual, hash rikh02).
+    - **Teste novo:** `testNOMEIPAD_RotuloDeFuroERoldanaNaoFicaEmCimaDaMedidaNoIPad`, com as caixas calculadas na métrica do iPad. No d8f36ead falha: 705, 906 nas 2 portas e 8 na cena de exemplo. Com a correção: 0.
+  - **3.** `testCORTEPRIORIDADE…`, cenário "normal": no iPad deu 23 etiquetas de sobra, quando o esperado eram 25.
+    - **Causa:** o cenário apagava a métrica forçada, e no iPad a medida real já é a do iPad, então ele não era o "normal".
+    - **Correção:** a normal passa a ser forçada em 0,95/0,26, com comentário no teste. Entrou um cenário próprio para a métrica do iPad medida (1,13/0,26 com `ip`), que dá os mesmos 23 do iPad real, com identificação 0 e callout em cima de etiqueta 0.

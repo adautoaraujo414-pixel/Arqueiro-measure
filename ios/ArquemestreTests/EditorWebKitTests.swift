@@ -19596,6 +19596,32 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // NOME-IPAD (Chefe 26/11; achado do Claude 3 no 955db9b0): com a métrica do iPad, "Lateral gaveta" sumia no Gaveteiro 3 gavetas e no Balcão porta +
+    // gavetas, e a Porta 497×330 do Aparador suspenso ficava só "#20". Regra: o nome nunca some; se não cabe no tamanho maior, tenta os menores (até o
+    // mínimo legível) dentro da peça, ou vai junto no callout. Nenhuma peça com nome na métrica normal fica sem nome na do iPad.
+    func testNOMEIPAD_ComAMetricaDoIPadOsNomesDasPecasNaoSomem() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var nomes=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.n&&nomes.indexOf(t.n)<0)nomes.push(t.n)})});
+        /* as cenas da sonda de 26/11 (6 modelos por projeto, na ordem do catálogo) que têm os modelos do achado */
+        var alvo=['Aparador suspenso 2 gavetas','Gaveteiro 3 gavetas','Balcão porta + gavetas'],gr=[];for(var i=0;i<nomes.length;i+=6){var L=nomes.slice(i,i+6);if(L.some(function(n){return alvo.indexOf(n)>=0}))gr.push(L)}
+        var cena=async function(met){if(met)window.__cpMet=met;else delete window.__cpMet;var t=0,c=0,sem=[];for(const L of gr){loadState(initLimpo());S.W=9000;L.forEach(function(n){var q=T(n);if(q)newTpl(q)});draw();openCut();await W(150);
+          [].forEach.call(document.querySelectorAll('#cutbody svg'),function(e){[].forEach.call(e.querySelectorAll('g[data-cp]'),function(g){var nm=shortLab(String(g.getAttribute('data-lab')||'').split(' · ').slice(0,-1).join(' · '));t++;var co=e.querySelector('[data-callout="'+CSS.escape(g.getAttribute('data-cp'))+'"]');if([].some.call(g.querySelectorAll('text'),function(x){return String(x.textContent).indexOf(nm)>=0})||(co&&String(co.textContent).indexOf(nm)>=0))c++;else sem.push(L[0].slice(0,12)+'|'+g.getAttribute('data-cp'))})});try{closeCut()}catch(_){}}
+          return {r:gr.length+' projetos · '+t+' peças · com nome '+c,sem:sem}};
+        /* 1ª passada aquece o otimizador (a frio o encaixe pode sair diferente) */await cena(null);var n=await cena(null),ip=await cena({AS:1,DS:.3,ip:1}),ip2=await cena({AS:1.13,DS:.3,ip:1});delete window.__cpMet;
+        R.normal=n.r;R.ipad=ip.r;var pd=function(q){return q.sem.filter(function(x){return n.sem.indexOf(x)<0}).slice(0,6).join(' ; ')};R.perdeu=pd(ip);R.ipad113=ip2.r;R.perdeu113=pd(ip2);
+        R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["normal"] as? String, "2 projetos · 281 peças · com nome 257", "métrica normal (Chromium, Android, Windows): igual ao 71915d90")
+        XCTAssertEqual(o["ipad"] as? String, "2 projetos · 281 peças · com nome 271", "métrica do iPad: antes (955db9b0) 246, perdia o nome de Lateral de gaveta, Porta…")
+        XCTAssertEqual(o["perdeu"] as? String, "")
+        XCTAssertEqual(o["ipad113"] as? String, "2 projetos · 281 peças · com nome 271", "subida medida no iPad real (1,13)")
+        XCTAssertEqual(o["perdeu113"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // FUNDO-15 × veio (Adauto 24/11, ordem final): na caixa amadeirada com veio, o fundo de 15 vai na chapa da caixa e segue a regra de rotação
     // das outras peças dela: não gira pra caber; o número de chapas é o do otimizador com essa regra (nenhum encaixe forçado). Peça alta que não cabe
     // sem girar fica na lista "maior que a chapa", igual às portas altas na cor já ficam hoje. Caixa branca sem veio: gira, contagem do otimizador

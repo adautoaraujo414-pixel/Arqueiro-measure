@@ -2670,3 +2670,20 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - os 61 testes de corte passam a 1366 e a 430, e a 1366 com o iPad simulado;
   - com a medida do iPad forçada (1,13/0,26), os 8 de legibilidade passam a 1032×1376 e a 430;
   - peças sem "#n" no catálogo com a métrica do iPad: 16 → 12, menos que as 14 da métrica normal.
+
+## NOME-IPAD (26/11): com a métrica do iPad, nomes de peça sumiam do plano de corte (achado do Claude 3 no 955db9b0) — Claude 4
+- **Erro:** com o agente de navegador do iPad, "Lateral gaveta" sumia no Gaveteiro 3 gavetas e no Balcão porta + gavetas. A Porta 497×330 do Aparador suspenso ficava só "#20" (antes "497 × 330 #20 Porta"). Regra do Chefe: "Se o nome não couber dentro da peça, ele vai junto no callout ou abreviado de forma legível. Nunca some".
+- **Causa raiz:** `cpTxt` (editor.html) ficava com o 1º tamanho em que medidas e "#n" cabiam, mesmo sem lugar pro nome.
+  - Com a subida maior do iPad, esse tamanho não deixava espaço pro nome.
+  - Na faixa estreita, a linha com o nome batia nas dobradiças no tamanho máximo e caía direto pra só "#n".
+  - O callout (`cpCallouts`) levava só "#n medida".
+- **Correção (só no iPad, marcada por `cpMet().ip`, que só existe quando a métrica em escala pequena do iPad é aplicada):**
+  - no bloco "completo", se o nome não cabe, tenta os tamanhos menores (até 12, o mínimo legível) e só fica sem nome se nenhum servir;
+  - na faixa estreita, a linha com o nome tenta os tamanhos menores antes das sem nome;
+  - no callout, tenta "#n medida · nome" e, se não couber, o de antes.
+- **Fora do iPad (Chromium, Android, Windows):** o mesmo plano do 955db9b0, byte a byte (24 cenas, hash rikh02). A única diferença em relação ao 71915d90 é o ganho do ID-SEMPRE: duas peças 2300×326 que não tinham texto ganharam "2300×326 #9". As posições das peças são idênticas.
+- **Validação (Chromium, 24 cenas, 3098 peças):**
+  - nomes na métrica normal: 2743, igual ao 71915d90;
+  - com o iPad simulado: 2826, contra 2743 no 71915d90 e 2817 no 955db9b0;
+  - peças que perdem o nome em relação ao 71915d90: 0, tanto no normal quanto no iPad.
+- **Teste novo:** `testNOMEIPAD_ComAMetricaDoIPadOsNomesDasPecasNaoSomem` (métrica 1,00/0,30 e 1,13/0,30 com `ip`). No 955db9b0 falha: 246 com nome e "Lateral de gaveta" perdida. Com a correção: 271, sem perda.

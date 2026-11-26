@@ -14454,6 +14454,27 @@ final class EditorWebKitTests: XCTestCase {
 
     // REG12-CRIACAO (Adauto 25/11, via Chefe: "nunca deslocar, diminuir ou modificar automaticamente os móveis existentes para acomodar um novo"):
     // criar ao lado deixa os vizinhos IDÊNTICOS sem o toque; a sugestão "Ajustar vizinhos ao novo módulo" faz o mesmo de antes (igual a criar tudo
+    // ETAPA 2 · item 8 (Adauto 26/11; itens 8 e 18): Estrutura do canto em L — desenho A/B, profundidade de cada lado, recuo automático (pela pedra) ou
+    // manual, voltar ao automático, pedra × armário × recuo; canto ESQUERDO e DIREITO (espelhado); mexe só no canto; desfazer
+    func testEtapa2EstruturaDoCantoABRecuoAutomaticoEManualNosDoisLados() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var out=[];for(const ld of ['e','d']){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();atArm();newTpl(T('Balcão 2 portas'));draw();await W(60);var m=S.mods[0];S.m=m;S.tab=0;draw();panel();await W(40);document.querySelector('#bd [data-corner="'+ld+'"]').click();await W(100);m=S.m;
+         atArm();newTpl(T('Balcão 2 portas'));draw();await W(60);addStone();draw();await W(60);var viz=S.mods[1],pv=function(q){return JSON.stringify([q.x,q.w,q.d,q.h,!!q.tl,!!q.tr])},JV=pv(viz);S.m=m;S.tab=0;draw();panel();await W(60);
+         var c=cornerAB(m),sv=document.querySelector('#bd [data-cnab]'),tab=(document.querySelector('[data-cnabt]')||{}).textContent||'';
+         var s1='lado '+c.lado+' · desenho '+!!sv+' · A pedra '+c.A.pedra+' armário '+c.A.prof+' recuo '+c.A.recuo;
+         await W(800);document.querySelector('[data-cnrec="man"]').click();await W(60);var i=document.querySelector('[data-cnrecv="A"]');i.value='60';i.dispatchEvent(new Event('change',{bubbles:true}));await W(60);var dm=m.d;
+         await W(800);document.querySelector('[data-cnrec="auto"]').click();await W(60);var da=m.d;
+         await W(800);document.getElementById('und').click();await W(150);var du=S.mods.filter(function(q){return q.corner})[0].d;
+         var vz=S.mods.filter(function(q){return !q.corner})[0];out.push(s1+' · manual 60 → '+dm+' · automático → '+da+' · desfazer → '+du+' · vizinho '+(vz&&pv(vz)===JV?'igual':'MUDOU'))}
+        R.canto=out.join(' | ');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+        XCTAssertEqual(o["canto"] as? String, "lado e · desenho true · A pedra 606 armário 560 recuo 40 · manual 60 → 540 · automático → 560 · desfazer → 540 · vizinho igual | lado d · desenho true · A pedra 606 armário 560 recuo 40 · manual 60 → 540 · automático → 560 · desfazer → 540 · vizinho igual")
+    }
+
     // numa ação só, que é o jeito de antes) num passo e com um desfazer; abrir um projeto salvo não mexe em nada
     func testReg12CriarAoLadoNaoMudaOsVizinhosSemOToqueEOToqueFazODeAntes() async throws {
         let web = try await editor()

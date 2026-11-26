@@ -2622,3 +2622,15 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - o `guarda` (~13110–13114) devolve os dois.
 
   Se algum caminho chamar `confineAll`/`roomClamp` fora do `guarda`, a mudança fica.
+
+## QUEDA-PARALELO (25/11): as quedas do app de teste no iOS ("Restarting after…") — causa comprovada pelo RECURSO-DIAG do iOS 701 — Claude 4
+- **Descartado com medida:**
+  - harness: WKWebView vivos 0 em todo teste, 0 de 503 criados;
+  - vazamento no app de teste: memória de 69 a 84 MB a bateria toda;
+  - acúmulo de processos: 1 WebContent, às vezes 2.
+- **Causa:** o passo do iPhone tem 75 min e acaba por tempo (701: 22:53:49), mas o `xcodebuild` do iPhone **não morre** e continua rodando junto com o iPad. São dois simuladores, dois apps de teste e WebContent de até 1 GB no mesmo Mac.
+  - O Mac troca memória com o disco: o amostrador, que dorme 60 s, atrasa para 74–133 s, e a memória residente de todos os processos cai a quase nada.
+  - O teste do momento passa de 120 s e o Xcode reinicia o app.
+  - As 2 quedas do 701 (≈22:58 e 23:14) e as do 699 (21:06 e 21:24) estão dentro dessa sobreposição. O `testTamanhoDoModuloInteiroNo3DAoVivo…` leva 3,5–11 s em toda execução e levou 167 s só nessa janela.
+- **Correção (CI, nenhum limite muda):** antes do iPad, o `ios.yml` encerra o `xcodebuild` e o amostrador que sobraram do iPhone, desliga os simuladores ligados e avisa quando isso aconteceu.
+- **Pendente (decisão do Chefe):** a bateria do iPhone não cabe nos 75 min do passo, então ele sai incompleto. O iPad tem 100 min.

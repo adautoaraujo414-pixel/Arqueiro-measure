@@ -84,6 +84,15 @@ jobs:
         timeout-minutes: 100
         run: |
           cd ios && mkdir -p build
+          # QUEDA-PARALELO (iOS 701, 25/11): quando o passo do iPhone acaba por tempo, o xcodebuild dele NÃO morre e continua rodando
+          # junto com o iPad (dois simuladores, dois WebContent de até 1 GB): o Mac troca memória com o disco, para 1 a 2 min, o teste
+          # do momento passa de 120 s e o Xcode reinicia o app de teste ("Restarting after…"). Antes do iPad, encerra o que sobrou do iPhone.
+          # Nenhum limite muda.
+          SOBRA=$(pgrep -f "xcodebuild.*build/Testes.xcresult" | wc -l | tr -d ' ')
+          echo "ABERTURA-DIAG xcodebuild do iPhone ainda rodando antes do iPad: $SOBRA"
+          if [ "$SOBRA" != "0" ]; then echo "::warning title=iPhone::o passo do iPhone acabou por tempo e o xcodebuild dele continuava rodando; encerrado antes do iPad"; fi
+          pkill -f "xcodebuild.*build/Testes.xcresult" 2>/dev/null; pkill -f "amostra_processos.sh build/processos-iphone.log" 2>/dev/null; sleep 5
+          xcrun simctl list devices booted | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}" | while read U; do xcrun simctl shutdown "$U" 2>/dev/null; done
           UDID=$(python3 scripts/pick_sim.py ipad)
           # Adauto 24/11: aquece o simulador do iPad antes da bateria (liga e espera terminar de iniciar).
           # O teste não mudou: a 1ª abertura do app continua com o limite de 20 s e o tempo sai no ABERTURA-DIAG (página / editor / total).

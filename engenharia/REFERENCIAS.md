@@ -111,3 +111,6 @@ Imagens anexadas ao pedido "IMPLEMENTAÇÃO COMPLETA DE PORTAS PROVENÇAIS E PUX
 - **V2 (vídeo 26 s, outro programa):** colocando cantos L e cantos cegos lado a lado no ambiente, girando a câmera em volta, encaixando um módulo ao lado do outro direto na tela (referência da câmera e edição no 2D).
 - **V3 (vídeo 13 s, outro programa):** câmera girando em volta de canto L e canto cego, portas abertas com dobradiças, travessas de cima, vista de cima e de lado.
 - Quadros dos vídeos e fotos: com o Chefe (sessão 016faTeEhtYkTpACtvjgfHzo). Medida que não está clara nas referências: perguntar ao Adauto antes.
+- **R14 (foto, outro programa, 26/11 15:29):** canto L visto de cima, sem portas: travessas DEITADAS EMBUTIDAS por dentro do armário (entre as laterais, laterais com altura inteira). Traseira esquerda passa inteira ao longo da parede; frontal direita atravessa o vão do canto até a traseira esquerda; frontal esquerda termina na frontal direita; traseira direita fecha. Topo aberto.
+- **R15 (foto, outro programa, 26/11 15:29):** módulo reto (canto cego com 2 portas) visto de cima: travessa da frente e travessa de trás deitadas EMBUTIDAS entre as laterais (laterais com altura inteira).
+- Adauto 26/11: duas opções — travessas **embutidas por dentro** (R14/R15) e travessas **apoiadas em cima da lateral**, seguindo o que o app já tem nos módulos retos.

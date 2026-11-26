@@ -2647,3 +2647,18 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Correção: `WebKitCompartilhado.aquece(store:rotulo:)` aquece o armazenamento do próprio teste antes de abrir. Não apaga dados; só lê a lista e abre about:blank. Nenhum limite muda.
 - **Falha 2, iPad, vídeo:** o roteiro que grava o vídeo **na versão publicada** caiu antes da versão nova entrar. Com o seletor de fotos aberto, listar os botões da página passou do tempo da consulta do XCUITest (176 s).
   - Correção (11ª rodada do roteiro): os botões da página são lidos antes de abrir o seletor, com a página parada.
+
+## CPMET-IPAD (26/11): o "641" do caixote 641×125 encostava no contorno no iPad (…SegundoTerco, iOS 694/697/701/704) — Claude 4
+- **Medido:** no iPad o `cpMet` mediu (`ok:2`) e deu 0,95/0,26, mas no plano a caixa do "641" (fonte 28,5, chapa de 2810 mostrada em 398 px, ~4 px na tela) sobe 1,15.
+- **1ª tentativa (a532a142, revertida):** medir também a 40 e a 16 px e usar a maior pra tudo.
+  - No Chromium a escala pequena também cresce (1,00/0,30) e o plano mudou: o Claude 3 achou o nome "Lateral gaveta" saindo de 6 peças.
+  - Eu achei a porta 390×2300 da cozinha de exemplo sem identificação nenhuma e a do Aparador só com "#20". O mesmo acontece com a métrica do iPad forçada (1,16).
+  - Inflar o espaço reservado do layout piora.
+- **Correção (CPMET-IPAD):**
+  - O espaço reservado continua o de sempre (AS/DS a 400 px).
+  - **Só no iPad** (WebKit em modo computador: `Macintosh` + toque) o `cpMet` mede também a 40 e a 16 px (ASr/DSr), e o texto da peça só centraliza a linha de base com essa medida. A caixa real fica no meio do espaço reservado, em vez de deslocada pra cima até o contorno.
+- **Fora do iPad, o plano é idêntico ao do 71915d90**: SVG do catálogo inteiro (24 cenas) igual byte a byte, métrica 0,95/0,26, 38 callouts.
+- **iPad simulado no Chromium** (agente de navegador do iPad + toque; ASr 1,00/DSr 0,30):
+  - os 61 testes de corte passam a 1366 e a 430;
+  - as portas do Aparador e da cozinha de exemplo mantêm "497 × 330 #20 Porta" e "2300 × 390 #22 Porta".
+  A medida real do iPad (1,15) só se confere no iOS CI.

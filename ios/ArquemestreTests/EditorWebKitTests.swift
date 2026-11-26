@@ -14454,6 +14454,27 @@ final class EditorWebKitTests: XCTestCase {
 
     // REG12-CRIACAO (Adauto 25/11, via Chefe: "nunca deslocar, diminuir ou modificar automaticamente os móveis existentes para acomodar um novo"):
     // criar ao lado deixa os vizinhos IDÊNTICOS sem o toque; a sugestão "Ajustar vizinhos ao novo módulo" faz o mesmo de antes (igual a criar tudo
+    // ETAPA 2 · item 6 (Adauto 26/11, R14/R15; item 18: canto ESQUERDO e DIREITO): travessas do canto em L embutidas por dentro ou apoiadas em cima da
+    // lateral — a traseira do lado passa inteira, a frente do fundo atravessa o canto até ela, a frente do lado termina nela, a traseira do fundo fecha;
+    // sem sobreposição no 3D, na lista de corte; "Como era" deixa o canto igual ao de antes (projeto antigo não muda); desfazer
+    func testEtapa2TravessasDoCantoEmbutidasOuApoiadasNosDoisLados() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var sig=function(m){return JSON.stringify(partsOf(m).map(function(p){return [p.name,Math.round(p.cl),Math.round(p.cw)]}))};
+        var out=[];for(const ld of ['e','d']){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();atArm();newTpl(T('Balcão 2 portas'));draw();await W(60);var m=S.mods[0];S.m=m;S.tab=0;draw();panel();await W(40);document.querySelector('#bd [data-corner="'+ld+'"]').click();await W(100);m=S.m;var antes=sig(m);
+         for(const md of ['emb','apo']){await W(800);document.querySelector('[data-cntrav="'+md+'"]').click();await W(80);
+          var P=partsOf(m).filter(function(p){return /Travessa deitada|^Lateral (direita|esquerda)$/.test(p.name)}).map(function(p){return p.name.replace('Travessa deitada · ','').replace(' (canto)','')+' '+Math.round(p.cl)}).join(', ');
+          __build();var B=__boxes().filter(function(b){return /^0:(Travessa deitada|Lateral)/.test(b.nm||'')}),ov=0;for(var i=0;i<B.length;i++)for(var j=i+1;j<B.length;j++){var a=B[i],b=B[j];if(Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>0.5&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>0.5&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>0.5)ov++}
+          var cut=0;cutLines(m).forEach(function(l){if(/Travessa deitada/.test(l.name||''))cut+=l.qty||1});out.push(ld+'/'+md+': '+P+' · sobrepõe '+ov+' · corte '+cut)}
+         await W(800);document.querySelector('[data-cntrav=""]').click();await W(80);var comoEra=sig(m)===antes;await W(800);document.getElementById('und').click();await W(150);var mu=S.mods.filter(function(q){return q.corner})[0];out.push(ld+': como era igual '+comoEra+' · desfazer volta a '+(mu.cnTrav||'como era'))}
+        R.trav=out.join(' | ');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+        XCTAssertEqual(o["trav"] as? String, "e/emb: Lateral direita 705, frente do fundo 809, frente do lado 319, trás do lado 879, trás do fundo 809 · sobrepõe 0 · corte 4 | e/apo: Lateral direita 690, frente do fundo 824, frente do lado 334, trás do lado 894, trás do fundo 824 · sobrepõe 0 · corte 4 | e: como era igual true · desfazer volta a apo | d/emb: Lateral esquerda 705, frente do fundo 809, frente do lado 319, trás do lado 879, trás do fundo 809 · sobrepõe 0 · corte 4 | d/apo: Lateral esquerda 690, frente do fundo 824, frente do lado 334, trás do lado 894, trás do fundo 824 · sobrepõe 0 · corte 4 | d: como era igual true · desfazer volta a apo")
+    }
+
     // ETAPA 2 · item 8 (Adauto 26/11; itens 8 e 18): Estrutura do canto em L — desenho A/B, profundidade de cada lado, recuo automático (pela pedra) ou
     // manual, voltar ao automático, pedra × armário × recuo; canto ESQUERDO e DIREITO (espelhado); mexe só no canto; desfazer
     func testEtapa2EstruturaDoCantoABRecuoAutomaticoEManualNosDoisLados() async throws {

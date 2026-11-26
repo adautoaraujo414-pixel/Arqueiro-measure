@@ -17478,6 +17478,30 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 
+    // ETAPA 2 · item 11, parte 3D (Adauto 26/11): auditoria dos puxadores. Catálogo inteiro, puxador barra, perfil G e gola vertical, com largura, altura
+    // e espessura mudadas: toda parte desenhada na porta/frente (puxador, perfil) fica presa na folha (encosta nela ou numa parte presa) e nenhuma entra em
+    // peça da caixa. Proteção (a auditoria de 26/11 não achou defeito no Chromium; o iPad continua na homologação)
+    func testE2ITEM11_PuxadoresPresosNaPortaSemAtravessarNoCatalogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var R={},e0=__errs.length;
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        var gap=function(a,b){return Math.max(a.x0-b.x1,b.x0-a.x1,a.y0-b.y1,b.y0-a.y1,a.z0-b.z1,b.z0-a.z1,0)},ov=function(a,b){return Math.min(Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0))};
+        open3D();await W(300);var tot=0,sol=[],atr=[];
+        for(const cfg of [['externo',.6,1.15,25],['g',.7,1.2,25],['gv',1.3,.9,18]]){for(var i=0;i<its.length;i++){loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=3000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(its[i])));if(!S.mods.length)continue;var m=S.mods[0];(m.v||[]).forEach(function(v){v.px=cfg[0];v.cava=false});m.w=Math.round(+m.w*cfg[1]);m.h=Math.round(+m.h*cfg[2]);m.esp=cfg[3];draw();re3();
+          var B=__boxes().filter(function(b){return /^0:(Porta|Frente|Gaveta|Basculante)/.test(String(b.nm))&&!b.ferr&&b.a>=.95&&!b.em}),C=__boxes().filter(function(b){return /^0:/.test(String(b.nm))&&!/^0:(Porta|Frente|Gaveta|Basculante|.*Vidro|.*LED)/.test(String(b.nm))&&b.a>=.95&&!b.pf&&!b.ferr&&!b.cup}),G={};
+          B.forEach(function(b){var k=b.pk||b.nm;(G[k]=G[k]||[]).push(b)});
+          Object.keys(G).forEach(function(k){var L=G[k];if(L.length<2)return;tot++;var vol=function(b){return (b.x1-b.x0)*(b.y1-b.y0)*(b.z1-b.z0)},fol=L.reduce(function(A,b){return vol(b)>vol(A)?b:A}),lig=[fol],rest=L.filter(function(b){return b!==fol}),mud=true;
+            while(mud){mud=false;rest=rest.filter(function(b){if(lig.some(function(q){return gap(b,q)<=1.5})){lig.push(b);mud=true;return false}return true})}
+            if(rest.length&&sol.length<5)sol.push(cfg[0]+' '+its[i].n+' · '+k);var bad=L.some(function(p){return p!==fol&&C.some(function(c){return ov(p,c)>2})});if(bad&&atr.length<5)atr.push(cfg[0]+' '+its[i].n+' · '+k)})}}
+        R.conferidas=tot>500;R.soltas=sol.join(' | ');R.atravessa=atr.join(' | ');document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["conferidas"] as? Bool, true, "catálogo inteiro nos 3 puxadores")
+        XCTAssertEqual(o["soltas"] as? String, "", "nenhuma parte do puxador solta da porta/frente")
+        XCTAssertEqual(o["atravessa"] as? String, "", "nenhum puxador dentro de peça da caixa")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // ETAPA 2 · item 4 (Adauto 26/11, R4): o relógio do forno e do micro-ondas mostra a hora do aparelho (antes "12:00" fixo); funciona sem internet.
     // Com a hora fixada pelo teste (window.__RELOGIO_FIXO), os dígitos acesos no 3D mudam com a hora; o projeto não muda
     func testE2ITEM4_RelogioDoFornoEMicroComAHoraDoAparelho() async throws {

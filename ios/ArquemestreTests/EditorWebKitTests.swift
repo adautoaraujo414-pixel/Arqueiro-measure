@@ -20336,7 +20336,9 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R)
         """#)
         XCTAssertEqual(o["largura"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+1585×606")
-        XCTAssertEqual(o["duplicar"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+2135×606")
+        // REG12-CRIACAO (Code 2, decisão do Chefe 25/11, §4): ao duplicar, o módulo que já existe fica com o tamponamento dele e a cópia entra
+        // depois dele (1835 em vez de 1805). A pedra continua sem acompanhar sozinha. Com o toque, encaixa nos balcões: 2135 → 2165 (+30 do tamponamento).
+        XCTAssertEqual(o["duplicar"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+2165×606")
         XCTAssertEqual(o["fundo 15"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+1535×615")
         XCTAssertEqual(o["nova"] as? String, "0+1585×606", "pedra nova nasce encaixada, igual a antes")
         XCTAssertEqual(o["toqueFora"] as? String, "true → false · pedra 0+1535×606", "um toque fora fecha a sugestão, a pedra fica como estava")

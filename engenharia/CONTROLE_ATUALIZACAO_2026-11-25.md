@@ -39,8 +39,26 @@ Publicação: só depois da aprovação integral do Code 1 e da homologação fi
 | 21 | 100 min no passo do iPad (25/11) | Code 2 | pronto (8b8e444c) |
 | 22 | Novidades desta versão (§10) | Code 1 | pendente |
 | 24 | Regra permanente §12 do CLAUDE.md: liberdade total de composição e edição (25/11) | Chefe (registro) / Code 2 (aplicar) / Code 1 (auditar) | registrada; aplicação: o que é automático sobre o existente vira sugestão |
+| 25 | Liberdade: criação não mexe nos vizinhos → "Ajustar vizinhos ao novo módulo" só por escolha (25/11) | Code 2 | em andamento (claude/reg12-criacao) |
+| 26 | Pedra existente não acompanha sozinha (§12) → "Ajustar pedra ao balcão" (25/11) | Claude 4 | pronto (a9d07fd0) |
+| 27 | Id único em tudo (P0: id de projeto repetido), desfazer em todas as operações, isolamento (25/11) | Claude 4 | pronto (4389a4d5, 69cd9332, 5a3f4c59); enfeite e Mais opções no integrado |
+| 28 | Intermitentes com causa: FOCO-3D (900 ms), TZ-ID (rebaixo) (25/11) | Claude 4 | pronto (8e1c0ffa, 9ea77043) |
+| 29 | iOS: processos do WebKit no simulador (data store único + aquecimento, 20 s mantidos) (25/11) | Claude 4 | pronto (fb2815f1); iOS 699 rodando |
+| 30 | Enfeites só manuais + biblioteca de objetos (25/11) | Claude 3 | pronto (7a09d08) |
+| 31 | Plano de corte no iPad: margem a partir da caixa medida (2º terço) (25/11) | Code 2 | em andamento |
+| 32 | Pré-integração única (claude/pre-final) + bateria completa | Claude 4 | em andamento |
+| 33 | Revisão independente das entregas novas, com prints | Claude 3 | em andamento |
+| 34 | CI: aquecimento do iPhone + nova escolha do iPad que some (25/11) | Chefe | pronto (72f6927d) |
 | 23 | Homologação única nas 4 plataformas + publicação | Chefe | depois da aprovação do Code 1 |
 
 ## Decisões abertas com o Adauto
 - Tamponamento da junção normal: RESPONDIDO pelo §12 (25/11): não muda sozinho o que já existe → TAMP-JUNTA sobre o vizinho vira sugestão com botão.
 - Veio em peças altas: RESPONDIDO pelo §12: informar claramente (aviso "maior que a chapa"), sem modificar o projeto.
+
+## ESTADO PARA CONTINUIDADE (25/11 ~23:45 UTC)
+Autorização do Adauto (25/11): publicar Android, Windows e iOS (revisão Apple, 3.0.14) SEM nova consulta, desde que: aprovação final escrita do Code 1 + homologação das 4 plataformas sem falha conhecida. Proibido: modo publicar/testflight/asc-enviar antes disso; mexer na main; afrouxar teste; mudar projeto existente sozinho.
+- Código definitivo em montagem: claude/pre-final-proximo @ cff643ae (Claude 4). Ainda entram: claude/reg12-criacao 736bddeb (Code 2, bateria rodando), claude/reg12-paineis (Code 2, a fazer: painéis existentes não mudam sozinhos; vira sugestão "Ajustar painéis à parede").
+- Depois: subir em claude/pre-final; disparar ios.yml (testflight=false), android/windows modo=teste, android/windows/ios-atualizacao (anterior apk-660 / win-166 / 3f1c3a58). Resultados em ci/ios-resultados-<ramo>.
+- Publicação (Chefe): android.yml e windows.yml modo=publicar com confirmar "PUBLICAR <7 letras do SHA>"; ios.yml testflight=true; asc-enviar versao=3.0.14, enviar=true, liberar=true. MARKETING_VERSION 3.0.14 no ios/project.yml. novidades.txt da versão (Code 1). AAB do Google Play fica na release; envio ao Play Console é manual.
+- Riscos registrados (não defeito): plano de corte não determinístico sob carga (N11); confineAll/roomClamp escreve-e-desfaz para módulos (guarda); simulador iOS instável após ~70 min (RECURSO-DIAG medindo).
+- Agentes: Code 1 session_016faTeAyG9oh6ZpRkCNgyn1 (aprovação final; contexto quase no limite) · Code 2 session_016faTeBM8Hvnazqmgmojndy · Claude 3 session_016faTeABFwdJx8bqQ1ih4ka · Claude 4 session_016faTeCYt1Jst4HkdGeQzW6 · Chefe session_016faTeEhtYkTpACtvjgfHzo.

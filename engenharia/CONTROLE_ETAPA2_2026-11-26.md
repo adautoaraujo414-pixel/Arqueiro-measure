@@ -18,6 +18,8 @@ Regras do Adauto nesta etapa: só o que foi pedido; não remover nem desfazer na
 | 12 | Cabeçalho tamponamentos: esquerdo, direito, cava, pós-cava, resto | Claude 4 | — | a fazer | |
 | 13 | Custos fixos na biblioteca de preços (vários, R$/%, por serviço, motor atual, sem duplicar, cópia no orçamento, fora do PDF/CSV/link) | 1º agente livre | — | a fazer | |
 | 14 | Desempenho iOS/Android/Windows: medir antes/depois, corrigir causa | Code 1 | — | a fazer | |
+| 18 | Canto ESQUERDO e canto DIREITO (L): tudo dos itens 5, 6 e 8 vale para os dois lados, além do canto cego E/D (Adauto 26/11: "tem canto esquerdo, canto direito") | Code 2 (estrutura) · Claude 3 (165°) | — | a fazer | |
+| 19 | Inferiores: composições prontas de frente — 2 gavetas + 1 gavetão; 3 gavetões; 2 gavetas; 1 gaveta + porta basculante; e livre montagem sem limitação. Reusar peças existentes de gaveta/basculante (partsOf), sem fórmula nova | Claude 4 (Code 1 audita fabricação) | — | a fazer | |
 | 15 | Controle central e integração | Chefe | — | em andamento | este arquivo |
 | 16 | Regras permanentes | todos | — | sempre | |
 | 17 | Homologação independente (iPhone, iPad, Android, Windows, update por cima, projetos antigos, prints e vídeos) | Code 1 + Chefe | 1–14 | depois | |

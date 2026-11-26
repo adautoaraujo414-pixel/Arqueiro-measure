@@ -4632,7 +4632,9 @@ final class EditorWebKitTests: XCTestCase {
           /* com vidro ligado as opções já vêm abertas */m.v[0].open=false;m.v[0].vidro=true;panel();R.abertoComVidro=document.querySelector('#bd [data-pmais]').open;
           R.errs=__errs;return JSON.stringify(R);
           """#)
-        XCTAssertEqual(o["ordem"] as? String, "4<6<7<8<9", "vão, quantas portas, mais opções, puxador (sem Travar e Anti-erros no painel desde 15/11)")
+        // PORTA-MODELOS (Adauto 26/11, ETAPA 2 item 11): o que é da porta vem antes dos puxadores. Entre "Mais opções" (8) e "2 · Puxador da porta"
+        // entram "Estilos de porta", o quadro dos estilos e a medida da folha (antes vinham depois do puxador): o puxador passa de 9 pra 12
+        XCTAssertEqual(o["ordem"] as? String, "4<6<7<8<12", "vão, quantas portas, mais opções, (estilos e folha), puxador (sem Travar e Anti-erros no painel desde 15/11)")
         XCTAssertEqual(o["fechado"] as? Bool, true)
         XCTAssertEqual(o["dentro"] as? Bool, true, "abrir, vidro, furo e basculante guardados")
         XCTAssertEqual(o["umaPorta"] as? Int, 1)
@@ -17923,7 +17925,7 @@ final class EditorWebKitTests: XCTestCase {
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
         loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));S.mods[2].v[0].vidro=true;S.m=S.mods[0];S.sv=0;S.tab=3;draw();panel();await W(900);
         var Q=function(s){var e=document.querySelector(s);if(!e)throw new Error('sem '+s);return e},inp=function(k,v){var e=Q('[data-estn="'+k+'"]');e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}))};
-        var secs=[].map.call(document.querySelectorAll('#bd .sec'),function(e){return e.textContent.replace(/[⌃⌄]/g,'').trim()});R.sec=secs.indexOf('Estilos de porta')>secs.indexOf('2 · Puxador da porta')&&secs.indexOf('1 · Quantas portas neste vão')>=0;
+        var secs=[].map.call(document.querySelectorAll('#bd .sec'),function(e){return e.textContent.replace(/[⌃⌄]/g,'').trim()});/* PORTA-MODELOS (Adauto 26/11, ETAPA 2 item 11): Estilos de porta passou pra antes do puxador (o que é da porta primeiro, puxadores embaixo) */R.sec=secs.indexOf('Estilos de porta')>=0&&secs.indexOf('Estilos de porta')<secs.indexOf('2 · Puxador da porta')&&secs.indexOf('1 · Quantas portas neste vão')>=0;
         Q('[data-est="t|simples"]').click();Q('[data-est="rw|40"]').click();inp('off','60');R.rascunho=JSON.stringify(S.mods[0].v[0].est||null);
         Q('[data-estdq="1"]').click();Q('[data-est="t|simples"]').click();Q('[data-estap="porta"]').click();R.p1=Q('#estprev [data-estn2]').textContent;Q('#estprev [data-estok]').click();
         R.so=JSON.stringify(Object.keys(S.mods[0].v[0].estQ||{}))+' '+partsOf(S.mods[0]).filter(function(p){return /^Régua/.test(p.name)}).map(function(p){return p.dq}).filter(function(v,i,a){return a.indexOf(v)===i}).join();
@@ -17935,7 +17937,7 @@ final class EditorWebKitTests: XCTestCase {
         var m=S.mods[0];m.v[0].est={t:'simples',c:'regua',rw:50,off:50};var r1=partsOf(m).filter(function(p){return / · régua de cima$/.test(p.pk)})[0].cl;m.w=1000;var r2=partsOf(m).filter(function(p){return / · régua de cima$/.test(p.pk)})[0].cl;R.acompanha=r2-r1;
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["sec"] as? Bool, true, "Estilos de porta dentro da aba Portas, depois do puxador; seções de antes continuam")
+        XCTAssertEqual(o["sec"] as? Bool, true, "Estilos de porta dentro da aba Portas, antes do puxador (ETAPA 2 item 11, 26/11); seções de antes continuam")
         XCTAssertEqual(o["rascunho"] as? String, "null", "escolher no quadro não muda o projeto antes de aplicar")
         XCTAssertEqual(o["p1"] as? String, "1 porta/frente muda")
         XCTAssertEqual(o["so"] as? String, "[\"1\"] 1", "somente esta porta: só a porta 2")
@@ -19600,6 +19602,47 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ipad"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 22", "métrica do iPad: a régua 815×30 ganha o callout e só sai a etiqueta da sobra que ficaria embaixo (antes: sem identificação 1)")
         XCTAssertEqual(o["ipad113"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 23", "métrica do iPad medida (iOS 708): o mesmo que o iPad deu no CI")
         XCTAssertEqual(o["e"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // PORTA-MODELOS (Adauto 26/11, ETAPA 2 item 11 · referência R7): na aba Portas, "Modelo da porta" mostra todos os modelos que existem com
+    // miniatura (Lisa, Ripada V/H, Usinada V/H, Palha e os Provençal simples/detalhada/dupla, que antes só estavam em "Estilos de porta");
+    // "Usados recentemente" guarda os últimos modelos usados nos Ajustes (prices.json: vale ao fechar e abrir); o que é da porta vem primeiro e
+    // os puxadores ficam embaixo. Nada sai: os mesmos blocos e botões; o Provençal aplica pelo quadro de estilos (prévia, porta escolhida ou todas).
+    func testPORTAMODELOS_TodosOsModelosComMiniaturaUsadosRecentementePuxadoresEmbaixo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var rec0=PR.portaRec;delete PR.portaRec;
+        loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.sv=0;draw();S.tab=3;panel();
+        var bd=function(){return document.getElementById('bd')},q=function(s){return bd().querySelector(s)},qa=function(s){return [].slice.call(bd().querySelectorAll(s))};
+        var grade=function(){var g=q('[data-vzm]');return g?g.parentNode:null};
+        var nomes=function(){var g=grade();return g?[].filter.call(g.children,function(b){return b.tagName==='BUTTON'}).map(function(b){return (b.querySelector('svg')?'▣':'□')+(b.querySelector('b')||b).textContent.trim()}).join(', '):''};
+        var secs=function(){return qa('.sec').map(function(e){return e.textContent.replace('⌃','').replace(/^\d · /,'').trim()}).join(' | ')};
+        var conta=function(){return ['[data-vzm]','[data-est]','[data-estap]','[data-pxt]','[data-pxmd]','[data-pxall]','[data-mcopy]','[data-pmais]'].map(function(s){return s.replace(/\[data-|\]/g,'')+' '+qa(s).length}).join(' · ')};
+        R.modelos=nomes();R.ordem=secs();R.botoes=conta();
+        /* puxadores depois de tudo da porta */var ix=function(e){return [].indexOf.call(bd().children,e)},pxP=qa('.sec').filter(function(e){return /Puxador da porta/.test(e.textContent)})[0],est=qa('.sec').filter(function(e){return /Estilos de porta/.test(e.textContent)})[0],folha=qa('.box').filter(function(e){return /Cada folha/.test(e.textContent)})[0];
+        R.puxEmbaixo=!!(pxP&&est&&ix(pxP)>ix(est)&&(!folha||ix(pxP)>ix(folha))&&ix(q('[data-pxbox]'))>ix(pxP));
+        R.recAntes=q('[data-prec]')?'tem':'não tem';
+        /* usa: Ripada vertical (aplica na hora) e Provençal simples pela prévia na porta 1 */
+        q('[data-vzm="rip|v"]').click();await W(30);q('[data-pmod="est:simples"]').click();await W(30);q('[data-estap]').click();await W(60);var ok=document.querySelector('#estprev [data-estok]');if(ok)ok.click();await W(60);
+        S.tab=3;panel();var v=S.m.v[0],e=(v.estQ&&v.estQ[0]!==undefined)?v.estQ[0]:v.est;R.porta=(v.vz?v.vz.t+'|'+v.vz.d:'lisa')+' · estilo '+(e&&e.t||'lisa');
+        R.rec=JSON.stringify(PR.portaRec);var f=null;try{f=JSON.parse(decodeURIComponent(escape(atob(ArqueApp.getFile('prices.json'))))).portaRec}catch(_){}R.arquivo=JSON.stringify(f);
+        var pr=q('[data-prec]');R.recTela=pr?[].map.call(pr.querySelectorAll('button'),function(b){return (b.querySelector('svg')?'▣':'□')+(b.querySelector('b')||b).textContent.trim()+(b.dataset.vzm!==undefined?' vzm':b.dataset.est?' est':'')}).join(', '):'não tem';
+        /* o botão do recente faz o mesmo que o da grade */q('[data-vzm="0"]').click();await W(30);S.tab=3;panel();pr=q('[data-prec]');var rb=pr&&pr.querySelector('[data-vzm="rip|v"]');if(rb){rb.click();await W(30)}R.recToque=S.m.v[0].vz?S.m.v[0].vz.t+'|'+S.m.v[0].vz.d:'lisa';
+        if(rec0===undefined)delete PR.portaRec;else PR.portaRec=rec0;try{prSave()}catch(_){}S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["modelos"] as? String, "▣Lisa, ▣Ripada vertical, ▣Ripada horizontal, ▣Usinada vertical, ▣Usinada horizontal, ▣Palha, ▣Provençal simples, ▣Provençal detalhada, ▣Provençal dupla", "antes (3174dbd8): só os 6 primeiros; os Provençal só no quadro de estilos, sem miniatura")
+        XCTAssertEqual(o["ordem"] as? String, "Modelo da porta | Quantas portas neste vão | Furo da dobradiça (plano de corte) | Estilos de porta | Puxador da porta | 🔧 Puxadores (alça e ponto)", "antes: Puxador da porta vinha antes de Estilos de porta")
+        XCTAssertEqual(o["botoes"] as? String, "vzm 6 · est 7 · estap 5 · pxt 11 · pxmd 6 · pxall 1 · mcopy 1 · pmais 1", "antes: est 4 (os 3 Provençal da grade são os mesmos botões do quadro); o resto igual")
+        XCTAssertEqual(o["puxEmbaixo"] as? Bool, true)
+        XCTAssertEqual(o["recAntes"] as? String, "não tem", "sem uso, sem a linha")
+        XCTAssertEqual(o["porta"] as? String, "rip|v · estilo simples", "Ripada na hora; Provençal só depois de Aplicar na prévia")
+        XCTAssertEqual(o["rec"] as? String, "[\"est:simples\",\"vz:rip|v\"]", "o último usado primeiro")
+        XCTAssertEqual(o["arquivo"] as? String, "[\"est:simples\",\"vz:rip|v\"]", "gravado nos Ajustes (prices.json): vale ao fechar e abrir")
+        XCTAssertEqual(o["recTela"] as? String, "▣Provençal simples est, ▣Ripada vertical vzm", "mesmos botões da grade, com miniatura")
+        XCTAssertEqual(o["recToque"] as? String, "rip|v", "o botão do recente faz o mesmo que o da grade")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

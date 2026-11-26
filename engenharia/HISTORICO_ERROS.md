@@ -2695,3 +2695,15 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - **3.** `testCORTEPRIORIDADE…`, cenário "normal": no iPad deu 23 etiquetas de sobra, quando o esperado eram 25.
     - **Causa:** o cenário apagava a métrica forçada, e no iPad a medida real já é a do iPad, então ele não era o "normal".
     - **Correção:** a normal passa a ser forçada em 0,95/0,26, com comentário no teste. Entrou um cenário próprio para a métrica do iPad medida (1,13/0,26 com `ip`), que dá os mesmos 23 do iPad real, com identificação 0 e callout em cima de etiqueta 0.
+
+## ETAPA 2 itens 10 e 11 (26/11): ordem da aba Divisões e modelos de porta — Claude 4
+- **Item 10 (R6).** Na aba Divisões, o bloco "÷ Dividir por igual (módulos lado a lado)" aparecia antes das divisões.
+  - Agora a ordem é: vão, prateleiras, divisórias, Avançado e, por último, "Dividir por igual".
+  - Muda só a ordem (`modBar(semEq)` na aba 1 e o `eqHtml()` no fim da aba). Nas outras abas o bloco fica onde estava.
+  - Teste `testDIVORDEM_…`: falha no 3174dbd8 e passa agora.
+- **Item 11, tela (R7).** Na aba Portas, "Modelo da porta" agora mostra os 9 modelos com miniatura. Os 3 Provençal só existiam em "Estilos de porta"; o botão deles é o mesmo `data-est` do quadro, então aplica pela prévia, em uma porta ou em todas, como hoje.
+  - "Usados recentemente": até 6 modelos, guardados em `PR.portaRec` (prices.json). O Provençal entra na lista só quando a pessoa confirma em Aplicar.
+  - Ordem: tudo o que é da porta vem antes; "2 · Puxador da porta" e "🔧 Puxadores (alça e ponto)" vão para o fim. Nada saiu; os botões são os mesmos, com 3 `data-est` a mais na grade.
+  - Teste `testPORTAMODELOS_…`: falha no 3174dbd8 e passa agora.
+  - Dois testes antigos fixavam a ordem anterior e tiveram a expectativa atualizada, com comentário do pedido e da data: `testAbaPortasSimplesEMinimizarQuadros` (puxador na posição 9 → 12) e `testEstilosDePortaPreviaAplicarEmMassaUmDesfazerESalvar` (Estilos agora vem antes do puxador).
+- **Evidência:** `engenharia/evidencias/etapa2/item10_antes_depois.png` e `item11_antes_depois.png`.

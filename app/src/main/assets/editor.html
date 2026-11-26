@@ -15861,5 +15861,43 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-decot]');if(!b)return;e.preventDefault();e.stopPropagation();var q=String(b.dataset.decot).split('|'),m=S.m,v=m&&m.v&&m.v[S.sv],o=v&&v.int&&v.int[+q[0]];if(o)window.decoPoe(m,o,q[1]==='1')},true);
 })();
 </script>
+<script>
+/* ===== PORTA-MODELOS (Adauto 26/11, ETAPA 2 item 11 · referência R7): na aba Portas
+   1) "Modelo da porta" mostra todos os modelos que existem com miniatura desenhada: Lisa, Ripada V/H, Usinada V/H, Palha (como já estavam)
+      e os Provençal (simples, detalhada, dupla), que só existiam em "Estilos de porta". O botão do Provençal é o mesmo do quadro de estilos
+      (data-est): monta o rascunho e aplica com a prévia, na porta escolhida ou em todas, como hoje. Nada sai do quadro de estilos.
+   2) "Usados recentemente": os últimos modelos usados (salvos nos Ajustes: valem ao fechar e abrir o app), com o mesmo botão de cada modelo.
+   3) Ordem: o que é da porta primeiro (modelo, quantas portas, mais opções, estilos, medida da folha) e os puxadores embaixo
+      ("2 · Puxador da porta" e "🔧 Puxadores (alça e ponto)"). Só muda a ordem: os mesmos blocos, os mesmos botões. ===== */
+(function(){
+ var PEND='',MAX=6,NOM={'vz:0':'Lisa','vz:rip|v':'Ripada vertical','vz:rip|h':'Ripada horizontal','vz:usi|v':'Usinada vertical','vz:usi|h':'Usinada horizontal','vz:pal|v':'Palha','est:simples':'Provençal simples','est:det':'Provençal detalhada','est:dupla':'Provençal dupla'};
+ function lista(){var r=null;try{r=PR.portaRec}catch(_){}return Array.isArray(r)?r.filter(function(k){return NOM[k]}):[]}
+ function usa(k){if(!NOM[k])return;var r=lista().filter(function(x){return x!==k});r.unshift(k);try{PR.portaRec=r.slice(0,MAX);prSave()}catch(_){}}
+ window.portaRecUsa=usa;
+ /* miniatura do Provençal: a porta com o quadro aplicado (régua/moldura), no mesmo tamanho das outras */
+ function icoEst(t){var W=54,H=66,o='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><rect x="1" y="1" width="'+(W-2)+'" height="'+(H-2)+'" rx="2" fill="#d9bb8f" stroke="#6b4a2f"/>',q=function(m,sw){return '<rect x="'+m+'" y="'+m+'" width="'+(W-2*m)+'" height="'+(H-2*m)+'" fill="none" stroke="#6b4a2f" stroke-width="'+sw+'"/>'};
+  if(t==='simples')o+=q(8,2.2);else if(t==='det')o+=q(7,2.6)+q(11,1);else if(t==='dupla')o+=q(6,1.8)+q(12,1.8);return o+'</svg>'}
+ function btEst(t,on){return '<button data-est="t|'+t+'" data-pmod="est:'+t+'" class="'+(on?'sel':'')+'" style="display:flex;flex-direction:column;align-items:center;gap:3px;width:104px;padding:6px 4px;min-height:0;font-size:12px;line-height:1.15'+(on?';border:2px solid #1f6feb;background:#eaf2ff;color:#1b1f27':'')+'">'+icoEst(t)+'<b>'+NOM['est:'+t]+'</b><span style="font-size:10.5px;color:#555;font-weight:400">quadro na frente</span></button>'}
+ /* qual estilo a porta escolhida tem (a mesma conta do quadro de estilos) */
+ function estAtual(){try{var v=S.m&&S.m.v&&S.m.v[S.sv||0];if(!v)return '';var e=(v.estQ&&v.estQ[window.ESTDQ||0]!==undefined)?v.estQ[window.ESTDQ||0]:v.est;return e&&e.t&&e.t!=='lisa'?e.t:''}catch(_){return ''}}
+ /* registra o uso: modelo do vão (aplica na hora) e Provençal quando aplica (botão de aplicar do quadro); na fase de captura da janela, antes dos outros */
+ window.addEventListener('click',function(e){try{if(window.RO||!S.m||S.m.lock)return;var t=e.target&&e.target.closest&&e.target.closest('[data-vzm],[data-estap],[data-estok]');if(!t)return;
+  if(t.dataset.vzm!==undefined){usa('vz:'+t.dataset.vzm);return}
+  /* Provençal: escolhe o alcance (estap) e só entra na lista quando confirma em Aplicar (estok) */
+  if(t.dataset.estap){var sel=document.querySelector('#bd [data-estbox] [data-est^="t|"].sel');PEND=sel?sel.dataset.est.slice(2):'';return}
+  if(t.dataset.estok&&PEND&&PEND!=='lisa')usa('est:'+PEND);PEND=''}catch(_){}},true);
+ function ordena(bd){var ks=[].slice.call(bd.children),secP=ks.filter(function(e){return e.classList&&e.classList.contains('sec')&&/Puxador da porta/.test(e.textContent)})[0];if(!secP)return;
+  var px=[secP],e=secP.nextElementSibling;while(e&&!(e.classList&&e.classList.contains('sec'))&&!(e.dataset&&e.dataset.pxbox)){px.push(e);e=e.nextElementSibling}
+  var box=ks.filter(function(x){return x.dataset&&x.dataset.pxbox})[0];px.forEach(function(x){bd.appendChild(x)});if(box)bd.appendChild(box)}
+ function enfeita(bd){var g=bd.querySelector('[data-vzm]');if(!g)return;var grade=g.parentNode;if(!grade||grade.dataset.pmodok)return;grade.dataset.pmodok='1';
+  [].forEach.call(grade.querySelectorAll('[data-vzm]'),function(b){b.dataset.pmod='vz:'+b.dataset.vzm});
+  var at=estAtual();var v=S.m&&S.m.v&&S.m.v[S.sv||0],porta=v&&v.k==='door'&&!v.vidro;
+  if(porta)['simples','det','dupla'].forEach(function(t){var d=document.createElement('div');d.innerHTML=btEst(t,at===t);grade.appendChild(d.firstChild)});
+  var r=lista();if(!r.length)return;var div=document.createElement('div');div.dataset.prec='1';div.innerHTML='<div class="note" style="margin:2px 0 4px"><b>Usados recentemente</b></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px"></div>';var lin=div.lastChild;
+  r.forEach(function(k){if(/^est:/.test(k)&&!porta)return;var o=grade.querySelector('[data-pmod="'+k+'"]');if(!o)return;var c=o.cloneNode(true);c.removeAttribute('data-pmod');c.dataset.precb=k;lin.appendChild(c)});
+  if(lin.children.length)grade.parentNode.insertBefore(div,grade)}
+ if(typeof panel==='function'){var p0=panel;window.panel=panel=function(){var r=p0.apply(this,arguments);try{var bd=document.getElementById('bd');if(bd&&S.tab===3&&S.m&&!window.RO){enfeita(bd);ordena(bd)}}catch(_){}return r}}
+})();
+</script>
 </body></html>
 

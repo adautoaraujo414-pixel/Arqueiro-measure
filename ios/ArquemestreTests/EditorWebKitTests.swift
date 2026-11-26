@@ -16119,7 +16119,10 @@ final class EditorWebKitTests: XCTestCase {
         var cam={};r.pecas.forEach(function(p){p.furos.forEach(function(f){cam[f.lay]=(cam[f.lay]||0)+1});p.rasgos.concat(p.linhas).forEach(function(f){cam[f.lay]=(cam[f.lay]||0)+1})});R.camadas=Object.keys(cam).sort().map(function(k){return k+' '+cam[k]}).join(' · ');
         /* puxador barra: posição dos furos não existe no projeto → exige marcar "furar na montagem" */loadState(initLimpo());S.W=4000;draw();newTpl(T0('Balcão 2 portas'));S.mods[0].v.forEach(function(v){v.px='barra'});draw();PR.dxf={dobP:'13',uniao:'nenhuma'};R.barraSemMarcar=dxfPecas().falta.join(' | ');PR.dxf.pxOutros='montagem';R.barraMarcado=dxfPecas().falta.length;
         /* gaveta: rebaixo 6 × 6 no comprimento da lateral da caixa */loadState(initLimpo());S.W=4000;draw();newTpl(T0('Gaveteiro 3 gavetas'));draw();PR.dxf={dobP:'13',uniao:'nenhuma'};var lg=dxfPecas().pecas.filter(function(p){return p.nome==='Lateral de gaveta'})[0];R.gaveta=lg?(lg.rasgos.map(function(q){return q.lay+' '+Math.round(q.x1-q.x0)+'×'+Math.round(q.y1-q.y0)}).join(';')+' na peça '+lg.L+'×'+lg.W):'sem';
-        /* botão no plano de corte */openCut();R.botao=!!document.getElementById('dxfbtn');try{document.getElementById('dxfbtn').click()}catch(_){}R.tela=!!document.getElementById('dxfbox');try{document.getElementById('dxfbox').remove()}catch(_){}
+        /* DXF-OFF (Adauto 26/11/2026: "desative o dxf por enquanto de todas as versões"): desligado, o plano de corte não mostra o botão nem abre a tela, e o espelho não mostra o DXF; o gerador acima continua igual */
+        R.off=window.DXF_OFF===true;openCut();R.botaoOff=!!document.getElementById('dxfbtn');R.espOff=(function(){try{loadState(initLimpo());draw();var h=espOrgHtml({forma:'ret',w:600,h:800});return h.indexOf('data-qorg="dxf"')>=0||h.indexOf('DXF do espelho')>=0}catch(e){return 'erro '+e}})();try{closeCut&&closeCut()}catch(_){}
+        /* religado (DXF_OFF=false) o botão e a tela voltam iguais a antes */window.DXF_OFF=false;try{var ob_=document.getElementById('dxfbtn');if(ob_)ob_.remove()}catch(_){}
+        /* botão no plano de corte */openCut();R.botao=!!document.getElementById('dxfbtn');try{document.getElementById('dxfbtn').click()}catch(_){}R.tela=!!document.getElementById('dxfbox');try{document.getElementById('dxfbox').remove()}catch(_){}try{document.getElementById('dxfbtn').remove()}catch(_){}window.DXF_OFF=true;
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
         XCTAssertEqual(o["semConfig"] as? String, "Dobradiça: profundidade do copo Ø35 (mm) | União das peças: escolha cavilha, pré-furo ou nenhuma")
@@ -16134,6 +16137,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["barraSemMarcar"] as? String, "Puxador barra: o projeto não tem a posição dos furos — marque \"furar na montagem\"")
         XCTAssertEqual(o["barraMarcado"] as? Int, 0)
         XCTAssertEqual(o["gaveta"] as? String, "REBAIXO_L6_P6 460×6 na peça 460×114")
+        XCTAssertEqual(o["off"] as? Bool, true, "DXF-OFF 26/11: desligado por pedido do Adauto")
+        XCTAssertEqual(o["botaoOff"] as? Bool, false, "DXF-OFF 26/11: sem botão de DXF no plano de corte")
+        XCTAssertEqual(o["espOff"] as? Bool, false, "DXF-OFF 26/11: sem DXF do espelho")
         XCTAssertEqual(o["botao"] as? Bool, true)
         XCTAssertEqual(o["tela"] as? Bool, true)
         XCTAssertEqual(o["erros"] as? String, "")

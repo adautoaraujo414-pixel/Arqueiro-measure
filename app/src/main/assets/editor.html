@@ -14544,6 +14544,9 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
 })();
 </script>
 <script>
+/* DXF-OFF (Adauto 26/11/2026: "desative o dxf por enquanto de todas as versões"): só os botões de DXF saem da tela (plano de corte e espelho da vidraçaria).
+   O gerador, os ajustes PR.dxf do projeto e o compartilhar nativo ficam intactos. Pra religar: window.DXF_OFF=false. */
+window.DXF_OFF=true;
 /* ===== FASE5 · DXF PARA CNC (23/11/2026, autorizado pelo Adauto) =====
    Gera DXF 2D (R12/AC1009, ASCII, milímetros) a partir da MESMA fonte do plano de corte (cutGroups → partsOf, furInfo, chAt):
    - contorno fechado de cada peça (camada CONTORNO);
@@ -14636,7 +14639,7 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
    if(t.closest&&t.closest('[data-dxall]')&&!r.falta.length){var how=dxfShare(nome+'.dxf',dxfTexto(r.pecas,nome));toast(how==='erro'?'Não consegui gerar o arquivo':'DXF gerado: '+r.pecas.length+' peças')}
    var b=t.closest&&t.closest('[data-dxone]');if(b&&!r.falta.length){var p=r.pecas[+b.dataset.dxone];dxfShare(nome+'_'+(p.nome+'_'+r1(p.L)+'x'+r1(p.W)).replace(/[^\w\-]+/g,'_')+'.dxf',dxfTexto([p],p.nome));toast('DXF da peça gerado')}})};
  /* botão no plano de corte (junto do enviar) — não mexe nos botões que já existem */
- var oc0=window.openCut;if(typeof oc0==='function'){openCut=window.openCut=function(){var r=oc0.apply(this,arguments);try{var sb=document.getElementById('cutsend');if(sb&&!document.getElementById('dxfbtn')){var b=document.createElement('button');b.id='dxfbtn';b.textContent='⬇ DXF para CNC';b.style.cssText='margin-left:6px';b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();dxfAbre()});sb.parentNode.insertBefore(b,sb.nextSibling)}}catch(_){}return r}}
+ var oc0=window.openCut;if(typeof oc0==='function'){openCut=window.openCut=function(){var r=oc0.apply(this,arguments);try{var sb=document.getElementById('cutsend');if(sb&&!window.DXF_OFF&&!document.getElementById('dxfbtn')){var b=document.createElement('button');b.id='dxfbtn';b.textContent='⬇ DXF para CNC';b.style.cssText='margin-left:6px';b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();dxfAbre()});sb.parentNode.insertBefore(b,sb.nextSibling)}}catch(_){}return r}}
 })();
 </script>
 <script>
@@ -14872,11 +14875,11 @@ window.fitaAcabH=function(m,p){var a=fitaAcab(p);if(!a||!(a.cl>0)||!(a.cw>0))ret
   if(L.fr||L.tr){h+=row('Cor da luz',B('k|3000','Quente 3000 K',+L.k===3000)+B('k|4000','Neutra 4000 K',(+L.k||4000)===4000)+B('k|6000','Fria 6000 K',+L.k===6000)+B('on',L.on===0?'○ Desligado':'● Ligado',L.on!==0));
    h+=row('Intensidade','<input data-qorgi="1" data-eid="'+f.id+'" type="range" min="10" max="100" step="5" value="'+(+L.int||80)+'" style="flex:1;min-width:140px"><b style="font-size:12px">'+(+L.int||80)+'%</b>')}
   h+=row('Faixa jateada',num('jw',J.w,'largura')+num('joff',J.off,'da borda')+(L.tr?num('af',espAf(f),'afastamento da parede'):''));
-  return h+row('',B('dxf','⬇ DXF do espelho (vidraçaria)',false))+'</div>'};
+  return h+(window.DXF_OFF?'':row('',B('dxf','⬇ DXF do espelho (vidraçaria)',false)))+'</div>'};
  var alvo=function(el){var id=el&&el.dataset&&el.dataset.eid;return (S.fr||[]).filter(function(q){return String(q.id)===String(id)})[0]};
  var redo=function(){try{draw();if(typeof showBox==='function')showBox();if(window.re3)re3();if(window.__itRerender)__itRerender()}catch(_){}};
  document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-qorg]');if(!t)return;var f=alvo(t);if(!f)return;e.stopImmediatePropagation();e.preventDefault();var a=t.dataset.qorg.split('|'),k=a[0],v=a[1];
-  if(k==='dxf'){window.espDxfAbre([f]);return}if(window.RO)return;try{snap()}catch(_){}f.led=f.led||{};
+  if(k==='dxf'){if(!window.DXF_OFF)window.espDxfAbre([f]);return}if(window.RO)return;try{snap()}catch(_){}f.led=f.led||{};
   if(k==='forma'){if(v!=='livre'){f.forma=v;delete f.pts}}else if(k==='ped')f.ped=f.ped?0:1;else if(k==='salva'){var nm=prompt('Nome do formato:','Meu formato '+(MEUS().length+1));if(nm){var M=MEUS();M.push({n:String(nm).slice(0,40),pts:JSON.parse(JSON.stringify(espCtrl(f)||FORMAS.gota))});try{localStorage.setItem('arq.espformas',JSON.stringify(M))}catch(_){}try{toast('⭐ Formato salvo: aparece em "Meus formatos" de todo espelho')}catch(_){}}}
   else if(k==='meu'){var q=MEUS()[+v];if(q){f.pts=JSON.parse(JSON.stringify(q.pts));f.forma='livre'}}
   else if(k==='led'){f.led.fr=v==='fr'||v==='ambos'?1:0;f.led.tr=v==='tr'||v==='ambos'?1:0;if(!f.led.k)f.led.k=4000;if(!f.led.int)f.led.int=80;if(!f.led.fr&&!f.led.tr)delete f.led}

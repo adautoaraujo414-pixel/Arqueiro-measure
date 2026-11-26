@@ -1,6 +1,6 @@
 # Texto do aviso "Atualização disponível" desta publicação. Atualize este arquivo a cada publicação:
 # se ele não mudar, o aviso volta a sair das mensagens dos commits. Linhas com # não aparecem.
-• Unidade de medida: em Ajustes, escolha milímetros (mm) ou centímetros (cm). Vale no editor (cotas, campos, Medir), na lista de peças, no plano de corte e na nota nova. Em cm aparece o valor exato (695 mm = 69,5 cm) e dá pra digitar com vírgula ou ponto. As medidas continuam guardadas em mm: trocar não muda nenhum projeto, e o DXF continua em mm. As notas que você já tem ficam como estão.
+• Unidade de medida: em Ajustes, escolha milímetros (mm) ou centímetros (cm). Vale no editor (cotas, campos, Medir), na lista de peças, no plano de corte e na nota nova. Em cm aparece o valor exato (695 mm = 69,5 cm) e dá pra digitar com vírgula ou ponto. As medidas continuam guardadas em mm: trocar não muda nenhum projeto. As notas que você já tem ficam como estão.
 • Fundo de 15 mm: além de 3 e 6 mm, o fundo pode ser de MDF 15, em um móvel ou em todos os móveis do ambiente de uma vez (com lista pra marcar, prévia e desfazer). O móvel fica 9 mm mais fundo e as medidas de dentro não mudam. No canto em L a medida de fora fica igual e as peças de dentro ficam 9 mm menores. O fundo de 15 não leva fita e vai na mesma chapa da caixa quando a cor é a mesma. Nada muda nos projetos que você já tem.
 • Plano de corte: zoom com dois dedos, roda do mouse e botões ＋, － e Ajustar à tela, e dá pra arrastar a chapa ampliada. O Ampliar continua com os mesmos níveis. Os números e os nomes das peças não ficam mais embaixo das linhas verdes da fita, na tela e no PDF.
 • Orçamento de vários ambientes: em Valores, "+ Adicionar ambiente ao orçamento" junta vários projetos do mesmo cliente num orçamento só. Cada ambiente tem nome, valor sugerido ou digitado e desconto próprio, e no fim vem o desconto geral. O PDF sai com cada ambiente separado ou só com o total. Os projetos não mudam e o mesmo projeto não entra duas vezes.
@@ -13,12 +13,12 @@
 • Plano de corte no iPhone e no iPad: a medida das sobras não sai mais pra fora do desenho da sobra e não tampa o número de nenhuma peça.
 • Forno e micro-ondas: a 🗑 não tira mais só o corte ou o nicho do forno ou do micro-ondas e explica por quê. Tocando de novo em seguida, sai o conjunto inteiro.
 • Rodapé e travessa: tirar pela 🗑 é o mesmo que desmarcar no painel, e as peças que dependem deles se ajustam do mesmo jeito. A travessa que segura o móvel sem base de cima não sai.
-• Puxador perfil G, gola e facetado: o rebaixo que o perfil precisa sai na lista de corte (nota na peça) e no DXF, na medida exata de cada peça. A medida de corte não muda. Móvel antigo mostra um aviso com botão; nada muda sozinho.
+• Puxador perfil G, gola e facetado: o rebaixo que o perfil precisa sai na lista de corte (nota na peça), na medida exata de cada peça. A medida de corte não muda. Móvel antigo mostra um aviso com botão; nada muda sozinho.
 • Dobradiça no 3D: o caneco não entra mais na lateral, na divisória nem no montante, também em móvel girado e nas paredes do lado.
 • Régua espaçadora e rodapé: a seta de altura do 3D muda a régua e a altura do rodapé do móvel, e as portas e gavetas se ajustam. A régua não sai do móvel e o rodapé para antes de chegar nas gavetas. Ajuste antigo de um projeto não muda quando você mexe em outra peça.
 • Arrastar um móvel não encolhe mais ele nem faz entrar em outro móvel, no 2D e no 3D.
 • Toque: no celular, o móvel que fica no alto do desenho ou da planta não fica mais embaixo dos botões 🔓 🗑 🧮. Tocar na porta escolhe a porta; a fita só é escolhida no modo Fita.
-• Cada móvel e cada peça têm uma identidade própria, a mesma no 3D, na lista, no plano de corte e no DXF, também depois de copiar, salvar e desfazer.
+• Cada móvel e cada peça têm uma identidade própria, a mesma no 3D, na lista, e no plano de corte, também depois de copiar, salvar e desfazer.
 • Restaurar um backup não apaga mais os seus preços nem os seus modelos.
 • Enfeites do 3D (roupas dobradas, roupas no cabide, sapatos, coisas na gaveta) só quando você escolhe: móvel novo vem sem. Toque na parte (prateleira, cabideiro, gaveta, sapateira) e use "Pôr enfeite" ou "Tirar enfeite". Projetos salvos continuam com o que já tinham. Peças, plano de corte e orçamento não mudam.
 • Espelho com LED: a faixa iluminada aparece inteira em volta do espelho também de longe e em tela pequena (antes uma linha escura apagava pedaços dela).

@@ -7199,7 +7199,8 @@ final class EditorWebKitTests: XCTestCase {
                   R.errs=__errs.length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["normal"] as? String, "esquerdo: 4 réguas · face à esquerda da moldura · espessura total 30 | direito: 4 réguas · face à direita da moldura · espessura total 30 | de cima: 4 réguas · face em cima da moldura · espessura total 30 | de baixo: 4 réguas · face embaixo da moldura · espessura total 30")
-        XCTAssertEqual(o["opcoesNaAba"] as? String, "tlInv trInv ttInv tbInv")
+        // TAMP-ORDEM (Adauto 26/11, ETAPA 2 item 12): a seção do inferior (pós-cava) passou pra antes da do superior; as 4 opções são as mesmas, só a ordem na tela
+        XCTAssertEqual(o["opcoesNaAba"] as? String, "tlInv trInv tbInv ttInv")
         XCTAssertEqual(o["inverteuEsquerdo"] as? String, "true · 4 réguas · face à direita da moldura · espessura total 30 · direito face à direita da moldura · espessura total 30")
         XCTAssertEqual(o["no2D"] as? String, "esquerdo true · direito false · Tamponamento esquerdo · 800 × 375 mm · MDF 30")
         XCTAssertEqual(o["corteIgual"] as? String, "true · 2× 800×375 | 4× 800×80 | 4× 215×80 · ATENÇÃO: INVERTIDO (parte lisa pra dentro, réguas por fora) só em: Tamponamento esquerdo")
@@ -19602,6 +19603,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ipad"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 22", "métrica do iPad: a régua 815×30 ganha o callout e só sai a etiqueta da sobra que ficaria embaixo (antes: sem identificação 1)")
         XCTAssertEqual(o["ipad113"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 23", "métrica do iPad medida (iOS 708): o mesmo que o iPad deu no CI")
         XCTAssertEqual(o["e"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // TAMP-ORDEM (Adauto 26/11, ETAPA 2 item 12; "pós-cava" = Tamponamento inferior, confirmado pelo Adauto): na aba Tamponamentos a ordem é
+    // esquerdo, direito, engrosso cava, inferior (pós-cava), superior e as peças. Só muda a ordem: mesmas seções, mesmos nomes, mesmos controles;
+    // nenhuma seção "Pós cava" (testTamponamentoInferiorReconheceACavaSozinhoSemSecaoPosCava continua valendo).
+    func testTAMPORDEM_EsquerdoDireitoCavaInferiorDepoisODemais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var olha=function(n){loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];draw();newTpl(T(n));S.m=S.mods[0];S.m.tl=true;S.m.tr=true;draw();S.tab=4;panel();var bd=document.getElementById('bd');
+          var secs=[].map.call(bd.querySelectorAll('.sec'),function(e){return e.textContent.replace('⌃','').trim()}).filter(function(t){return /Tamponamento|Engrosso|Peças de tamp/.test(t)});
+          var ctl=[].map.call(bd.querySelectorAll('[data-c],[data-tw],[data-r],input,button'),function(e){return e.tagName+(e.dataset.c||e.dataset.r||e.dataset.tw||'')}).sort().join(',');
+          var h=0;for(var i=0;i<ctl.length;i++)h=((h*31)+ctl.charCodeAt(i))>>>0;return secs.join(' → ')+' · controles '+bd.querySelectorAll('[data-c],input,button').length+' #'+h.toString(36)};
+        R.aereo=olha('Aéreo 2 portas');R.balcao=olha('Balcão 2 portas');R.posCava=/ós cava/i.test(document.getElementById('bd').innerHTML)?'tem':'não tem';
+        S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["aereo"] as? String, "Tamponamento esquerdo → Tamponamento direito → Engrosso cava (réguas de baixo) → Tamponamento inferior do módulo → Tamponamento superior do módulo → Peças de tamponamento · controles 18 #cc3cx8", "antes (bd2de0db): esquerdo, direito, superior, inferior, engrosso cava, peças; controles iguais")
+        XCTAssertEqual(o["balcao"] as? String, "Tamponamento esquerdo → Tamponamento direito → Tamponamento inferior do módulo → Tamponamento superior do módulo → Peças de tamponamento · controles 13 #1ob8toq", "balcão não tem engrosso cava; controles iguais")
+        XCTAssertEqual(o["posCava"] as? String, "não tem")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

@@ -2707,3 +2707,8 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Teste `testPORTAMODELOS_…`: falha no 3174dbd8 e passa agora.
   - Dois testes antigos fixavam a ordem anterior e tiveram a expectativa atualizada, com comentário do pedido e da data: `testAbaPortasSimplesEMinimizarQuadros` (puxador na posição 9 → 12) e `testEstilosDePortaPreviaAplicarEmMassaUmDesfazerESalvar` (Estilos agora vem antes do puxador).
 - **Evidência:** `engenharia/evidencias/etapa2/item10_antes_depois.png` e `item11_antes_depois.png`.
+- **Item 12 (Adauto 26/11; "pós-cava" = Tamponamento inferior, confirmado).** Na aba Tamponamentos a ordem agora é: esquerdo, direito, engrosso cava, inferior, superior, peças.
+  - Só muda a ordem da concatenação em `tampHtml`: os controles são os mesmos (mesmo hash no teste) e não há seção "Pós cava".
+  - Teste `testTAMPORDEM_…`: falha no bd2de0db e passa agora.
+  - `testTamponamentoInvertido…` tinha a ordem das opções "Inverter" na tela; a expectativa mudou de "tt tb" para "tb tt", com comentário do pedido.
+  - Os 40 testes de tamponamento passam.

@@ -19603,6 +19603,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // DIV-ORDEM (Adauto 26/11, ETAPA 2 item 10 · referência R6): na aba Divisões, as divisões e divisórias do módulo vêm primeiro, depois o resto
+    // (Avançado, peça por peça) e o "÷ Dividir por igual (módulos lado a lado)" mais embaixo. Nada sai: o bloco continua uma vez só, com os mesmos
+    // botões, e nas outras abas fica onde estava (logo depois da escolha do módulo).
+    func testDIVORDEM_AbaDivisoesDivisoesPrimeiroDividirPorIgualEmbaixo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));S.m=S.mods[0];draw();
+        var aba=function(t){S.tab=t;panel();var h=document.getElementById('bd').innerHTML,ix=function(k){return h.indexOf(k)},n=(h.match(/Dividir por igual \(módulos lado a lado\)/g)||[]).length;return {h:h,ix:ix,n:n}};
+        var d=aba(1),pos=function(k){var i=d.ix(k);return i<0?'falta':i};
+        var ord=[['módulo',d.ix('data-selm=')],['vão',d.ix('Vão do módulo')],['prateleiras',d.ix('Prateleiras no vão')],['divisórias',d.ix('Divisórias no vão')],['avançado',d.ix('Avançado (peça por peça)')],['dividir por igual',d.ix('Dividir por igual (módulos lado a lado)')]];
+        R.ordem=ord.filter(function(q){return q[1]>=0}).sort(function(a,b){return a[1]-b[1]}).map(function(q){return q[0]}).join(' → ')+' · blocos '+d.n+' · botões '+(d.h.match(/data-eq[a-z]*="/g)||[]).length;
+        var c=aba(0);R.estrutura='blocos '+c.n+' · antes do conteúdo '+(c.ix('Dividir por igual (módulos lado a lado)')>=0&&c.ix('Dividir por igual (módulos lado a lado)')<c.ix('Dimensões'));
+        var t4=aba(4);R.tamp='blocos '+t4.n;
+        S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["ordem"] as? String, "vão → prateleiras → divisórias → avançado → dividir por igual · blocos 1 · botões 3", "antes (3174dbd8): dividir por igual → vão → prateleiras → divisórias → avançado")
+        XCTAssertEqual(o["estrutura"] as? String, "blocos 1 · antes do conteúdo false", "aba Estrutura: igual a antes")
+        XCTAssertEqual(o["tamp"] as? String, "blocos 1", "aba Tamponamentos: igual a antes")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // NOME-IPAD (Chefe 26/11, iOS 708): no iPad o "furo dobradiça" ficava em cima do "705" (Balcão 2 portas) e o "roldana" em cima do "906"
     // (Guarda-roupa porta de correr). Causa: o cpObs estimava a caixa do rótulo com a métrica fixa do Chromium (0,95 e ±0,62 do texto
     // centralizado); no iPad a fonte sobe 1,13 e o texto centralizado é maior. Com a métrica do iPad, nenhum texto da peça fica em cima de outro

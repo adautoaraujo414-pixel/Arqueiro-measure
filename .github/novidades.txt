@@ -18,7 +18,7 @@
 • Régua espaçadora e rodapé: a seta de altura do 3D muda a régua e a altura do rodapé do móvel, e as portas e gavetas se ajustam. A régua não sai do móvel e o rodapé para antes de chegar nas gavetas. Ajuste antigo de um projeto não muda quando você mexe em outra peça.
 • Arrastar um móvel não encolhe mais ele nem faz entrar em outro móvel, no 2D e no 3D.
 • Toque: no celular, o móvel que fica no alto do desenho ou da planta não fica mais embaixo dos botões 🔓 🗑 🧮. Tocar na porta escolhe a porta; a fita só é escolhida no modo Fita.
-• Cada móvel e cada peça têm uma identidade própria, a mesma no 3D, na lista, e no plano de corte, também depois de copiar, salvar e desfazer.
+• Cada móvel e cada peça têm uma identidade própria, a mesma no 3D, na lista e no plano de corte, também depois de copiar, salvar e desfazer.
 • Restaurar um backup não apaga mais os seus preços nem os seus modelos.
 • Enfeites do 3D (roupas dobradas, roupas no cabide, sapatos, coisas na gaveta) só quando você escolhe: móvel novo vem sem. Toque na parte (prateleira, cabideiro, gaveta, sapateira) e use "Pôr enfeite" ou "Tirar enfeite". Projetos salvos continuam com o que já tinham. Peças, plano de corte e orçamento não mudam.
 • Espelho com LED: a faixa iluminada aparece inteira em volta do espelho também de longe e em tela pequena (antes uma linha escura apagava pedaços dela).

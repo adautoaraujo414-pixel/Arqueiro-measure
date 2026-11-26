@@ -73,11 +73,21 @@ enum WebKitCompartilhado {
     static func aquece() async {
         guard !aquecido else { return }
         aquecido = true
+        await aquece(store: store, rotulo: "WebKit frio", limpar: true)
+    }
+
+    /// O mesmo aquecimento para outro armazenamento (testes de atualização, que usam o armazenamento deles; iOS-atualização 37, 26/11:
+    /// a 1ª abertura do editor no iPad frio passou de 90 s e a 2ª, logo depois, abriu em 28 s). Não apaga nada do armazenamento:
+    /// só lê a lista de dados (sobe o processo de rede) e abre about:blank. Sem assert e sem limite novo.
+    private static var aquecidos = Set<ObjectIdentifier>()
+    static func aquece(store s: WKWebsiteDataStore, rotulo: String, limpar: Bool = false) async {
+        guard !aquecidos.contains(ObjectIdentifier(s)) else { return }
+        aquecidos.insert(ObjectIdentifier(s))
         let t0 = Date()
-        await limpa()                                   // sobe o processo de rede do armazenamento compartilhado
+        if limpar { await limpa() } else { _ = await s.dataRecords(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes()) }   // sobe o processo de rede
         let tRede = Date().timeIntervalSince(t0)
         let cfg = WKWebViewConfiguration()
-        cfg.websiteDataStore = store
+        cfg.websiteDataStore = s
         let w = WKWebView(frame: CGRect(x: 0, y: 0, width: 40, height: 40), configuration: cfg)
         registra(w)
         if let win = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first?.windows.first { win.addSubview(w) }
@@ -92,7 +102,7 @@ enum WebKitCompartilhado {
             w.load(URLRequest(url: URL(string: "about:blank")!))
         }
         _ = try? await w.evaluateJavaScript("1")       // a página respondeu: o WebContent está no ar
-        print("ABERTURA-DIAG WebKit frio: \(String(format: "%.2f", Date().timeIntervalSince(t0))) s (rede \(String(format: "%.2f", tRede)) s · página em branco pronta) · antes do 1º editor, sem limite")
+        print("ABERTURA-DIAG \(rotulo): \(String(format: "%.2f", Date().timeIntervalSince(t0))) s (rede \(String(format: "%.2f", tRede)) s · página em branco pronta) · antes do 1º editor, sem limite")
         w.navigationDelegate = nil
         w.removeFromSuperview()
     }

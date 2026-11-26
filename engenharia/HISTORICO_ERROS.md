@@ -2639,3 +2639,11 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - `ios/scripts/metade_testes.py` divide o `EditorWebKitTests` ao meio pela lista do código. As outras classes ficam no A, e a SubscriptionTests segue no passo dela.
   - Prova da contagem: 669 testes = A 376 + B 293, sem repetir. Contra o log do 701, nenhum teste que rodou fica fora da lista, e os 5 que faltam no 701 são os criados depois dele. O passo B imprime "começaram X de 669".
   - O iPad virou job próprio (outro Mac, os mesmos 100 min), então os 2 simuladores nunca ficam juntos. Os resultados vão pra `ci/ios-resultados-<ramo>-ipad`.
+
+## ATU-IOS-37 (26/11): atualização do iOS falhou no iPad (iOS-atualização 37, 7cf195eb) — Claude 4
+- **No iPhone passou tudo:** projetos, notas e fotos iguais; o vídeo da versão publicada voltou igual byte a byte e tocou no editor novo. No iPad passou o "backup rico".
+- **Falha 1, iPad, "backup referência":** "Exceeded timeout of 90 seconds… editor aberto pelo esquema do app". Era a 1ª abertura do editor no iPad, com o WebKit frio; depois ele abriu e conferiu tudo igual. O 2º teste do iPad, logo depois, abriu em 28 s.
+  - É o mesmo WebKit frio já tratado no `EditorWebKitTests`.
+  - Correção: `WebKitCompartilhado.aquece(store:rotulo:)` aquece o armazenamento do próprio teste antes de abrir. Não apaga dados; só lê a lista e abre about:blank. Nenhum limite muda.
+- **Falha 2, iPad, vídeo:** o roteiro que grava o vídeo **na versão publicada** caiu antes da versão nova entrar. Com o seletor de fotos aberto, listar os botões da página passou do tempo da consulta do XCUITest (176 s).
+  - Correção (11ª rodada do roteiro): os botões da página são lidos antes de abrir o seletor, com a página parada.

@@ -64,6 +64,8 @@ final class VideoGravarUITests: XCTestCase {
         sleep(2)
         try toca(["Vídeos"])
         sleep(2)
+        // botões da página do editor (pra nunca tocar neles achando que são do seletor), lidos com a página parada
+        let daPagina = Set(app.webViews.firstMatch.buttons.allElementsBoundByIndex.map { $0.label })
         try toca(["🎥 Gravar / adicionar vídeo"], contem: true)
         sleep(3)
         // menu do iOS pro campo de arquivo (sem câmera no simulador): Fototeca / Photo Library
@@ -89,7 +91,8 @@ final class VideoGravarUITests: XCTestCase {
         // botão da apresentação: só botão, sem rolar a página do editor (rolar fecharia o seletor)
         // 6ª rodada: nenhum botão com esses nomes apareceu em 60 s; vale também quem CONTÉM "Continu"/"Get Started"/"Começar",
         // e só fora da página do editor (botões do seletor, que é outro processo)
-        let daPagina = Set(app.webViews.firstMatch.buttons.allElementsBoundByIndex.map { $0.label })
+        // 11ª rodada (iOS-atualização 37, 26/11): os botões da página são lidos antes de abrir o seletor (acima). Com o seletor aberto, no
+        // iPad, listar os botões da página passava do tempo da consulta do XCUITest (176 s) e o teste caía antes de escolher o vídeo.
         func botaoSegue() -> XCUIElement? {
             let ps = segue.map { NSPredicate(format: "label == %@", $0) } + ["Continu", "Get Started", "Começar"].map { NSPredicate(format: "label CONTAINS[c] %@", $0) }
             let q = app.buttons.matching(NSCompoundPredicate(orPredicateWithSubpredicates: ps))

@@ -78,6 +78,7 @@ final class AtualizacaoAbreProjetosTests: XCTestCase {
         sink.host = host
         uc.add(sink, name: "arque")
         cfg.userContentController = uc
+        await WebKitCompartilhado.aquece(store: cfg.websiteDataStore, rotulo: "WebKit frio (atualização)")
         let w = WKWebView(frame: CGRect(x: 0, y: 0, width: 430, height: 900), configuration: cfg)
         w.navigationDelegate = host
         w.uiDelegate = host
@@ -180,6 +181,7 @@ final class AtualizacaoAbreProjetosTests: XCTestCase {
         sink.host = host
         uc.add(sink, name: "arque")
         cfg.userContentController = uc
+        await WebKitCompartilhado.aquece(store: cfg.websiteDataStore, rotulo: "WebKit frio (atualização)")
         let w = WKWebView(frame: CGRect(x: 0, y: 0, width: 430, height: 900), configuration: cfg)
         w.navigationDelegate = host
         w.uiDelegate = host

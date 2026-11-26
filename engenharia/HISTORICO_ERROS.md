@@ -2662,3 +2662,11 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - os 61 testes de corte passam a 1366 e a 430;
   - as portas do Aparador e da cozinha de exemplo mantêm "497 × 330 #20 Porta" e "2300 × 390 #22 Porta".
   A medida real do iPad (1,15) só se confere no iOS CI.
+- **iOS 706 (7dcd8b3e):** só centralizar a linha de base não bastou. O iPad mediu ASr 1,13 / DSr 0,26 (a subida cresce, a descida não), e os 6 terços falharam com o texto empurrado pra baixo.
+- **Correção final:**
+  - **CPMET-IPAD:** no iPad o plano usa a medida em escala pequena (como o fallback 1,16/0,30 do c624f1c6, que passa os terços). Fora do iPad nada muda.
+  - **ID-SEMPRE** (regra do Chefe, "a identificação da peça nunca some"): toda peça que fica sem texto e sem callout ganha "medida #n" ou "#n" num lugar livre dentro dela, sem bater em furo nem linha. Na métrica do iPad, as portas 290/326×2300 do "2P c/ Cab" ficavam sem nada.
+- **Validação no Chromium:**
+  - os 61 testes de corte passam a 1366 e a 430, e a 1366 com o iPad simulado;
+  - com a medida do iPad forçada (1,13/0,26), os 8 de legibilidade passam a 1032×1376 e a 430;
+  - peças sem "#n" no catálogo com a métrica do iPad: 16 → 12, menos que as 14 da métrica normal.

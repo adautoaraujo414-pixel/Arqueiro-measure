@@ -17478,6 +17478,30 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 
+    // ETAPA 2 · item 3 (Adauto 26/11, R3): a dobradiça (calço, braço, caneco, parafusos) é ferragem de metal: com a porta pintada pela ferramenta Pintar
+    // (madeira com textura) a dobradiça continua metálica — antes as 40 caixas de cada porta herdavam o nome/chave da porta e saíam na cor e na textura dela.
+    // Balcão e aéreo, porta fechada e aberta: nenhuma caixa da dobradiça dentro de lateral, tampo ou base
+    func testE2ITEM3_DobradicaMetalicaNaoPegaACorDaPortaENaoAtravessa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==="number"?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var hx=function(c){return c?'#'+c.map(function(v){return ('0'+v.toString(16)).slice(-2)}).join(''):''},MET={'#a9b0b8':1,'#c3c9d0':1,'#7d848c':1,'#9ea5ad':1,'#4a4f56':1,'#2f3338':1,'#8f969e':1};
+        var wood=(MAT||[]).filter(function(c){return c.cat==='wood'&&c.hex})[0];var out=[],pen=[];open3D();await W(400);
+        for(const nome of ['Balcão 2 portas','Aéreo 2 portas']){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.mods=[];draw();newTpl(T(nome));var m=S.mods[0];m.pc={'Porta#1':{c:wood.hex,id:wood.id},'Porta#2':{c:wood.hex,id:wood.id}};draw();
+          for(const ab of [0,1]){(m.v||[]).forEach(function(v){if(v.k==='door'){v.od={};for(var q=0;q<(v.n||1);q++)v.od[q]=ab}});draw();re3();await W(80);
+            var B=__boxes(),F=B.filter(function(b){return b.ferr||(/:Porta$/.test(String(b.nm))&&(b.x1-b.x0)<60&&(b.y1-b.y0)<60)}),Ob=B.filter(function(b){return !b.ferr&&b.a>=.95&&/^0:/.test(String(b.nm))&&!/Porta|Puxador|Cava/.test(String(b.nm))&&!b.pf}),bad=0;
+            F.forEach(function(f){Ob.forEach(function(o){if(Math.min(f.x1,o.x1)-Math.max(f.x0,o.x0)>1&&Math.min(f.y1,o.y1)-Math.max(f.y0,o.y0)>1&&Math.min(f.z1,o.z1)-Math.max(f.z0,o.z0)>1)bad++})});
+            out.push(nome+(ab?' aberta':' fechada')+': '+F.length+' ferragens · metal '+F.every(function(b){return MET[hx(b.c)]})+' · sem textura '+F.every(function(b){return !b.mid&&!b.tx}));pen.push(bad)}}
+        var porta=__boxes().filter(function(b){return /:Porta$/.test(String(b.nm))&&!b.ferr&&b.y1-b.y0>300})[0];R.porta=!!porta&&porta.mid===wood.id;
+        R.lista=out.join(' | ');R.atravessa=pen.join(',');document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["lista"] as? String, "Balcão 2 portas fechada: 80 ferragens · metal true · sem textura true | Balcão 2 portas aberta: 80 ferragens · metal true · sem textura true | Aéreo 2 portas fechada: 80 ferragens · metal true · sem textura true | Aéreo 2 portas aberta: 80 ferragens · metal true · sem textura true", "dobradiça de metal, nunca na cor/textura da porta")
+        XCTAssertEqual(o["porta"] as? Bool, true, "a porta continua com a madeira pintada")
+        XCTAssertEqual(o["atravessa"] as? String, "0,0,0,0", "nenhuma caixa da dobradiça dentro de lateral, tampo ou base (fechada e aberta)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // ETAPA 2 · item 1 (Adauto 26/11, R1): "Espelhos: equilibrado" sai da barra do 3D e fica só no quadro do espelho (a função é a mesma: preferência do
     // aparelho, não do projeto); todo espelho com LED tem Jateado liga/desliga dele (sem o campo novo, igual a antes: jateado só com o LED frontal);
     // botão de toque do LED no vidro (como os reais): tocar nele no 3D liga/desliga o LED daquele espelho, toque longe não pega; orçamento do jateamento

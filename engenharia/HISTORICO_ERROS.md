@@ -2695,3 +2695,11 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - **3.** `testCORTEPRIORIDADE…`, cenário "normal": no iPad deu 23 etiquetas de sobra, quando o esperado eram 25.
     - **Causa:** o cenário apagava a métrica forçada, e no iPad a medida real já é a do iPad, então ele não era o "normal".
     - **Correção:** a normal passa a ser forçada em 0,95/0,26, com comentário no teste. Entrou um cenário próprio para a métrica do iPad medida (1,13/0,26 com `ip`), que dá os mesmos 23 do iPad real, com identificação 0 e callout em cima de etiqueta 0.
+
+## DOB-METAL (ETAPA 2 item 3, R3, 26/11): dobradiça na cor da porta — Claude 3
+- **Módulo:** 3D, todas as portas com dobradiça de caneco (balcão, aéreo, torre, guarda-roupa) e o basculante.
+- **Reproduzir:** pintar a porta com a ferramenta Pintar (madeira com textura) e abrir a porta no 3D. Calço, braço, caneco e parafusos saem na madeira da porta.
+- **Causa raiz:** `hinges3`/`basHw3_` desenham a ferragem com o nome e a chave da porta (`CURN`/`CURK` = "N:Porta", `Porta#k`). Depois, o passo de pintura do 3D (`build_pc`, `pcOf`/`modMatId`) troca a cor e põe a textura (`mid`) em toda caixa com essa chave.
+- **Correção:** toda caixa criada por `hinges3`/`basHw3_` ganha a marca `ferr`, e o passo de pintura pula as caixas `ferr`. As cores metálicas que o desenho já tinha ficam. Geometria, furação, lista, corte e DXF ficam iguais.
+- **Família conferida:** balcão e aéreo, com a porta fechada e aberta: nenhuma caixa da dobradiça dentro de lateral, tampo ou base.
+- **Teste:** `testE2ITEM3_DobradicaMetalicaNaoPegaACorDaPortaENaoAtravessa`. No 3174dbd8 dá "metal false · sem textura false"; agora passa.

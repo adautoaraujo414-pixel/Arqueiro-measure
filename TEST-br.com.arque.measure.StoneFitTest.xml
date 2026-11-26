@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.StoneFitTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-26T12:40:22.193Z" hostname="runnervmop6rv" time="0.004">
+  <properties/>
+  <testcase name="ladosFicamProporcionaisAsMedidas" classname="br.com.arque.measure.StoneFitTest" time="0.002"/>
+  <testcase name="semMedidaNaoMexe" classname="br.com.arque.measure.StoneFitTest" time="0.0"/>
+  <testcase name="ladoQueFaltaFechaAPedraEConfereAMedida" classname="br.com.arque.measure.StoneFitTest" time="0.002"/>
+  <testcase name="medidasQueNaoFechamAvisam" classname="br.com.arque.measure.StoneFitTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

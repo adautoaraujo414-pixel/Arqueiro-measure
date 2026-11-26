@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.QuotePdfTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-26T12:40:22.177Z" hostname="runnervmop6rv" time="0.003">
+  <properties/>
+  <testcase name="textoDigitadoNuncaViraDetalheNemEspecificacao" classname="br.com.arque.measure.QuotePdfTest" time="0.001"/>
+  <testcase name="todaFotoEntraNumaLinhaSemSumirNemRepetir" classname="br.com.arque.measure.QuotePdfTest" time="0.0"/>
+  <testcase name="linhasDoEditorViramDetalhesEOQueAPessoaDigitouFicaEmObservacoes" classname="br.com.arque.measure.QuotePdfTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

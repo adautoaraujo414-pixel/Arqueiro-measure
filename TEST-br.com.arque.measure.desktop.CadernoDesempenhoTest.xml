@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.desktop.CadernoDesempenhoTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-26T12:40:26.547Z" hostname="runnervmop6rv" time="7.037">
+  <properties/>
+  <testcase name="escreverNaFolhaCheiaSoDesenhaOTracoNovoEOResultadoEIgual" classname="br.com.arque.measure.desktop.CadernoDesempenhoTest" time="6.929"/>
+  <testcase name="cameraMexendoDesenhaDiretoComoEra" classname="br.com.arque.measure.desktop.CadernoDesempenhoTest" time="0.108"/>
+  <system-out><![CDATA[CADERNO folha com 600 traços + 2 fotos · por ponto do traço: antes (folha inteira) 52.0 ms · agora 1.4 ms (mediana)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

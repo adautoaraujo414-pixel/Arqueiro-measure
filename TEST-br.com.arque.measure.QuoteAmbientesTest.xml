@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.QuoteAmbientesTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-11-26T12:40:19.464Z" hostname="runnervmop6rv" time="2.704">
+  <properties/>
+  <testcase name="custoInternoNuncaSaiNoPdf" classname="br.com.arque.measure.QuoteAmbientesTest" time="0.01"/>
+  <testcase name="orcamentoAntigoSemAmbientesAbreCalculaEGravaIgual" classname="br.com.arque.measure.QuoteAmbientesTest" time="0.014"/>
+  <testcase name="oMesmoProjetoNuncaEntraDuasVezes" classname="br.com.arque.measure.QuoteAmbientesTest" time="0.0"/>
+  <testcase name="descontoUmaRegraSoVarreduraIgualAoEditorEAoIos" classname="br.com.arque.measure.QuoteAmbientesTest" time="2.675"/>
+  <testcase name="descontoIndividualDepoisSubtotalDepoisGeralAoCentavo" classname="br.com.arque.measure.QuoteAmbientesTest" time="0.001"/>
+  <testcase name="pdfCadaAmbienteComOValorEOsTotaisNoFim" classname="br.com.arque.measure.QuoteAmbientesTest" time="0.001"/>
+  <testcase name="pdfSoComOTotalMantemAsDescricoesPorAmbiente" classname="br.com.arque.measure.QuoteAmbientesTest" time="0.0"/>
+  <testcase name="orcamentoComAmbientesSalvaEReabreIgual" classname="br.com.arque.measure.QuoteAmbientesTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

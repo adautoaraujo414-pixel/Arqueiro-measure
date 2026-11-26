@@ -12,3 +12,4 @@ app/build/
 *.jks
 
 !app/arque-debug.keystore
+__pycache__/

@@ -19610,7 +19610,7 @@ final class EditorWebKitTests: XCTestCase {
         var cena=async function(met){if(met)window.__cpMet=met;else delete window.__cpMet;var t=0,c=0,sem=[];for(const L of gr){loadState(initLimpo());S.W=9000;L.forEach(function(n){var q=T(n);if(q)newTpl(q)});draw();openCut();await W(150);
           [].forEach.call(document.querySelectorAll('#cutbody svg'),function(e){[].forEach.call(e.querySelectorAll('g[data-cp]'),function(g){var nm=shortLab(String(g.getAttribute('data-lab')||'').split(' · ').slice(0,-1).join(' · '));t++;var co=e.querySelector('[data-callout="'+CSS.escape(g.getAttribute('data-cp'))+'"]');if([].some.call(g.querySelectorAll('text'),function(x){return String(x.textContent).indexOf(nm)>=0})||(co&&String(co.textContent).indexOf(nm)>=0))c++;else sem.push(L[0].slice(0,12)+'|'+g.getAttribute('data-cp'))})});try{closeCut()}catch(_){}}
           return {r:gr.length+' projetos · '+t+' peças · com nome '+c,sem:sem}};
-        /* 1ª passada aquece o otimizador (a frio o encaixe pode sair diferente) */await cena(null);var n=await cena(null),ip=await cena({AS:1,DS:.3,ip:1}),ip2=await cena({AS:1.13,DS:.3,ip:1});delete window.__cpMet;
+        /* 1ª passada aquece o otimizador (a frio o encaixe pode sair diferente); a normal é forçada (no iPad a medida real já é a do iPad) */var N0={AS:.95,DS:.26};await cena(N0);var n=await cena(N0),ip=await cena({AS:1,DS:.3,ip:1}),ip2=await cena({AS:1.13,DS:.3,ip:1});delete window.__cpMet;
         R.normal=n.r;R.ipad=ip.r;var pd=function(q){return q.sem.filter(function(x){return n.sem.indexOf(x)<0}).slice(0,6).join(' ; ')};R.perdeu=pd(ip);R.ipad113=ip2.r;R.perdeu113=pd(ip2);
         R.errs=__errs.length-e0;return JSON.stringify(R)
         """#)

@@ -2634,3 +2634,8 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - As 2 quedas do 701 (≈22:58 e 23:14) e as do 699 (21:06 e 21:24) estão dentro dessa sobreposição. O `testTamanhoDoModuloInteiroNo3DAoVivo…` leva 3,5–11 s em toda execução e levou 167 s só nessa janela.
 - **Correção (CI, nenhum limite muda):** antes do iPad, o `ios.yml` encerra o `xcodebuild` e o amostrador que sobraram do iPhone, desliga os simuladores ligados e avisa quando isso aconteceu.
 - **Pendente (decisão do Chefe):** a bateria do iPhone não cabe nos 75 min do passo, então ele sai incompleto. O iPad tem 100 min.
+- **BATERIA-2-PASSOS (decisão do Chefe 25/11: não aumentar o passo do iPhone, nenhum limite muda):**
+  - O iPhone roda em 2 passos, A e B, com os mesmos 75 min e a mesma tolerância por teste. O B usa `test-without-building` e encerra o que sobrou do A antes de começar.
+  - `ios/scripts/metade_testes.py` divide o `EditorWebKitTests` ao meio pela lista do código. As outras classes ficam no A, e a SubscriptionTests segue no passo dela.
+  - Prova da contagem: 669 testes = A 376 + B 293, sem repetir. Contra o log do 701, nenhum teste que rodou fica fora da lista, e os 5 que faltam no 701 são os criados depois dele. O passo B imprime "começaram X de 669".
+  - O iPad virou job próprio (outro Mac, os mesmos 100 min), então os 2 simuladores nunca ficam juntos. Os resultados vão pra `ci/ios-resultados-<ramo>-ipad`.

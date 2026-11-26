@@ -92,9 +92,10 @@ jobs:
           SOBRA=$(pgrep -f "xcodebuild.*build/Testes.xcresult" | wc -l | tr -d ' ')
           echo "ABERTURA-DIAG xcodebuild do passo A ainda rodando antes do B: $SOBRA"
           if [ "$SOBRA" != "0" ]; then echo "::warning title=iPhone::o passo A acabou por tempo e o xcodebuild dele continuava rodando; encerrado antes do B"; fi
-          pkill -f "xcodebuild.*build/Testes.xcresult" 2>/dev/null; pkill -f "amostra_processos.sh build/processos-iphone.log" 2>/dev/null; sleep 5
+          pkill -f "xcodebuild.*build/Testes.xcresult" 2>/dev/null || true; pkill -f "amostra_processos.sh build/processos-iphone.log" 2>/dev/null || true; sleep 5
           UDID=$(cat build/udid-iphone.txt 2>/dev/null || python3 scripts/pick_sim.py iphone)
-          xcrun simctl boot "$UDID" 2>/dev/null; xcrun simctl bootstatus "$UDID" -b > /dev/null 2>&1
+          # (bash -e: boot de simulador já ligado e pkill sem processo devolvem erro; aqui não é falha)
+          xcrun simctl boot "$UDID" 2>/dev/null || true; xcrun simctl bootstatus "$UDID" -b > /dev/null 2>&1 || true
           bash scripts/amostra_processos.sh build/processos-iphone-b.log & AMOSTRA=$!
           echo "######## passo B ########" >> build/xcodebuild-test.log
           set +e

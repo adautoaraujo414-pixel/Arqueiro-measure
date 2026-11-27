@@ -64,3 +64,11 @@ Só entra aqui o que o Adauto aprovou. Sugestões ficam em `PLANO_EVOLUCAO.md`.
 - Não removido: `dxfPecas`, `dxfTexto`, `espDxf`, os ajustes `PR.dxf` salvos no projeto e o compartilhar nativo. Projetos não mudam.
 - Religar: `window.DXF_OFF=false` (teste `testFASE5_DxfParaCnc...` confere desligado e religado).
 - Novidades: as 3 menções a DXF saíram do texto.
+
+## Composição da frente dos módulos de baixo (ETAPA 2 item 19, 26/11) — padrão editável, Adauto pode trocar
+- **2 gavetas + 1 gavetão:** frentes na proporção 1:1:2, com o gavetão embaixo (Ajustes › Gavetas › "proporção das frentes", campo `fcGf`; cada módulo muda a dele).
+- **3 gavetões:** 3 frentes iguais. **2 gavetas:** 2 frentes iguais.
+- **1 gaveta + basculante:** a gaveta fica em cima, com a frente de 25% da altura do vão (Ajustes `fcGavB`; cada módulo muda o dele em `v.fcB`). Embaixo dela vai uma travessa fixa: uma prateleira na espessura da chapa, peça de verdade, onde a ferragem se apoia. A basculante vai embaixo, no sentido padrão do app; a escolha de sentido continua na aba Portas.
+- **Gavetão:** é a mesma gaveta, só com a frente maior. A caixa segue a regra de hoje (`gavH` ou automática); não tem fórmula nova.
+- **Livre montagem:** converte para o módulo por vãos que já existe (`rgConvert`). Se a conversão não der, só avisa.
+- O app só muda o vão quando a pessoa toca na composição, e ↶ desfaz.

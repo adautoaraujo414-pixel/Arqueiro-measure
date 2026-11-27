@@ -2712,3 +2712,18 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Teste `testTAMPORDEM_…`: falha no bd2de0db e passa agora.
   - `testTamponamentoInvertido…` tinha a ordem das opções "Inverter" na tela; a expectativa mudou de "tt tb" para "tb tt", com comentário do pedido.
   - Os 40 testes de tamponamento passam.
+
+## ETAPA 2 item 19 (26–27/11): composição da frente nos módulos de baixo — Claude 4
+- **B (aa723095):** no `DRW_`, o campo `v.gf` reparte as frentes pela proporção. O total, as folgas, as réguas do cava e a regra da caixa ficam os de hoje. Sem `gf`, os 142 modelos do catálogo saem iguais bit a bit (hash `115l8ej`), e os 180 testes de gaveta passam.
+- **C (9e80e24a):** vão misto "1 gaveta + basculante", feito como espelho do vão de porta com gavetas embaixo (`gx`). A travessa entra como "Prateleira fixa (embaixo da gaveta)".
+  - **Achado no caminho:** a porta usava o `tX_` (travessa frontal do topo do módulo) e subia por cima da gaveta. Agora, só nesse vão, o `tX_` fica zerado durante a porta e é restaurado depois.
+- **Tela (este commit):** seção "Composição da frente" na aba Estrutura, só nos módulos de baixo. Padrões nos Ajustes; `fcMisto`/`fcAplica`.
+- **Teste `testFRENTECOMP_ComposicoesDaFrente…`:** cobre os 14 erros de sincronização no vão misto.
+  - partsOf = 3D (altura de cada peça) = lista = corte = plano = orçamento;
+  - salvar/reabrir, duplicar e ↶;
+  - trocar de composição não deixa peça velha;
+  - um vão não mexe no outro (medida, posição e nota);
+  - Ajustes valem só para composição nova; cada módulo muda a dele; livre montagem e ↶.
+- **Risco identificado (comportamento que já existia, não mudou):** a chave da peça (`pk`) é numerada por nome no módulo inteiro. Pôr uma frente de gaveta num vão renumera as frentes dos outros vãos ("#1" vira "#2"). O mesmo acontece hoje ao trocar porta por gavetas pelo menu do vão.
+- **Item 11 (9225834e):** o `data-pmod` mudava a assinatura dos botões de modelo, e `testMenusPorTipoInventario…` os acusava como sumidos. Saiu.
+- **Teste de inventário:** a lista de "novas" ganhou os 5 botões de composição, com comentário do pedido.

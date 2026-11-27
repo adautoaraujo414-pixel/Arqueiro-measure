@@ -14507,7 +14507,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["combos"] as? String, "44/44", "as 44 combinações de móvel × aba")
         XCTAssertEqual((o["conf"] as? NSNumber)?.intValue, 1938, "assinaturas conferidas")
         XCTAssertEqual(o["falta"] as? String, "nenhum", "nenhum controle sumiu")
-        XCTAssertEqual(o["novas"] as? String, "Guarda-roupa 2 vãos#2 button:submit[k=oven] ; Guarda-roupa 2 vãos#2 button:submit[k=tempero]", "só os 2 que voltaram")
+        // FRENTE-COMP (Adauto 26/11, ETAPA 2 item 19): a seção nova "Composição da frente" (aba Estrutura, só nos de baixo) traz os 5 botões das composições
+        XCTAssertEqual(o["novas"] as? String, "Balcão 2 portas#0 button:submit[fc=1gB] ; Balcão 2 portas#0 button:submit[fc=2g1G] ; Balcão 2 portas#0 button:submit[fc=2g] ; Balcão 2 portas#0 button:submit[fc=3G] ; Balcão 2 portas#0 button:submit[fc=livre] ; Guarda-roupa 2 vãos#2 button:submit[k=oven] ; Guarda-roupa 2 vãos#2 button:submit[k=tempero]", "os 2 que voltaram e as 5 composições da frente")
         XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
     }
 
@@ -19602,6 +19603,80 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["normal"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 25", "métrica normal: igual a antes")
         XCTAssertEqual(o["ipad"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 22", "métrica do iPad: a régua 815×30 ganha o callout e só sai a etiqueta da sobra que ficaria embaixo (antes: sem identificação 1)")
         XCTAssertEqual(o["ipad113"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 23", "métrica do iPad medida (iOS 708): o mesmo que o iPad deu no CI")
+        XCTAssertEqual(o["e"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FRENTE-COMP (Adauto 26/11, ETAPA 2 item 19): "Composição da frente" nos módulos de baixo (aba Estrutura): 2 gavetas + 1 gavetão (1:1:2, gavetão embaixo),
+    // 3 gavetões, 2 gavetas, 1 gaveta + basculante (gaveta em cima com 1/4 do vão, travessa fixa = prateleira na espessura da chapa, basculante embaixo) e
+    // livre montagem (módulo por vãos). Padrões editáveis nos Ajustes e em cada módulo; só muda quando a pessoa toca; ↶ desfaz.
+    // Vão misto conferido nos 14 erros de sincronização (§11.4): partsOf = 3D = lista = corte = plano = orçamento, salvar/reabrir, duplicar,
+    // desfazer, troca de composição sem peça velha, um vão não mexe no outro, módulo sozinho = no projeto.
+    func testFRENTECOMP_ComposicoesDaFrenteVaoMistoGavetaBasculanteSincronizado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var r1=function(x){return Math.round(x*10)/10},bd=function(){return document.getElementById('bd')},q=function(s){return bd().querySelector(s)};
+        var STD0=JSON.stringify({a:STD().fcGf,b:STD().fcGavB});delete STD().fcGf;delete STD().fcGavB;
+        var novo=function(n){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T(n));var m=S.mods[0];m.x=1000;S.m=m;S.sv=0;draw();S.tab=0;panel();return m};
+        var toca=function(k){var b=q('[data-fc="'+k+'"]');if(!b)return 'sem botão';b.click();return ''};
+        var nomes=function(m,vi){var o={};partsOf(m).forEach(function(p){if(vi!==undefined&&p.vi!==vi)return;o[p.name]=(o[p.name]||0)+1});return Object.keys(o).sort().map(function(k){return k+' '+o[k]}).join(', ')};
+        /* 1. seção só nos de baixo, com as 5 composições */
+        var m=novo('Balcão 2 portas');R.botoes=[].map.call(bd().querySelectorAll('[data-fc]'),function(b){return b.textContent.trim()}).join(' | ');
+        R.soEmbaixo='aéreo '+(novo('Aéreo 2 portas')&&q('[data-fcsec]')?'tem':'não tem')+' · torre '+(novo('Torre quente (forno)')&&q('[data-fcsec]')?'tem':'não tem');
+        /* 2. olhar não muda nada; 2 gavetas + gavetão; ↶ volta igual */
+        m=novo('Balcão 2 portas');var p0=JSON.stringify(partsOf(m));S.tab=0;panel();R.olharNaoMuda=JSON.stringify(partsOf(m))===p0;
+        await W(800);draw();toca('2g1G');var F=partsOf(S.mods[0]).filter(function(p){return p.name==='Frente de gaveta'}).sort(function(a,b){return a.y-b.y});R.gavetao=F.map(function(p){return r1(p.h)}).join('/')+' · '+JSON.stringify(S.mods[0].v[0].gf);
+        document.getElementById('und').click();await W(120);draw();R.desfaz=JSON.stringify(partsOf(S.mods[0]))===p0;
+        toca('3G');R.tres=S.mods[0].v[0].n+' '+(S.mods[0].v[0].gf?'com gf':'iguais');toca('2g');R.duas=S.mods[0].v[0].n+' '+(S.mods[0].v[0].gf?'com gf':'iguais');
+        /* 3. vão misto: 1 gaveta + basculante */
+        m=novo('Balcão 2 portas');await W(800);draw();var pBase=JSON.stringify(partsOf(m));toca('1gB');m=S.mods[0];draw();var P=partsOf(m),v=m.v[0];R.misto=nomes(m);
+        var fg=P.filter(function(p){return p.name==='Frente de gaveta'})[0],tv=P.filter(function(p){return p.name==='Prateleira fixa (embaixo da gaveta)'})[0],pt=P.filter(function(p){return /^Porta/.test(p.name)&&!p.noCut})[0];
+        R.ordem=!!(fg&&tv&&pt&&fg.y+fg.h<=pt.y+0.01&&tv.y>=fg.y&&tv.y+tv.h<=pt.y+pt.h)+' · frente da gaveta '+(fg?r1(fg.h):'-')+' · porta '+(pt?r1(pt.w)+'×'+r1(pt.h):'-')+' · travessa '+(tv?tv.cl+'×'+tv.cw+' esp '+r1(tv.h):'-')+' · basculante '+!!v.bas;
+        var lat=P.filter(function(p){return p.name==='Lateral de gaveta'});R.caixaEmCima=lat.length===2&&lat.every(function(p){return p.y+p.h<=tv.y+0.01});
+        /* 3D: cada peça do partsOf tem caixa no 3D na mesma altura (como no teste do catálogo) */
+        open3D();await W(300);__build();var BX=__boxes().filter(function(b){return b.nm&&/^0:/.test(b.nm)&&!b.ft}),top=(+m.b||0)+(+m.h||0),fora=[],n3=0;
+        P.forEach(function(p){if(p.noCut||!p.pk||/de gaveta|Gaveta interna/i.test(p.name))return;var bs=BX.filter(function(b){return b.pk===p.pk});if(!bs.length){fora.push('sem 3D: '+p.name);return}n3++;var y0=Math.min.apply(null,bs.map(function(b){return b.y0})),y1=Math.max.apply(null,bs.map(function(b){return b.y1}));if(Math.abs(y0-(top-p.y-p.h))>1.5||Math.abs(y1-(top-p.y))>1.5)fora.push(p.name)});
+        try{document.getElementById('v3x').click()}catch(_){}R.tresD=n3+' peças · '+(fora.join(', ')||'todas na altura');
+        /* lista e corte */var L=cutLines(m),tem=function(nm){return L.some(function(l){return String(l.n||l.name||'').indexOf(nm)===0})};R.listaCorte='travessa '+tem('Prateleira fixa (embaixo da gaveta)')+' · frente '+tem('Frente de gaveta')+' · porta '+L.some(function(l){return /^Porta/.test(String(l.n||l.name||''))});
+        var pl=sheetPlan(1),noPlano=0;pl.groups.forEach(function(g){g.sheets.forEach(function(s){s.used.forEach(function(u){if(/Prateleira fixa \(embaixo da gaveta\)/.test(u.p.lab))noPlano++})})});R.plano='travessa no plano '+noPlano;
+        await W(800);draw();var bu=budget(),tot=JSON.stringify(bu.total!==undefined?bu.total:bu);document.getElementById('und').click();await W(120);draw();var bu0=JSON.stringify(budget().total!==undefined?budget().total:budget());R.orcamento=(tot!==bu0)+' · ↶ volta: '+(JSON.stringify(partsOf(S.mods[0]))===pBase);
+        /* salvar/reabrir e duplicar */fcAplica(S.mods[0],'1gB');draw();var pm=JSON.stringify(partsOf(S.mods[0])),sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();R.reabre=JSON.stringify(partsOf(S.mods[0]))===pm;
+        S.m=S.mods[0];S.tab=0;panel();var cp=q('[data-mcopy]');if(cp)cp.click();draw();R.duplica=S.mods.length+' módulos · '+(S.mods.length===2&&nomes(S.mods[1],0)===nomes(S.mods[0],0)&&S.mods[1].v[0].fc==='1gB');
+        /* troca de composição: sem peça velha */S.mods.splice(1);S.m=S.mods[0];S.sv=0;draw();S.tab=0;panel();toca('2g');R.trocaSemSobra=nomes(S.mods[0]).indexOf('embaixo da gaveta')<0&&!S.mods[0].v[0].bas;
+        /* um vão não mexe no outro */m=novo('Balcão 2 portas + 4 gavetas');var sem=function(L){return JSON.stringify(L.filter(function(p){return p.vi===1}).map(function(p){var c=JSON.parse(JSON.stringify(p));delete c.pk;return c}))},v1=sem(partsOf(m));S.sv=0;S.tab=0;panel();toca('1gB');/* a chave (pk) é numerada por nome no módulo inteiro (já era assim ao trocar porta por gaveta em qualquer vão): confere medida, posição e nota */R.outroVao=sem(partsOf(S.mods[0]))===v1;
+        /* Ajustes: muda o padrão e só o módulo novo pega; cada módulo muda o dele */
+        m=novo('Balcão 2 portas');toca('2g1G');var gA=JSON.stringify(S.mods[0].v[0].gf);STD().fcGf='1:2:3';var g1=JSON.stringify(S.mods[0].v[0].gf);S.tab=0;panel();toca('3G');toca('2g1G');var g2=JSON.stringify(S.mods[0].v[0].gf);R.ajustes=gA+' → existente '+g1+' → nova '+g2;
+        var inp=q('[data-fcgf]');inp.value='1:1:3';inp.dispatchEvent(new Event('change',{bubbles:true}));R.noModulo=JSON.stringify(S.mods[0].v[0].gf);
+        m=novo('Balcão 2 portas');toca('1gB');var f25=r1(partsOf(S.mods[0]).filter(function(p){return p.name==='Frente de gaveta'})[0].h);S.tab=0;panel();var ib=q('[data-fcbp]');ib.value='40';ib.dispatchEvent(new Event('change',{bubbles:true}));var f40=r1(partsOf(S.mods[0]).filter(function(p){return p.name==='Frente de gaveta'})[0].h);R.pctGaveta=f25+' → '+f40;
+        /* livre montagem */m=novo('Balcão 2 portas');await W(800);draw();toca('livre');R.livre=!!(window.rgIs&&rgIs(S.mods[0]));document.getElementById('und').click();await W(120);draw();R.livreDesfaz=!(window.rgIs&&rgIs(S.mods[0]));
+        var a0=JSON.parse(STD0);if(a0.a===undefined)delete STD().fcGf;else STD().fcGf=a0.a;if(a0.b===undefined)delete STD().fcGavB;else STD().fcGavB=a0.b;
+        S.tab=0;R.errs=__errs.length-e0;R.e=__errs.slice(e0,e0+2).join(' | ');return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["botoes"] as? String, "2 gavetas + 1 gavetão | 3 gavetões | 2 gavetas | 1 gaveta + porta basculante | livreLivre montagem (sem limitação)")
+        XCTAssertEqual(o["soEmbaixo"] as? String, "aéreo não tem · torre não tem")
+        XCTAssertEqual(o["olharNaoMuda"] as? Bool, true)
+        XCTAssertEqual(o["gavetao"] as? String, "163.8/163.8/327.5 · [1,1,2]")
+        XCTAssertEqual(o["desfaz"] as? Bool, true)
+        XCTAssertEqual(o["tres"] as? String, "3 iguais")
+        XCTAssertEqual(o["duas"] as? String, "2 iguais")
+        XCTAssertEqual(o["misto"] as? String, "Base inferior 1, Divisória do pedestal (meio) 1, Frente de gaveta 1, Frente/costa de gaveta (contra-frente e traseira) 2, Fundo de gaveta (6 mm) 1, Lateral de gaveta 2, Lateral direita 1, Lateral esquerda 1, Porta 1, Prateleira fixa (embaixo da gaveta) 1, Rodapé (pedestal) 1, Rodapé lateral direito (pedestal) 1, Rodapé lateral esquerdo (pedestal) 1, Rodapé traseiro (pedestal) 1, Tamponamento direito 1, Tamponamento esquerdo 1, Travessa deitada do pedestal (fixação) 2, Travessa frontal 1")
+        XCTAssertEqual(o["ordem"] as? String, "true · frente da gaveta 155 · porta 884×547 · travessa 870×560 esp 15 · basculante true")
+        XCTAssertEqual(o["caixaEmCima"] as? Bool, true)
+        XCTAssertEqual(o["tresD"] as? String, "15 peças · todas na altura")
+        XCTAssertEqual(o["listaCorte"] as? String, "travessa true · frente true · porta true")
+        XCTAssertEqual(o["plano"] as? String, "travessa no plano 1")
+        XCTAssertEqual(o["orcamento"] as? String, "true · ↶ volta: true")
+        XCTAssertEqual(o["reabre"] as? Bool, true)
+        XCTAssertEqual(o["duplica"] as? String, "2 módulos · true")
+        XCTAssertEqual(o["trocaSemSobra"] as? Bool, true)
+        XCTAssertEqual(o["outroVao"] as? Bool, true)
+        XCTAssertEqual(o["ajustes"] as? String, "[1,1,2] → existente [1,1,2] → nova [1,2,3]")
+        XCTAssertEqual(o["noModulo"] as? String, "[1,1,3]")
+        XCTAssertEqual(o["pctGaveta"] as? String, "155 → 248")
+        XCTAssertEqual(o["livre"] as? Bool, true)
+        XCTAssertEqual(o["livreDesfaz"] as? Bool, true)
         XCTAssertEqual(o["e"] as? String, "")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }

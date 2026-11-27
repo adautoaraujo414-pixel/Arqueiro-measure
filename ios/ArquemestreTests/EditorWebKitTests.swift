@@ -17138,6 +17138,31 @@ final class EditorWebKitTests: XCTestCase {
 
     /// MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11 "cálculos reais e automáticos" e "Regras do módulo · organização"; checklist D21/D24): as 24
     /// combinações (balcão e aéreo × moldura × Frontal × travessão sem/externo/interno) com cada peça igual no 3D e no corte (nenhuma espessura somada
+    /// ETAPA 2 · item 1 (Chefe 26/11: "melhore o vidro, a borda (lapidação/bisotê visível), o reflexo e o aro do botão sem perder desempenho"):
+    /// faces do bisotê e da lapidação em degradê com contraste (a borda aparece), aro do botão cromado (borda escura, anel claro, lábio e centro),
+    /// vidro com tom de vidro e brilho no mesmo shader (sem passada nova); o projeto não muda.
+    func testE2ITEM1_EspelhoVidroBisoteEAroDoBotaoMelhores() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var R={},e0=__errs.length;
+          loadState(initLimpo());S.env='banheiro';S.room='banheiro';S.W=3000;S.H=2700;draw();
+          var f=espWallAdd(0);f.w=600;f.h=800;f.x=400;f.b=1000;f.borda='bisotado';var g=espWallAdd(0);g.w=600;g.h=800;g.x=1600;g.b=1000;g.led={fr:1,k:4000,int:80,on:1};g.forma='red';draw();var sv0=JSON.stringify(snapState());
+          open3D();await W(400);__build();var B=__boxes();
+          var ks=function(lo,hi){return B.filter(function(b){return b.mirB&&b.mirK&&b.x0>=lo&&b.x1<=hi}).map(function(b){return +b.mirK}).filter(function(k,i,a){return a.indexOf(k)===i})};
+          var kb=ks(300,1100),kl=ks(1500,2300);R.bisote=kb.length+' faces · contraste '+(Math.round((Math.max.apply(null,kb)-Math.min.apply(null,kb))*100)/100);R.lapid=kl.length+' faces · contraste '+(Math.round((Math.max.apply(null,kl)-Math.min.apply(null,kl))*100)/100);
+          var bt=B.filter(function(b){return b.espLed==='btn'||b.k==='btn'});R.botao=bt.length+' discos';
+          var sh=[].slice.call(document.querySelectorAll('script')).some(function(s){return /ESP-VIDRO/.test(s.textContent)});R.shader=sh;
+          document.getElementById('v3x').click();R.projeto=JSON.stringify(snapState())===sv0;R.errs=__errs.slice(e0);return JSON.stringify(R);
+          """#)
+        /* antes (37ad1152): bisotê 4 faces contraste 0,26 · lapidação 2 faces 0,14 · botão 2 discos */
+        XCTAssertEqual(o["bisote"] as? String, "4 faces · contraste 0.4", "bisotê em degradê visível")
+        XCTAssertEqual(o["lapid"] as? String, "2 faces · contraste 0.28", "lapidação visível")
+        XCTAssertEqual(o["botao"] as? String, "4 discos", "aro cromado: borda escura, anel claro, lábio e centro")
+        XCTAssertEqual(o["shader"] as? Bool, true)
+        XCTAssertEqual(o["projeto"] as? Bool, true, "só desenho: o projeto não muda")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
     /// ETAPA 2 · item 23 (PRIORIDADE, pedido do Adauto 27/11): paredes invertidas/espelho — mover pra direita vai pra direita de quem olha, em todas as paredes;
     /// o espelho do desenho não inverte a coordenada real. Arrasto 2D (fundo, esquerda espelhada, direita), Mover no 3D na parede do lado (não pula pra parede do fundo
     /// nem anda contra o dedo), campo "Da esquerda do módulo" da peça livre no móvel virado (espE), rótulo da posição da peça de parede na parede esquerda,

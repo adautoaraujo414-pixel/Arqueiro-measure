@@ -2756,3 +2756,14 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Na vista 2D da parede esquerda aparece o painel/prateleira da parede do FUNDO (sem `wall`), espelhado junto. É anterior e fica para decisão.
   - Lista/corte mantêm os nomes guardados (decisão de 18/11, chave da marca ✓ cortada).
 - **Pendente:** aparelho real (iPhone/iPad com toque).
+
+## ESP-VIDRO (ETAPA 2 item 1, Chefe 26/11): vidro, bisotê/lapidação, reflexo e aro do botão — Claude 3
+- **Pedido:** melhorar o vidro, a borda (lapidação/bisotê visível), o reflexo e o aro do botão sem perder desempenho, com antes/depois.
+- **Mudança (só desenho do 3D):**
+  - shader 12/13: tom de vidro na face, brilho diagonal suave e refração do bisotê 0,006 → 0,010, sem passada nova;
+  - faces do bisotê com fatores [1,1, 0,93, 0,8, 0,7] (antes [1,16, 1,07, 0,98, 0,9]) e lapidação [1,08, 0,8] (antes [1,1, 0,96]): antes a 1ª face estourava no branco;
+  - botão: borda escura, anel cromado, lábio e centro (antes anel cinza e centro).
+- **Não muda:** projeto, peças, corte, orçamento e DXF.
+- **Desempenho:** render 2,2 ms → 2,4–2,8 ms no mesmo cenário (variação da medição; só 2 discos a mais por espelho com LED).
+- **Teste:** `testE2ITEM1_EspelhoVidroBisoteEAroDoBotaoMelhores`. No 37ad1152 falha (contraste 0,26/0,14, 2 discos, sem shader); agora passa.
+- **Print:** `tools/sondas/etapa2_c3/item1_vidro_bisote_aro_antes_depois.png`.

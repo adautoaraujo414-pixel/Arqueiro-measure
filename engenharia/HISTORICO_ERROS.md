@@ -2738,3 +2738,27 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Usa o mesmo `tapCount`/`SEL` do módulo.
 - **Teste novo:** `testTOQUEJANELA_…`, com eventos de dedo (`pointerType: 'touch'`), a 430 e com o iPad simulado. A sonda com toque real do CDP dá o mesmo resultado.
 - **Teste atualizado:** `testFocarSoNoModuloEArrastarJanelaNo2D` agora toca antes de arrastar, com comentário do pedido. Ele também passou a buscar a janela de novo depois do toque, porque o desenho é refeito.
+
+## TOQUE-ALCA (ETAPA 2 itens 26/27, Adauto 27/11): no módulo do 2D, tremida e pinça mexiam na medida e na posição — Claude 4
+- **Como reproduzir (toque real pelo CDP, Chromium a 430, "Balcão 2 portas + 4 gavetas" com zoom no módulo):**
+  - tremida de 5 px na bolinha da lateral (alça de medida `data-h`): largura 1200→1180, x 600→620;
+  - tremida de 5 px na divisória (`data-d`): posição 0,667→0,681;
+  - pinça com 1 dedo em cima de um botão do desenho (zoom) e o outro na alça: o módulo andava com o movimento do outro dedo (x 600→830);
+  - pinça em cima da porta escolhia a peça ("Peça escolhida: Porta"), como se fosse toque.
+- **Causa raiz (`editor.html`, `pointermove`/`pointerup` do `#svg`):**
+  - os arrastos `h` (alça), `d` (divisória), `s` (prateleira) e `tp` (tamponamento) não tinham a zona morta `SEL.mov`, que o arrasto do módulo (`m`) e da janela (`op`) já tinham;
+  - o `pointermove` não conferia qual dedo começou o arrasto: o 1º dedo que caiu fora do desenho não entrava em `ptrs`, o desenho via só 1 dedo e qualquer movimento arrastava;
+  - o `pointerup` do contador de toques não sabia que tinha havido pinça.
+- **Correção (componente compartilhado, sem lógica paralela):**
+  - `DN0` guarda o dedo e o ponto do `pointerdown`;
+  - alça, divisória, prateleira e tamponamento só andam depois de `SEL.mov` px (depois seguem o dedo como antes);
+  - o movimento de outro dedo desfaz o que andou (o mesmo `drag.m` que a pinça já usava) e para o arrasto;
+  - `PZG` marca gesto de 2 dedos, e pinça ou arrasto não contam como toque.
+- **Comportamento mantido:** arrasto de verdade na alça, na divisória e no módulo; 1 toque escolhe a peça; 2 toques no meio do vão abrem o acesso rápido; 4 toques travam.
+- **Teste novo:** `testTOQUEALCA_TremidaPincaEOutroDedoNaoMexemNoModulo`, com eventos de dedo (`pointerType: 'touch'`).
+  - Falha na 3ca951db em 4 pontos: tremidaAlca, tremidaDivisoria, pincaDedoFora, pincaNaPorta (que dava x 850 e peça escolhida).
+  - Passa depois a 430 e a 1366.
+- **Módulos semelhantes:** a alça, a divisória e o tamponamento são os mesmos para inferiores, superiores, torres e guarda-roupas (mesmo `drag`). O arrasto do módulo e da janela já tinham a zona morta.
+- **Observações da auditoria (sem correção, para decidir):**
+  - a bolinha da alça (raio 15 no desenho) fica em cima da lateral e do tamponamento: 1 ou 2 toques na lateral não chegam na peça;
+  - 2 toques na lateral também giram o engrosso (EGT), e isso mexe no projeto.

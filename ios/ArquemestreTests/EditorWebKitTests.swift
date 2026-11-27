@@ -19607,6 +19607,55 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // TOQUE-ALCA (Adauto 27/11, ETAPA 2 itens 26/27, auditoria de toques com dedo de verdade): no módulo do 2D, com eventos de DEDO (pointerType touch):
+    // tremida de 5 px na alça de medida (bolinha da lateral) mudava a largura 1200→1180 e na divisória mudava a posição; pinça com 1 dedo fora do desenho
+    // (em cima de um botão) arrastava o módulo com o movimento do outro dedo (x 600→830); pinça contava como toque e escolhia peça.
+    // Agora: tremida não mexe, outro dedo não arrasta, pinça e arrasto não contam como toque; o que já existia continua (arrasto de verdade mexe,
+    // 1 toque escolhe a peça, 2 toques no meio do vão abrem o acesso rápido).
+    func testTOQUEALCA_TremidaPincaEOutroDedoNaoMexemNoModulo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var sv=function(){return document.getElementById('svg')},pid=40;
+        var ev=function(tp,x,y,id,el){el=el||document.elementFromPoint(x,y)||sv();el.dispatchEvent(new PointerEvent(tp,{clientX:x,clientY:y,pointerId:id,bubbles:true,cancelable:true,isPrimary:id===pid,pointerType:'touch',width:16,height:16,pressure:tp==='pointerup'?0:0.5}))};
+        var tap=async function(x,y){pid++;ev('pointerdown',x,y,pid);await W(50);ev('pointerup',x,y,pid)};
+        /* o desenho captura o dedo (setPointerCapture): o resto do gesto vai pro svg, mesmo que a peça seja redesenhada */
+        var arr=async function(x,y,dx,dy,n){pid++;var id=pid,el=document.elementFromPoint(x,y);ev('pointerdown',x,y,id);if(el&&sv().contains(el))el=sv();for(var i=1;i<=n;i++){await W(16);ev('pointermove',x+dx*i/n,y+dy*i/n,id,el)}ev('pointerup',x+dx,y+dy,id,el)};
+        var pin=async function(x,y){pid++;var a=pid;pid++;var b=pid;ev('pointerdown',x-30,y,a);ev('pointerdown',x+30,y,b);for(var i=1;i<=6;i++){await W(16);ev('pointermove',x-30-8*i,y,a);ev('pointermove',x+30+8*i,y,b)}ev('pointerup',x-78,y,a);ev('pointerup',x+78,y,b)};
+        /* 1º dedo cai fora do desenho (num botão), o 2º cai na alça; o movimento do 1º chega no desenho */
+        var pinFora=async function(x,y){pid++;var a=pid;pid++;var b=pid;var el=document.elementFromPoint(x,y);ev('pointerdown',x-30,y,a,document.body);ev('pointerdown',x,y,b,el);el=sv();for(var i=1;i<=6;i++){await W(16);ev('pointermove',x-30-8*i,y,a,el);ev('pointermove',x+2,y,b,el)}ev('pointerup',x-78,y,a,document.body);ev('pointerup',x+2,y,b,el)};
+        var ini=async function(){try{vmenuClose()}catch(_){}loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2400;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.mods[0].x=600;S.m=S.mods[0];S.tab=0;draw();panel();window.PSEL=null;await W(500);
+          for(var it=0;it<4;it++){var L=[].slice.call(document.querySelectorAll('#svg [data-p]')),X0=1e9,Y0=1e9,X1=-1e9,Y1=-1e9;L.forEach(function(e){var r=e.getBoundingClientRect();X0=Math.min(X0,r.x);Y0=Math.min(Y0,r.y);X1=Math.max(X1,r.right);Y1=Math.max(Y1,r.bottom)});var Q=sv().getBoundingClientRect(),f=Math.min(Q.width*0.8/(X1-X0),Q.height*0.8/(Y1-Y0)),a=sv().getScreenCTM().a;if(Math.abs(f-1)>0.02)zoom(f);else{VB.x+=((X0+X1)/2-(Q.x+Q.width/2))/a;VB.y+=((Y0+Y1)/2-(Q.y+Q.height/2))/a;setVB()}draw()}await W(300)};
+        var cen=function(sel){var e=document.querySelector(sel);if(!e)return null;var r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}};
+        var porta=function(){var m=S.mods[0],P=partsOf(m),e=[].filter.call(document.querySelectorAll('#svg [data-p]'),function(q){return /^Porta/.test((P[+q.dataset.p]||{}).name||'')})[0],r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}};
+        var vm=function(){var e=document.getElementById('vmenu');return !!(e&&e.getClientRects().length&&getComputedStyle(e).display!=='none')};
+        var est=function(){var m=S.mods[0];return 'x '+m.x+' · larg '+m.w+' · div '+(m.div||[]).map(function(d){return Math.round(d*1000)}).join(',')+(window.PSEL?' · peça escolhida':'')+(vm()?' · acesso rápido':'')};
+        await ini();R.inicio=est();
+        var h=cen('#svg [data-h="l"]');await arr(h.x,h.y,4,3,4);await W(300);R.tremidaAlca=est();
+        await ini();h=cen('#svg [data-h="l"]');await arr(h.x,h.y,60,0,8);await W(300);R.arrastoAlca=est();
+        await ini();var d=cen('#svg [data-d="0"]');await arr(d.x,d.y,4,3,4);await W(300);R.tremidaDivisoria=est();
+        await ini();d=cen('#svg [data-d="0"]');await arr(d.x,d.y,60,0,8);await W(300);R.arrastoDivisoria=(S.mods[0].div[0]!==0.6667)?'andou':'parada';
+        await ini();h=cen('#svg [data-h="l"]');await pinFora(h.x,h.y);await W(500);R.pincaDedoFora=est();
+        await ini();var p=porta();await pin(p.x,p.y);await W(800);R.pincaNaPorta=est();
+        await ini();p=porta();await tap(p.x,p.y);await W(800);R.umToquePorta=est();
+        await ini();p=porta();await tap(p.x,p.y);await W(90);await tap(p.x,p.y);await W(800);R.doisToquesPorta=est();
+        await ini();p=porta();await arr(p.x,p.y,60,0,8);await W(500);R.arrastoModulo=S.mods[0].x!==600?'andou':'parado';
+        try{vmenuClose()}catch(_){}S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["inicio"] as? String, "x 600 · larg 1200 · div 667")
+        XCTAssertEqual(o["tremidaAlca"] as? String, "x 600 · larg 1200 · div 667", "tremida na alça de medida não muda a largura")
+        XCTAssertNotEqual(o["arrastoAlca"] as? String, "x 600 · larg 1200 · div 667", "arrasto de verdade na alça continua mudando a medida")
+        XCTAssertEqual(o["tremidaDivisoria"] as? String, "x 600 · larg 1200 · div 667", "tremida na divisória não muda a posição")
+        XCTAssertEqual(o["arrastoDivisoria"] as? String, "andou", "arrasto de verdade na divisória continua")
+        XCTAssertEqual(o["pincaDedoFora"] as? String, "x 600 · larg 1200 · div 667", "movimento do outro dedo não arrasta o módulo")
+        XCTAssertEqual(o["pincaNaPorta"] as? String, "x 600 · larg 1200 · div 667", "pinça não conta como toque: não escolhe peça nem abre menu")
+        XCTAssertEqual(o["umToquePorta"] as? String, "x 600 · larg 1200 · div 667 · peça escolhida", "1 toque continua escolhendo a peça")
+        XCTAssertEqual(o["doisToquesPorta"] as? String, "x 600 · larg 1200 · div 667 · acesso rápido", "2 toques no meio do vão continuam abrindo o acesso rápido")
+        XCTAssertEqual(o["arrastoModulo"] as? String, "andou", "arrasto do módulo continua")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // TOQUE-JANELA (Adauto 27/11, ETAPA 2 item 25): janela (e porta/abertura/vão da parede) no desenho de frente, com eventos de DEDO (pointerType touch):
     // 1 toque só seleciona (contorno), não move e não grava desfazer; 2 toques abrem a configuração dela (aba Ambiente, no quadro dela); arrastar só com
     // ela selecionada e depois do limite de toque (SEL.mov); tremida, pinça e arrasto sem selecionar não movem nem selecionam; tocar fora tira a seleção.

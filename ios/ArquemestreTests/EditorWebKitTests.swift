@@ -17138,6 +17138,39 @@ final class EditorWebKitTests: XCTestCase {
 
     /// MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11 "cálculos reais e automáticos" e "Regras do módulo · organização"; checklist D21/D24): as 24
     /// combinações (balcão e aéreo × moldura × Frontal × travessão sem/externo/interno) com cada peça igual no 3D e no corte (nenhuma espessura somada
+    /// ETAPA 2 · V1 (vídeo do Adauto 26/11: forno embutido no balcão embaixo do cooktop): a frente do forno nasce em cima da base da caixa
+    /// e a porta aberta (meio e toda) não cruza lateral, base, rodapé, tamponamento, pedra nem porta do vizinho — tamponamento com engrosso
+    /// que avança, vizinho mais fundo, pedra/cooktop, vizinhos com a porta aberta e todas as medidas de nicho dos fornos do catálogo.
+    func testE2V1_PortaDoFornoNoBalcaoNaoCruzaNadaNasVariantes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var R={ruim:[],n:0,base:''};
+          var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==="number"?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+          var cena=async function(nome,fx){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;S.mods=[];draw();
+           ['Balcão 2 portas','Balcão forno embutido','Balcão 2 portas'].forEach(function(n){S.m=S.mods[S.mods.length-1]||null;newTpl(T(n));draw()});
+           var mi=S.mods.findIndex(function(m){return (m.v||[]).some(function(v){return v.k==='oven'})}),m=S.mods[mi];S.mods.forEach(function(q){q.tl=q.tr=false});fx(m,S.mods);draw();/* nicho maior: o módulo novo ganha a largura mínima; o vizinho da direita encosta sem sobrepor */if(S.mods[mi+1]&&S.mods[mi+1].x<m.x+m.w){S.mods[mi+1].x=m.x+m.w;draw()}
+           var vi=m.v.findIndex(function(v){return v.k==='oven'});if(getComputedStyle(document.getElementById('v3')).display==='none')open3D();re3();await W(200);
+           var A_=__ang();Object.keys(A_.t).forEach(function(k){A_.g[k]=A_.t[k]});__build();var B=__boxes();
+           var ov=B.filter(function(b){return String(b.nm)===mi+':Corte do forno'}),lat=B.filter(function(b){return String(b.nm)===mi+':Lateral esquerda'})[0];
+           var fy=Math.min.apply(null,ov.map(function(b){return b.y0}));if(!R.base)R.base=/* a lateral apoia na base: o pé da lateral é o topo da base */Math.round(fy)>=Math.round(lat.y0)?'frente em cima da base':'frente '+Math.round(fy)+' abaixo da base '+Math.round(lat.y0);
+           for(const a of [0.5,1]){fx3api.fra('mo'+mi+'|'+vi,a);await W(40);Object.keys(A_.t).forEach(function(k){A_.g[k]=A_.t[k]});__build();B=__boxes();R.n++;
+            var D=B.filter(function(b){return b.pf&&b.pf.ax==='x'&&String(b.nm).indexOf(mi+':')===0}),O=B.filter(function(b){return (!b.pf||String(b.nm).indexOf(mi+':')!==0)&&b.a>=.5&&/^\d+:/.test(String(b.nm))&&!b.em&&String(b.nm)!==mi+':Corte do forno'});
+            if(!D.length)R.ruim.push(nome+' a'+a+': porta do forno sumiu');
+            D.forEach(function(d){O.forEach(function(q){var ox=Math.min(d.x1,q.x1)-Math.max(d.x0,q.x0),oy=Math.min(d.y1,q.y1)-Math.max(d.y0,q.y0),oz=Math.min(d.z1,q.z1)-Math.max(d.z0,q.z0);if(ox>1&&oy>1&&oz>1)R.ruim.push(nome+' a'+a+': '+q.nm)})})}};
+          await cena('base',function(){});
+          await cena('tamponamento com engrosso que avança',function(m,M){M.forEach(function(q){q.tl=q.tr=true;q.tlW=q.trW=40;q.tpAv=40})});
+          await cena('vizinho mais fundo',function(m,M){M.forEach(function(q){if(q!==m)q.d=650})});
+          await cena('pedra/cooktop',function(m,M){M.forEach(function(q){q.tl=q.tr=true});addStone();(S.stones||[]).forEach(function(s){s.d=(+s.d||600)+40;s.cook=1})});
+          await cena('vizinhos abertos',function(m,M){M.forEach(function(q){q.tl=q.tr=true;if(q!==m)q.v.forEach(function(v){v.open=true})})});
+          for(const k of Object.keys(TWM).filter(function(k){return TWM[k].k==='forno'}))await cena('nicho '+k,function(m){var v=m.v.filter(function(v){return v.k==='oven'})[0];v.mdl=k;v.ow=+TWM[k].nw;v.oh=+TWM[k].nh});
+          document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["base"] as? String, "frente em cima da base")
+        XCTAssertEqual(o["ruim"] as? [String], [], "porta do forno aberta não cruza nada")
+        XCTAssertEqual(o["n"] as? Int, 40, "20 cenas × meio aberta e toda aberta")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
     /// ETAPA 2 · item 5 (pedido do Adauto 26/11): portas do canto abrem 165° — canto em L esquerdo e direito (baixo, aéreo, guarda-roupa)
     /// e canto cego na esquerda e na direita (balcão e aéreo). Cada folha abre sozinha e as duas juntas, sem entrar em nada.
     /// Vizinho ou tamponamento faceado com a frente não segura; tamponamento que avança na frente da porta segura em 90° e mostra aviso técnico.

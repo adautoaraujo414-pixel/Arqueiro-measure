@@ -2719,3 +2719,14 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - ajustado `testPortasDeCantoRobocop…`: a folha do lado abre sozinha, com comentário do pedido;
   - `testArmarioDeCantoFolga…`: as duas juntas continuam em ordem, bateu 0;
   - `testFitaDeTopo…`: o filtro da porta tira a dobradiça (`ferr`, item 3).
+
+## V1-FORNO (ETAPA 2 · V1, vídeo do Adauto 26/11): porta do forno embutido no balcão "atravessando" — Claude 3 · NÃO REPRODUZIDO
+- **Módulo:** 3D, balcão com forno embutido (embaixo do cooktop), entre dois balcões.
+- **O que foi conferido (Chromium):**
+  - a frente fechada nasce em cima da base (frente y 137, pé da lateral 115);
+  - porta a meio e toda aberta em 20 cenas: base, tamponamento com engrosso que avança 40, vizinho mais fundo (650), pedra/cooktop, vizinhos com a porta aberta e as 15 medidas de nicho dos fornos do catálogo;
+  - 0 cruzamentos com lateral, base, rodapé, tamponamento, pedra ou porta do vizinho.
+- **Leitura da referência:** o "y 97" anotado antes é a porta toda aberta, deitada na frente do rodapé (z > 596), e não a frente fechada. Nos quadros do vídeo, a porta aberta fica na altura da borda de baixo das portas vizinhas, 15 mm na frente delas, e de perto parece cruzar.
+- **Correção:** nenhuma no código, porque o defeito não se reproduziu. Não foi feita mudança "por via das dúvidas".
+- **Teste de proteção:** `testE2V1_PortaDoFornoNoBalcaoNaoCruzaNadaNasVariantes`.
+- **Pendente:** conferir em aparelho real (iPad, acabamento realista) com o projeto do vídeo.

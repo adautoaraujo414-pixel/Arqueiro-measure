@@ -2727,3 +2727,14 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Risco identificado (comportamento que já existia, não mudou):** a chave da peça (`pk`) é numerada por nome no módulo inteiro. Pôr uma frente de gaveta num vão renumera as frentes dos outros vãos ("#1" vira "#2"). O mesmo acontece hoje ao trocar porta por gavetas pelo menu do vão.
 - **Item 11 (9225834e):** o `data-pmod` mudava a assinatura dos botões de modelo, e `testMenusPorTipoInventario…` os acusava como sumidos. Saiu.
 - **Teste de inventário:** a lista de "novas" ganhou os 5 botões de composição, com comentário do pedido.
+
+## TOQUE-JANELA (ETAPA 2 item 25, Adauto 27/11): no desenho de frente, a janela arrastava no primeiro contato do dedo — Claude 4
+- **Antes (toque real pelo CDP, Chromium a 430):** o `pointerdown` em `[data-op2]` já iniciava o arrasto (`snap()` e `drag={t:'op'}`), então o dedo que tremia movia a janela. 1 toque não selecionava e 2 toques não abriam nada.
+- **Correção:** vale para janela, porta, abertura e vão da parede (mesmo `data-op2`).
+  - 1 toque (ao soltar, sem arrasto e sem pinça) seleciona e mostra o contorno azul.
+  - 2 toques abrem a configuração dela: aba Ambiente, quadro dela em destaque.
+  - Arrastar só com ela já selecionada, depois do limite de toque (`SEL.mov`); o desfazer só é gravado quando o arrasto começa de verdade.
+  - Tocar fora tira a seleção.
+  - Usa o mesmo `tapCount`/`SEL` do módulo.
+- **Teste novo:** `testTOQUEJANELA_…`, com eventos de dedo (`pointerType: 'touch'`), a 430 e com o iPad simulado. A sonda com toque real do CDP dá o mesmo resultado.
+- **Teste atualizado:** `testFocarSoNoModuloEArrastarJanelaNo2D` agora toca antes de arrastar, com comentário do pedido. Ele também passou a buscar a janela de novo depois do toque, porque o desenho é refeito.

@@ -1111,7 +1111,7 @@ final class EditorWebKitTests: XCTestCase {
           S.W=5610;S.H=2600;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];draw();var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Balcão 2 portas'));S.mods[0].x=1400;S.ops=[{id:7,t:'janela',x:1500,b:1100,w:1700,h:600}];draw();
           var g=document.querySelector('#svg [data-op2="7"] rect'),rc=g.getBoundingClientRect(),x=rc.left+rc.width/2,y=rc.top+rc.height/2,svg=document.getElementById('svg'),ev=function(tp,el,cx,cy){el.dispatchEvent(new PointerEvent(tp,{clientX:cx,clientY:cy,pointerId:1,bubbles:true,isPrimary:true,pointerType:'touch'}))};
-          ev('pointerdown',g,x,y);ev('pointermove',svg,x+40,y-20);ev('pointermove',svg,x+60,y-25);ev('pointerup',svg,x+60,y-25);R.janela=S.ops[0].x!==1500&&S.ops[0].b!==1100;
+          /* TOQUE-JANELA (Adauto 27/11, ETAPA 2 item 25): 1 toque seleciona e só a janela selecionada arrasta: toca antes, depois arrasta */ev('pointerdown',g,x,y);ev('pointerup',g,x,y);await new Promise(function(r){setTimeout(r,450)});g=document.querySelector('#svg [data-op2="7"] rect');ev('pointerdown',g,x,y);ev('pointermove',svg,x+40,y-20);ev('pointermove',svg,x+60,y-25);ev('pointerup',svg,x+60,y-25);R.janela=S.ops[0].x!==1500&&S.ops[0].b!==1100;
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["so"] as? Bool, true, "só as peças do módulo focado aparecem")
@@ -1119,7 +1119,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["barra"] as? Bool, true, "barra do foco com as vistas")
         XCTAssertEqual(o["lado"] as? String, "side", "vista de lado no foco")
         XCTAssertEqual(o["volta"] as? Bool, true, "↩ volta pro ambiente com tudo")
-        XCTAssertEqual(o["janela"] as? Bool, true, "janela arrasta no 2D mesmo com móvel embaixo")
+        XCTAssertEqual(o["janela"] as? Bool, true, "janela arrasta no 2D mesmo com móvel embaixo (depois de selecionada com 1 toque · item 25, 27/11)")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
@@ -19604,6 +19604,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ipad"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 22", "métrica do iPad: a régua 815×30 ganha o callout e só sai a etiqueta da sobra que ficaria embaixo (antes: sem identificação 1)")
         XCTAssertEqual(o["ipad113"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 23", "métrica do iPad medida (iOS 708): o mesmo que o iPad deu no CI")
         XCTAssertEqual(o["e"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // TOQUE-JANELA (Adauto 27/11, ETAPA 2 item 25): janela (e porta/abertura/vão da parede) no desenho de frente, com eventos de DEDO (pointerType touch):
+    // 1 toque só seleciona (contorno), não move e não grava desfazer; 2 toques abrem a configuração dela (aba Ambiente, no quadro dela); arrastar só com
+    // ela selecionada e depois do limite de toque (SEL.mov); tremida, pinça e arrasto sem selecionar não movem nem selecionam; tocar fora tira a seleção.
+    func testTOQUEJANELA_UmToqueSelecionaDoisAbremConfigArrastoSoSelecionada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var sv=function(){return document.getElementById('svg')},pid=10;
+        var ev=function(tp,x,y,id){var el=document.elementFromPoint(x,y)||sv();el.dispatchEvent(new PointerEvent(tp,{clientX:x,clientY:y,pointerId:id,bubbles:true,cancelable:true,isPrimary:id===pid,pointerType:'touch',width:16,height:16,pressure:tp==='pointerup'?0:0.5}))};
+        var tap=async function(x,y){pid++;ev('pointerdown',x,y,pid);await W(50);ev('pointerup',x,y,pid)};
+        var arr=async function(x,y,dx,dy,n){pid++;ev('pointerdown',x,y,pid);for(var i=1;i<=n;i++){await W(16);ev('pointermove',x+dx*i/n,y+dy*i/n,pid)}ev('pointerup',x+dx,y+dy,pid)};
+        var pin=async function(x,y){pid++;var a=pid;pid++;var b=pid;ev('pointerdown',x-30,y,a);ev('pointerdown',x+30,y,b);for(var i=1;i<=6;i++){await W(16);ev('pointermove',x-30-8*i,y,a);ev('pointermove',x+30+8*i,y,b)}ev('pointerup',x-78,y,a);ev('pointerup',x+78,y,b)};
+        var ini=async function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];S.ops=[{id:1,t:'janela',w:1200,h:1000,x:1400,b:1000}];S.tab=0;window.OPSEL=null;draw();panel();await W(900)};
+        var c=function(){var r=document.querySelector('#svg [data-op2="1"] rect').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}};
+        var est=function(){var o=S.ops[0],bx=document.querySelector('#bd [data-opfoco]');return 'aba '+S.tab+' · '+(o.x===1400?'parada':'movida')+' · '+(window.OPSEL==null?'sem seleção':'selecionada')+(document.querySelector('[data-opselbox]')?' (contorno)':'')+(bx?' · quadro da janela':'')+' · desfazer '+HIST.length};
+        await ini();var p=c();R.inicio=est();await tap(p.x,p.y);await W(450);R.umToque=est();
+        await ini();p=c();await arr(p.x,p.y,60,0,8);await W(300);R.arrastoSemSelecionar=est();
+        await ini();p=c();await tap(p.x,p.y);await W(450);await arr(p.x,p.y,5,3,4);await W(300);R.tremida=est();await arr(p.x,p.y,60,0,8);await W(300);R.arrastoSelecionada=est();
+        await ini();p=c();await tap(p.x,p.y);await W(90);await tap(p.x,p.y);await W(600);R.doisToques=est();
+        await ini();p=c();await pin(p.x,p.y);await W(400);R.pinca=est();
+        await ini();p=c();await tap(p.x,p.y);await W(450);var r=sv().getBoundingClientRect();await tap(r.x+15,r.y+r.height-15);await W(400);R.tocaFora=est();
+        S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["inicio"] as? String, "aba 0 · parada · sem seleção · desfazer 1")
+        XCTAssertEqual(o["umToque"] as? String, "aba 0 · parada · selecionada (contorno) · desfazer 1", "1 toque só seleciona")
+        XCTAssertEqual(o["arrastoSemSelecionar"] as? String, "aba 0 · parada · sem seleção · desfazer 1", "arrasto não é toque: não move nem seleciona")
+        XCTAssertEqual(o["tremida"] as? String, "aba 0 · parada · selecionada (contorno) · desfazer 1", "dedo que treme não move")
+        XCTAssertEqual(o["arrastoSelecionada"] as? String, "aba 0 · movida · selecionada (contorno) · desfazer 2", "selecionada arrasta e grava 1 desfazer")
+        XCTAssertEqual(o["doisToques"] as? String, "aba 9 · parada · selecionada (contorno) · quadro da janela · desfazer 1", "2 toques abrem a configuração dela")
+        XCTAssertEqual(o["pinca"] as? String, "aba 0 · parada · sem seleção · desfazer 1", "pinça não seleciona nem move")
+        XCTAssertEqual(o["tocaFora"] as? String, "aba 0 · parada · sem seleção · desfazer 1", "tocar fora tira a seleção")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

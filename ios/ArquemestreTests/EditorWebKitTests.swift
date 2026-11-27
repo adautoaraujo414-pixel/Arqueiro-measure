@@ -19669,7 +19669,7 @@ final class EditorWebKitTests: XCTestCase {
         var rec0=PR.portaRec;delete PR.portaRec;
         loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.sv=0;draw();S.tab=3;panel();
         var bd=function(){return document.getElementById('bd')},q=function(s){return bd().querySelector(s)},qa=function(s){return [].slice.call(bd().querySelectorAll(s))};
-        var grade=function(){var g=q('[data-vzm]');return g?g.parentNode:null};
+        var grade=function(){var g=[].filter.call(bd().querySelectorAll('[data-vzm]'),function(b){return !b.closest('[data-prec]')})[0];return g?g.parentNode:null};
         var nomes=function(){var g=grade();return g?[].filter.call(g.children,function(b){return b.tagName==='BUTTON'}).map(function(b){return (b.querySelector('svg')?'▣':'□')+(b.querySelector('b')||b).textContent.trim()}).join(', '):''};
         var secs=function(){return qa('.sec').map(function(e){return e.textContent.replace('⌃','').replace(/^\d · /,'').trim()}).join(' | ')};
         var conta=function(){return ['[data-vzm]','[data-est]','[data-estap]','[data-pxt]','[data-pxmd]','[data-pxall]','[data-mcopy]','[data-pmais]'].map(function(s){return s.replace(/\[data-|\]/g,'')+' '+qa(s).length}).join(' · ')};
@@ -19678,7 +19678,7 @@ final class EditorWebKitTests: XCTestCase {
         R.puxEmbaixo=!!(pxP&&est&&ix(pxP)>ix(est)&&(!folha||ix(pxP)>ix(folha))&&ix(q('[data-pxbox]'))>ix(pxP));
         R.recAntes=q('[data-prec]')?'tem':'não tem';
         /* usa: Ripada vertical (aplica na hora) e Provençal simples pela prévia na porta 1 */
-        q('[data-vzm="rip|v"]').click();await W(30);q('[data-pmod="est:simples"]').click();await W(30);q('[data-estap]').click();await W(60);var ok=document.querySelector('#estprev [data-estok]');if(ok)ok.click();await W(60);
+        q('[data-vzm="rip|v"]').click();await W(30);grade().querySelector('[data-est="t|simples"]').click();await W(30);q('[data-estap]').click();await W(60);var ok=document.querySelector('#estprev [data-estok]');if(ok)ok.click();await W(60);
         S.tab=3;panel();var v=S.m.v[0],e=(v.estQ&&v.estQ[0]!==undefined)?v.estQ[0]:v.est;R.porta=(v.vz?v.vz.t+'|'+v.vz.d:'lisa')+' · estilo '+(e&&e.t||'lisa');
         R.rec=JSON.stringify(PR.portaRec);var f=null;try{f=JSON.parse(decodeURIComponent(escape(atob(ArqueApp.getFile('prices.json'))))).portaRec}catch(_){}R.arquivo=JSON.stringify(f);
         var pr=q('[data-prec]');R.recTela=pr?[].map.call(pr.querySelectorAll('button'),function(b){return (b.querySelector('svg')?'▣':'□')+(b.querySelector('b')||b).textContent.trim()+(b.dataset.vzm!==undefined?' vzm':b.dataset.est?' est':'')}).join(', '):'não tem';

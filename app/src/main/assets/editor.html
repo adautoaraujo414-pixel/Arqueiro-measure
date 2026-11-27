@@ -15877,7 +15877,7 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
  /* miniatura do Provençal: a porta com o quadro aplicado (régua/moldura), no mesmo tamanho das outras */
  function icoEst(t){var W=54,H=66,o='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><rect x="1" y="1" width="'+(W-2)+'" height="'+(H-2)+'" rx="2" fill="#d9bb8f" stroke="#6b4a2f"/>',q=function(m,sw){return '<rect x="'+m+'" y="'+m+'" width="'+(W-2*m)+'" height="'+(H-2*m)+'" fill="none" stroke="#6b4a2f" stroke-width="'+sw+'"/>'};
   if(t==='simples')o+=q(8,2.2);else if(t==='det')o+=q(7,2.6)+q(11,1);else if(t==='dupla')o+=q(6,1.8)+q(12,1.8);return o+'</svg>'}
- function btEst(t,on){return '<button data-est="t|'+t+'" data-pmod="est:'+t+'" class="'+(on?'sel':'')+'" style="display:flex;flex-direction:column;align-items:center;gap:3px;width:104px;padding:6px 4px;min-height:0;font-size:12px;line-height:1.15'+(on?';border:2px solid #1f6feb;background:#eaf2ff;color:#1b1f27':'')+'">'+icoEst(t)+'<b>'+NOM['est:'+t]+'</b><span style="font-size:10.5px;color:#555;font-weight:400">quadro na frente</span></button>'}
+ function btEst(t,on){return '<button data-est="t|'+t+'" class="'+(on?'sel':'')+'" style="display:flex;flex-direction:column;align-items:center;gap:3px;width:104px;padding:6px 4px;min-height:0;font-size:12px;line-height:1.15'+(on?';border:2px solid #1f6feb;background:#eaf2ff;color:#1b1f27':'')+'">'+icoEst(t)+'<b>'+NOM['est:'+t]+'</b><span style="font-size:10.5px;color:#555;font-weight:400">quadro na frente</span></button>'}
  /* qual estilo a porta escolhida tem (a mesma conta do quadro de estilos) */
  function estAtual(){try{var v=S.m&&S.m.v&&S.m.v[S.sv||0];if(!v)return '';var e=(v.estQ&&v.estQ[window.ESTDQ||0]!==undefined)?v.estQ[window.ESTDQ||0]:v.est;return e&&e.t&&e.t!=='lisa'?e.t:''}catch(_){return ''}}
  /* registra o uso: modelo do vão (aplica na hora) e Provençal quando aplica (botão de aplicar do quadro); na fase de captura da janela, antes dos outros */
@@ -15890,11 +15890,10 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
   var px=[secP],e=secP.nextElementSibling;while(e&&!(e.classList&&e.classList.contains('sec'))&&!(e.dataset&&e.dataset.pxbox)){px.push(e);e=e.nextElementSibling}
   var box=ks.filter(function(x){return x.dataset&&x.dataset.pxbox})[0];px.forEach(function(x){bd.appendChild(x)});if(box)bd.appendChild(box)}
  function enfeita(bd){var g=bd.querySelector('[data-vzm]');if(!g)return;var grade=g.parentNode;if(!grade||grade.dataset.pmodok)return;grade.dataset.pmodok='1';
-  [].forEach.call(grade.querySelectorAll('[data-vzm]'),function(b){b.dataset.pmod='vz:'+b.dataset.vzm});
   var at=estAtual();var v=S.m&&S.m.v&&S.m.v[S.sv||0],porta=v&&v.k==='door'&&!v.vidro;
   if(porta)['simples','det','dupla'].forEach(function(t){var d=document.createElement('div');d.innerHTML=btEst(t,at===t);grade.appendChild(d.firstChild)});
   var r=lista();if(!r.length)return;var div=document.createElement('div');div.dataset.prec='1';div.innerHTML='<div class="note" style="margin:2px 0 4px"><b>Usados recentemente</b></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px"></div>';var lin=div.lastChild;
-  r.forEach(function(k){if(/^est:/.test(k)&&!porta)return;var o=grade.querySelector('[data-pmod="'+k+'"]');if(!o)return;var c=o.cloneNode(true);c.removeAttribute('data-pmod');c.dataset.precb=k;lin.appendChild(c)});
+  r.forEach(function(k){if(/^est:/.test(k)&&!porta)return;var o=/^vz:/.test(k)?grade.querySelector('[data-vzm="'+k.slice(3)+'"]'):grade.querySelector('[data-est="t|'+k.slice(4)+'"]');if(!o)return;lin.appendChild(o.cloneNode(true))});
   if(lin.children.length)grade.parentNode.insertBefore(div,grade)}
  if(typeof panel==='function'){var p0=panel;window.panel=panel=function(){var r=p0.apply(this,arguments);try{var bd=document.getElementById('bd');if(bd&&S.tab===3&&S.m&&!window.RO){enfeita(bd);ordena(bd)}}catch(_){}return r}}
 })();

@@ -64,3 +64,6 @@ Só entra aqui o que o Adauto aprovou. Sugestões ficam em `PLANO_EVOLUCAO.md`.
 - Não removido: `dxfPecas`, `dxfTexto`, `espDxf`, os ajustes `PR.dxf` salvos no projeto e o compartilhar nativo. Projetos não mudam.
 - Religar: `window.DXF_OFF=false` (teste `testFASE5_DxfParaCnc...` confere desligado e religado).
 - Novidades: as 3 menções a DXF saíram do texto.
+
+## AUTONOMIA TOTAL (Adauto, 27/11/2026 · regra permanente)
+O usuário decide; o app executa corretamente. Nenhum botão vazio, nenhuma alteração involuntária, nenhuma informação falsa, nenhuma peça fantasma, nenhuma dependência artificial entre funcionalidades, nenhuma perda de dados, nenhuma funcionalidade removida. Ver CLAUDE.md §12.

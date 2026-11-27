@@ -19208,6 +19208,59 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* Item 20 (Adauto 26/11, ETAPA 2): no ArqueCut a pessoa escolhe em quais lados de cada peça vai fita. Sem escolha = o automático de sempre.
+       A escolha vai pra lista, linhas verdes do plano, metros de fita (orçamento) e quadro do 3D; desfazer; salvar e reabrir; projeto antigo igual; ArqueCut avulso também. */
+    func testFitaManualPorLadoNoArqueCutListaPlanoMetrosOrcamentoDesfazerEAvulso() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length,r3=function(v){return Math.round(v*1000)/1000};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});
+        var m=S.mods[0],mi=0,P=partsOf(m).filter(function(p){return p.pk&&edgeSides(p.name)==='B'&&+p.cl>0})[0],pk=P.pk;R.peca=!!P;
+        var mt=function(){var c=mCost(m);return r3(c.tB+c.tC+c.tT)},st0=JSON.stringify(snapState()),m0=mt(),b0=JSON.stringify(budget().L||budget());
+        var verdes=function(root){var n=0;[].forEach.call(root.querySelectorAll('g[data-cp]'),function(g){if(String(g.dataset.src||'').split(';').indexOf(mi+'|'+pk)>=0)n+=(g.innerHTML.match(/stroke="#1f9d55" stroke-width="9"/g)||[]).length});return n};
+        openCut();await W(300);var cb=document.getElementById('cutbody');R.antes=verdes(cb)+' · '+!!cb.querySelector('[data-ftman]');R.mesmoProjeto=JSON.stringify(snapState())===st0;
+        var bt=[].filter.call(cb.querySelectorAll('[data-fted]'),function(b){return String(b.dataset.ftsrc).split(';').indexOf(mi+'|'+pk)>=0})[0];R.botao=!!bt;bt.click();await W(50);
+        var M=document.getElementById('ftedm');R.janela=!!M&&!M.hidden&&/Frente/.test(M.textContent);
+        M.querySelector('[data-ftk="T"]').click();M.querySelector('[data-ftk="L"]').click();
+        [].forEach.call(M.querySelectorAll('[data-ftp]'),function(c,i){var s=bt.dataset.ftsrc.split(';').filter(Boolean)[i];if(s!==mi+'|'+pk&&c.checked)c.click()});
+        M.querySelector('[data-fta="ok"]').click();await W(300);cb=document.getElementById('cutbody');
+        R.guardado=JSON.stringify(m.fitaMan);R.depois=verdes(cb)+' · '+!!cb.querySelector('[data-ftman="LTB"]');
+        R.metros=r3(mt()-m0)===r3((+P.cl+ +P.cl+ +P.cw)/1000-(+P.cl)/1000)?'certo':(mt()-m0)+'';
+        R.orcamento=JSON.stringify(budget().L||budget())!==b0;R.quadro3D=fitaAcab(P,m).s+' · '+fitaAcab(P).s;
+        var outros=partsOf(m).filter(function(p){return p.pk&&p.pk!==pk}).every(function(p){return edgeSidesOf(m,p)===edgeSides(p.name)});R.soEssa=outros;
+        var st1=JSON.stringify(snapState());loadState(JSON.parse(st1));draw();var mR=mt();R.reabre=JSON.stringify(S.mods[0].fitaMan)===R.guardado&&r3(mCost(S.mods[0]).tB+mCost(S.mods[0]).tC+mCost(S.mods[0]).tT)===mR;
+        m=S.mods[0];await W(800);openCut();await W(300);bt=[].filter.call(document.querySelectorAll('#cutbody [data-fted]'),function(b){return String(b.dataset.ftsrc).split(';').indexOf(mi+'|'+pk)>=0})[0];bt.click();await W(50);M=document.getElementById('ftedm');[].forEach.call(M.querySelectorAll('[data-ftp]'),function(c,i){var s=bt.dataset.ftsrc.split(';').filter(Boolean)[i];if(s!==mi+'|'+pk&&c.checked)c.click()});M.querySelector('[data-fta="auto"]').click();await W(300);
+        R.automatico=(S.mods[0].fitaMan===undefined)+' · '+(r3(mt())===m0);
+        await W(800);document.getElementById('und').click();await W(200);R.desfaz=JSON.stringify(S.mods[0].fitaMan)===R.guardado;R.guardado=/"LTB"/.test(R.guardado);
+        document.getElementById('cutx')&&document.getElementById('cutx').click();
+        /* ArqueCut avulso */
+        MC=null;localStorage.removeItem('arque.corteAvulso.v1');mcLoad();MC.list=[{n:'Lateral',w:700,h:500,q:2}];mcSave();mcOpen();mcCalc();await W(300);var res=document.getElementById('mcres'),gv=function(){return (res.innerHTML.match(/stroke="#1f9d55" stroke-width="9"/g)||[]).length},av0=gv();
+        res.querySelector('[data-fted]').click();await W(50);M=document.getElementById('ftedm');M.querySelector('[data-ftk="L"]').click();M.querySelector('[data-ftk="R"]').click();M.querySelector('[data-fta="ok"]').click();await W(300);res=document.getElementById('mcres');
+        R.avulso=MC.list[0].f+' · '+av0+'→'+gv()+' · '+JSON.parse(localStorage.getItem('arque.corteAvulso.v1')).list[0].f;
+        res.querySelector('[data-fted]').click();await W(50);document.querySelector('#ftedm [data-fta="auto"]').click();await W(300);R.avulsoAuto=(MC.list[0].f===undefined)+' · '+gv();
+        document.getElementById('mcm').hidden=true;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["peca"] as? Bool, true)
+        XCTAssertEqual(o["antes"] as? String, "1 · false", "sem escolha: a fita automática de sempre (1 lado, frente)")
+        XCTAssertEqual(o["mesmoProjeto"] as? Bool, true, "abrir o plano não muda o projeto")
+        XCTAssertEqual(o["botao"] as? Bool, true)
+        XCTAssertEqual(o["janela"] as? Bool, true)
+        XCTAssertEqual(o["depois"] as? String, "3 · true", "linhas verdes e lista com os lados escolhidos (frente + trás + ponta esquerda)")
+        XCTAssertEqual(o["guardado"] as? Bool, true, "a escolha fica no módulo (m.fitaMan)")
+        XCTAssertEqual(o["reabre"] as? Bool, true, "salvar e reabrir: a mesma fita")
+        XCTAssertEqual(o["desfaz"] as? Bool, true, "↶ desfaz volta a escolha")
+        XCTAssertEqual(o["metros"] as? String, "certo", "metros de fita: + 1 comprimento + 1 largura")
+        XCTAssertEqual(o["orcamento"] as? Bool, true, "o orçamento muda junto (fita)")
+        XCTAssertEqual(o["quadro3D"] as? String, "LTB · B", "o quadro da peça no 3D mostra a mesma fita")
+        XCTAssertEqual(o["soEssa"] as? Bool, true, "só a peça escolhida muda")
+        XCTAssertEqual(o["automatico"] as? String, "true · true", "Automático volta à regra de sempre")
+        XCTAssertEqual(o["avulso"] as? String, "LRB · 2→6 · LRB", "ArqueCut avulso: as 2 laterais com frente e as 2 pontas, guardado")
+        XCTAssertEqual(o["avulsoAuto"] as? String, "true · 2")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto, via Chefe 24/11): cada módulo (m.uid) e peça (m.uid|pk) com a mesma chave no editor (partsOf), no 3D,
     // na lista, no corte e no DXF; cópia ganha id novo (módulo e peças); salvar/reabrir e desfazer/refazer mantêm; Meus modelos ganha id novo; id que existe
     // nunca é trocado; id repetido ao abrir: avisa e só muda se a pessoa mandar

@@ -2703,3 +2703,19 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Correção:** toda caixa criada por `hinges3`/`basHw3_` ganha a marca `ferr`, e o passo de pintura pula as caixas `ferr`. As cores metálicas que o desenho já tinha ficam. Geometria, furação, lista, corte e DXF ficam iguais.
 - **Família conferida:** balcão e aéreo, com a porta fechada e aberta: nenhuma caixa da dobradiça dentro de lateral, tampo ou base.
 - **Teste:** `testE2ITEM3_DobradicaMetalicaNaoPegaACorDaPortaENaoAtravessa`. No 3174dbd8 dá "metal false · sem textura false"; agora passa.
+
+## CANTO-165 (ETAPA 2 item 5, pedido do Adauto 26/11): portas do canto paravam em 90° sem obstáculo e abriam juntas — Claude 3
+- **Módulo:** 3D, canto em L (baixo, aéreo, guarda-roupa; esquerdo e direito) e canto cego (balcão e aéreo; na esquerda e na direita).
+- **Reproduzir:** canto em L com um vizinho faceado ao lado: a folha do fundo parava em 90°. Abrir só a folha do lado também abria a do fundo. A porta do canto cego abria só 90°.
+- **Causa raiz:** `cnAng_` tratava qualquer vizinho encostado como obstáculo, mesmo faceado. O `partsOf` do canto marcava a folha do fundo aberta quando só a do lado (`od[1]`) estava aberta. A porta do canto cego usava o 90° fixo da porta comum.
+- **Correção:**
+  - `cnObs_` e `cgObs` listam só o que sai de fato para a frente da face das portas: tamponamento com avanço > 16,5 mm, vizinho mais fundo, tamponamento do vizinho que avança e puxador de barra do vizinho.
+  - Sem obstáculo a abertura é 165°. Com obstáculo é 90°, e a folha do lado fica no limite que já existia, com aviso técnico (`ambMsg`) dizendo o quê e quanto, uma vez por mudança.
+  - Cada folha abre sozinha (`od[0]` só para a do fundo). A do lado só espera a do fundo quando as duas estão abrindo juntas (aí uma cruza a outra).
+  - Os botões de ângulo do canto e do canto cego são 90, 120 e 165. Corte, lista e 2D ficam iguais.
+- **Observação:** o tamponamento automático da ponta tem `tpAv` 25, ou seja, avança 9 mm na frente da porta. Com ele a porta para em 90° com aviso, o que é correto pelo pedido. Faceado (`tpAv` 16), abre 165°.
+- **Testes:**
+  - novo `testE2ITEM5_PortasDoCantoAbrem165EmLECegoEsquerdaEDireita`: no 3174dbd8 dá "0 de 6" e o canto cego falha; agora passa;
+  - ajustado `testPortasDeCantoRobocop…`: a folha do lado abre sozinha, com comentário do pedido;
+  - `testArmarioDeCantoFolga…`: as duas juntas continuam em ordem, bateu 0;
+  - `testFitaDeTopo…`: o filtro da porta tira a dobradiça (`ferr`, item 3).

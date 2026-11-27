@@ -124,5 +124,6 @@ Leia este arquivo e a pasta `engenharia/` antes de qualquer alteração.
 - Interferência, colisão ou medida fora do padrão **não bloqueiam** a edição: aviso técnico claro (o quê, onde, quanto), sem diálogo que interrompa o gesto; pergunta no máximo uma vez ao soltar/confirmar; sobreposição já confirmada não pergunta de novo.
 - Peça que não pode ser fabricada ou não cabe na chapa: **informar** claramente; **nunca** modificar o projeto sozinho.
 - Precisão intacta: partsOf = 2D = 3D = lista = orçamento = plano de corte = DXF, para o que o usuário decidiu.
+- Reforço do Adauto (27/11/2026): **o cliente controla o projeto; o app obedece ao cliente.** Todas as opções compatíveis de estrutura ficam ativas juntas; ativar uma opção nova não desativa, não move e não redimensiona outra. Não remover componentes, não mexer em vizinhos, não mudar projeto antigo ao abrir, não impedir composição fora do padrão. Inconsistência = aviso claro; ajuste = botão manual com prévia e desfazer.
 - Convive com o §4 ("medida e posição são do marceneiro") e com o §3 (projetos do usuário): mais liberdade, nenhuma mudança calada.
 

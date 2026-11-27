@@ -1,5 +1,6 @@
 # Controle central · ETAPA 2 (Adauto, 26/11/2026)
 Ramo de integração: `claude/etapa-2` (base 5067fecc = publicado: apk-725, win-190, iOS 3.0.14 build 713). Cada agente: ramo próprio a partir de `claude/etapa-2`, commits pequenos, o Chefe integra. Não publicar sem o "sim" final do Adauto. DXF continua desligado (DXF_OFF).
+Concluído = implementado + integrado em claude/etapa-2 + testado + auditado pelo Code 1 + homologado (Adauto 27/11).
 Regras do Adauto nesta etapa: só o que foi pedido; não remover nem desfazer nada que funciona; não mudar layout não autorizado; referências = especificação (ver REFERENCIAS.md · ETAPA 2).
 
 | # | Pedido | Responsável | Depende de | Status | Commits / testes / evidência |
@@ -22,6 +23,14 @@ Regras do Adauto nesta etapa: só o que foi pedido; não remover nem desfazer na
 | 19 | Inferiores: composições prontas de frente — 2 gavetas + 1 gavetão; 3 gavetões; 2 gavetas; 1 gaveta + porta basculante; e livre montagem sem limitação. Reusar peças existentes de gaveta/basculante (partsOf), sem fórmula nova | Claude 4 (Code 1 audita fabricação) | — | a fazer | |
 | 20 | ArqueCut: a pessoa escolhe manualmente em quais lados de cada peça vai fita (Adauto 26/11). Reflete em lista, plano de corte (linhas verdes), metros de fita e orçamento; padrão automático continua; desfazer; projeto antigo igual | 1º agente livre (junto do 13) | — | a fazer | |
 | 21 | ERRO (Adauto 26/11): módulos criados separados e encostados unem as BASES INFERIORES sozinhos. Cada módulo mantém a própria base; união só pelo "Unir bases" manual (item 2); separar de novo; auditar tampos/travessas/fundos/demais estruturais e todo o catálogo; corrigir a causa; conferir plano de corte; projeto antigo só avisa (sem separar sozinho); desfazer | Code 2 (prioridade antes do 7 e do 2) | — | a fazer | |
+| 22 | PRIORIDADE (Adauto 27/11, iPhone): travessa frontal ao ser ativada sobe sozinha; nenhuma opção de estrutura pode desativar/mover outra; todas compatíveis ativas juntas; posição/altura/prof./espessura certas; 2D/3D/lista/corte/orçamento/DXF | Code 2 (antes do 7) | — | a fazer | |
+| 23 | PRIORIDADE: paredes invertidas/espelho — mover p/ direita vai p/ direita na vista do cliente (todas as paredes, multi-paredes); espelho visual não inverte coordenada real; arrasto, posição, rotação, vincular/desvincular, salvar/reabrir | Claude 3 (antes do 5) | — | a fazer | |
+| 24 | Auditoria geral de medidas e informações contraditórias (campos × peças reais × 2D/3D × lista/corte/orçamento/DXF; E/D invertidos; mm↔cm; coordenadas) — corrigir a causa | Code 1 (com o 14) | — | a fazer | |
+| 25 | Janela: 1 toque = seleciona; 2 toques = configurações; arrastar só no modo certo; conferir portas/paredes/arquitetônicos | Claude 4 (antes do 19) | — | a fazer | |
+| 26 | Módulos no 2D: 1 toque = seleção normal; 2 toques no meio = acesso rápido que JÁ EXISTE (portas, prateleiras, divisórias, gavetas…); 2 toques numa peça = edição dela; arrasto/zoom sem abrir menu | Claude 4 | — | a fazer | |
+| 27 | Auditoria de toques (módulos, vãos, laterais, bases, travessas, divisórias, tamponamentos, réguas, portas, gavetas, prateleiras, janelas, paredes, LED, espelhos, peças livres, elementos pequenos/próximos; simples/duplo/longo; arrasto/zoom/rotação) — iPhone/iPad com toque real | Claude 4 (Code 1 confere) | — | a fazer | |
+| 28 | Regra permanente: o cliente controla o projeto (CLAUDE.md §12, reforçada 27/11) | todos | — | sempre | |
+| 29 | Recuperar pendências antigas (controle 25/11): A31 projeto antigo/gavetas/régua +47; TOQUE-430 ambiente fundo; abertura lenta do iPhone; atualização por cima iOS (2 verdes); apmodels corrompido; riscos N11 e confineAll — classificar cada um (concluído e publicado / parcial / não iniciado) com prova, e abrir o que faltar | Code 1 (classifica) → Chefe redistribui | — | a fazer | |
 | 15 | Controle central e integração | Chefe | — | em andamento | este arquivo |
 | 16 | Regras permanentes | todos | — | sempre | |
 | 17 | Homologação independente (iPhone, iPad, Android, Windows, update por cima, projetos antigos, prints e vídeos) | Code 1 + Chefe | 1–14 | depois | |

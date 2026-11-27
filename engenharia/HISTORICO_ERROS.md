@@ -2730,3 +2730,29 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Correção:** nenhuma no código, porque o defeito não se reproduziu. Não foi feita mudança "por via das dúvidas".
 - **Teste de proteção:** `testE2V1_PortaDoFornoNoBalcaoNaoCruzaNadaNasVariantes`.
 - **Pendente:** conferir em aparelho real (iPad, acabamento realista) com o projeto do vídeo.
+
+## MOV-23 (ETAPA 2 item 23, PRIORIDADE, pedido do Adauto 27/11): movimentos contrários com parede espelhada — Claude 3
+- **Pedido:** mover para a direita vai para a direita de quem olha, em todas as paredes. O espelho não inverte a coordenada real. Conferir arrasto, posição, rotação, vincular/desvincular, edição de peças e salvar/reabrir.
+- **Matriz conferida (Chromium), fundo / esquerda espelhada / direita:**
+
+| Comando | Antes (3174dbd8) | Depois |
+|---|---|---|
+| Arrasto no 2D | certo nas 3 (tela e 3D) | certo (teste de proteção) |
+| Mover no 3D (segurar e arrastar), móvel da parede do lado | **pulava para a parede do fundo e andava contra o dedo** (E: dedo ← → móvel →; D: dedo → → móvel ←) | fica na parede, nunca anda contra o dedo |
+| Peça livre: campo "Da esquerda do módulo", móvel virado (`espE`) da parede esquerda | **30 ficava à direita de quem olha** | 30 fica à esquerda (mostra e recebe a partir da esquerda de quem olha; dados iguais) |
+| Peça de parede (prateleira, painel, ripado) na parede esquerda: "Da esquerda da parede" | **maior ia para a esquerda de quem olha** (x conta do canto do fundo) | rótulo "Da parede do fundo", como janela/porta das laterais (dados iguais) |
+| Desvincular | mesmo trecho, gaveta do mesmo lado, 3 paredes | igual |
+| Salvar e reabrir | igual | igual |
+| "Só ele no 2D" | espelhado e coerente com a sala e o 3D | igual |
+| Setas ◀▶▲▼ dos itens da pedra | planta (vista de cima), rótulos "Pro fundo"/"Pra frente": coerentes | igual |
+| Móvel livre (girado) e paredes criadas no 3D | arrasto pelo chão (`lvTenta` com dx/dz do chão): segue o dedo por construção | igual |
+
+- **Causas:**
+  1. Arrasto do 3D na parede do lado: o deslocamento `wo` (chão embaixo do dedo − começo do móvel) era preso entre 0 e a largura. Com o dedo no corpo do móvel, o chão embaixo dele fica atrás do móvel, o `wo` virava 0, e no 1º movimento o móvel saltava para esse ponto e passava do canto (`Z < wingStart−80`), indo para a parede do fundo. Correção: `wo` real, sem prender, e a volta para o fundo só quando o **móvel** passa do canto.
+  2. O bloco PAREDE-ESQ-NOVO vira os dados do móvel da parede esquerda (`espE`), mas o campo da peça livre (`valDe` / `change` de `data-empk`) lia o x cru. Correção: no `espE` o campo converte (`m.w − x − largura`); a largura cresce para a direita de quem olha.
+  3. Peça de parede com `wall:'e'` guarda x a partir do canto do fundo. Correção: rótulo `rpXLbl` em `pratEdit`, painel (aba 8), campos do 3D e etiqueta do arrasto.
+- **Teste:** `testE2ITEM23_MovimentoSegueQuemOlhaEmTodasAsParedes`. No 3174dbd8 falha em a3d (pulou para o fundo), peca (direita de quem olha) e rp (rótulo); agora passa.
+- **Riscos identificados (não corrigidos):**
+  - Na vista 2D da parede esquerda aparece o painel/prateleira da parede do FUNDO (sem `wall`), espelhado junto. É anterior e fica para decisão.
+  - Lista/corte mantêm os nomes guardados (decisão de 18/11, chave da marca ✓ cortada).
+- **Pendente:** aparelho real (iPhone/iPad com toque).

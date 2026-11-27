@@ -17138,6 +17138,52 @@ final class EditorWebKitTests: XCTestCase {
 
     /// MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11 "cálculos reais e automáticos" e "Regras do módulo · organização"; checklist D21/D24): as 24
     /// combinações (balcão e aéreo × moldura × Frontal × travessão sem/externo/interno) com cada peça igual no 3D e no corte (nenhuma espessura somada
+    /// ETAPA 2 · item 23 (PRIORIDADE, pedido do Adauto 27/11): paredes invertidas/espelho — mover pra direita vai pra direita de quem olha, em todas as paredes;
+    /// o espelho do desenho não inverte a coordenada real. Arrasto 2D (fundo, esquerda espelhada, direita), Mover no 3D na parede do lado (não pula pra parede do fundo
+    /// nem anda contra o dedo), campo "Da esquerda do módulo" da peça livre no móvel virado (espE), rótulo da posição da peça de parede na parede esquerda,
+    /// desvincular (fica no mesmo trecho, gaveta do mesmo lado) e salvar/reabrir.
+    func testE2ITEM23_MovimentoSegueQuemOlhaEmTodasAsParedes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.ambMsg=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var R={a2d:[],a3d:[],peca:[],rp:[],solta:[]},e0=__errs.length;
+          var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+          var ini=function(w){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.wl={L:'p',R:'p'};if(w!=='f')wvGo(w)};
+          var box=function(mi,re){__build();var B=__boxes().filter(function(b){return String(b.nm).indexOf(mi+':')===0&&!b.nol&&!b.ferr&&(!re||re.test(String(b.nm)))});return {x:(Math.min.apply(null,B.map(function(b){return b.x0}))+Math.max.apply(null,B.map(function(b){return b.x1})))/2,y:(Math.min.apply(null,B.map(function(b){return b.y0}))+Math.max.apply(null,B.map(function(b){return b.y1})))/2,z:(Math.min.apply(null,B.map(function(b){return b.z0}))+Math.max.apply(null,B.map(function(b){return b.z1})))/2,x0:Math.min.apply(null,B.map(function(b){return b.x0})),x1:Math.max.apply(null,B.map(function(b){return b.x1})),z0:Math.min.apply(null,B.map(function(b){return b.z0})),z1:Math.max.apply(null,B.map(function(b){return b.z1}))}};
+          /* direita de quem olha a parede de dentro da sala: fundo +x · esquerda −z (pro fundo) · direita +z */
+          var dir=function(w,a,b){var d=w==='f'?b.x-a.x:w==='e'?a.z-b.z:b.z-a.z;return d>5?'direita':d<-5?'esquerda':'parado'};
+          /* 1) arrasto no 2D pra direita */
+          for(const w of ['f','e','d']){ini(w);newTpl(achar('Balcão porta + gavetas'));var a=S.m;a.x=1200;S.m=null;draw();var ia=S.mods.indexOf(a);open3D();await W(120);var p0=box(ia);document.getElementById('v3x').click();await W(30);if(w!=='f'&&wvCur()!==w)wvGo(w);VB={x:0,y:0,w:900,h:560};setVB();draw();await W(40);S.m=a;draw();panel();await W(30);
+            var ga=document.querySelector('#mod[data-mi="'+ia+'"] rect[data-mi]').getBoundingClientRect(),x0=0,y0=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.5,.6]].some(function(f){x0=ga.left+ga.width*f[0];y0=ga.top+ga.height*f[1];el=document.elementFromPoint(x0,y0);return !!(el&&el.closest('#mod[data-mi="'+ia+'"]'))});
+            var pe=function(n,e,x){e.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:x,clientY:y0,pointerId:1,pointerType:'touch',isPrimary:true,button:0}))},sv=document.getElementById('svg'),dp=Math.max(30,Math.round(500*ga.width/(+a.w||1)));
+            pe('pointerdown',el,x0);await W(30);for(var k=1;k<=5;k++){pe('pointermove',sv,x0+dp*k/5);await W(20)}await W(60);pe('pointerup',sv,x0+dp);await W(150);var ga2=document.querySelector('#mod[data-mi="'+ia+'"] rect[data-mi]').getBoundingClientRect();
+            open3D();await W(120);var p1=box(ia);document.getElementById('v3x').click();await W(30);R.a2d.push(w+': tela '+(ga2.left-ga.left>3?'direita':'errado')+' · 3D '+dir(w,p0,p1));if(w!=='f')wvGo('f')}
+          /* 2) Mover no 3D (segurar e arrastar) um móvel da parede do lado: não pula pra parede do fundo e nunca anda contra o dedo */
+          var CAMS=[[0,.3,1],[.6,.35,1],[-.6,.35,1]];
+          for(const w of ['e','d'])for(const c of CAMS)for(const dx of [60,-60]){ini(w);newTpl(achar('Balcão porta + gavetas'));var a=S.m;a.x=1500;S.m=null;draw();wvGo('f');var ia=S.mods.indexOf(a);open3D();await W(200);__cam(c[0],c[1],c[2]);re3();await W(1200);
+            var b0=box(ia),s0=__p3(b0.x,b0.y,b0.z),el=document.elementFromPoint(s0[0],s0[1]),pe=function(n,x){el.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:x,clientY:s0[1],pointerId:7,pointerType:'touch',isPrimary:true,button:0}))};
+            pe('pointerdown',s0[0]);await W(700);for(var k=1;k<=6;k++){pe('pointermove',s0[0]+dx*k/6);await W(30)}pe('pointerup',s0[0]+dx);await W(120);re3();await W(50);var b1=box(ia),s1=__p3(b0.x,b0.y,b0.z),s2=__p3(b1.x,b1.y,b1.z),d=s2[0]-s1[0];
+            if((a.wing||0)!==w)R.a3d.push(w+' câm '+c[0]+' '+(dx>0?'→':'←')+': pulou pra parede '+(a.wing||'do fundo'));else if(d*dx<-16)R.a3d.push(w+' câm '+c[0]+' '+(dx>0?'→':'←')+': andou contra o dedo ('+Math.round(d)+' px)');document.getElementById('v3x').click();await W(30)}
+          /* 3) peça livre: "Da esquerda do módulo" = 30 fica à esquerda de quem olha, em todas as paredes (o campo mostra o que foi digitado) */
+          for(const w of ['f','e','d']){ini(w);newTpl(achar('Balcão 2 portas'));var m=S.m;m.x=1500;draw();var q={k:'peca',x:400,b:300,z:30,w:100,h:100,d:100};EM.pecaNova(m,q);S.m=m;EM.st.sel=q.id;EM.st.modo='peca';var inp=null;for(var t=0;t<12&&!inp;t++){S.tab=t;try{panel()}catch(_){}inp=document.querySelector('[data-empk="'+q.id+'|x"]')}
+            inp.value='30';inp.dispatchEvent(new Event('change',{bubbles:true}));await W(30);S.tab=t-1;panel();var inp2=document.querySelector('[data-empk="'+q.id+'|x"]');if(w!=='f')wvGo('f');var mi=S.mods.indexOf(m),B=box(mi),P=box(mi,/livre/),ax=w==='f'?'x':'z',fr=(P[ax]-B[ax+'0'])/(B[ax+'1']-B[ax+'0']),lado=w==='e'?(fr>.5?'esquerda':'direita'):(fr<.5?'esquerda':'direita');
+            R.peca.push(w+': '+lado+' de quem olha · campo '+(inp2&&inp2.value))}
+          /* 4) peça de parede (prateleira suspensa) na parede esquerda: o rótulo diz de onde conta (x é do canto do fundo, que fica à direita de quem olha) */
+          for(const w of ['f','e','d']){ini('f');var rp=rpNew({x:300,b:1750,w:1400,h:50});rp.prat=true;rp.pd=250;if(w!=='f')rp.wall=w;pratEdit(rp);await W(150);var lb=[].slice.call(document.querySelectorAll('#pratm label')).map(function(l){return l.textContent}).filter(function(t){return /esquerda da parede|parede do fundo/i.test(t)})[0];var xb=document.querySelector('#pratm [data-pex]');if(xb)xb.click();
+            open3D();await W(100);var c0=box('rp',null);document.getElementById('v3x').click();R.rp.push(w+': '+(lb||'?'))}
+          /* 5) desvincular fica no mesmo trecho com a gaveta do mesmo lado; salvar e reabrir igual */
+          for(const w of ['f','e','d']){ini(w);newTpl(achar('Balcão porta + gavetas'));var a=S.m;a.x=1500;S.m=null;draw();if(w!=='f')wvGo('f');var ia=S.mods.indexOf(a),ax=w==='f'?'x':'z',g0=box(ia,/Frente de gaveta/)[ax],t0=box(ia);
+            __mv3.solta(a,30);var g1=box(ia,/Frente de gaveta/)[ax],t1=box(ia);var sn=JSON.stringify(snapState());loadState(JSON.parse(sn));draw();var t2=box(ia),g2=box(ia,/Frente de gaveta/)[ax];
+            R.solta.push(w+': '+(Math.abs(g1-g0)<1&&Math.abs(t1[ax+'0']-t0[ax+'0'])<1?'mesmo trecho e lado':'mudou')+' · '+(Math.abs(g2-g1)<1&&Math.abs(t2.x-t1.x)<1&&Math.abs(t2.z-t1.z)<1?'reabriu igual':'reabriu diferente'))}
+          R.errs=__errs.slice(e0);return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["a2d"] as? [String], ["f: tela direita · 3D direita", "e: tela direita · 3D direita", "d: tela direita · 3D direita"], "arrasto no 2D pra direita: direita na tela e de quem olha no 3D")
+        XCTAssertEqual(o["a3d"] as? [String], [], "Mover no 3D na parede do lado: fica na parede e não anda contra o dedo")
+        XCTAssertEqual(o["peca"] as? [String], ["f: esquerda de quem olha · campo 30", "e: esquerda de quem olha · campo 30", "d: esquerda de quem olha · campo 30"], "peça livre: \"Da esquerda do módulo\" é a esquerda de quem olha")
+        XCTAssertEqual(o["rp"] as? [String], ["f: Da esquerda da parede", "e: Da parede do fundo", "d: Da esquerda da parede"], "parede esquerda: x conta do canto do fundo (direita de quem olha)")
+        XCTAssertEqual(o["solta"] as? [String], ["f: mesmo trecho e lado · reabriu igual", "e: mesmo trecho e lado · reabriu igual", "d: mesmo trecho e lado · reabriu igual"])
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
     /// ETAPA 2 · V1 (vídeo do Adauto 26/11: forno embutido no balcão embaixo do cooktop): a frente do forno nasce em cima da base da caixa
     /// e a porta aberta (meio e toda) não cruza lateral, base, rodapé, tamponamento, pedra nem porta do vizinho — tamponamento com engrosso
     /// que avança, vizinho mais fundo, pedra/cooktop, vizinhos com a porta aberta e todas as medidas de nicho dos fornos do catálogo.

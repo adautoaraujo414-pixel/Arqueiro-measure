@@ -2695,3 +2695,23 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - **3.** `testCORTEPRIORIDADE…`, cenário "normal": no iPad deu 23 etiquetas de sobra, quando o esperado eram 25.
     - **Causa:** o cenário apagava a métrica forçada, e no iPad a medida real já é a do iPad, então ele não era o "normal".
     - **Correção:** a normal passa a ser forçada em 0,95/0,26, com comentário no teste. Entrou um cenário próprio para a métrica do iPad medida (1,13/0,26 com `ip`), que dá os mesmos 23 do iPad real, com identificação 0 e callout em cima de etiqueta 0.
+
+## CRUZA-3D-ID: peça cortada e desenhada no 3D com a identidade de outra peça (Code 1, 27/11, auditoria ETAPA 2 itens 24/40)
+- **Achado:** cruzamento automático dos 138 modelos do catálogo (em mm e em cm, Chromium a 1366). Por modelo, compara:
+  - campos do painel × dado do módulo;
+  - `partsOf` × grupos do corte (`cutGroups().map[*].src`, por `pk`);
+  - `partsOf` × caixas do 3D (`__boxes()`, por `pk`), com presença e medida;
+  - salvar e reabrir (`snapState` → `loadState`);
+  - mudar a largura e o botão ↶ (`#und`).
+- **Erro comprovado** (identidade; a medida e o corte estão certos):
+  - **Gaveta interna** (10 modelos, ex. "2P c/ Cab+Gav Int 600mm"): `Gaveta interna · lateral#n`, `· frente/costa#n` e `Fundo de gaveta interna (6 mm)#n` estão no `partsOf` e no corte, mas o 3D desenha a gaveta como um bloco 520 × 188,5 × 445 com o `pk` da `Gaveta interna · frente#n`. Nenhuma caixa do 3D leva o `pk` dessas peças: tocar nelas na lista não acende nada no 3D.
+  - **Aparador da sapateira** (18 modelos, ex. "Closet aberto · cabideiro + prateleiras (sem porta)"): `Sapateira · aparador#n` (577,5 × 15) está no `partsOf` e no corte; o 3D desenha a tira 577,5 × 40 × 15 com o `pk` da `Sapateira · prateleira inclinada#n`.
+  - **Área:** 3D (`build`), encaminhado ao Chefe. Não mexido aqui.
+- **Comportamento correto** (diferença técnica identificada, igual no corte e no 3D):
+  - Tamponamento 30 mm = face de 15 + engrosso (`… · engrosso 80#n`); no aéreo, a régua de 30 mm = 2 × 15 (`Tamponamento … (régua)#n`).
+  - O fundo (`Fundo#n`, `Fundo (lado do canto)#n`) entra no corte e no 3D, montado fora do `partsOf` do módulo, com os mesmos `pk` nos dois.
+  - Lateral de gaveta 57,8 no desenho e 57 no corte e no 3D (§5: o décimo vira folga). A nota da peça mostra a conta com decimal ("57,8 − 15 = 42,8").
+  - Itens `noCut` sem caixa no 3D: Decoração, Vão da torre, Nicho do forno/micro/geladeira, lado do canto L. São marcações, não peças.
+  - Salvar e reabrir: igual nos 138. Mudar a largura e ↶: volta igual nos 138.
+  - Campos a 1366 em mm: iguais ao dado nos 138. Em cm, a tela mostra 90 / 82 / 56 cm pro balcão 900 × 820 × 560 (print). O campo escondido que a sonda lia guarda mm.
+- **Não foi possível verificar aqui:** DXF (desligado, DXF_OFF); aparelho real.

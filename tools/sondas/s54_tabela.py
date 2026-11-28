@@ -19,6 +19,8 @@ def g(d, *k):
 linhas = [
     ('(1) acerto na seleção (todas as peças visíveis)', ('1_acerto',)),
     ('(1b) acerto nos toques inequívocos (meta 100%)', ('1b_acerto_inequivoco',)),
+    ('(1g) acerto · critério antigo do grupo (o do ANTES)', ('1g_acerto_criterioGrupo',)),
+    ('(1h) inequívocos · critério antigo do grupo', ('1h_inequivoco_criterioGrupo',)),
     ('(2) seleções no módulo vizinho', ('2_vizinho',)),
     ('(2b) toque que não selecionou nada', ('2b_nada',)),
     ('(3) acerto · zoom 1×', ('3_porZoom', 'z1')),

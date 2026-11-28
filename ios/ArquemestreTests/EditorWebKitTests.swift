@@ -21106,6 +21106,40 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // ETAPA 3.1 (Chefe 28/11, sonda s54 do Claude 5): (1) MOVE-750: no 3D, escolher o tamponamento e tocar de novo nele levava o módulo pra outro
+    // lugar (x 5 → 800): o "mudar de lugar" pendente lançava o raio ignorando o próprio módulo e batia no chão/parede de trás. (2) TAMP-NEAR: tocando a
+    // lateral, a porta, o rodapé ou a frente perto do tamponamento, o tamponamento "roubava" o toque (seleciona peça que não é a da frente).
+    func testETAPA3_ToqueNoMesmoModuloNaoMoveEPecaDaFrenteGanhaDoTamponamento() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var amb0=window.ambMsg;window.ambMsg=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        /* verdade = a caixa mais perto do olho no ponto (igual à s54) */
+        var RAY=function(cx,cy,bx){var P=window.PM3;var nx=cx/P.w*2-1,ny=1-cy/P.h*2,r1=[0,1,2,3].map(function(i){return P.X[i]-nx*P.W[i]}),r2=[0,1,2,3].map(function(i){return P.Y[i]-ny*P.W[i]}),best=null,bw=1e18;
+          for(var k=0;k<bx.length;k++){var b=bx[k],lo=[b.x0,b.y0,b.z0],hi=[b.x1,b.y1,b.z1];for(var a=0;a<3;a++)for(var s2=0;s2<2;s2++){var v=s2?hi[a]:lo[a],u1=(a+1)%3,u2=(a+2)%3,A=r1[u1],B_=r1[u2],C=r2[u1],D=r2[u2],det=A*D-B_*C;if(Math.abs(det)<1e-12)continue;
+            var e1=-(r1[a]*v+r1[3]),e2=-(r2[a]*v+r2[3]),p1=(e1*D-B_*e2)/det,p2=(A*e2-e1*C)/det;if(p1<lo[u1]||p1>hi[u1]||p2<lo[u2]||p2>hi[u2])continue;var q=[0,0,0];q[a]=v;q[u1]=p1;q[u2]=p2;var w=P.W[0]*q[0]+P.W[1]*q[1]+P.W[2]*q[2]+P.W[3];if(w<=0)continue;if(w<bw){bw=w;best=b}}}return best};
+        var OKB=function(b){return b.nm&&/^\d+:/.test(b.nm)&&b.g!=='sh'&&!b.nol&&b.a>0&&!b.wl&&!b.cs};var PROJ=function(c){var P=window.PM3,d=function(r){return r[0]*c[0]+r[1]*c[1]+r[2]*c[2]+r[3]},w=d(P.W);if(!(w>0))return null;return [(d(P.X)/w+1)/2*P.w,(1-d(P.Y)/w)/2*P.h]};
+        var monta=async function(env){loadState(initLimpo());S.env=env;S.room=env==='livre'?'':'cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.stones=[];draw();newTpl(T('Balcão 2 portas'));S.m=null;window.SEL3=null;draw();open3D();await W(600);var b=document.querySelector('#v3 [data-v="iso"]');if(b)b.click();await W(60);try{re3()}catch(_){}await W(40)};
+        /* 1. 2 toques no tamponamento e de novo nele: nada sai do lugar; o "mudar de lugar" pelo chão continua */
+        var mv=[];for(const env of ['livre','cozinha']){await monta(env);var m=S.mods[0],x0=m.x;var t=__boxes().filter(function(b){return /^0:Tamponamento direito$/.test(b.nm)&&b.pk})[0];var c=PROJ([(t.x0+t.x1)/2,(t.y0+t.y1)/2,t.z1]);
+          __sel3(c[0],c[1]);var s1=window.SEL3?window.SEL3.pk:'nada';__sel3(c[0],c[1]);var s2=window.SEL3?window.SEL3.pk:'nada';var dep=m.x;mv.push(env+': '+s1+' · de novo '+s2+' · x '+(dep===x0?'parado':'MUDOU '+x0+'→'+dep));
+          /* escolhido, 2 toques no chão longe: o gesto de mudar de lugar continua */var chao=PROJ([m.x+m.w+900,0,700]);__sel3(chao[0],chao[1]);mv.push(env+' gesto de mudar de lugar pelo chão: '+(m.x!==dep?'move':'NÃO MOVE'))}
+        R.mover=mv.join(' · ');
+        /* 2. em cada vista (iso, frente, lado) e zoom: o ponto visível de cada peça mais perto do tamponamento escolhe a própria peça */
+        await monta('livre');var falhas=[],n=0;for(const v of ['iso','front','left']){var b_=document.querySelector('#v3 [data-v="'+v+'"]');if(b_)b_.click();await W(40);try{re3()}catch(_){}await W(30);
+          var P=window.PM3,bx=__boxes().filter(OKB),tp=bx.filter(function(b){return /:Tamponamento direito/.test(b.nm)}),G={};
+          var tb=null;tp.forEach(function(b){[[b.x0,b.y0,b.z0],[b.x1,b.y1,b.z1],[b.x0,b.y1,b.z1],[b.x1,b.y0,b.z0]].forEach(function(q){var s=PROJ(q);if(!s)return;tb=tb||{x0:1e9,x1:-1e9,y0:1e9,y1:-1e9};tb.x0=Math.min(tb.x0,s[0]);tb.x1=Math.max(tb.x1,s[0]);tb.y0=Math.min(tb.y0,s[1]);tb.y1=Math.max(tb.y1,s[1])})});if(!tb)continue;
+          for(var y=Math.max(2,tb.y0-12);y<Math.min(P.h,tb.y1+12);y+=4)for(var x=Math.max(2,tb.x0-12);x<Math.min(P.w,tb.x1+12);x+=4){var h=RAY(x,y,bx);if(!h||!h.pk||/:Tamponamento/.test(h.nm))continue;
+            /* inequívoco: os vizinhos a 8 px são da mesma peça */var ok=true;for(var dx=-8;dx<=8&&ok;dx+=4)for(var dy=-8;dy<=8&&ok;dy+=4){var h2=RAY(x+dx,y+dy,bx);if(!h2||(h2.ppk||h2.pk)!==(h.ppk||h.pk))ok=false}if(!ok)continue;var k=v+'|'+(h.ppk||h.pk);G[k]=(G[k]||0)+1;if(G[k]>8||n>=40*(['iso','front','left'].indexOf(v)+1))continue;
+            window.SEL3=null;__sel3(x,y);n++;var s=window.SEL3;if(!s||s.mi!==parseInt(h.nm,10)||(s.pk!==h.pk&&s.pk!==h.ppk&&s.ppk!==h.ppk))falhas.push(v+' '+h.nm+' → '+(s?s.pk:'nada'))}}
+        R.pertoDoTamp=(n>=15?'pontos testados ≥15':'POUCOS '+n)+' · erradas '+falhas.length+(falhas.length?' ('+falhas.slice(0,4).join('; ')+')':'');
+        window.SEL3=null;window.ambMsg=amb0;R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["mover"] as? String, "livre: Tamponamento direito#1 · de novo Tamponamento direito#1 · x parado · livre gesto de mudar de lugar pelo chão: move · cozinha: Tamponamento direito#1 · de novo Tamponamento direito#1 · x parado · cozinha gesto de mudar de lugar pelo chão: move", "tocar de novo no próprio módulo não muda ele de lugar; 2 toques no chão longe continua mudando")
+        XCTAssertEqual(o["pertoDoTamp"] as? String, "pontos testados ≥15 · erradas 0", "perto do tamponamento, a peça da frente no ponto é a escolhida")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // REGUA-PAREDE (item 39, Adauto 28/11: "reproduza a criação de réguas em todas as paredes… corrija a causa"): com o 2D na parede do lado aberta,
     // o que era mandado pra outra parede (catálogo "Módulo na lateral direita/esquerda", botões Fundo/Esquerda/Direita/Livre do módulo) ficava na parede
     // da vista (o botão não fazia nada). Olhar as paredes e salvar/reabrir com a vista do lado não mudam o projeto.

@@ -3352,3 +3352,16 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - medido no navegador: o «▁» presente a 0 e a 90 ms depois de "Teto" (antes: ausente);
   - ParteB1 a 430, 3 de 3 rodadas com o «▁» pelo mesmo caminho (Ambiente › Teto › «▁»), 55 controles;
   - os 12 NadaDeEnfeite passam a 1366.
+
+## MOVE-750 e TAMP-NEAR (ETAPA 3.1, Chefe 28/11, sonda s54 do Claude 5) — Claude 4
+- **MOVE-750 (erro comprovado):** no 3D, escolher o tamponamento (2 toques) e tocar de novo nele mudava o módulo de lugar (x 5 → 800), sem aviso, no livre e na cozinha.
+  - Causa raiz: toda escolha de peça arma o "mudar de lugar" pendente (`MDMV`, 12 s). No toque seguinte, `lbtRay` ignora as caixas do próprio módulo: o raio atravessava o módulo, batia no chão ou na parede de trás, e isso valia como "lugar novo" (`mdDropAt`).
+  - Correção: se a superfície visível no ponto (`pickFace`) é do próprio módulo, não é lugar novo. O toque segue como escolha normal.
+  - O gesto de mudar de lugar (2 toques no chão ou na parede) continua.
+- **TAMP-NEAR (erro comprovado):** tocando a lateral, a porta, o rodapé, o fundo, a frente ou a travessa perto do tamponamento, o tamponamento "roubava" o toque.
+  - Causa raiz: `tampNear` mede a distância até o retângulo da tela da placa. Uma placa fina vista de lado tem retângulo que cobre as peças do lado, então distância 0 e a peça escondida atrás ganhava.
+  - Correção: a ajuda pra pegar o tamponamento fino só vale quando o toque não acertou peça nenhuma (toque no vazio, raio 18 px).
+- **Teste:** `testETAPA3_ToqueNoMesmoModuloNaoMoveEPecaDaFrenteGanhaDoTamponamento`.
+  - Confere tocar de novo no tamponamento (livre e cozinha) e o gesto pelo chão.
+  - Confere 17 pontos inequívocos de peças em volta do tamponamento (iso, frente e lado), com a verdade dada pelo raio, como na s54.
+  - No ANTES (cópia c1cc2616 sem estas duas correções): x 5→800 e 8 pontos errados. Depois: passa a 1366 e a 430.

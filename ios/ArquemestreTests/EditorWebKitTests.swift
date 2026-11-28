@@ -19288,6 +19288,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* Item 31 (risco confineAll/roomClamp, 27/11): as passadas de restrição não escrevem mais e desfazem nos módulos. Um espião nos campos x e b de
+       móveis postos fora do lugar (passando da parede e do teto) conta as escritas: antes 2 por passada (encaixa e devolve), agora nenhuma.
+       O resultado é o mesmo bit a bit: posição, avisos e projeto (sonda tools/sondas/s50: 120 modelos + cozinha, antigo × novo). */
+    func testConfineAllRoomClampNaoEscrevemNosModulosMesmoResultado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.env='cozinha';S.W=3600;S.H=2600;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));draw();
+        var st=JSON.stringify(snapState());loadState(JSON.parse(st));var a=S.mods[0],b=S.mods[1];a.x=S.W-a.w/2;b.b=S.H-200;st=JSON.stringify(snapState());loadState(JSON.parse(st));a=S.mods[0];b=S.mods[1];S.m=null;
+        /* conta só escrita que troca o valor (o sanM do partsOf regrava o mesmo número: não muda nada e não é destas passadas) */var esp=function(q,f){var v=q[f],L=[];Object.defineProperty(q,f,{get:function(){return v},set:function(n){if(n!==v)L.push(n);v=n},enumerable:true,configurable:true});return L};
+        var ax=a.x,bb=b.b,Wx=esp(a,'x'),Wb=esp(b,'b');
+        draw();__build();draw();
+        R.escritasX=Wx.length;R.escritasB=Wb.length;R.mesmoLugar=(a.x===ax)+' · '+(b.b===bb);
+        var av=(window.fgConflitos?fgConflitos():[]).map(function(c){return c.texto}).join(' | ');R.avisoParede=/não cabe onde está/.test(av);R.avisoTeto=/passa do teto/.test(av);
+        R.espiaoFica=typeof Object.getOwnPropertyDescriptor(a,'x').get;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["escritasX"] as? Int, 0, "confineAll não escreve (antes: encaixava e devolvia)")
+        XCTAssertEqual(o["escritasB"] as? Int, 0, "roomClamp não escreve (antes: encaixava e devolvia)")
+        XCTAssertEqual(o["mesmoLugar"] as? String, "true · true")
+        XCTAssertEqual(o["avisoParede"] as? Bool, true, "o aviso continua (módulo, medida, diferença)")
+        XCTAssertEqual(o["avisoTeto"] as? Bool, true)
+        XCTAssertEqual(o["espiaoFica"] as? String, "function", "quem já observava o campo continua observando")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto, via Chefe 24/11): cada módulo (m.uid) e peça (m.uid|pk) com a mesma chave no editor (partsOf), no 3D,
     // na lista, no corte e no DXF; cópia ganha id novo (módulo e peças); salvar/reabrir e desfazer/refazer mantêm; Meus modelos ganha id novo; id que existe
     // nunca é trocado; id repetido ao abrir: avisa e só muda se a pessoa mandar

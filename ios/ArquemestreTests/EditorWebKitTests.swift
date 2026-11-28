@@ -17382,6 +17382,33 @@ document.getElementById('pv2db').click();out.push('errs '+(__errs.length-e0));re
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /// MEDOBJ (Chefe 28/11, regra do Adauto "o número mostrado corresponde ao real"): todo objeto do catálogo (eletros, mobília, decoração, luminárias…)
+    /// é desenhado no 3D na medida cadastrada (corpo, ± 4% ou 12 mm). O que passa de propósito (cabo, alças, pedal, manivela, tampa aberta, torneira,
+    /// puxador/botões da frente até 45 mm) é detalhe e tem que estar na nota do quadro (apDetNota). Antes: banqueta com encosto 1210 de 950, roupas no cabide 390 de 1000,
+    /// banquetas 340 de 380, giratórias 940 de 1000, panelas, frigideira, copos, vaso…
+    func testMEDOBJ_ObjetoDoCatalogoNaMedidaCadastradaNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.ambMsg=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var e0=__errs.length,n=0,ruim=[],semNota=[],ex={};
+open3D();await W(300);
+var mede=function(f,t){__build();var A=__boxes().filter(function(b){return b.fr===f.id&&!b.nol&&b.a>.3});if(!A.length)return null;var zmn=Math.min.apply(null,A.map(function(b){return b.z0})),fr0=zmn+(+f.d),dt={};
+  var B=A.filter(function(b){if(b.det){dt[b.det]=1;return false}if(b.z0>=fr0-1&&b.z1-fr0<=45){dt['puxador']=1;return false}return true});
+  return {bx:[Math.max.apply(null,B.map(function(b){return b.x1}))-Math.min.apply(null,B.map(function(b){return b.x0})),Math.max.apply(null,B.map(function(b){return b.y1}))-Math.min.apply(null,B.map(function(b){return b.y0})),Math.max.apply(null,B.map(function(b){return b.z1}))-Math.min.apply(null,B.map(function(b){return b.z0}))].map(Math.round),det:Object.keys(dt)}};
+for(const t of Object.keys(APM)){var L=(apModels(t)||[]);for(var j=0;j<L.length;j++){loadState(initLimpo());S.env='livre';S.W=6000;S.H=3000;S.mods=[];S.fr=[];draw();var f=null;try{f=apAdd(t,j)}catch(e){continue}if(!f)continue;f.x=2000;f.y=500;f.rot=0;draw();re3();
+  var r=mede(f,t);if(!r)continue;n++;var tl=function(v){return Math.max(12,v*.04)},w=+f.w,h=+f.h,d=+f.d;
+  if(Math.abs(r.bx[0]-w)>tl(w)||Math.abs(r.bx[1]-h)>tl(h)||Math.abs(r.bx[2]-d)>tl(d))ruim.push(t+'#'+j+' '+w+'×'+h+'×'+d+' → '+r.bx.join('×'));
+  var nota=(window.apDetNota?apDetNota(f):[]).join(', ');r.det.forEach(function(k){if(nota.indexOf(k)<0)semNota.push(t+'#'+j+' '+k)});
+  var nm=String(f.nome||'');if(/Banqueta de madeira com encosto|^Banqueta alta \(bancada|Bancada com cuba|Roupas no cabide|Giratória com braço/.test(nm))ex[nm.slice(0,24)]=r.bx.join('×')+(nota?' · sem: '+nota:'')}}
+/* a nota aparece no quadro do objeto */
+loadState(initLimpo());S.env='livre';S.W=6000;S.H=3000;S.mods=[];S.fr=[];var fp=apAdd('luminaria',0);draw();re3();fx3api.open({k:'fr',id:fp.id});await W(100);var q=document.querySelector('#it4 [data-detnota]'),qt=q?q.textContent:'(sem nota)';document.getElementById('v3x').click();
+return JSON.stringify({out:'objetos '+(n>=200?'200+':n)+' · fora da medida '+ruim.length+' '+ruim.slice(0,6).join(' | ')+' · detalhe sem nota '+semNota.length+' '+semNota.slice(0,6).join(' | '),ex:JSON.stringify(ex),nota:qt,errs:__errs.length-e0});
+          """#)
+        XCTAssertEqual(o["out"] as? String, "objetos 200+ · fora da medida 0  · detalhe sem nota 0 ", "o 3D desenha cada objeto na medida cadastrada; o que passa está na nota")
+        XCTAssertEqual(o["ex"] as? String, #"{"Banqueta alta (bancada ":"380×650×380","Banqueta de madeira com ":"400×950×400","Roupas no cabide (cabide":"600×1000×450","Bancada com cuba":"1500×900×600 · sem: torneira","Giratória com braço · 60":"600×1000×600"}"#)
+        XCTAssertEqual(o["nota"] as? String, "A medida não inclui: cabo e canopla.")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /// CORRER-TRILHO (varredura visual 3D do Chefe, 28/11): com todas as folhas de correr abertas, nenhuma folha entra em outra do MESMO trilho
     /// (antes, no guarda-roupa de 3 folhas, a 1ª e a 3ª iam as duas pra x 828..1642 no trilho da frente). Confere o catálogo inteiro; medidas e partsOf não mudam.
     func testCORRERTRILHO_FolhasAbertasNaoEntramUmaNaOutraNoMesmoTrilho() async throws {

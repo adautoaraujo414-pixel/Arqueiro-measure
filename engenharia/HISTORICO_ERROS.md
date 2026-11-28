@@ -3230,3 +3230,21 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Correção (só 3D, sem caixa nem medida):** em editor.html, no desenho de 'Porta de correr': folha cujo caminho cruza uma folha de número menor já aberta no mesmo trilho fica fechada; e a folha que corre para até encostar na folha parada do mesmo trilho (antes entrava 30 mm nela). partsOf, lista, corte e orçamento não mudam.
 - **Teste:** testCORRERTRILHO_FolhasAbertasNaoEntramUmaNaOutraNoMesmoTrilho (catálogo inteiro; também confere que as peças não mudam). Falha antes (HEAD 949e3f0c: "cruzando: Guarda-roupa correr 3 folhas 1"), passa depois. Nos outros 7 itens com correr, posição das folhas idêntica antes/depois.
 - **Evidência:** tools/sondas/etapa2_c3/correr_trilho_antes_depois.png (1366 e 430). Render 8–12 ms.
+
+## MEDOBJ · objeto do catálogo desenhado no 3D com medida diferente da cadastrada — Claude 3 (varredura visual 3D; decisão do Chefe 28/11)
+- **Regra (Chefe, pela regra do Adauto "o número mostrado corresponde ao real"):** a medida cadastrada (a que aparece no campo e no catálogo) é a verdade; o 3D desenha o objeto nela, sem deformar o desenho. O que passa de propósito (cabo do pendente, alças, pedal, manivela, tampa aberta, torneira, puxador/botões da frente) fica como detalhe, com nota no quadro do objeto.
+- **Módulo:** 3D dos objetos soltos (S.fr): mobília, decoração, lixeiras, luminárias, cadeiras de escritório, sofás, eletros, churrasqueiras, elétrica. Família: todos os 234 itens do APM.
+- **Reproduzir:** pôr no projeto "Banqueta de madeira com encosto" (950) → 3D desenha 1210; "Roupas no cabide" (1000) → 390; banquetas 380 → 340; giratórias 1000/1050 → 940; panela Ø240 → 158; frigideira 400 → 252; copos 170 → 146; vaso 350 → 252; lixeira basculante 700 → 730; cadeira fixa 560 → 500; longarinas 600 → 550; sofá orgânico 1000 → 939; registro de gás 55 → 38. Ao todo 41 itens fora (± 4% ou 12 mm).
+- **Causas (cada desenho):**
+  - banqueta3: raio do assento w/2−20;
+  - banqueta com encosto: encosto em cima da altura cadastrada;
+  - cad3: rodízios fora da base e encosto limitado a 940;
+  - decoObj3: roupas com comprimentos fixos de 150 a 390 mm, folhas do vaso em 0,6 do Ø, copos em 0,76, armação do escorredor baixa;
+  - panelas: raio −40 e cabo da frigideira na largura;
+  - lixeira basculante: tampa acima da altura;
+  - airfryer: puxador 40 mm fora;
+  - sofOrg: as pontas do arco não chegavam à profundidade;
+  - el3 (registro): profundidade fixa.
+- **Correção:** cada desenho passa a usar a medida cadastrada. Detalhes reais marcados na caixa 3D (b.det) e listados em window.apDetNota(f), que o quadro do objeto mostra ("A medida não inclui: …"). Nenhuma medida cadastrada mudou; nenhum projeto muda (só o desenho).
+- **Teste:** testMEDOBJ_ObjetoDoCatalogoNaMedidaCadastradaNo3D, no catálogo inteiro. Confere três coisas: corpo = medida cadastrada; todo detalhe marcado está na nota; a nota aparece no quadro. Falha antes (HEAD fb78ca4d: "fora da medida 41") e passa depois.
+- **Evidência:** tools/sondas/etapa2_c3/medobj_objetos_antes_depois.png. Render 4–6 ms.

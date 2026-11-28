@@ -2937,3 +2937,24 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Validação:** sonda `tools/sondas/s50_guarda_sem_escrita.js` (120 modelos postos fora do lugar + cozinha sobreposta; desenhar, 3D, campo, parede menor): projeto e avisos iguais ao código antigo, bit a bit. Desempenho do `draw`/`partsOf` igual.
 - **Teste:** `testConfineAllRoomClampNaoEscrevemNosModulosMesmoResultado` (espião nos campos). No c38c9ba: 8 escritas em x e 10 em b; agora 0, mesmo lugar e mesmos avisos.
 - **Fora (classificação):** o `sanM` (dentro do `partsOf`) regrava o mesmo valor (não muda nada) — comportamento correto. Pedra e móveis soltos no `roomClamp` ainda usam escrever-e-desfazer (mesmo mecanismo) — risco identificado, não pedido.
+
+## CEGO-ESTRUTURA (ETAPA 2 item 7, Adauto/Chefe 27/11, R12/R13/R15 descritas pelo Chefe): canto cego E e D — Claude 3
+- **Pedido:** balcão canto cego com:
+  - laterais E e D inteiras, base e fundo;
+  - travessa da frente e de trás deitadas: embutidas entre as laterais OU apoiadas em cima (regra do item 6);
+  - painel cego do lado do canto, régua vertical entre o cego e a porta, porta com 2 dobradiças, espelhamento E/D;
+  - medidas de fora iguais e lista = 3D;
+  - projeto antigo igual, com "Atualizar estrutura" e desfazer.
+- **Antes:** o canto cego tinha só a travessa frontal em pé (70, no rebaixo das laterais). Faltava a de trás e a opção embutida/apoiada.
+- **Implementação (bloco CANTO CEGO no fim do editor; embrulho do partsOf, sem mexer no núcleo; combinado com o Code 2):**
+  - marca `m.cgTrav` ('emb' | 'apo'), só no balcão com painel cego (`temCego`, !sup, !corner);
+  - 'emb': laterais inteiras e travessas `Travessa deitada · frente#1` e `· trás#1` de W − 2e × `cnTravMm` (80), entre as laterais;
+  - 'apo': laterais 1 espessura mais baixas e travessas de W × 80 por cima;
+  - a travessa em pé sai e a lateral fica sem o rebaixo dela no 3D;
+  - 3D pelo `cxz`, com a chave de cada peça;
+  - o módulo novo do catálogo nasce com 'emb' (é criação);
+  - sem a marca nada muda; a aba Estrutura mostra "Atualizar estrutura" e, com a marca, "Embutidas/Apoiadas", a largura e "Voltar à estrutura antiga". Tudo com snap/desfazer;
+  - o `ttParts` do Code 2 (item 22) já exclui `m.cgTrav`.
+- **Não muda:** aéreo canto cego (regra: base em cima e embaixo), painel cego, régua espaçadora, porta (2 dobradiças), 165° e E/D.
+- **Pendente de decisão do Chefe:** a altura da "Divisória 1" interna com a travessa deitada (hoje 620, com vão de 55 até a travessa).
+- **Teste:** `testE2ITEM7_CantoCegoComTravessasDaFrenteEDeTrasEmbutidasOuApoiadas`. No HEAD anterior falha (sem a estrutura nem o botão); agora passa.

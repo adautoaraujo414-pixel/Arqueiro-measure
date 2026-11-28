@@ -17239,6 +17239,46 @@ final class EditorWebKitTests: XCTestCase {
 
     /// MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11 "cálculos reais e automáticos" e "Regras do módulo · organização"; checklist D21/D24): as 24
     /// combinações (balcão e aéreo × moldura × Frontal × travessão sem/externo/interno) com cada peça igual no 3D e no corte (nenhuma espessura somada
+    /// ETAPA 2 · item 7 (Adauto/Chefe 27/11, referências R12/R13/R15): balcão canto cego E e D com laterais inteiras, travessa da frente e de trás
+    /// deitadas (embutidas entre as laterais OU apoiadas em cima), painel cego, régua entre o cego e a porta, porta com 2 dobradiças; medidas de fora iguais;
+    /// lista = corte = 3D (cada travessa com a sua chave); projeto antigo igual, com "Atualizar estrutura" e desfazer; salvar e reabrir; aéreo não muda.
+    func testE2ITEM7_CantoCegoComTravessasDaFrenteEDeTrasEmbutidasOuApoiadas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W_=function(t){return new Promise(function(r){setTimeout(r,t)})};var R={},e0=__errs.length;
+          var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+          var resumo=function(m){return partsOf(m).filter(function(p){return /^(Lateral (esquerda|direita)|Travessa (frontal|deitada · (frente|trás))|Base superior)$/.test(p.name)}).map(function(p){return p.name.replace('Travessa deitada · ','TD ')+' '+p.cl+'×'+p.cw}).join(' | ')};
+          var cubo=async function(m){open3D();await W_(150);__build();var B=__boxes().filter(function(b){return /^0:/.test(String(b.nm))&&!b.nol&&!b.ft}),P=partsOf(m).filter(function(p){return !p.noCut&&p.pk&&!/^Fundo/.test(p.name)}),sem=P.filter(function(p){return !B.some(function(b){return b.pk===p.pk})}).map(function(p){return p.pk});
+            var L=B.filter(function(b){return /:Lateral esquerda$/.test(b.nm)}),T=B.filter(function(b){return /:Travessa deitada · (frente|trás)$/.test(b.nm)});var lx1=Math.max.apply(null,L.map(function(b){return b.x1})),ly1=Math.max.apply(null,L.map(function(b){return b.y1}));
+            var r=(sem.length?'sem 3D: '+sem.join(','):'lista = 3D')+' · laterais '+L.length+' caixa(s)'+' · travessas '+T.map(function(b){return Math.round(b.x1-b.x0)+'×'+Math.round(b.z1-b.z0)+(b.x0>=lx1-.5?' entre':' por cima')+(Math.round(b.y0)>=Math.round(ly1)?' em cima da lateral':' na altura da lateral')}).join(' / ');document.getElementById('v3x').click();return r};
+          for(const n of ['Balcão canto cego · cego na direita (porta na esquerda)','Balcão canto cego · cego na esquerda (porta na direita)']){var k=/esquerda \(porta/.test(n)?'E':'D';loadState(initLimpo());S.mods=[];newTpl(achar(n));var m=S.mods[0];m.x=500;draw();
+            var w0=[m.w,m.h,m.d].join('×');R['nasce'+k]=m.cgTrav;R['emb'+k]=resumo(m)+' · '+await cubo(m);
+            m.cgTrav='apo';draw();R['apo'+k]=resumo(m)+' · '+await cubo(m)+' · de fora '+([m.w,m.h,m.d].join('×')===w0?'igual':'MUDOU');
+            var pt=partsOf(m).filter(function(p){return p.name==='Porta'&&!p.cego})[0];R['porta'+k]=/2 furos/.test(pt.note)+' '+partsOf(m).some(function(p){return p.cego})+' '+partsOf(m).some(function(p){return /^Régua espaçadora do canto/.test(p.name)})}
+          /* projeto antigo: sem a marca fica igual; o painel oferece Atualizar estrutura (com desfazer) */
+          loadState(initLimpo());S.mods=[];newTpl(achar('Balcão canto cego · cego na direita (porta na esquerda)'));var m=S.mods[0];delete m.cgTrav;var sv=JSON.parse(JSON.stringify(snapState()));loadState(sv);m=S.mods[0];draw();R.antigo=resumo(m);
+          S.m=m;S.tab=0;panel();var b=document.querySelector('#bd [data-cgtrav="emb"]');R.botao=b?b.textContent:'';b.click();R.atualizado=m.cgTrav+' · '+resumo(m);document.getElementById('und').click();await W_(50);m=S.mods[0];R.desfez=(m.cgTrav===undefined||!m.cgTrav)+' · '+resumo(m);
+          /* salvar e reabrir */m.cgTrav='apo';draw();var sv2=JSON.parse(JSON.stringify(snapState()));loadState(sv2);R.reabre=S.mods[0].cgTrav+' · '+resumo(S.mods[0]);
+          /* aéreo canto cego não muda */loadState(initLimpo());S.mods=[];newTpl(achar('Aéreo canto cego · cego na direita'));R.aereo=String(S.mods[0].cgTrav)+' · '+resumo(S.mods[0]);
+          R.errs=__errs.slice(e0);return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["nasceD"] as? String, "emb", "canto cego novo nasce com as travessas embutidas (R15)")
+        XCTAssertEqual(o["nasceE"] as? String, "emb")
+        XCTAssertEqual(o["embD"] as? String, "Lateral esquerda 690×560 | Lateral direita 690×560 | TD frente 970×80 | TD trás 970×80 · lista = 3D · laterais 1 caixa(s) · travessas 970×80 entre na altura da lateral / 970×80 entre na altura da lateral")
+        XCTAssertEqual(o["embE"] as? String, "Lateral esquerda 690×560 | Lateral direita 690×560 | TD frente 970×80 | TD trás 970×80 · lista = 3D · laterais 1 caixa(s) · travessas 970×80 entre na altura da lateral / 970×80 entre na altura da lateral")
+        XCTAssertEqual(o["apoD"] as? String, "Lateral esquerda 675×560 | Lateral direita 675×560 | TD frente 1000×80 | TD trás 1000×80 · lista = 3D · laterais 1 caixa(s) · travessas 1000×80 por cima em cima da lateral / 1000×80 por cima em cima da lateral · de fora igual")
+        XCTAssertEqual(o["apoE"] as? String, "Lateral esquerda 675×560 | Lateral direita 675×560 | TD frente 1000×80 | TD trás 1000×80 · lista = 3D · laterais 1 caixa(s) · travessas 1000×80 por cima em cima da lateral / 1000×80 por cima em cima da lateral · de fora igual")
+        XCTAssertEqual(o["portaD"] as? String, "true true true", "porta com 2 dobradiças, painel cego e régua entre o cego e a porta")
+        XCTAssertEqual(o["portaE"] as? String, "true true true")
+        XCTAssertEqual(o["antigo"] as? String, "Lateral esquerda 690×560 | Lateral direita 690×560 | Travessa frontal 1000×70", "projeto antigo fica igual")
+        XCTAssertEqual(o["botao"] as? String, "Atualizar estrutura")
+        XCTAssertEqual(o["atualizado"] as? String, "emb · Lateral esquerda 690×560 | Lateral direita 690×560 | TD frente 970×80 | TD trás 970×80")
+        XCTAssertEqual(o["desfez"] as? String, "true · Lateral esquerda 690×560 | Lateral direita 690×560 | Travessa frontal 1000×70", "↶ volta")
+        XCTAssertEqual(o["reabre"] as? String, "apo · Lateral esquerda 675×560 | Lateral direita 675×560 | TD frente 1000×80 | TD trás 1000×80")
+        XCTAssertEqual(o["aereo"] as? String, "undefined · Lateral esquerda 720×350 | Lateral direita 720×350 | Base superior 900×350", "aéreo: base em cima e embaixo (regra)")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
     /// ETAPA 2 · item 4 (Chefe 27/11: "melhore texturas e materiais de eletros, puxadores, ferragens e vidros sem perder desempenho… sem mudar nenhuma caixa"):
     /// dobradiça, corrediça, cabideiro e o inox/painel preto do forno embutido usam o material de metal do 3D (VIS-MAT); as caixas (medidas e posições) são as mesmas.
     func testE2ITEM4_FerragensEEletroEmbutidoComMaterialDeMetalSemMudarCaixa() async throws {

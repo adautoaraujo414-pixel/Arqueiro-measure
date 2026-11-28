@@ -3385,3 +3385,8 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Causa: e3Type partia do desenho (560,8, com décimo) e não do corte (560).
   - Correção: quando o desenho tem décimo, a conta parte de RNDC (corte). O número digitado vira a medida de corte. Vale para qualquer peça (componente compartilhado); peças com medida inteira não mudam.
 - **Teste:** testDIVCEGO_DivisoriaDoCantoCegoLivreComOpcaoDeSubirAteATravessa, cego E e D. Cobre: campos do editor (altura, profundidade), andar 30, opção ligada/desligada, lista = 3D, salvar/reabrir e desfazer. Falha antes (prof 479; sobe 675) e passa depois.
+- **Ajuste pela decisão do Chefe/Adauto (28/11, "o número digitado é a medida"):** sem deslocamento.
+  - Ligar "sobe até a travessa" põe a altura que encosta na travessa (675) e guarda a altura digitada antes (m.cgDivMem).
+  - Desligar volta ao último valor digitado (500).
+  - Digitar a altura com a opção ligada (campo ou ajuste fino; gancho cgDivEdit em e3Type/e3Fine) vale o número exato (450) e desliga a opção. O quadro mostra "(desligada pela edição da altura)" (m.cgDivEd).
+  - testDIVCEGO ajustado: ligar 675 → desligar 500 → ligar 675 → digitar 450 = 450 com a opção desligada → reabrir 450 → desfazer.

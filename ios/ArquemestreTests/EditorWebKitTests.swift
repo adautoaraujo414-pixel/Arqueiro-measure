@@ -19315,6 +19315,35 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* Item 34 (auditoria dos botões fora do editor, 28/11): achados da sonda que aciona cada botão/campo de Valores, Preços, Plano de corte e ArqueCut.
+       (1) a opção já escolhida (desconto, × o material) não dava retorno nenhum; agora avisa e não muda nada.
+       (2) ArqueCut: trocar o jeito de cortar (botões dentro do resultado) e "✎ lados" recalculavam e jogavam a tela pro começo do resultado; agora a tela fica onde estava. */
+    func testItem34OpcaoJaEscolhidaRespondeEArqueCutNaoRolaAoTrocarOJeitoDeCortar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});delete S.desc;
+        document.getElementById('vlb').click();await W(150);var st=JSON.stringify(snapState()),n0=TS.length;document.querySelector('#vlm [data-vdesc="0"]').click();await W(50);
+        R.semDesconto=(TS.slice(n0).join()==='Já está sem desconto')+' · '+(JSON.stringify(snapState())===st);
+        document.querySelector('#vlm [data-vdesc="10"]').click();await W(50);n0=TS.length;document.querySelector('#vlm [data-vdesc="10"]').click();await W(50);R.dezDuasVezes=TS.slice(n0).join()+' · '+S.desc;
+        document.getElementById('vlx').click();
+        PR.mult=2.5;document.getElementById('prb').click();await W(80);document.querySelector('[data-propen]').click();await W(150);var pr=JSON.stringify(PR);n0=TS.length;document.querySelector('#prbody [data-mx="2.5"]').click();await W(50);
+        R.mult=TS.slice(n0).join()+' · '+(JSON.stringify(PR)===pr);document.querySelector('#prbody [data-mx="3"]').click();await W(50);R.mult3=PR.mult;document.getElementById('prm').hidden=true;
+        MC=null;localStorage.removeItem('arque.corteAvulso.v1');mcLoad();MC.list=[{n:'Lateral',w:700,h:500,q:2},{n:'Porta',w:700,h:400,q:3},{n:'Base',w:900,h:560,q:2}];mcSave();document.getElementById('mcb').click();await W(80);mcCalc();await W(150);
+        var sc=document.getElementById('mcm').firstElementChild,b=document.querySelector('#mcres [data-mcmt="comp"]');b.scrollIntoView({block:'center'});await W(30);var y0=sc.scrollTop;b.click();await W(150);R.metodo=PR.metodo+' · rolou '+Math.round(Math.abs(sc.scrollTop-y0));
+        var f=document.querySelector('#mcres [data-fted]');f.scrollIntoView({block:'center'});await W(30);y0=sc.scrollTop;f.click();await W(50);document.querySelector('#ftedm [data-ftk="T"]').click();document.querySelector('#ftedm [data-fta="ok"]').click();await W(150);/* a linha escolhida cresce (texto "manual"): o navegador segura o conteúdo à vista, até 30 px */R.fita=(Math.abs(sc.scrollTop-y0)<=30?'parada':'rolou '+Math.round(Math.abs(sc.scrollTop-y0)))+' · '+(MC.list.filter(function(p){return p.f!=null}).length);
+        document.getElementById('mcm').hidden=true;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["semDesconto"] as? String, "true · true", "Sem desconto já escolhido: avisa e não muda o projeto")
+        XCTAssertEqual(o["dezDuasVezes"] as? String, "Já está com 10% de desconto · 10")
+        XCTAssertEqual(o["mult"] as? String, "Já está em 2,5× o material · true")
+        XCTAssertEqual(o["mult3"] as? Double, 3, "a outra opção continua mudando")
+        XCTAssertEqual(o["metodo"] as? String, "comp · rolou 0", "ArqueCut: trocar o jeito de cortar não tira a tela do lugar")
+        XCTAssertEqual(o["fita"] as? String, "parada · 1", "ArqueCut: ✎ lados aplica sem tirar a tela do lugar")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto, via Chefe 24/11): cada módulo (m.uid) e peça (m.uid|pk) com a mesma chave no editor (partsOf), no 3D,
     // na lista, no corte e no DXF; cópia ganha id novo (módulo e peças); salvar/reabrir e desfazer/refazer mantêm; Meus modelos ganha id novo; id que existe
     // nunca é trocado; id repetido ao abrir: avisa e só muda se a pessoa mandar

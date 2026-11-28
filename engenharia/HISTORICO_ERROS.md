@@ -3267,3 +3267,17 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Testes:**
   - novo: `testEtapa2MovidoMantemTamponamentoDaJuntaSugestaoTirarComPreviaEDesfazer` (digitar, arrastar, aplicar, desfazer, projeto antigo);
   - `testB24…` v5 atualizado com comentário: antes "tr0", agora "tra".
+
+## ZOOM-ROLADA (item 34, achado do pacote de evidências; Chefe 28/11): o ⌂ ficava calado com a página rolada — Claude 4
+- **Como reproduzir:** a 1366 × 768, a barra do desenho (−, +, ⌂) fica abaixo da dobra. Para tocar nela é preciso rolar a página. Com a página rolada e a vista já no começo, o ⌂ não fazia nada e não avisava. Toque real pelo CDP, página rolada 107 px.
+  - Acontecia no c38c9ba e no e98e8187.
+  - A 430, sem rolar, o aviso aparecia.
+- **Causa raiz:** no `onclick` do `#zr`, o aviso "A vista já está no começo" tinha a condição `!(window.scrollY>4)`. Com a página rolada, a função caía no `VB={…};setVB()`, que não muda nada quando a vista já está no começo.
+- **Correção (`editor.html`, `$('zr').onclick`):** a condição da rolagem saiu.
+  - O ⌂ avisa em qualquer rolagem e não rola a página.
+  - Layout e posição da barra não mudaram, porque o Adauto não autorizou mexer no layout.
+  - O − e o + já funcionavam rolados; o teste prova.
+- **Teste:** `testZOOMROLADA_BotoesDaVistaFuncionamComAPaginaRolada`. Cobre ⌂ no começo, − com a parede inteira, +, ⌂ com zoom e "a página não rola sozinha", sem rolar e com a página rolada.
+  - Falha antes ("⌂ CALADO" só com a página rolada).
+  - Passa depois a 1366 e a 430.
+- **Evidência:** `engenharia/evidencias/etapa2/pacote_claude4/i34_1366.jpg` (quadros 3 e 4).

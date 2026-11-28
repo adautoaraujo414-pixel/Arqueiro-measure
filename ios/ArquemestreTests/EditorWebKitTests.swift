@@ -20641,6 +20641,28 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // ZOOM-ROLADA (item 34, achado do pacote de evidências; Chefe 28/11): a 1366×768 a barra −/+/⌂ fica abaixo da dobra; com a página rolada
+    // o ⌂ com a vista já no começo ficava calado. ⌂, − e + funcionam em qualquer rolagem, sem mudar layout nem rolar a página sozinhos.
+    func testZOOMROLADA_BotoesDaVistaFuncionamComAPaginaRolada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length,T0=window.toast,ult='';window.MINI3OFF=1;PR.setupDone=1;window.toast=function(t){ult=String(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2400;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.stones=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.m=S.mods[0];S.m.x=600;S.tab=0;draw();panel();await W(500);
+        var pad=document.createElement('div');pad.style.height='1500px';pad.id='__pad';document.body.appendChild(pad);
+        var vb=function(){return VB.x+','+VB.y+','+VB.w+','+VB.h};var rodada=async function(y){window.scrollTo(0,y);await W(100);var sy=Math.round(window.scrollY),r={};
+          VB={x:0,y:0,w:900,h:560};setVB();ult='';$('zr').click();await W(80);r.casa=(vb()==='0,0,900,560'&&/já está no começo/.test(ult)?'avisa':'CALADO '+vb()+' '+ult);
+          ult='';$('zo').click();await W(80);r.menos=/parede inteira/.test(ult)?'avisa':'CALADO';
+          $('zi').click();await W(80);r.mais=VB.w<900?'aproxima':'NADA';var v1=vb();ult='';$('zr').click();await W(80);r.casaComZoom=vb()==='0,0,900,560'&&v1!=='0,0,900,560'?'volta':'NADA '+vb();
+          r.rolagem=Math.round(window.scrollY)===sy?'rolagem igual':'ROLAGEM MUDOU '+sy+'→'+Math.round(window.scrollY);return '⌂ '+r.casa+' · − '+r.menos+' · + '+r.mais+' · ⌂ com zoom '+r.casaComZoom+' · '+r.rolagem+(sy>4?' · rolada':'')};
+        R.semRolar=await rodada(0);R.rolada=await rodada(300);
+        pad.remove();window.scrollTo(0,0);window.toast=T0;S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["semRolar"] as? String, "⌂ avisa · − avisa · + aproxima · ⌂ com zoom volta · rolagem igual")
+        XCTAssertEqual(o["rolada"] as? String, "⌂ avisa · − avisa · + aproxima · ⌂ com zoom volta · rolagem igual · rolada", "com a página rolada (barra abaixo da dobra a 1366×768) os 3 botões funcionam e a página não rola sozinha")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // ITEM 41 (Chefe 28/11, achados da auditoria de toques): (1) a dica do 3D dizia "arraste pra mover", mas arrastar gira a vista (move segurando o dedo
     // ou com 2 toques no lugar novo); (2) 2 toques num ponto sem chão/parede levavam o módulo pra "a NaN mm" (depois 0); (3) a bolinha da alça da geladeira
     // tinha raio 7 do desenho (6 px na tela); (4) a alça de medida do escolhido fica em cima da lateral do vizinho encostado: toque parado nela escolhe o

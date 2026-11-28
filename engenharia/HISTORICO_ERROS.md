@@ -2713,6 +2713,38 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - 6 testes antigos que esperavam a união automática agora unem pela opção manual e conferem os MESMOS valores;
   - 67/67 testes relacionados passam a 1366 e a 430.
 - **Evidência:** `engenharia/diagnosticos/etapa2/code2/i21_corte_{antes,depois}.png`.
+
+## ETAPA 2 · itens 22, 32, 33 e 34 (Adauto 27/11): "adicionar a travessa" sobe a tela e não põe nada; travessa trocava o teto — Code 2
+- **Sintomas:**
+  - Tocar em "Travessa frontal" no aéreo ou no armário alto não punha peça nenhuma e a caixa voltava vazia.
+  - No balcão, ligar a travessa tirava o teto, subia as laterais 15 mm e crescia as portas (650 → 705).
+  - O painel pulava (1039 → 190) e o controle tocado saía da tela.
+- **Causa:**
+  - A caixinha antiga era "travessa NO LUGAR do teto" (`m.trav`). No aéreo e no alto, `sanBase` desfazia na hora, pela regra "sempre tem base em cima".
+  - O redesenho do painel não guardava a rolagem. Depois, o scroll anchoring do navegador e os blocos que outros embrulhos põem acima do controle mexiam na posição.
+- **Correção (na causa):**
+  - Marcas independentes `travT`, `travOff`, `tetoAdd` e `tetoOff`, aplicadas num embrulho do `partsOf`. A lista, o 3D, o corte, o DXF e o orçamento usam a mesma peça.
+  - Caixinhas novas `data-tt`, com tratador próprio antes do tratador antigo do `data-rc`.
+  - `sanBase` e a geometria antiga não mudaram.
+  - Painel: `overflow-anchor:none` e ajuste ao controle tocado, depois de todos os embrulhos.
+- **Conferência:**
+  - Catálogo inteiro: 266 trocas, todas mexem só na própria peça e voltam iguais, sem sobreposição nova no 3D.
+  - 6 modelos com gaveta no lugar recusam, com o motivo.
+  - Todos os controles da Estrutura de 5 tipos de módulo, a 1366 e a 430.
+- **Teste:** `testEtapa2TravessaETetoIndependentesSoAPropriaPecaTelaNaoPula`, que falha antes (não existe a caixinha nova; no aéreo, nenhuma peça) e passa depois.
+- **Escapou da entrega do item 21 (a74b6387), achado agora pela bateria completa e pelo Claude 3:**
+  - **Bug real: encaixar no 3D mudava o vizinho.**
+    - Causa: `__mv3.encaixa` chama `draw()`, e o tamponamento automático tirava o tamponamento DO VIZINHO na junta (fere a REG12).
+    - Antes, a base unida fazia a colisão aparecer e o encaixe era recusado antes disso. Sem a união, a peça do vizinho sumia e a colisão também.
+    - Correção: no encaixe, os outros módulos voltam exatamente como estavam antes da conferência de colisão. Só o móvel encaixado muda.
+    - Teste: `testMoverNo3DEncaixaNaParedeAte20mmSoDeCostasSemMexerEmNinguem` (sem mudança).
+  - **10 testes montavam projeto com módulos encostados e contavam peças unidas pela regra antiga.** Passam em 02c69024 e falham em a74b6387. Na época rodei só os 67 relacionados; o certo era a bateria completa. Ajustes, sem afrouxar nenhuma conferência:
+    - unem pela opção manual "Unir" e conferem os MESMOS valores: `testEstruturaAfastamento…`, `testTamponamentoAutomatico…` e `testCenarioCompleto…`;
+    - volta como projeto antigo (a travessa corrida só existe no projeto antigo) e confere o mesmo: `testValoresCobra…`;
+    - `testPlanoDeCortePecaBranca…`: a travessa corrida em cor virou 2 travessas, porque o "Unir" junta só base e rodapé. Valores novos, com comentário;
+    - contagens novas, com o valor antigo no comentário: `testMedidaDePeca…`, `testPlanoDeCorteTodaPeca…`, `testFASE5_EtiquetaDoDxf…` e `testNOMEIPAD_ComAMetrica…`. As conferências de qualidade (0 problemas, 0 sobreposições, nenhum nome perdido) continuam iguais;
+    - seção nova "Bases unidas" (item 2): `testEdicaoAmbiente3D…` e `testSetinhaDoTitulo…`.
+  - Desta vez, bateria completa nas duas larguras antes de entregar.
 ## DOB-METAL (ETAPA 2 item 3, R3, 26/11): dobradiça na cor da porta — Claude 3
 - **Módulo:** 3D, todas as portas com dobradiça de caneco (balcão, aéreo, torre, guarda-roupa) e o basculante.
 - **Reproduzir:** pintar a porta com a ferramenta Pintar (madeira com textura) e abrir a porta no 3D. Calço, braço, caneco e parafusos saem na madeira da porta.
@@ -3075,6 +3107,49 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Validação:** sonda `tools/sondas/s50_guarda_sem_escrita.js` (120 modelos postos fora do lugar + cozinha sobreposta; desenhar, 3D, campo, parede menor): projeto e avisos iguais ao código antigo, bit a bit. Desempenho do `draw`/`partsOf` igual.
 - **Teste:** `testConfineAllRoomClampNaoEscrevemNosModulosMesmoResultado` (espião nos campos). No c38c9ba: 8 escritas em x e 10 em b; agora 0, mesmo lugar e mesmos avisos.
 - **Fora (classificação):** o `sanM` (dentro do `partsOf`) regrava o mesmo valor (não muda nada) — comportamento correto. Pedra e móveis soltos no `roomClamp` ainda usam escrever-e-desfazer (mesmo mecanismo) — risco identificado, não pedido.
+- **Correção (Chefe 28/11): "Unir" sem travessa e sem moldura fazia função sumir (§0).** O "Unir" manual agora une também a travessa/régua corrida e a moldura corrida, com escolha por peça.
+  - `testPlanoDeCortePecaBranca…` e `testValoresCobra…` montam a união pelo "Unir", com base, rodapé, travessa e moldura marcadas, e voltaram aos valores ORIGINAIS.
+  - Prova das contagens que subiram: com o "unir sozinho" antigo forçado numa cópia do editor, `testMedidaDePeca…`, `testPlanoDeCorteTodaPeca…`, `testFASE5…` e `testNOMEIPAD…` voltam exatamente a 6308, 12836, 284/142 e 281/257/271. A diferença é só a união.
+  - Testes novos: `testEtapa2UnirManualTravessaEMolduraCorridaPeloBotaoComCorte` e `testEtapa2VizinhoIgualBitABitEmTodoCaminhoDeMoverCriarCopiarEncaixar`.
+
+## CEGO-ESTRUTURA (ETAPA 2 item 7, Adauto/Chefe 27/11, R12/R13/R15 descritas pelo Chefe): canto cego E e D — Claude 3
+- **Pedido:** balcão canto cego com:
+  - laterais E e D inteiras, base e fundo;
+  - travessa da frente e de trás deitadas: embutidas entre as laterais OU apoiadas em cima (regra do item 6);
+  - painel cego do lado do canto, régua vertical entre o cego e a porta, porta com 2 dobradiças, espelhamento E/D;
+  - medidas de fora iguais e lista = 3D;
+  - projeto antigo igual, com "Atualizar estrutura" e desfazer.
+- **Antes:** o canto cego tinha só a travessa frontal em pé (70, no rebaixo das laterais). Faltava a de trás e a opção embutida/apoiada.
+- **Implementação (bloco CANTO CEGO no fim do editor; embrulho do partsOf, sem mexer no núcleo; combinado com o Code 2):**
+  - marca `m.cgTrav` ('emb' | 'apo'), só no balcão com painel cego (`temCego`, !sup, !corner);
+  - 'emb': laterais inteiras e travessas `Travessa deitada · frente#1` e `· trás#1` de W − 2e × `cnTravMm` (80), entre as laterais;
+  - 'apo': laterais 1 espessura mais baixas e travessas de W × 80 por cima;
+  - a travessa em pé sai e a lateral fica sem o rebaixo dela no 3D;
+  - 3D pelo `cxz`, com a chave de cada peça;
+  - o módulo novo do catálogo nasce com 'emb' (é criação);
+  - sem a marca nada muda; a aba Estrutura mostra "Atualizar estrutura" e, com a marca, "Embutidas/Apoiadas", a largura e "Voltar à estrutura antiga". Tudo com snap/desfazer;
+  - o `ttParts` do Code 2 (item 22) já exclui `m.cgTrav`.
+- **Não muda:** aéreo canto cego (regra: base em cima e embaixo), painel cego, régua espaçadora, porta (2 dobradiças), 165° e E/D.
+- **Divisória interna, parametrizada** (decisão do Adauto pendente, Chefe 28/11): por padrão fica como era (620). A opção "Divisória interna sobe até a travessa" (`m.cgDivTopo`) leva a 675, encostada embaixo da travessa deitada. Com desfazer.
+- **Teste:** `testE2ITEM7_CantoCegoComTravessasDaFrenteEDeTrasEmbutidasOuApoiadas`. No HEAD anterior falha (sem a estrutura nem o botão); agora passa.
+
+## PV2D (ETAPA 2 item 9, Adauto/Chefe 27/11, V2/V3): perspectiva livre como modo a mais do editor 2D — Claude 3 · 1ª parte
+- **Pedido:** câmera em perspectiva livre dentro do 2D, girando em volta dos módulos (frente/cima/lado/diagonal), com a mesma geometria do partsOf.
+  - Na mesma vista: tocar seleciona, 2 toques configuram, alças, cota até a parede, pôr do catálogo ao lado.
+  - Gestos: 1 dedo edita/arrasta; 2 dedos giram; pinça dá zoom; a câmera nunca move peça; mouse meio/direito gira e a roda dá zoom; caneta com palma.
+  - Todas as vistas e ferramentas do 2D continuam.
+- **1ª parte (feita):**
+  - botão "🧊 Perspectiva" na barra do 2D: a mesma cena do 3D (as caixas do partsOf) encaixada no quadro do desenho; o painel ao lado e a barra de baixo continuam;
+  - barra própria: Frente, Cima, Lado, Diagonal e "↩ 2D";
+  - `PV2D` nos tratadores do 3D:
+    - 2 dedos giram e a pinça dá zoom; 1 dedo nunca move a câmera; mouse do meio/direito gira, a roda dá zoom (a de sempre);
+    - 1 dedo no móvel arrasta na hora (sem segurar 350 ms);
+    - 1 toque escolhe com contorno (`LP3MI`); 2 toques abrem as configurações pelo `pcEdOpen` do Claude 4;
+    - a caneta usa o `window.PALMA` do Claude 4, que já cobre o 3D.
+  - Fechar volta ao 2D. O projeto não muda por abrir, girar ou fechar.
+- **Ajuste (Chefe 28/11, mesma regra do TOQUE-ALCA do Claude 4):** o arrasto do móvel só começa depois de `SEL.mov` px, então a tremida de 5 px não move. Caindo um 2º dedo com o arrasto já começado (pinça em cima do móvel), o móvel volta para onde estava e o desfazer não ganha passo. Teste `testE2ITEM9_TremidaEPincaNaoMovemOMovelNaPerspectiva`: no a8e75134 a pinça deixava o móvel fora do lugar.
+- **2ª parte (a fazer):** alças de tamanho, cota até a parede e "pôr do catálogo ao lado" dentro da perspectiva.
+- **Teste:** `testE2ITEM9_PerspectivaLivreNo2DGestosSemACameraMoverPeca` (falha antes, passa agora). Print: `tools/sondas/etapa2_c3/item9_perspectiva_no_2d.png`.
 
 ## PLANTA-TAMP (achado do Code 1, CRUZA-PROJETO, Chefe 28/11): a planta desenhava o módulo sem o tamponamento — Claude 4
 - **Antes:** na planta o módulo terminava em 2705, e no 3D, na lista, no corte e na pedra em 2735 (tamponamento de 30). Medi pelas caixas do 3D (`__boxes`): o tamponamento esquerdo ocupa x 1475..1505 e vai do fundo até 25 mm à frente do corpo (z 6..591).
@@ -3126,3 +3201,37 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - 10 rodadas isoladas com o app corrigido: Parte1b 10/10, ParteB 10/10.
   - As rodadas em família e o PesDeMetal estão abaixo.
 - **ESTAVEL (cont.):** com exploração completa, a 1366 a ParteB também achou "Isométrica" e "Lado" (vistas prontas do 3D) calados quando a câmera já estava nessa vista. Agora avisam "Já está na vista … · gire com o dedo pra mudar". ParteB e PesDeMetal juntos passam.
+
+### CRUZA-PROJETO (Code 1, 27–28/11, item 40, parte projeto × 2D × 3D × planta)
+- **Cenário:** cozinha de exemplo (`demoScene`). 9 módulos: fundo, parede esquerda (`wing:'e'`), parede direita (`wing:'d'`), aéreos.
+- **Comportamento correto:**
+  - **3D × dado:** posição de cada módulo, nas 3 paredes. Na parede esquerda, `x` ao longo da parede = `z` do 3D (x 900 → z 900..1760).
+  - **Planta × 3D:** o corpo de cada módulo bate ao milímetro (escala 0,1507 px/mm).
+  - **Mover e desfazer:** +100 mm no módulo da parede esquerda move o 3D (z 900 → 1000) e a planta (196 → 211 px). O ↶ volta os três.
+  - **Lados na parede esquerda:** a peça interna `Lateral esquerda#1` do módulo 3 fica junto da parede do fundo (z 908). A lista do corte chama essa peça de "Lateral direita", que é o lado de quem olha a parede de dentro. Bate com a decisão de 25/11 e com `testParedeEsquerdaNomesDosLadosSeguemQuemOlha`.
+  - **Base corrida:** a `Base inferior` do módulo 1 vai de 905 a 2705, por baixo do módulo 2. É a base unida. Esse assunto é do item 2/21 (Code 2).
+- **Risco identificado (diferença não identificada como intencional):**
+  - Na planta (`plantaSvg`), o polígono do módulo é só o corpo, sem os tamponamentos. Exemplo: o módulo 2 termina em 2705 na planta, e no 3D, na lista e no corte o tamponamento direito de 30 mm vai até 2735. A pedra, na mesma planta, vai até 2735.
+  - Quem mede pela planta vê o móvel 30 mm menor do que ele ocupa.
+  - **Não mexido:** precisa da decisão do Adauto (planta com ou sem tamponamento).
+- **Coberto por testes existentes (passaram 587/587 em 28/11):** sentido do arrasto e do toque no 2D da parede esquerda, nomes dos lados, projeto antigo na parede esquerda, trena e plano de corte da parede esquerda (12 testes `testParedeEsquerda*`/`testParedeDaEsquerda*`). Identidade de módulo e peça: D23 (`testIdentidadeUnica`).
+
+## INTEGRAÇÃO 28/11 · testValoresCobraAChapaPeloQueFoiUsadoNaoAChapaInteira "linhasDeChapaComOMesmoPreco: 0 · esperado 1" — Claude 5
+- **Reproduzido** na integração 48b46033 (a 1366); no ramo do Claude 5 (itens 13/20/30/31) passava.
+- **Causa (não é o item 13):** o teste precisa de 2 linhas de chapa com o mesmo preço; vinham da "Travessa frontal (régua corrida)" de 2700 (sem nome de cor, 2º grupo de chapa de cor). O item 21 (a74b638, aprovado) não une mais travessa sozinho e o "Unir" manual une só base e rodapé; a régua corrida continua só no projeto antigo (módulos sem `unV`).
+- **Correção (só o cenário do teste, a conferência é a mesma):** os balcões vêm de um arquivo antigo (salvo sem `unV`, reaberto), como o item 21 manda deixar. Comentário no teste com o pedido e a data. Passa 13/13; os 9 testes de custos, fita, N11, confineAll, item 34 e ambientes também passam no integrado.
+
+## ITEM 40 (A) · corrediça do caixote de gavetas fora do orçamento — Claude 5 (aprovado pelo Chefe 28/11)
+- **Erro (achado da sonda s52):** a gaveta do CAIXOTE (guarda-roupas, torres, closet) tem o par de corrediça telescópica nas peças ("Corrediça telescópica (caixote)") e no 3D, mas o orçamento contava 0. É o erro 3 do §11 (no 3D e fora da lista/orçamento).
+- **Causa:** o `mCost` conta a corrediça pelo nome exato da frente ("Frente de gaveta", "Frente (porta tempero)", "Gaveta interna · frente"); a frente do caixote se chama "Frente de gaveta (caixote)".
+- **Família:** catálogo inteiro (s52 + teste): 12 modelos com caixote (50 gavetas) ficavam sem corrediça; nos outros, frentes = pares no orçamento.
+- **Conta (Estante torre aberta com gavetas embaixo, preço médio da corrediça R$ 35, × 2,5):**
+  - antes: corrediças 0 · material R$ 556,35 · valor R$ 1.390,87;
+  - depois: corrediças 3 pares × R$ 35 = R$ 105 · material R$ 661,35 · valor R$ 1.653,37.
+- **Correção:** "Frente de gaveta (caixote)" conta 1 par de corrediça telescópica (`r.drw`). Orçamentos já salvos (cópias) não mudam.
+- **Teste:** `testItem40CorredicaDoCaixoteDeGavetasEntraNoOrcamento` (no código de antes: 0 pares e 12 modelos com diferença; depois: 3 pares e o catálogo inteiro bate).
+
+### Item 34 · salvar/reabrir e desfazer controle por controle (Chefe 28/11) — Claude 5
+- A sonda s51 (agora com salvar/desfazer/reabrir) aciona cada controle e, se ele mudou o projeto: espera o salvamento automático e confere que o arquivo é o estado da tela; toca ↶ e confere que volta ao estado de antes; reabre o arquivo e confere igual. Se mudou preços: confere que ficou gravado.
+- Resultado a 1366: Valores 23 controles que mudam o projeto, Preços 77, Plano de corte 61, ArqueCut 8 → todos salvam, desfazem e reabrem iguais; preços gravados. Clientes: nenhum controle muda o projeto aberto (cria/abre outro).
+- 1ª rodada acusou "não desfaz" por erro da sonda (reabria antes de desfazer e mexia no histórico); corrigida a ordem.

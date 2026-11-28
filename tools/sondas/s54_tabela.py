@@ -37,6 +37,18 @@ linhas = [
     ('(6) LED · módulo certo (onde o app aceita LED)', ('6_led', 'modulo')),
     ('(6) LED · encosta na peça tocada', ('6_led', 'superficie')),
     ('(6) LED · recusado pela regra atual', ('6_led', 'recusadoPelaRegra')),
+    ('(6p) LED na peça · caminho do toque', ('6p_led_peca', 'caminho')),
+    ('(6) LED de módulo · prévia #ledprev confirmada', ('6_led', 'previaConfirmada')),
+    ('(6) LED de módulo · foi pro rodapé', ('6_led', 'noRodape')),
+    ('(6p) LED na peça · toques', ('6p_led_peca', 'toques')),
+    ('(6p) LED na peça · base do acerto (sem escolha e sem recusa com aviso)', ('6p_led_peca', 'criaramOuDeviamCriar')),
+    ('(6p) LED na peça · recusado com aviso do app', ('6p_led_peca', 'recusadoComAviso')),
+    ('(6p) LED na peça · módulo certo', ('6p_led_peca', 'modulo')),
+    ('(6p) LED na peça · peça certa (pk)', ('6p_led_peca', 'peca')),
+    ('(6p) LED na peça · encosta na peça tocada', ('6p_led_peca', 'superficie')),
+    ('(6p) LED na peça · pediu escolha (não é erro)', ('6p_led_peca', 'pediuEscolha')),
+    ('(6p) LED na peça · toque sem LED e sem aviso', ('6p_led_peca', 'nenhumLEDsemAviso')),
+    ('(6p) LED na peça · tempo p95 (ms)', ('6p_led_peca', 'ms', 'p95')),
     ('destaque: acende só a peça escolhida', ('destaque',)),
     ('toque que mudou o projeto sozinho', ('toqueMudouProjeto', 'n')),
     ('ids · caixa do 3D sem pk (peça)', ('ids', 'semPk')),
@@ -62,7 +74,7 @@ print('### Exemplos de erro (primeiros 40, %s)\n' % a.rotulo)
 print('| Cenário · vista | Peça no ponto | px² | Toque (x,y) | Selecionou | Destaque | Inequívoco |'); print('|---|---|---|---|---|---|---|')
 for f in (A.get('falhas') or [])[:40]:
     print('| %s | %s | %s | %s | %s | %s | %s |' % (f.get('c'), f.get('peca'), f.get('px'), f.get('xy'), f.get('sel'), f.get('hl'), 'sim' if f.get('inq') else 'não'))
-for nm, k in (('Ids', ('ids', 'ex')), ('LED', ('6_led', 'ex')), ('Toque que mudou o projeto', ('toqueMudouProjeto', 'ex'))):
+for nm, k in (('Ids', ('ids', 'ex')), ('LED', ('6_led', 'ex')), ('LED na peça', ('6p_led_peca', 'ex')), ('LED na peça · recusas com aviso', ('6p_led_peca', 'recusaEx')), ('Toque que mudou o projeto', ('toqueMudouProjeto', 'ex'))):
     ex = g(A, *k)
     if isinstance(ex, list) and ex:
         print('\n### ' + nm + ' (exemplos)\n')

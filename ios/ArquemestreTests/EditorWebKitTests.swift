@@ -19771,6 +19771,25 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* Item 34 (28/11): Clientes · digitar na busca encolhia a lista e a tela descia o campo da busca (430: ~350 px; no celular, pra trás do teclado).
+       Agora o campo fica no mesmo lugar enquanto a pessoa digita; o filtro continua o mesmo; limpar a busca volta a lista inteira. */
+    func testItem34BuscaDeClientesNaoTiraOCampoDoLugar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        ['Ana Souza','Bruno Lima','Helena Prado'].forEach(function(n,i){newProjFor({nome:n,end:'Rua '+i,cidade:i%2?'Frutal':'Uberaba',tel:''});draw();saveNow()});
+        window.CLQ='';document.getElementById('clb').click();await W(200);var q=document.getElementById('clq'),sc=document.getElementById('clm').firstElementChild;/* o caso da sonda: poucos clientes e o campo no meio da tela; a lista encolher puxava a rolagem */q.scrollIntoView({block:'center'});await W(50);var y0=q.getBoundingClientRect().top,n0=document.querySelectorAll('#cllist [data-cl], #cllist > *').length;
+        q.focus({preventScroll:true});q.value='Teste';q.dispatchEvent(new Event('input',{bubbles:true}));await W(100);/* nada casa: a lista fica vazia (o caso da sonda) */var y1=document.getElementById('clq').getBoundingClientRect().top;q.value='Helena';q.dispatchEvent(new Event('input',{bubbles:true}));await W(100);y1=Math.abs(y1-y0)>Math.abs(document.getElementById('clq').getBoundingClientRect().top-y0)?y1:document.getElementById('clq').getBoundingClientRect().top;var n1=document.querySelectorAll('#cllist [data-cl], #cllist > *').length,tx=document.getElementById('cllist').textContent;
+        R.campo=Math.abs(y1-y0)<=2?'parado':'andou '+Math.round(y1-y0);R.filtro=(n1<n0)+' · '+/Helena/.test(tx)+' · '+!/Bruno/.test(tx);
+        q.value='';q.dispatchEvent(new Event('input',{bubbles:true}));await W(100);R.limpa=(document.querySelectorAll('#cllist [data-cl], #cllist > *').length===n0)+' · '+(document.getElementById('cllist').style.minHeight==='');
+        document.getElementById('clm').hidden=true;window.CLQ='';R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["campo"] as? String, "parado", "o campo da busca não sai do lugar enquanto digita")
+        XCTAssertEqual(o["filtro"] as? String, "true · true · true", "o filtro continua o mesmo")
+        XCTAssertEqual(o["limpa"] as? String, "true · true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto, via Chefe 24/11): cada módulo (m.uid) e peça (m.uid|pk) com a mesma chave no editor (partsOf), no 3D,
     // na lista, no corte e no DXF; cópia ganha id novo (módulo e peças); salvar/reabrir e desfazer/refazer mantêm; Meus modelos ganha id novo; id que existe
     // nunca é trocado; id repetido ao abrir: avisa e só muda se a pessoa mandar

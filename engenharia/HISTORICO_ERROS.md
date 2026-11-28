@@ -3410,6 +3410,7 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Causa: o laranja era pintado no meio do build (passada única por módulo). Peças desenhadas depois não acendiam e as que copiam a cor da frente copiavam o laranja.
   - Correção: uma passada no fim do build (último wrapper do escopo) acende as caixas com pk igual ou ppk = peça-mãe (engrossos do tamponamento).
   - Teste: testDESTAQUE, 5 modelos com 100% (antes: balcão 11/16, gaveteiro 12/19, aéreo 5/9).
-- **IDS-CORR (comprovado):** a corrediça telescópica tinha 18 caixas sem pk (gaveteiro de 3).
-  - Correção: pk próprio 'Corrediça telescópica#n' (n da gaveta); continua sem acender junto com a frente.
+- **IDS-CORR (comprovado):** a corrediça telescópica tinha 18 caixas sem pk e sem marca (gaveteiro de 3).
+  - Correção revista: dar pk de peça quebrou a regra "o 3D não inventa peça" (testCatalogoInteiroMesmaPeca e testToPecaQueO3DOfereceApagar). Ferragem não é peça. A corrediça fica sem pk, identificada pelo nome e marcada ferr=1, como a dobradiça.
+  - testDESTAQUE: caixa sem pk só se for ferragem marcada.
 - **Auditoria de LED do catálogo (antes × depois, normal e espelhado):** rodando. A tabela vai para o Chefe e para o Claude 5 medir.

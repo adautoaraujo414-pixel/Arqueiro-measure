@@ -17528,7 +17528,7 @@ return JSON.stringify({out:out.join(' | '),dica:dica,errs:__errs.length-e0});
 
     /// DESTAQUE-FIM (Etapa 3 · 3.5, sonda s54 do Claude 5): a peça escolhida acende sozinha e inteira — antes o tamponamento, a travessa e o batente não
     /// acendiam e a porta/frente acendia o módulo inteiro (o laranja era pintado no meio do desenho e copiado pelas peças desenhadas depois).
-    /// IDS-CORR: as caixas da corrediça telescópica têm pk próprio (antes 18 sem pk no gaveteiro de 3 gavetas).
+    /// IDS-CORR: caixa sem pk só se for ferragem marcada (ferr), como a corrediça — peça não fica sem pk e ferragem não ganha pk de peça (o 3D não inventa peça).
     func testDESTAQUE_PecaEscolhidaAcendeSozinhaEInteiraECorredicaComId() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -17536,13 +17536,13 @@ window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){ret
 var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
 open3D();await W(200);var OR='255,159,26',semPk=0;
 for(const n of ['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas','Balcão canto cego · cego na direita (porta na esquerda)','Estante aberta']){loadState(initLimpo());S.env='cozinha';S.mods=[];newTpl(achar(n));var m=S.mods[0];m.tl=1;m.tr=1;m.tt=1;draw();re3();window.SEL3=null;__build();
- semPk+=__boxes().filter(function(b){return /^0:/.test(String(b.nm))&&!b.pk&&!b.nol}).length;
+ semPk+=__boxes().filter(function(b){return /^0:/.test(String(b.nm))&&!b.pk&&!b.nol&&!b.ferr}).length;
  var P=partsOf(m).filter(function(p){return p.pk&&!p.noDraw}),ok=0,ruim=[];P.forEach(function(p){window.SEL3={mi:0,pk:p.pk};__build();var L=__boxes().filter(function(b){return String(b.c)===OR}),nm={};L.forEach(function(b){nm[String(b.nm).split(':')[1]]=1});var k=Object.keys(nm);if(L.length&&k.length===1&&k[0]===p.name)ok++;else ruim.push(p.pk+'→'+(k.join('+')||'nada'))});window.SEL3=null;
  out.push(n+' '+ok+'/'+P.length+(ruim.length?' '+ruim.slice(0,3).join(','):''))}
 return JSON.stringify({out:out.join(' | '),semPk:semPk,errs:__errs.length-e0});
           """#)
         XCTAssertEqual(o["out"] as? String, "Balcão 2 portas 16/16 | Gaveteiro 3 gavetas 19/19 | Aéreo 2 portas 9/9 | Balcão canto cego · cego na direita (porta na esquerda) 18/18 | Estante aberta 19/19")
-        XCTAssertEqual(o["semPk"] as? Int, 0, "toda caixa desenhada do módulo tem pk")
+        XCTAssertEqual(o["semPk"] as? Int, 0, "toda caixa desenhada do módulo tem pk ou é ferragem marcada")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

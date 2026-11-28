@@ -3241,3 +3241,11 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - **Teste:** `testVizinhoIgualProfundidadeDigitadaSoNoModuloEPosicaoDigitadaPerguntaSemMoverCalado`. No código de antes: 600/600/600 e sem sugestão; depois: 560/600/560, sugestão, aplicar e desfazer (1366 e 430).
 - **E3 · NÃO era erro (falso positivo da sonda s53):** a sonda chamava `setv('x','100')` com TEXTO; `"100"+900` vira texto e o `confine` levava o móvel para o fim da parede. A tela passa número (`+t.value`) e, com número, o app já pergunta "Assim o módulo entra dentro do vizinho · Aplicar mesmo assim / Cancelar" sem mover nada. O mesmo teste ficou de proteção desse comportamento (passa antes e depois).
 - **R1 · risco (sem correção):** o desenho grava `m.wing=0` na memória (campo padrão); medido: o arquivo NÃO é regravado, a data não muda, o projeto não fica "alterado" e o histórico não ganha passo. Só o estado do desfazer guarda `wing:0` (dado igual). Igual no c38c9ba.
+
+## TECLADO-ABAS (28/11): 2 testes de teclado falham quando o Chromium da bateria tem mais de uma aba — AMBIENTE, não código — Claude 5
+- **Testes:** `testDepoisDeDigitarOPrimeiroToqueNoBotaoPegaAPaginaNaoDesceNoMeioDoToque` e `testDigitacaoTecladoFisicoTabEnterEPrecoAoSairDoCampoNaoPerdeValor`.
+- **Prova:** isolados, 5× no c38c9ba e 5× no HEAD c123537:
+  - Chromium com 2 abas abertas (a do editor + outra): 20/20 FALHAM, iguais nos dois códigos ("teclado do app: FECHOU…", "tecladoAbreComAFolga: false"…);
+  - Chromium novo com 1 aba só (a do editor): 20/20 PASSAM nos dois códigos.
+- **Causa provável:** com outra aba aberta, a aba do teste não é a que tem o foco; foco, teclado e eventos de campo não chegam como no app (só nesses testes, que dependem do foco real do campo).
+- **Como rodar:** a bateria precisa de um Chromium com UMA aba, a do editor (`curl -X PUT ".../json/new?<editor>"` e fechar o `about:blank`). Nada no código muda.

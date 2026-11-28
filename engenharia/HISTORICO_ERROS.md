@@ -3432,3 +3432,21 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Prova nova (`cadeadoXvao`):** o toque no 🔓 não abre o vão e muda só o cadeado; os 2 toques na faixa livre abrem o vão e não mexem no cadeado.
 - **Resultado:** passa a 375, 430 e 1366.
 - O caso do LED no ripado fica com o ajuste do Claude 3 (db5c08d9).
+
+## PECA-NO-TOQUE (Chefe 28/11: "exponha o que está no sel3 como window.pecaNoToque(x,y), a mesma lógica, sem copiar") — Claude 4
+- **API:** `window.pecaNoToque(x,y)` → `{mi, pk, ppk, nm, face, ponto:[x,y,z], via, ambig:[{mi,pk}]}` ou `null`.
+  - x,y em px do canvas do 3D.
+  - `face`: 'esq' | 'dir' | 'baixo' | 'cima' | 'tras' | 'frente'.
+  - `via`: 'face' (superfície da frente) ou 'tampNear' (ajuda do tamponamento fino no vazio).
+  - `ambig`: outras peças a até 8 px.
+  - Não seleciona nem muda nada.
+- **Sem cópia:**
+  - a escolha do `sel3` base virou `peca3(cx,cy)`, usada pelo próprio `sel3` e pela `pecaNoToque`;
+  - o wrapper TAMP-NEAR usa a `pecaNoToque`;
+  - `rayHits` passou a guardar também o ponto e a face do acerto (campos novos, quem já usava não muda).
+- **Mesma ordem do toque:** sem peça no ponto exato e com parede no ponto, devolve `null`, porque o toque vai pra parede (escolha de porta/janela, que vem antes na cadeia do `sel3`).
+- **Teste:** `testPECANOTOQUE_MesmaEscolhaDoToqueSemMudarNada`.
+  - Grade proporcional à tela, nas vistas iso, frente e lado, com balcão e aéreo.
+  - Toda resposta é igual à escolha do `__sel3` no mesmo ponto, com formato completo, e não muda o projeto.
+  - Passa a 1366, 430 e 375.
+- Os 159 testes de 3D, seleção e tamponamento a 1366: 158 passam. A única falha é a `PosicaoDigitadaPertoDaParede…`, já conhecida e vinda do Code 2.

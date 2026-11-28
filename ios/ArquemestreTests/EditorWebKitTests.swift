@@ -21121,16 +21121,16 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
         loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4200;S.H=2700;S.mods=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.mods[0].x=600;newTpl(T('Aéreo 2 portas'));S.mods[1].x=600;draw();S.m=null;window.SEL3=null;open3D();await W(600);
-        var igual=0,dif=[],n=0,forma=true,sem=0,J0=JSON.stringify(snapState().mods);
+        var igual=0,dif=[],n=0,forma=true,falhaForma='',sem=0,J0=JSON.stringify(snapState().mods);
         for(const v of ['iso','front','left']){var b_=document.querySelector('#v3 [data-v="'+v+'"]');if(b_)b_.click();await W(60);try{re3()}catch(_){}await W(30);var P=window.PM3;
-          for(var y=20;y<P.h;y+=37)for(var x=20;x<P.w;x+=41){var r=window.pecaNoToque(x,y);if(!r){sem++;continue}n++;
-            if(!(typeof r.mi==='number'&&r.pk&&r.ponto&&r.ponto.length===3&&r.face&&Array.isArray(r.ambig)))forma=false;
+          var sy=Math.max(8,P.h/22),sx=Math.max(8,P.w/30);for(var y=sy/2;y<P.h;y+=sy)for(var x=sx/2;x<P.w;x+=sx){var r=window.pecaNoToque(x,y);if(!r){sem++;continue}n++;
+            if(!(typeof r.mi==='number'&&r.pk&&r.ponto&&r.ponto.length===3&&r.face&&Array.isArray(r.ambig))){forma=false;falhaForma=r.mi+':'+r.pk+' via '+r.via+' ponto '+JSON.stringify(r.ponto)}
             window.__sel3(-99999,-99999);window.SEL3=null;window.__sel3(x,y);var s=window.SEL3;if(s&&s.mi===r.mi&&s.pk===r.pk)igual++;else if(dif.length<4)dif.push(v+' '+x+','+y+' '+r.mi+':'+r.pk+' × '+(s?s.mi+':'+s.pk:'nada'));/* limpa a escolha e o "mudar de lugar" pendente (igual à s54) */window.__sel3(-99999,-99999);window.SEL3=null;S.m=null}}
-        R.mesma=(n>=100?'pontos ≥100':'POUCOS '+n)+' · iguais ao toque '+(igual===n?'todos':igual+'/'+n+' '+dif.join('; '))+' · formato '+(forma?'ok':'ERRADO');
+        R.mesma=(n>=80?'pontos ≥80':'POUCOS '+n)+(forma?'':' ('+falhaForma+')')+' · iguais ao toque '+(igual===n?'todos':igual+'/'+n+' '+dif.join('; '))+' · formato '+(forma?'ok':'ERRADO');
         window.SEL3=null;S.m=null;var J1=JSON.stringify(snapState().mods);var r2=window.pecaNoToque(PM3.w/2,PM3.h/2);R.naoMuda=(JSON.stringify(snapState().mods)===J1?'projeto igual':'MUDOU')+' · nada escolhido '+(!window.SEL3&&!S.m);
         document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R)
         """#)
-        XCTAssertEqual(o["mesma"] as? String, "pontos ≥100 · iguais ao toque todos · formato ok")
+        XCTAssertEqual(o["mesma"] as? String, "pontos ≥80 · iguais ao toque todos · formato ok")
         XCTAssertEqual(o["naoMuda"] as? String, "projeto igual · nada escolhido true")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }

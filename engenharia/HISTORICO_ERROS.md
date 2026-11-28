@@ -2713,3 +2713,35 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - 6 testes antigos que esperavam a união automática agora unem pela opção manual e conferem os MESMOS valores;
   - 67/67 testes relacionados passam a 1366 e a 430.
 - **Evidência:** `engenharia/diagnosticos/etapa2/code2/i21_corte_{antes,depois}.png`.
+
+## ETAPA 2 · itens 22, 32, 33 e 34 (Adauto 27/11): "adicionar a travessa" sobe a tela e não põe nada; travessa trocava o teto — Code 2
+- **Sintomas:**
+  - Tocar em "Travessa frontal" no aéreo ou no armário alto não punha peça nenhuma e a caixa voltava vazia.
+  - No balcão, ligar a travessa tirava o teto, subia as laterais 15 mm e crescia as portas (650 → 705).
+  - O painel pulava (1039 → 190) e o controle tocado saía da tela.
+- **Causa:**
+  - A caixinha antiga era "travessa NO LUGAR do teto" (`m.trav`). No aéreo e no alto, `sanBase` desfazia na hora, pela regra "sempre tem base em cima".
+  - O redesenho do painel não guardava a rolagem. Depois, o scroll anchoring do navegador e os blocos que outros embrulhos põem acima do controle mexiam na posição.
+- **Correção (na causa):**
+  - Marcas independentes `travT`, `travOff`, `tetoAdd` e `tetoOff`, aplicadas num embrulho do `partsOf`. A lista, o 3D, o corte, o DXF e o orçamento usam a mesma peça.
+  - Caixinhas novas `data-tt`, com tratador próprio antes do tratador antigo do `data-rc`.
+  - `sanBase` e a geometria antiga não mudaram.
+  - Painel: `overflow-anchor:none` e ajuste ao controle tocado, depois de todos os embrulhos.
+- **Conferência:**
+  - Catálogo inteiro: 266 trocas, todas mexem só na própria peça e voltam iguais, sem sobreposição nova no 3D.
+  - 6 modelos com gaveta no lugar recusam, com o motivo.
+  - Todos os controles da Estrutura de 5 tipos de módulo, a 1366 e a 430.
+- **Teste:** `testEtapa2TravessaETetoIndependentesSoAPropriaPecaTelaNaoPula`, que falha antes (não existe a caixinha nova; no aéreo, nenhuma peça) e passa depois.
+- **Escapou da entrega do item 21 (a74b6387), achado agora pela bateria completa e pelo Claude 3:**
+  - **Bug real: encaixar no 3D mudava o vizinho.**
+    - Causa: `__mv3.encaixa` chama `draw()`, e o tamponamento automático tirava o tamponamento DO VIZINHO na junta (fere a REG12).
+    - Antes, a base unida fazia a colisão aparecer e o encaixe era recusado antes disso. Sem a união, a peça do vizinho sumia e a colisão também.
+    - Correção: no encaixe, os outros módulos voltam exatamente como estavam antes da conferência de colisão. Só o móvel encaixado muda.
+    - Teste: `testMoverNo3DEncaixaNaParedeAte20mmSoDeCostasSemMexerEmNinguem` (sem mudança).
+  - **10 testes montavam projeto com módulos encostados e contavam peças unidas pela regra antiga.** Passam em 02c69024 e falham em a74b6387. Na época rodei só os 67 relacionados; o certo era a bateria completa. Ajustes, sem afrouxar nenhuma conferência:
+    - unem pela opção manual "Unir" e conferem os MESMOS valores: `testEstruturaAfastamento…`, `testTamponamentoAutomatico…` e `testCenarioCompleto…`;
+    - volta como projeto antigo (a travessa corrida só existe no projeto antigo) e confere o mesmo: `testValoresCobra…`;
+    - `testPlanoDeCortePecaBranca…`: a travessa corrida em cor virou 2 travessas, porque o "Unir" junta só base e rodapé. Valores novos, com comentário;
+    - contagens novas, com o valor antigo no comentário: `testMedidaDePeca…`, `testPlanoDeCorteTodaPeca…`, `testFASE5_EtiquetaDoDxf…` e `testNOMEIPAD_ComAMetrica…`. As conferências de qualidade (0 problemas, 0 sobreposições, nenhum nome perdido) continuam iguais;
+    - seção nova "Bases unidas" (item 2): `testEdicaoAmbiente3D…` e `testSetinhaDoTitulo…`.
+  - Desta vez, bateria completa nas duas larguras antes de entregar.

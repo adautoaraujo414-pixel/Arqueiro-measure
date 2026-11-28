@@ -3390,3 +3390,26 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Desligar volta ao último valor digitado (500).
   - Digitar a altura com a opção ligada (campo ou ajuste fino; gancho cgDivEdit em e3Type/e3Fine) vale o número exato (450) e desliga a opção. O quadro mostra "(desligada pela edição da altura)" (m.cgDivEd).
   - testDIVCEGO ajustado: ligar 675 → desligar 500 → ligar 675 → digitar 450 = 450 com a opção desligada → reabrir 450 → desfazer.
+
+## ETAPA 3 · 3.3/3.5 (parte 1) · LED recusado no balcão; LED entrando no vizinho / atravessando peças / maior que a face; destaque errado; corrediça sem pk — Claude 3 (Chefe 28/11, sonda s54 do Claude 5)
+- **LED-QUALQUER (comprovado):** "＋ No módulo escolhido" e o "💡 Pôr LED" do quadro recusavam balcão, gaveteiro e canto.
+  - Causa: ledOk (só aéreos, cristaleira, vidro) usado como trava, contra a regra "sem limitação artificial".
+  - Correção: qualquer módulo; ledOk fica só no "todos embaixo dos aéreos", que é o menu que facilita.
+  - Teste: testLEDQUALQUER.
+- **LED-CAIXA (comprovado):** lvlAdd criava o LED na face inteira (u20, L = face − 40), sem olhar o resto.
+  - Na face encostada no vizinho, entrava na lateral dele.
+  - Na lateral de dentro de uma estante, atravessava as 5 prateleiras.
+  - Na borda de 6 mm do fundo, o perfil de 12 mm passava da face.
+  - Correção (lvlFit, na criação): o LED nasce só no trecho livre da face.
+    - Obstáculo = qualquer caixa, do módulo ou de outro, na faixa do perfil × 10 mm na frente da face.
+    - Trecho escolhido: o que contém o ponto tocado (4º parâmetro de lvlAdd, a ligar no pecaNoToque do Claude 4); sem ponto, o maior.
+    - Sem trecho de 50 mm ou face mais estreita que o perfil: aviso, e nada é criado.
+    - Depois de criado, o LED é livre (só pela mão da pessoa).
+  - Teste: testLEDCAIXA.
+- **DESTAQUE-FIM (comprovado):** tamponamento, travessa e batente não acendiam; porta e frente acendiam o módulo inteiro.
+  - Causa: o laranja era pintado no meio do build (passada única por módulo). Peças desenhadas depois não acendiam e as que copiam a cor da frente copiavam o laranja.
+  - Correção: uma passada no fim do build (último wrapper do escopo) acende as caixas com pk igual ou ppk = peça-mãe (engrossos do tamponamento).
+  - Teste: testDESTAQUE, 5 modelos com 100% (antes: balcão 11/16, gaveteiro 12/19, aéreo 5/9).
+- **IDS-CORR (comprovado):** a corrediça telescópica tinha 18 caixas sem pk (gaveteiro de 3).
+  - Correção: pk próprio 'Corrediça telescópica#n' (n da gaveta); continua sem acender junto com a frente.
+- **Auditoria de LED do catálogo (antes × depois, normal e espelhado):** rodando. A tabela vai para o Chefe e para o Claude 5 medir.

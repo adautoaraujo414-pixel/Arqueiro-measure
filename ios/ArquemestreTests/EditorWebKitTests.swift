@@ -17488,6 +17488,64 @@ return JSON.stringify({out:nomes.length+' com correr · cruzando: '+(ruins.join(
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /// LED-CAIXA (Etapa 3 · 3.3, Adauto 28/11): o LED nasce só no trecho livre da face escolhida — não entra no módulo vizinho, não atravessa outra peça do
+    /// próprio módulo e não fica maior que a face; o trecho é o do ponto tocado (intenção da pessoa). Antes: na face encostada entrava na lateral do vizinho,
+    /// na lateral de dentro atravessava as 5 prateleiras e na borda de 6 mm do fundo o perfil de 12 mm passava da face.
+    func testLEDCAIXA_LedNasceNoTrechoLivreSemEntrarNoVizinhoNemAtravessarPeca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;var MS=[];window.toast=function(t){MS.push(t)};window.ambMsg=function(t){MS.push(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length;
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+open3D();await W(200);loadState(initLimpo());S.env='livre';S.W=6000;S.mods=[];for(var i=0;i<3;i++)newTpl(achar('Estante aberta'));var A=S.mods;A.forEach(function(m,i){m.x=1000+i*A[0].w});draw();re3();__build();
+var ov=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>1&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>1&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>1};
+var tenta=function(pk,fi,nome,pt){MS=[];var L=lvlAdd(1,pk,fi,pt);if(!L){out.push(nome+': não criou · '+MS.join('/').replace('⚠ ',''));return}__build();var BX=__boxes(),lb=BX.filter(function(b){return b.ledl&&b.ledl.id===L.id&&!b.nol}),bate=[];lb.forEach(function(b){BX.forEach(function(o){if(o.ledl||o.nol||!o.nm||o.a===0||o.gp)return;if(parseInt(String(o.nm),10)===1&&o.pk===pk)return;if(ov(b,o))bate[String(o.nm)]=1})});out.push(nome+': criou u'+L.u+' L'+L.L+' · bate em: '+(Object.keys(bate).join(',')||'nada'))};
+tenta('Lateral direita#1',3,'lateral dir · face de fora (encostada no vizinho)');tenta('Lateral esquerda#1',3,'lateral esq · face de dentro');var hb_=__boxes().filter(function(b){return b.pk==='Lateral esquerda#1'&&/^1:/.test(String(b.nm))})[0];out.push('lateral y '+Math.round(hb_.y0)+'..'+Math.round(hb_.y1)+' · prateleira y '+__boxes().filter(function(b){return /^1:Prateleira/.test(String(b.nm))}).map(function(b){return Math.round(b.y0)+'..'+Math.round(b.y1)}).join(','));var prs=__boxes().filter(function(b){return /^1:Prateleira/.test(String(b.nm))}).map(function(b){return Math.round(b.y0)}).filter(function(v,i,a){return a.indexOf(v)===i}).sort(function(a,b){return a-b});tenta('Lateral esquerda#1',3,'lateral esq · dentro, tocando no 2º vão',(prs[0]+prs[1])/2);tenta('Lateral esquerda#1',3,'lateral esq · dentro, tocando no último vão',hb_.y1-60);tenta('Fundo#1',4,'fundo · borda de baixo');
+return JSON.stringify({out:out.join(' | '),errs:__errs.length-e0});
+
+          """#)
+        XCTAssertEqual(o["out"] as? String, "lateral dir · face de fora (encostada no vizinho): não criou · Esta face está encostada em outro módulo: o LED entraria nele (nada foi criado). | lateral esq · face de dentro: criou u633 L293 · bate em: nada | lateral y 115..1985 · prateleira y 1666..1681,1354..1369,1043..1058,731..746,419..434,1666..1681,1354..1369,1043..1058,731..746,419..434 | lateral esq · dentro, tocando no 2º vão: criou u321 L293 · bate em: nada | lateral esq · dentro, tocando no último vão: criou u1568 L282 · bate em: nada | fundo · borda de baixo: não criou · O LED não cabe nesta face: ela tem 6 mm e o perfil precisa de 12 mm (nada foi criado).")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// LED-QUALQUER (Etapa 3 · 3.3, sonda s54 do Claude 5; Adauto: "não quero limitações artificiais"): "＋ No módulo escolhido" e o "💡 Pôr LED" do quadro
+    /// aceitam qualquer módulo — balcão, gaveteiro, canto — e não só os de cima e a cristaleira. O "todos embaixo dos aéreos" continua só nos de cima.
+    func testLEDQUALQUER_LedNoModuloEscolhidoEmBalcaoGaveteiroECanto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;var MS=[];window.toast=function(t){MS.push(t)};window.ambMsg=function(t){MS.push(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length;
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+open3D();await W(200);
+for(const n of ['Balcão 2 portas','Gaveteiro 3 gavetas','Balcão canto cego · cego na direita (porta na esquerda)','Aéreo 2 portas']){loadState(initLimpo());S.env='cozinha';S.mods=[];newTpl(achar(n));var m=S.mods[0];draw();re3();__build();var e1=__boxes().filter(function(b){return b.em}).length;MS=[];S.m=m;
+ var b_=document.createElement('button');b_.dataset.cled='mod';document.getElementById('crp3').appendChild(b_);b_.click();b_.remove();re3();__build();var e2=__boxes().filter(function(b){return b.em}).length;
+ out.push(n+': '+(m.led?'LED '+m.led.pos:'RECUSOU')+(e2>e1?' aceso no 3D':' APAGADO'))}
+loadState(initLimpo());S.env='cozinha';S.mods=[];newTpl(achar('Balcão 2 portas'));S.m=S.mods[0];draw();var dica=document.body.innerHTML.indexOf('LED vai só nos módulos de cima')<0;
+return JSON.stringify({out:out.join(' | '),dica:dica,errs:__errs.length-e0});
+          """#)
+        XCTAssertEqual(o["out"] as? String, "Balcão 2 portas: LED rodape aceso no 3D | Gaveteiro 3 gavetas: LED rodape aceso no 3D | Balcão canto cego · cego na direita (porta na esquerda): LED rodape aceso no 3D | Aéreo 2 portas: LED base aceso no 3D")
+        XCTAssertEqual(o["dica"] as? Bool, true, "sem a dica de que o LED só vai em cima")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// DESTAQUE-FIM (Etapa 3 · 3.5, sonda s54 do Claude 5): a peça escolhida acende sozinha e inteira — antes o tamponamento, a travessa e o batente não
+    /// acendiam e a porta/frente acendia o módulo inteiro (o laranja era pintado no meio do desenho e copiado pelas peças desenhadas depois).
+    /// IDS-CORR: as caixas da corrediça telescópica têm pk próprio (antes 18 sem pk no gaveteiro de 3 gavetas).
+    func testDESTAQUE_PecaEscolhidaAcendeSozinhaEInteiraECorredicaComId() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length;
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+open3D();await W(200);var OR='255,159,26',semPk=0;
+for(const n of ['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas','Balcão canto cego · cego na direita (porta na esquerda)','Estante aberta']){loadState(initLimpo());S.env='cozinha';S.mods=[];newTpl(achar(n));var m=S.mods[0];m.tl=1;m.tr=1;m.tt=1;draw();re3();window.SEL3=null;__build();
+ semPk+=__boxes().filter(function(b){return /^0:/.test(String(b.nm))&&!b.pk&&!b.nol}).length;
+ var P=partsOf(m).filter(function(p){return p.pk&&!p.noDraw}),ok=0,ruim=[];P.forEach(function(p){window.SEL3={mi:0,pk:p.pk};__build();var L=__boxes().filter(function(b){return String(b.c)===OR}),nm={};L.forEach(function(b){nm[String(b.nm).split(':')[1]]=1});var k=Object.keys(nm);if(L.length&&k.length===1&&k[0]===p.name)ok++;else ruim.push(p.pk+'→'+(k.join('+')||'nada'))});window.SEL3=null;
+ out.push(n+' '+ok+'/'+P.length+(ruim.length?' '+ruim.slice(0,3).join(','):''))}
+return JSON.stringify({out:out.join(' | '),semPk:semPk,errs:__errs.length-e0});
+          """#)
+        XCTAssertEqual(o["out"] as? String, "Balcão 2 portas 16/16 | Gaveteiro 3 gavetas 19/19 | Aéreo 2 portas 9/9 | Balcão canto cego · cego na direita (porta na esquerda) 18/18 | Estante aberta 19/19")
+        XCTAssertEqual(o["semPk"] as? Int, 0, "toda caixa desenhada do módulo tem pk")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /// DIV-CEGO-LIVRE (decisão do Adauto 28/11, DECISOES_TECNICAS @888603db): a divisória do canto cego mantém o funcionamento atual e a opção de subir até
     /// a travessa, com liberdade total de altura, profundidade e posição, sem nada reposicionar sozinho. Antes, ligar "sobe até a travessa" jogava fora a altura
     /// que o usuário tinha mexido. Confere: campos do editor de peça (3D), mover, opção ligada/desligada, lista = 3D, salvar/reabrir e desfazer, nos dois lados.

@@ -8482,7 +8482,7 @@ final class EditorWebKitTests: XCTestCase {
           else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
           else e.click();return ''};
         
-        var SUBCAP=20,ORC=8000;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
         /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
         var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
           var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
@@ -8564,7 +8564,7 @@ final class EditorWebKitTests: XCTestCase {
           else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
           else e.click();return ''};
         
-        var SUBCAP=20,ORC=8000;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
         /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
         var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
           var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
@@ -8645,7 +8645,7 @@ final class EditorWebKitTests: XCTestCase {
           else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
           else e.click();return ''};
         
-        var SUBCAP=20,ORC=8000;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
         /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
         var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
           var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
@@ -8728,7 +8728,7 @@ final class EditorWebKitTests: XCTestCase {
           else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
           else e.click();return ''};
         
-        var SUBCAP=20,ORC=8000;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
         /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
         var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
           var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
@@ -8810,7 +8810,7 @@ final class EditorWebKitTests: XCTestCase {
           else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
           else e.click();return ''};
         
-        var SUBCAP=20,ORC=8000;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
         /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
         var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
           var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
@@ -8892,7 +8892,7 @@ final class EditorWebKitTests: XCTestCase {
           else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
           else e.click();return ''};
         
-        var SUBCAP=20,ORC=8000;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
         /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
         var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
           var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
@@ -8973,7 +8973,7 @@ final class EditorWebKitTests: XCTestCase {
           else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
           else e.click();return ''};
         
-        var SUBCAP=20,ORC=8000;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
         /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
         var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
           var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};

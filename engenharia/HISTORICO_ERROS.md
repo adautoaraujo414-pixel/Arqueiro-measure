@@ -3111,3 +3111,17 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **1 era minha:** `testTocarEmQualquerMedidaDoVaoEDigitar`. Com a alça na borda de fora (item 26), a bolinha tapava a medida do vão no armário por vãos.
   - Correção: as medidas pequenas (`[data-q]`, filhas diretas do svg) passam a ser desenhadas por cima das alças. Só muda a ordem do desenho: a medida abre com toque e o resto da bolinha arrasta.
   - Os 11 testes de toque e medida passam a 430 e a 1366.
+
+## ESTAVEL (Chefe 28/11): testes intermitentes NadaDeEnfeite Parte1b / ParteB — causa achada — Claude 4
+- **Causa da intermitência (os 7 NadaDeEnfeite):** depois da lista inicial, o teste explorava os controles que aparecem no caminho (sub-vistas) só até estourar um **tempo** (`ORC=8000` ms). Quantos controles entravam dependia da velocidade da rodada. Um botão com problema real só às vezes era alcançado, e o teste passava ou falhava conforme a rodada.
+- **Problemas reais que o tempo escondia:**
+  - Parte1b: "Régua aplicada"/"50" (opção já escolhida e calada). Corrigido em cd593377.
+  - ParteB, com exploração completa, achou 9 controles do 3D "sem função":
+    - setas ▲◀▼▶ e "Em pé"/"Agachar" da vista em primeira pessoa, e o ▤ das opções da peça: só respondiam a `pointerdown`, então o clique sem ponteiro (teclado, Enter, leitor de tela, `click()`) não fazia nada;
+    - a setinha de puxar ⟷: só arrasto.
+- **Correção do app (BOTAO-CLIQUE):** o clique sem ponteiro aciona o mesmo caminho do toque (`pointerdown`/`pointerup` do próprio botão; nas setas, um passo curto). Toque real recente não repete. A setinha de puxar avisa "Puxe a setinha pra esticar ou diminuir".
+- **Correção do teste (mais rígido, não mais frouxo):** `ORC=Infinity` nos 7, testando **todos** os controles das vistas extras. A fila é finita, porque cada controle entra uma vez.
+  - Com exploração completa os 7 passam: 580 s no total, o maior 182 s (ParteB), dentro dos 300 s por teste.
+- **Provas:**
+  - 10 rodadas isoladas com o app corrigido: Parte1b 10/10, ParteB 10/10.
+  - As rodadas em família e o PesDeMetal estão abaixo.

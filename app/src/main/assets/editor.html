@@ -16300,5 +16300,20 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
    desenho: o toque na medida abre a medida; o resto da bolinha continua arrastando. */
 (function(){var d0=window.draw;if(typeof d0!=='function')return;window.draw=draw=function(){var r=d0.apply(this,arguments);try{var sv=document.getElementById('svg');if(sv&&sv.querySelector(':scope > [data-h]')){[].filter.call(sv.children,function(e){return e.hasAttribute&&e.hasAttribute('data-q')}).forEach(function(e){sv.appendChild(e)})}}catch(_){}return r}})();
 </script>
+<script>
+/* BOTAO-CLIQUE (ETAPA 2 item 34 + estabilizar NadaDeEnfeite 3D ParteB, Chefe 28/11): alguns controles do 3D só respondiam ao dedo/mouse (pointerdown):
+   setas de andar e "Em pé"/"Agachar" da pessoa, o botão ▤ das opções da peça. Um clique sem ponteiro (teclado, Enter, leitor de tela) não fazia nada — e o
+   teste completo acusava "sem função" só quando tinha tempo de chegar neles (por isso passava ou falhava conforme a rodada). Agora o clique aciona o MESMO
+   caminho (pointerdown/pointerup do próprio botão; nas setas, um passo curto). Toque de verdade não repete. A setinha de puxar (⟷) só funciona puxando:
+   o toque parado avisa como usar. */
+(function(){var UL=new WeakMap();
+ document.addEventListener('pointerdown',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-fpp],[data-fpw],#geofab,[data-ah]');if(t&&!e.__sint)UL.set(t,Date.now())},true);
+ function sint(el,tp,pid){var ev=new PointerEvent(tp,{bubbles:true,cancelable:true,pointerId:pid,isPrimary:true,pointerType:'mouse',button:0,buttons:tp==='pointerdown'?1:0,clientX:0,clientY:0});ev.__sint=1;el.dispatchEvent(ev)}
+ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-fpp],[data-fpw],#geofab,[data-ah]');if(!t)return;var u=UL.get(t);if(u&&Date.now()-u<700)return;
+  if(t.matches('[data-ah]')){try{toast('Puxe a setinha pra esticar ou diminuir')}catch(_){}return}
+  var r=t.getBoundingClientRect(),pid=777;if(t.matches('[data-fpw]')){sint(t,'pointerdown',pid);setTimeout(function(){sint(t,'pointerup',pid);try{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:pid}))}catch(_){}},220);return}
+  sint(t,'pointerdown',pid);sint(t,'pointerup',pid)},true);
+})();
+</script>
 </body></html>
 

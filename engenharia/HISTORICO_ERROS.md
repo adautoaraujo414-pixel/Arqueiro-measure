@@ -2973,5 +2973,6 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
     - 1 toque escolhe com contorno (`LP3MI`); 2 toques abrem as configurações pelo `pcEdOpen` do Claude 4;
     - a caneta usa o `window.PALMA` do Claude 4, que já cobre o 3D.
   - Fechar volta ao 2D. O projeto não muda por abrir, girar ou fechar.
+- **Ajuste (Chefe 28/11, mesma regra do TOQUE-ALCA do Claude 4):** o arrasto do móvel só começa depois de `SEL.mov` px, então a tremida de 5 px não move. Caindo um 2º dedo com o arrasto já começado (pinça em cima do móvel), o móvel volta para onde estava e o desfazer não ganha passo. Teste `testE2ITEM9_TremidaEPincaNaoMovemOMovelNaPerspectiva`: no a8e75134 a pinça deixava o móvel fora do lugar.
 - **2ª parte (a fazer):** alças de tamanho, cota até a parede e "pôr do catálogo ao lado" dentro da perspectiva.
 - **Teste:** `testE2ITEM9_PerspectivaLivreNo2DGestosSemACameraMoverPeca` (falha antes, passa agora). Print: `tools/sondas/etapa2_c3/item9_perspectiva_no_2d.png`.

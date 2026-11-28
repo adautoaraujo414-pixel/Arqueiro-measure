@@ -17239,6 +17239,27 @@ final class EditorWebKitTests: XCTestCase {
 
     /// MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11 "cálculos reais e automáticos" e "Regras do módulo · organização"; checklist D21/D24): as 24
     /// combinações (balcão e aéreo × moldura × Frontal × travessão sem/externo/interno) com cada peça igual no 3D e no corte (nenhuma espessura somada
+    /// ETAPA 2 · item 9 (Chefe 28/11, mesma regra do TOQUE-ALCA do Claude 4): na perspectiva do 2D a tremida (5 px) não move o móvel, e a pinça que começa
+    /// em cima dele (1º dedo anda antes do 2º cair) devolve o móvel pro lugar, sem passo extra no desfazer.
+    func testE2ITEM9_TremidaEPincaNaoMovemOMovelNaPerspectiva() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.ambMsg=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length;
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;newTpl(achar('Balcão 2 portas'));S.m.x=1200;draw();document.getElementById('pv2db').click();await W(1500);
+var cv=document.getElementById('cv3'),pe=function(n,x,y,id){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:id,pointerType:'touch',isPrimary:id===1,button:0,buttons:n==='pointerup'?0:1}))};
+var B=__boxes().filter(function(b){return /^0:/.test(String(b.nm))&&!b.nol}),c=[(Math.min.apply(null,B.map(function(b){return b.x0}))+Math.max.apply(null,B.map(function(b){return b.x1})))/2,(Math.min.apply(null,B.map(function(b){return b.y0}))+Math.max.apply(null,B.map(function(b){return b.y1})))/2,(Math.min.apply(null,B.map(function(b){return b.z0}))+Math.max.apply(null,B.map(function(b){return b.z1})))/2],sp=__p3(c[0],c[1],c[2]),r=cv.getBoundingClientRect(),X=r.left+sp[0],Y=r.top+sp[1],m=S.mods[0],h0=hs.length;
+/* tremida de 5 px */pe('pointerdown',X,Y,1);for(var k=1;k<=6;k++){pe('pointermove',X+(k%2?5:-5),Y+(k%2?3:-2),1);await W(25)}pe('pointerup',X,Y,1);await W(100);out.push('tremida 5px: x '+m.x+(m.x===1200?' (parado)':' (MEXEU)'));
+/* pinça começando em cima do móvel: o 1º dedo anda 20 px antes do 2º cair */pe('pointerdown',X,Y,1);for(var k=1;k<=4;k++){pe('pointermove',X+k*6,Y,1);await W(25)}var xm=m.x;pe('pointerdown',X+200,Y,2);await W(30);for(var k=1;k<=5;k++){pe('pointermove',X+24-k*10,Y,1);pe('pointermove',X+200+k*10,Y,2);await W(25)}pe('pointerup',X-26,Y,1);pe('pointerup',X+250,Y,2);await W(150);
+out.push('pinça: andou '+(xm!==1200?'sim':'não')+' antes do 2º dedo · no fim x '+m.x+(m.x===1200?' (voltou)':' (FICOU FORA)')+' · desfazer extra '+(hs.length-h0));
+out.push('errs '+(__errs.length-e0)+' '+__errs.slice(e0).join('|').slice(0,200));var R={tremida:out[0],pinca:out[1],errs:__errs.length-e0};document.getElementById('pv2db').click();return JSON.stringify(R);
+
+          """#)
+        XCTAssertEqual(o["tremida"] as? String, "tremida 5px: x 1200 (parado)")
+        XCTAssertEqual(o["pinca"] as? String, "pinça: andou sim antes do 2º dedo · no fim x 1200 (voltou) · desfazer extra 0", "pinça começando no móvel não move o móvel")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /// ETAPA 2 · item 9 (Adauto/Chefe 27/11, V2/V3): perspectiva livre como modo a mais do 2D — mesma cena do partsOf dentro do quadro do desenho, painel ao lado
     /// visível; 1 dedo no vazio não mexe a câmera; 2 dedos giram sem mudar o projeto; 1 dedo no móvel arrasta na hora; 1 toque escolhe (contorno); 2 toques abrem as
     /// configurações (pcEdOpen do Claude 4); fechar volta ao 2D.

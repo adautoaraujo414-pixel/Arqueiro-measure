@@ -2852,3 +2852,27 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Teste atualizado:** `testCAMPONUM_MedidaEmbaixoDaAlca…` escolhe "mover" no quadro, com comentário do pedido (38, 28/11).
 - **Evidência:** `engenharia/evidencias/etapa2/item38_opcoes_da_medida.png`.
 - **Não feito (perguntar):** largura e altura digitadas (mw/mh e o campo do painel) seguem a convenção de sempre (esquerda e chão parados). Também dá para perguntar de que lado cresce.
+
+## BOTAO-VAZIO (ETAPA 2 item 34, parte do Claude 4, Adauto 27/11): botões de interface acionados um a um — Claude 4
+- **Como:** com toque real (CDP, 430), cada botão foi acionado e medi se mudou alguma coisa: Ajustes, projeto, tela, janela ou aviso.
+  - Barras (24 botões), acesso rápido do vão (11) e Ajustes (594, sendo 480 amostras de cor). Nos Ajustes, o painel foi reaberto do zero antes de cada botão.
+- **Erros comprovados e corrigidos:**
+  1. "−" (afastar) com a parede inteira na tela e "⌂" com a vista já no começo não faziam nada, calados. Agora avisam.
+  2. Ajustes › Paredes da obra › "A diferença fica: na esquerda / na direita": o valor mudava, mas o destaque ficava em "metade em cada lado" (o `panel()` não redesenha os Ajustes) e o toque parecia morto.
+     - Agora o destaque acompanha.
+     - A troca grava desfazer, porque `S.amb` faz parte do projeto.
+- **Comportamento correto:**
+  - As 480 amostras de cor dos Ajustes: 478 mudam o ajuste e 2 já eram a escolhida.
+  - Os outros 104 botões dos Ajustes, as barras e o acesso rápido funcionam.
+  - "Laterais por dentro" e "▙▟ U" já eram a opção escolhida.
+- **Não foi possível verificar (precisa do aparelho):** Cliente 3D, Nota, Pronto e Fechar chamam o app nativo (`ArqueApp.shareStart`, `A.openNoteOf`, `A.close`).
+- **Pré-existente e instável (não mexi):** `testNadaDeEnfeiteAbasDoModuloParte1b` (Estilos de porta, botões diferentes a cada rodada; falha também na referência antiga).
+
+## Regressões da 53344a39 achadas na bateria completa (corrigidas) — Claude 4
+- `testNenhumBotaoFicaNaFrenteDeOutro` (6 casos a 430, 20 a 1366): com a alça na borda de fora, a bolinha cobria os números de largura e altura, que ficam no meio da borda. Agora a alça continua na borda de fora, mas a 72% da altura (laterais) e da largura (em cima).
+- `testDoisToquesFuncionamNaGeladeiraENasTorresComPrateleira`: o `pointerdown` no puxador da prateleira interna (`data-ish`) para antes do ouvinte do desenho. O `DN0` ficava com o ponto de um toque antigo e o toque era descartado como arrasto.
+  - Agora `DN0` e `PZG` são marcados na captura da janela, que roda antes de tudo.
+  - Toque primário zera o mapa de dedos, e entradas com mais de 5 s não contam.
+  - Toques "por cima" (puxador da prateleira, eletro) seguem a regra DUPLO-TOQUE de 18/11: 2 toques abrem o acesso rápido do módulo de baixo.
+- `testDoisToquesNaPontaDoTamponamentoDeCimaDesceOLateralEInverte` (1366): mesma causa, corrigida junto.
+- Os 11 testes de toque, medida, caneta e campo passam a 430 e a 1366. A sonda com toque real foi refeita e está certa.

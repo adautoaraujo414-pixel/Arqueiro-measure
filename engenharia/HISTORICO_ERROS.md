@@ -2713,3 +2713,102 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - 6 testes antigos que esperavam a união automática agora unem pela opção manual e conferem os MESMOS valores;
   - 67/67 testes relacionados passam a 1366 e a 430.
 - **Evidência:** `engenharia/diagnosticos/etapa2/code2/i21_corte_{antes,depois}.png`.
+## DOB-METAL (ETAPA 2 item 3, R3, 26/11): dobradiça na cor da porta — Claude 3
+- **Módulo:** 3D, todas as portas com dobradiça de caneco (balcão, aéreo, torre, guarda-roupa) e o basculante.
+- **Reproduzir:** pintar a porta com a ferramenta Pintar (madeira com textura) e abrir a porta no 3D. Calço, braço, caneco e parafusos saem na madeira da porta.
+- **Causa raiz:** `hinges3`/`basHw3_` desenham a ferragem com o nome e a chave da porta (`CURN`/`CURK` = "N:Porta", `Porta#k`). Depois, o passo de pintura do 3D (`build_pc`, `pcOf`/`modMatId`) troca a cor e põe a textura (`mid`) em toda caixa com essa chave.
+- **Correção:** toda caixa criada por `hinges3`/`basHw3_` ganha a marca `ferr`, e o passo de pintura pula as caixas `ferr`. As cores metálicas que o desenho já tinha ficam. Geometria, furação, lista, corte e DXF ficam iguais.
+- **Família conferida:** balcão e aéreo, com a porta fechada e aberta: nenhuma caixa da dobradiça dentro de lateral, tampo ou base.
+- **Teste:** `testE2ITEM3_DobradicaMetalicaNaoPegaACorDaPortaENaoAtravessa`. No 3174dbd8 dá "metal false · sem textura false"; agora passa.
+
+## CANTO-165 (ETAPA 2 item 5, pedido do Adauto 26/11): portas do canto paravam em 90° sem obstáculo e abriam juntas — Claude 3
+- **Módulo:** 3D, canto em L (baixo, aéreo, guarda-roupa; esquerdo e direito) e canto cego (balcão e aéreo; na esquerda e na direita).
+- **Reproduzir:** canto em L com um vizinho faceado ao lado: a folha do fundo parava em 90°. Abrir só a folha do lado também abria a do fundo. A porta do canto cego abria só 90°.
+- **Causa raiz:** `cnAng_` tratava qualquer vizinho encostado como obstáculo, mesmo faceado. O `partsOf` do canto marcava a folha do fundo aberta quando só a do lado (`od[1]`) estava aberta. A porta do canto cego usava o 90° fixo da porta comum.
+- **Correção:**
+  - `cnObs_` e `cgObs` listam só o que sai de fato para a frente da face das portas: tamponamento com avanço > 16,5 mm, vizinho mais fundo, tamponamento do vizinho que avança e puxador de barra do vizinho.
+  - Sem obstáculo a abertura é 165°. Com obstáculo é 90°, e a folha do lado fica no limite que já existia, com aviso técnico (`ambMsg`) dizendo o quê e quanto, uma vez por mudança.
+  - Cada folha abre sozinha (`od[0]` só para a do fundo). A do lado só espera a do fundo quando as duas estão abrindo juntas (aí uma cruza a outra).
+  - Os botões de ângulo do canto e do canto cego são 90, 120 e 165. Corte, lista e 2D ficam iguais.
+- **Observação:** o tamponamento automático da ponta tem `tpAv` 25, ou seja, avança 9 mm na frente da porta. Com ele a porta para em 90° com aviso, o que é correto pelo pedido. Faceado (`tpAv` 16), abre 165°.
+- **Testes:**
+  - novo `testE2ITEM5_PortasDoCantoAbrem165EmLECegoEsquerdaEDireita`: no 3174dbd8 dá "0 de 6" e o canto cego falha; agora passa;
+  - ajustado `testPortasDeCantoRobocop…`: a folha do lado abre sozinha, com comentário do pedido;
+  - `testArmarioDeCantoFolga…`: as duas juntas continuam em ordem, bateu 0;
+  - `testFitaDeTopo…`: o filtro da porta tira a dobradiça (`ferr`, item 3).
+
+## V1-FORNO (ETAPA 2 · V1, vídeo do Adauto 26/11): porta do forno embutido no balcão "atravessando" — Claude 3 · NÃO REPRODUZIDO
+- **Módulo:** 3D, balcão com forno embutido (embaixo do cooktop), entre dois balcões.
+- **O que foi conferido (Chromium):**
+  - a frente fechada nasce em cima da base (frente y 137, pé da lateral 115);
+  - porta a meio e toda aberta em 20 cenas: base, tamponamento com engrosso que avança 40, vizinho mais fundo (650), pedra/cooktop, vizinhos com a porta aberta e as 15 medidas de nicho dos fornos do catálogo;
+  - 0 cruzamentos com lateral, base, rodapé, tamponamento, pedra ou porta do vizinho.
+- **Leitura da referência:** o "y 97" anotado antes é a porta toda aberta, deitada na frente do rodapé (z > 596), e não a frente fechada. Nos quadros do vídeo, a porta aberta fica na altura da borda de baixo das portas vizinhas, 15 mm na frente delas, e de perto parece cruzar.
+- **Correção:** nenhuma no código, porque o defeito não se reproduziu. Não foi feita mudança "por via das dúvidas".
+- **Teste de proteção:** `testE2V1_PortaDoFornoNoBalcaoNaoCruzaNadaNasVariantes`.
+- **Pendente:** conferir em aparelho real (iPad, acabamento realista) com o projeto do vídeo.
+
+## MOV-23 (ETAPA 2 item 23, PRIORIDADE, pedido do Adauto 27/11): movimentos contrários com parede espelhada — Claude 3
+- **Pedido:** mover para a direita vai para a direita de quem olha, em todas as paredes. O espelho não inverte a coordenada real. Conferir arrasto, posição, rotação, vincular/desvincular, edição de peças e salvar/reabrir.
+- **Matriz conferida (Chromium), fundo / esquerda espelhada / direita:**
+
+| Comando | Antes (3174dbd8) | Depois |
+|---|---|---|
+| Arrasto no 2D | certo nas 3 (tela e 3D) | certo (teste de proteção) |
+| Mover no 3D (segurar e arrastar), móvel da parede do lado | **pulava para a parede do fundo e andava contra o dedo** (E: dedo ← → móvel →; D: dedo → → móvel ←) | fica na parede, nunca anda contra o dedo |
+| Peça livre: campo "Da esquerda do módulo", móvel virado (`espE`) da parede esquerda | **30 ficava à direita de quem olha** | 30 fica à esquerda (mostra e recebe a partir da esquerda de quem olha; dados iguais) |
+| Peça de parede (prateleira, painel, ripado) na parede esquerda: "Da esquerda da parede" | **maior ia para a esquerda de quem olha** (x conta do canto do fundo) | rótulo "Da parede do fundo", como janela/porta das laterais (dados iguais) |
+| Desvincular | mesmo trecho, gaveta do mesmo lado, 3 paredes | igual |
+| Salvar e reabrir | igual | igual |
+| "Só ele no 2D" | espelhado e coerente com a sala e o 3D | igual |
+| Setas ◀▶▲▼ dos itens da pedra | planta (vista de cima), rótulos "Pro fundo"/"Pra frente": coerentes | igual |
+| Móvel livre (girado) e paredes criadas no 3D | arrasto pelo chão (`lvTenta` com dx/dz do chão): segue o dedo por construção | igual |
+
+- **Causas:**
+  1. Arrasto do 3D na parede do lado: o deslocamento `wo` (chão embaixo do dedo − começo do móvel) era preso entre 0 e a largura. Com o dedo no corpo do móvel, o chão embaixo dele fica atrás do móvel, o `wo` virava 0, e no 1º movimento o móvel saltava para esse ponto e passava do canto (`Z < wingStart−80`), indo para a parede do fundo. Correção: `wo` real, sem prender, e a volta para o fundo só quando o **móvel** passa do canto.
+  2. O bloco PAREDE-ESQ-NOVO vira os dados do móvel da parede esquerda (`espE`), mas o campo da peça livre (`valDe` / `change` de `data-empk`) lia o x cru. Correção: no `espE` o campo converte (`m.w − x − largura`); a largura cresce para a direita de quem olha.
+  3. Peça de parede com `wall:'e'` guarda x a partir do canto do fundo. Correção: rótulo `rpXLbl` em `pratEdit`, painel (aba 8), campos do 3D e etiqueta do arrasto.
+- **Teste:** `testE2ITEM23_MovimentoSegueQuemOlhaEmTodasAsParedes`. No 3174dbd8 falha em a3d (pulou para o fundo), peca (direita de quem olha) e rp (rótulo); agora passa.
+- **Riscos identificados (não corrigidos):**
+  - Na vista 2D da parede esquerda aparece o painel/prateleira da parede do FUNDO (sem `wall`), espelhado junto. É anterior e fica para decisão.
+  - Lista/corte mantêm os nomes guardados (decisão de 18/11, chave da marca ✓ cortada).
+- **Pendente:** aparelho real (iPhone/iPad com toque).
+
+## ESP-VIDRO (ETAPA 2 item 1, Chefe 26/11): vidro, bisotê/lapidação, reflexo e aro do botão — Claude 3
+- **Pedido:** melhorar o vidro, a borda (lapidação/bisotê visível), o reflexo e o aro do botão sem perder desempenho, com antes/depois.
+- **Mudança (só desenho do 3D):**
+  - shader 12/13: tom de vidro na face, brilho diagonal suave e refração do bisotê 0,006 → 0,010, sem passada nova;
+  - faces do bisotê com fatores [1,1, 0,93, 0,8, 0,7] (antes [1,16, 1,07, 0,98, 0,9]) e lapidação [1,08, 0,8] (antes [1,1, 0,96]): antes a 1ª face estourava no branco;
+  - botão: borda escura, anel cromado, lábio e centro (antes anel cinza e centro).
+- **Não muda:** projeto, peças, corte, orçamento e DXF.
+- **Desempenho:** render 2,2 ms → 2,4–2,8 ms no mesmo cenário (variação da medição; só 2 discos a mais por espelho com LED).
+- **Teste:** `testE2ITEM1_EspelhoVidroBisoteEAroDoBotaoMelhores`. No 37ad1152 falha (contraste 0,26/0,14, 2 discos, sem shader); agora passa.
+- **Print:** `tools/sondas/etapa2_c3/item1_vidro_bisote_aro_antes_depois.png`.
+
+## CRUZA-3D-ID (achado do Code 1, 27/11; correção Claude 3, 28/11): peça desenhada no 3D com a chave de outra peça
+- **Erro:** a peça é cortada certa, mas no 3D aparece com a identidade de outra peça. Tocar nela na lista não acendia a própria peça no 3D.
+  - Gaveta interna (2 modelos do catálogo, todas as gavetas): lateral, contra-frente/traseira e fundo de 6 eram um bloco só, 520 × 188,5 × 445, com a chave da `Gaveta interna · frente#n`.
+  - Sapateira (4 modelos): a tira de 40 do aparador saía com a chave da `Sapateira · prateleira inclinada#n`.
+- **Causa raiz:** no `build` do 3D a frente da gaveta interna desenhava a caixa inteira (`B(...,'#f4f2ee')`) com `CURN/CURK` da frente. As peças da caixa são `noDraw` no `partsOf`. O ramo `p.sap` desenhava a tira do aparador (que é `noDraw`) com a chave da prateleira. O `hlResolve` só mandava o toque na lista para a peça vizinha, uma 2ª lógica tapando o problema.
+- **Correção (só o 3D; peças, corte e medidas iguais):**
+  - gaveta interna: cada peça do `partsOf` daquela gaveta (2 laterais, contra-frente, traseira e fundo) vira a sua caixa, com o seu nome e a sua chave, na medida de corte e no mesmo espaço do bloco. O fundo entra 6 mm no rebaixo das laterais;
+  - a marca `gfk` faz tocar na caixa abrir a gaveta como antes;
+  - aparador: a tira sai com o nome e a chave da peça `Sapateira · aparador`;
+  - o `hlResolve` fica como rede (agora a caixa própria existe).
+- **Ajustes depois da família (124 testes; 4 auditorias do catálogo passaram a ver as peças com a sua chave):**
+  - a lateral tem o rebaixo de 6 × 6 do fundo, então o fundo não entra nela;
+  - a corrediça vai até a lateral da caixa, que deixa de ficar solta;
+  - o aparador fica na frente da ponta da prateleira inclinada, sem entrar nela;
+  - o aparador tirado pela 🗑 não fica no 3D;
+  - no teste de altura do partsOf, o aparador entra na exceção da prateleira inclinada, porque fica em pé na ponta dela com 40 de altura. Comentário do pedido no teste.
+- **Teste:** `testCRUZA3DID_GavetaInternaESapateiraComAChaveDeCadaPecaNo3D` (catálogo inteiro, 6 modelos). No HEAD falha (aparador sem caixa própria, bloco com a chave da frente); agora passa.
+
+## TEX-METAL (ETAPA 2 item 4, Chefe 27/11): texturas e materiais de eletros e ferragens sem perder desempenho — Claude 3
+- **Antes:** o `vizMat` (VIS-MAT) mandava ao material de metal só puxador, gola, alumínio e os eletros soltos (`S.fr`). Ficavam lisos, sem brilho de metal: forno/micro/cooktop embutidos no módulo, dobradiças (`ferr`), corrediças e cabideiros. Medido no cenário da sonda: dobradiça 0/360, forno 0/75, cabideiro 0/5, corrediça 0/4.
+- **Mudança (só a classificação do material; nenhuma caixa, medida ou posição muda):**
+  - dobradiça: níquel escovado;
+  - corrediça, cabideiro e suportes: zincado;
+  - inox do forno/micro/cooktop/coifa do módulo: escovado; painel preto: brilhante.
+  - Vidros e puxadores já tinham material próprio (vidro 8,5; puxador pelo acabamento) e ficam como estão.
+- **Teste:** `testE2ITEM4_FerragensEEletroEmbutidoComMaterialDeMetalSemMudarCaixa` (também liga e desliga o VIS-MAT e compara todas as caixas). Falha no 33ffaf05; agora passa.
+- **Print:** `tools/sondas/etapa2_c3/item4_metal_forno_dobradica_antes_depois.png`.

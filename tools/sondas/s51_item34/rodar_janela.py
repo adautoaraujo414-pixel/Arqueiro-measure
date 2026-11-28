@@ -10,7 +10,7 @@ Sondas com __TRACER__ recebem tools/sondas/rastreador.js no lugar.
 s08a precisa de --semente vazio (ver semente_arquivo_vazio.js) e s08b de um projeto salvo como semente (ver o relatório).
 """
 import argparse, json, os, re, sys, time, urllib.request, websocket
-H = '/home/user/Arqueiro-measure/tools/sondas'
+H = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 ap = argparse.ArgumentParser(); ap.add_argument('sonda'); ap.add_argument('--porta', default='9334'); ap.add_argument('--url', default='http://127.0.0.1:8765/editor.html?lang=pt'); ap.add_argument('--semente', default='')
 a = ap.parse_args()
 js = open(a.sonda, encoding='utf-8').read().replace('__TRACER__', open(os.path.join(H, 'rastreador.js'), encoding='utf-8').read())

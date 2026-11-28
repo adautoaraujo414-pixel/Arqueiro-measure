@@ -3464,3 +3464,16 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Correção: a faixa só vale pra peça fina que aparece em algum ponto (a base a 375 aparece numa tira embaixo da porta). Peça toda coberta não ganha faixa, e o meio do vão volta a ser o acesso rápido.
   - Prova: ParedeEsquerdaToque, PuxadorBola, TOQUEPECA e ToqueNoVao passam a 430, 375 e 1366.
 - **PASSO-375, revisto (28/11):** fica a correção do Code 2 (bbe5e688), que manda todos os pointermove ao canvas, como o toque real faz, e não depende da zona morta. O ajuste do passo ≥ 11 px (da053985) foi desfeito neste ramo. Sem o bbe5e688, o teste falha a 375 neste ramo sozinho; integrado, passa.
+
+## RAIO-EXATO (ETAPA 3.1, Chefe 28/11: zerar as seleções inequívocas erradas) — Claude 4
+- **Achado (s54 dos projetos, com os acertos do raio de cada falha):**
+  - o raio do app aceita 0,5 mm de tolerância na borda de cada caixa;
+  - a verdade (o que se vê) não tem tolerância;
+  - a borda da porta, do lado de fora dela, a menos de 0,5 mm, ganhava da lateral, do fundo ou da travessa que aparecem ali de verdade;
+  - de duas laterais encostadas na mesma profundidade, ganhava a do vizinho.
+  - Entre esses casos estão os 3 que o Claude 3 viu na escolha do LED (lateral do aéreo em P1; lateral e fundo do nicho em P3).
+- **Correção (`rayHits` + `pickFace`):** o `rayHits` marca o acerto exato (`ws`). O `pickFace` prefere a peça exata mais perto; sem acerto exato (peça fina), segue a tolerância de sempre.
+- **Resultado (s54, só projetos):** 96,8% → 99,1%, vizinho 3 → 0, inequívocos 100% (352/352).
+  - Os 6 que sobram são a régua do engrosso do tamponamento, escolhida sozinha pela regra A50 (é a caixa da frente no ponto).
+  - A s54 agrupa a régua com o tamponamento principal e conta erro. Isso é critério da sonda; avisado ao Claude 5.
+- Regressão (3D, seleção, toque, porta, gaveta a 1366) e a s54 do catálogo inteiro estão rodando.

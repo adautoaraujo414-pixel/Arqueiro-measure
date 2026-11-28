@@ -2696,6 +2696,212 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
     - **Causa:** o cenário apagava a métrica forçada, e no iPad a medida real já é a do iPad, então ele não era o "normal".
     - **Correção:** a normal passa a ser forçada em 0,95/0,26, com comentário no teste. Entrou um cenário próprio para a métrica do iPad medida (1,13/0,26 com `ip`), que dá os mesmos 23 do iPad real, com identificação 0 e callout em cima de etiqueta 0.
 
+## ETAPA 2 · item 21 (Adauto 26/11): bases unidas sozinhas ao encostar módulos — Code 2
+- **Erro:** dois ou mais módulos criados separados e encostados ficavam com a base inferior, o rodapé (frente e trás), a travessa da frente ("régua corrida") e a moldura UNIDOS sozinhos numa peça só (corte, lista, orçamento e 3D).
+- **Causa:** três mecanismos juntavam por geometria (folga ≤ 1 mm, sem tamponamento entre os módulos, mesma profundidade e altura):
+  - `moldRuns` (mold/base) e o embrulho do rodapé (~5465);
+  - `lrRows` (travessa e rodapé em fileira e no L);
+  - o corte, a lista e o 3D, que seguiam esses grupos (`baseRunOf`/`rodRunOf`/`rodSkip`/`cutGroups`).
+- **Auditoria:** o catálogo inteiro, dois de cada modelo encostados contra afastados. Antes, 74 de 99 modelos uniam peças sozinhos; depois, 0 de 99.
+- **Correção (na causa):** `unPode(p,m,key)` em todos os mecanismos.
+  - Só une se os dois módulos tiverem a mesma marca manual `une` (item 2, "Unir": base inferior e rodapé, até 2700 mm, divide acima). Separar e desfazer funcionam.
+  - Ou se os dois forem de projeto antigo (sem `unV`, vindos do arquivo): esses ficam como estavam.
+  - Módulo novo ganha `unV=1` e nunca une sozinho.
+  - Projeto antigo com peça unida: aviso "Separar as peças" na barra e na Estrutura, com desfazer.
+- **Testes:**
+  - novo: `testEtapa2BasesNaoSeUnemSozinhasUnirESepararManualEProjetoAntigo`, que falha antes e passa depois;
+  - 6 testes antigos que esperavam a união automática agora unem pela opção manual e conferem os MESMOS valores;
+  - 67/67 testes relacionados passam a 1366 e a 430.
+- **Evidência:** `engenharia/diagnosticos/etapa2/code2/i21_corte_{antes,depois}.png`.
+## DOB-METAL (ETAPA 2 item 3, R3, 26/11): dobradiça na cor da porta — Claude 3
+- **Módulo:** 3D, todas as portas com dobradiça de caneco (balcão, aéreo, torre, guarda-roupa) e o basculante.
+- **Reproduzir:** pintar a porta com a ferramenta Pintar (madeira com textura) e abrir a porta no 3D. Calço, braço, caneco e parafusos saem na madeira da porta.
+- **Causa raiz:** `hinges3`/`basHw3_` desenham a ferragem com o nome e a chave da porta (`CURN`/`CURK` = "N:Porta", `Porta#k`). Depois, o passo de pintura do 3D (`build_pc`, `pcOf`/`modMatId`) troca a cor e põe a textura (`mid`) em toda caixa com essa chave.
+- **Correção:** toda caixa criada por `hinges3`/`basHw3_` ganha a marca `ferr`, e o passo de pintura pula as caixas `ferr`. As cores metálicas que o desenho já tinha ficam. Geometria, furação, lista, corte e DXF ficam iguais.
+- **Família conferida:** balcão e aéreo, com a porta fechada e aberta: nenhuma caixa da dobradiça dentro de lateral, tampo ou base.
+- **Teste:** `testE2ITEM3_DobradicaMetalicaNaoPegaACorDaPortaENaoAtravessa`. No 3174dbd8 dá "metal false · sem textura false"; agora passa.
+
+## CANTO-165 (ETAPA 2 item 5, pedido do Adauto 26/11): portas do canto paravam em 90° sem obstáculo e abriam juntas — Claude 3
+- **Módulo:** 3D, canto em L (baixo, aéreo, guarda-roupa; esquerdo e direito) e canto cego (balcão e aéreo; na esquerda e na direita).
+- **Reproduzir:** canto em L com um vizinho faceado ao lado: a folha do fundo parava em 90°. Abrir só a folha do lado também abria a do fundo. A porta do canto cego abria só 90°.
+- **Causa raiz:** `cnAng_` tratava qualquer vizinho encostado como obstáculo, mesmo faceado. O `partsOf` do canto marcava a folha do fundo aberta quando só a do lado (`od[1]`) estava aberta. A porta do canto cego usava o 90° fixo da porta comum.
+- **Correção:**
+  - `cnObs_` e `cgObs` listam só o que sai de fato para a frente da face das portas: tamponamento com avanço > 16,5 mm, vizinho mais fundo, tamponamento do vizinho que avança e puxador de barra do vizinho.
+  - Sem obstáculo a abertura é 165°. Com obstáculo é 90°, e a folha do lado fica no limite que já existia, com aviso técnico (`ambMsg`) dizendo o quê e quanto, uma vez por mudança.
+  - Cada folha abre sozinha (`od[0]` só para a do fundo). A do lado só espera a do fundo quando as duas estão abrindo juntas (aí uma cruza a outra).
+  - Os botões de ângulo do canto e do canto cego são 90, 120 e 165. Corte, lista e 2D ficam iguais.
+- **Observação:** o tamponamento automático da ponta tem `tpAv` 25, ou seja, avança 9 mm na frente da porta. Com ele a porta para em 90° com aviso, o que é correto pelo pedido. Faceado (`tpAv` 16), abre 165°.
+- **Testes:**
+  - novo `testE2ITEM5_PortasDoCantoAbrem165EmLECegoEsquerdaEDireita`: no 3174dbd8 dá "0 de 6" e o canto cego falha; agora passa;
+  - ajustado `testPortasDeCantoRobocop…`: a folha do lado abre sozinha, com comentário do pedido;
+  - `testArmarioDeCantoFolga…`: as duas juntas continuam em ordem, bateu 0;
+  - `testFitaDeTopo…`: o filtro da porta tira a dobradiça (`ferr`, item 3).
+
+## V1-FORNO (ETAPA 2 · V1, vídeo do Adauto 26/11): porta do forno embutido no balcão "atravessando" — Claude 3 · NÃO REPRODUZIDO
+- **Módulo:** 3D, balcão com forno embutido (embaixo do cooktop), entre dois balcões.
+- **O que foi conferido (Chromium):**
+  - a frente fechada nasce em cima da base (frente y 137, pé da lateral 115);
+  - porta a meio e toda aberta em 20 cenas: base, tamponamento com engrosso que avança 40, vizinho mais fundo (650), pedra/cooktop, vizinhos com a porta aberta e as 15 medidas de nicho dos fornos do catálogo;
+  - 0 cruzamentos com lateral, base, rodapé, tamponamento, pedra ou porta do vizinho.
+- **Leitura da referência:** o "y 97" anotado antes é a porta toda aberta, deitada na frente do rodapé (z > 596), e não a frente fechada. Nos quadros do vídeo, a porta aberta fica na altura da borda de baixo das portas vizinhas, 15 mm na frente delas, e de perto parece cruzar.
+- **Correção:** nenhuma no código, porque o defeito não se reproduziu. Não foi feita mudança "por via das dúvidas".
+- **Teste de proteção:** `testE2V1_PortaDoFornoNoBalcaoNaoCruzaNadaNasVariantes`.
+- **Pendente:** conferir em aparelho real (iPad, acabamento realista) com o projeto do vídeo.
+
+## MOV-23 (ETAPA 2 item 23, PRIORIDADE, pedido do Adauto 27/11): movimentos contrários com parede espelhada — Claude 3
+- **Pedido:** mover para a direita vai para a direita de quem olha, em todas as paredes. O espelho não inverte a coordenada real. Conferir arrasto, posição, rotação, vincular/desvincular, edição de peças e salvar/reabrir.
+- **Matriz conferida (Chromium), fundo / esquerda espelhada / direita:**
+
+| Comando | Antes (3174dbd8) | Depois |
+|---|---|---|
+| Arrasto no 2D | certo nas 3 (tela e 3D) | certo (teste de proteção) |
+| Mover no 3D (segurar e arrastar), móvel da parede do lado | **pulava para a parede do fundo e andava contra o dedo** (E: dedo ← → móvel →; D: dedo → → móvel ←) | fica na parede, nunca anda contra o dedo |
+| Peça livre: campo "Da esquerda do módulo", móvel virado (`espE`) da parede esquerda | **30 ficava à direita de quem olha** | 30 fica à esquerda (mostra e recebe a partir da esquerda de quem olha; dados iguais) |
+| Peça de parede (prateleira, painel, ripado) na parede esquerda: "Da esquerda da parede" | **maior ia para a esquerda de quem olha** (x conta do canto do fundo) | rótulo "Da parede do fundo", como janela/porta das laterais (dados iguais) |
+| Desvincular | mesmo trecho, gaveta do mesmo lado, 3 paredes | igual |
+| Salvar e reabrir | igual | igual |
+| "Só ele no 2D" | espelhado e coerente com a sala e o 3D | igual |
+| Setas ◀▶▲▼ dos itens da pedra | planta (vista de cima), rótulos "Pro fundo"/"Pra frente": coerentes | igual |
+| Móvel livre (girado) e paredes criadas no 3D | arrasto pelo chão (`lvTenta` com dx/dz do chão): segue o dedo por construção | igual |
+
+- **Causas:**
+  1. Arrasto do 3D na parede do lado: o deslocamento `wo` (chão embaixo do dedo − começo do móvel) era preso entre 0 e a largura. Com o dedo no corpo do móvel, o chão embaixo dele fica atrás do móvel, o `wo` virava 0, e no 1º movimento o móvel saltava para esse ponto e passava do canto (`Z < wingStart−80`), indo para a parede do fundo. Correção: `wo` real, sem prender, e a volta para o fundo só quando o **móvel** passa do canto.
+  2. O bloco PAREDE-ESQ-NOVO vira os dados do móvel da parede esquerda (`espE`), mas o campo da peça livre (`valDe` / `change` de `data-empk`) lia o x cru. Correção: no `espE` o campo converte (`m.w − x − largura`); a largura cresce para a direita de quem olha.
+  3. Peça de parede com `wall:'e'` guarda x a partir do canto do fundo. Correção: rótulo `rpXLbl` em `pratEdit`, painel (aba 8), campos do 3D e etiqueta do arrasto.
+- **Teste:** `testE2ITEM23_MovimentoSegueQuemOlhaEmTodasAsParedes`. No 3174dbd8 falha em a3d (pulou para o fundo), peca (direita de quem olha) e rp (rótulo); agora passa.
+- **Riscos identificados (não corrigidos):**
+  - Na vista 2D da parede esquerda aparece o painel/prateleira da parede do FUNDO (sem `wall`), espelhado junto. É anterior e fica para decisão.
+  - Lista/corte mantêm os nomes guardados (decisão de 18/11, chave da marca ✓ cortada).
+- **Pendente:** aparelho real (iPhone/iPad com toque).
+
+## ESP-VIDRO (ETAPA 2 item 1, Chefe 26/11): vidro, bisotê/lapidação, reflexo e aro do botão — Claude 3
+- **Pedido:** melhorar o vidro, a borda (lapidação/bisotê visível), o reflexo e o aro do botão sem perder desempenho, com antes/depois.
+- **Mudança (só desenho do 3D):**
+  - shader 12/13: tom de vidro na face, brilho diagonal suave e refração do bisotê 0,006 → 0,010, sem passada nova;
+  - faces do bisotê com fatores [1,1, 0,93, 0,8, 0,7] (antes [1,16, 1,07, 0,98, 0,9]) e lapidação [1,08, 0,8] (antes [1,1, 0,96]): antes a 1ª face estourava no branco;
+  - botão: borda escura, anel cromado, lábio e centro (antes anel cinza e centro).
+- **Não muda:** projeto, peças, corte, orçamento e DXF.
+- **Desempenho:** render 2,2 ms → 2,4–2,8 ms no mesmo cenário (variação da medição; só 2 discos a mais por espelho com LED).
+- **Teste:** `testE2ITEM1_EspelhoVidroBisoteEAroDoBotaoMelhores`. No 37ad1152 falha (contraste 0,26/0,14, 2 discos, sem shader); agora passa.
+- **Print:** `tools/sondas/etapa2_c3/item1_vidro_bisote_aro_antes_depois.png`.
+
+## CRUZA-3D-ID (achado do Code 1, 27/11; correção Claude 3, 28/11): peça desenhada no 3D com a chave de outra peça
+- **Erro:** a peça é cortada certa, mas no 3D aparece com a identidade de outra peça. Tocar nela na lista não acendia a própria peça no 3D.
+  - Gaveta interna (2 modelos do catálogo, todas as gavetas): lateral, contra-frente/traseira e fundo de 6 eram um bloco só, 520 × 188,5 × 445, com a chave da `Gaveta interna · frente#n`.
+  - Sapateira (4 modelos): a tira de 40 do aparador saía com a chave da `Sapateira · prateleira inclinada#n`.
+- **Causa raiz:** no `build` do 3D a frente da gaveta interna desenhava a caixa inteira (`B(...,'#f4f2ee')`) com `CURN/CURK` da frente. As peças da caixa são `noDraw` no `partsOf`. O ramo `p.sap` desenhava a tira do aparador (que é `noDraw`) com a chave da prateleira. O `hlResolve` só mandava o toque na lista para a peça vizinha, uma 2ª lógica tapando o problema.
+- **Correção (só o 3D; peças, corte e medidas iguais):**
+  - gaveta interna: cada peça do `partsOf` daquela gaveta (2 laterais, contra-frente, traseira e fundo) vira a sua caixa, com o seu nome e a sua chave, na medida de corte e no mesmo espaço do bloco. O fundo entra 6 mm no rebaixo das laterais;
+  - a marca `gfk` faz tocar na caixa abrir a gaveta como antes;
+  - aparador: a tira sai com o nome e a chave da peça `Sapateira · aparador`;
+  - o `hlResolve` fica como rede (agora a caixa própria existe).
+- **Ajustes depois da família (124 testes; 4 auditorias do catálogo passaram a ver as peças com a sua chave):**
+  - a lateral tem o rebaixo de 6 × 6 do fundo, então o fundo não entra nela;
+  - a corrediça vai até a lateral da caixa, que deixa de ficar solta;
+  - o aparador fica na frente da ponta da prateleira inclinada, sem entrar nela;
+  - o aparador tirado pela 🗑 não fica no 3D;
+  - no teste de altura do partsOf, o aparador entra na exceção da prateleira inclinada, porque fica em pé na ponta dela com 40 de altura. Comentário do pedido no teste.
+- **Teste:** `testCRUZA3DID_GavetaInternaESapateiraComAChaveDeCadaPecaNo3D` (catálogo inteiro, 6 modelos). No HEAD falha (aparador sem caixa própria, bloco com a chave da frente); agora passa.
+
+## TEX-METAL (ETAPA 2 item 4, Chefe 27/11): texturas e materiais de eletros e ferragens sem perder desempenho — Claude 3
+- **Antes:** o `vizMat` (VIS-MAT) mandava ao material de metal só puxador, gola, alumínio e os eletros soltos (`S.fr`). Ficavam lisos, sem brilho de metal: forno/micro/cooktop embutidos no módulo, dobradiças (`ferr`), corrediças e cabideiros. Medido no cenário da sonda: dobradiça 0/360, forno 0/75, cabideiro 0/5, corrediça 0/4.
+- **Mudança (só a classificação do material; nenhuma caixa, medida ou posição muda):**
+  - dobradiça: níquel escovado;
+  - corrediça, cabideiro e suportes: zincado;
+  - inox do forno/micro/cooktop/coifa do módulo: escovado; painel preto: brilhante.
+  - Vidros e puxadores já tinham material próprio (vidro 8,5; puxador pelo acabamento) e ficam como estão.
+- **Teste:** `testE2ITEM4_FerragensEEletroEmbutidoComMaterialDeMetalSemMudarCaixa` (também liga e desliga o VIS-MAT e compara todas as caixas). Falha no 33ffaf05; agora passa.
+- **Print:** `tools/sondas/etapa2_c3/item4_metal_forno_dobradica_antes_depois.png`.
+## ETAPA 2 itens 10 e 11 (26/11): ordem da aba Divisões e modelos de porta — Claude 4
+- **Item 10 (R6).** Na aba Divisões, o bloco "÷ Dividir por igual (módulos lado a lado)" aparecia antes das divisões.
+  - Agora a ordem é: vão, prateleiras, divisórias, Avançado e, por último, "Dividir por igual".
+  - Muda só a ordem (`modBar(semEq)` na aba 1 e o `eqHtml()` no fim da aba). Nas outras abas o bloco fica onde estava.
+  - Teste `testDIVORDEM_…`: falha no 3174dbd8 e passa agora.
+- **Item 11, tela (R7).** Na aba Portas, "Modelo da porta" agora mostra os 9 modelos com miniatura. Os 3 Provençal só existiam em "Estilos de porta"; o botão deles é o mesmo `data-est` do quadro, então aplica pela prévia, em uma porta ou em todas, como hoje.
+  - "Usados recentemente": até 6 modelos, guardados em `PR.portaRec` (prices.json). O Provençal entra na lista só quando a pessoa confirma em Aplicar.
+  - Ordem: tudo o que é da porta vem antes; "2 · Puxador da porta" e "🔧 Puxadores (alça e ponto)" vão para o fim. Nada saiu; os botões são os mesmos, com 3 `data-est` a mais na grade.
+  - Teste `testPORTAMODELOS_…`: falha no 3174dbd8 e passa agora.
+  - Dois testes antigos fixavam a ordem anterior e tiveram a expectativa atualizada, com comentário do pedido e da data: `testAbaPortasSimplesEMinimizarQuadros` (puxador na posição 9 → 12) e `testEstilosDePortaPreviaAplicarEmMassaUmDesfazerESalvar` (Estilos agora vem antes do puxador).
+- **Evidência:** `engenharia/evidencias/etapa2/item10_antes_depois.png` e `item11_antes_depois.png`.
+- **Item 12 (Adauto 26/11; "pós-cava" = Tamponamento inferior, confirmado).** Na aba Tamponamentos a ordem agora é: esquerdo, direito, engrosso cava, inferior, superior, peças.
+  - Só muda a ordem da concatenação em `tampHtml`: os controles são os mesmos (mesmo hash no teste) e não há seção "Pós cava".
+  - Teste `testTAMPORDEM_…`: falha no bd2de0db e passa agora.
+  - `testTamponamentoInvertido…` tinha a ordem das opções "Inverter" na tela; a expectativa mudou de "tt tb" para "tb tt", com comentário do pedido.
+  - Os 40 testes de tamponamento passam.
+
+## ETAPA 2 item 19 (26–27/11): composição da frente nos módulos de baixo — Claude 4
+- **B (aa723095):** no `DRW_`, o campo `v.gf` reparte as frentes pela proporção. O total, as folgas, as réguas do cava e a regra da caixa ficam os de hoje. Sem `gf`, os 142 modelos do catálogo saem iguais bit a bit (hash `115l8ej`), e os 180 testes de gaveta passam.
+- **C (9e80e24a):** vão misto "1 gaveta + basculante", feito como espelho do vão de porta com gavetas embaixo (`gx`). A travessa entra como "Prateleira fixa (embaixo da gaveta)".
+  - **Achado no caminho:** a porta usava o `tX_` (travessa frontal do topo do módulo) e subia por cima da gaveta. Agora, só nesse vão, o `tX_` fica zerado durante a porta e é restaurado depois.
+- **Tela (este commit):** seção "Composição da frente" na aba Estrutura, só nos módulos de baixo. Padrões nos Ajustes; `fcMisto`/`fcAplica`.
+- **Teste `testFRENTECOMP_ComposicoesDaFrente…`:** cobre os 14 erros de sincronização no vão misto.
+  - partsOf = 3D (altura de cada peça) = lista = corte = plano = orçamento;
+  - salvar/reabrir, duplicar e ↶;
+  - trocar de composição não deixa peça velha;
+  - um vão não mexe no outro (medida, posição e nota);
+  - Ajustes valem só para composição nova; cada módulo muda a dele; livre montagem e ↶.
+- **Risco identificado (comportamento que já existia, não mudou):** a chave da peça (`pk`) é numerada por nome no módulo inteiro. Pôr uma frente de gaveta num vão renumera as frentes dos outros vãos ("#1" vira "#2"). O mesmo acontece hoje ao trocar porta por gavetas pelo menu do vão.
+- **Item 11 (9225834e):** o `data-pmod` mudava a assinatura dos botões de modelo, e `testMenusPorTipoInventario…` os acusava como sumidos. Saiu.
+- **Teste de inventário:** a lista de "novas" ganhou os 5 botões de composição, com comentário do pedido.
+
+## TOQUE-JANELA (ETAPA 2 item 25, Adauto 27/11): no desenho de frente, a janela arrastava no primeiro contato do dedo — Claude 4
+- **Antes (toque real pelo CDP, Chromium a 430):** o `pointerdown` em `[data-op2]` já iniciava o arrasto (`snap()` e `drag={t:'op'}`), então o dedo que tremia movia a janela. 1 toque não selecionava e 2 toques não abriam nada.
+- **Correção:** vale para janela, porta, abertura e vão da parede (mesmo `data-op2`).
+  - 1 toque (ao soltar, sem arrasto e sem pinça) seleciona e mostra o contorno azul.
+  - 2 toques abrem a configuração dela: aba Ambiente, quadro dela em destaque.
+  - Arrastar só com ela já selecionada, depois do limite de toque (`SEL.mov`); o desfazer só é gravado quando o arrasto começa de verdade.
+  - Tocar fora tira a seleção.
+  - Usa o mesmo `tapCount`/`SEL` do módulo.
+- **Teste novo:** `testTOQUEJANELA_…`, com eventos de dedo (`pointerType: 'touch'`), a 430 e com o iPad simulado. A sonda com toque real do CDP dá o mesmo resultado.
+- **Teste atualizado:** `testFocarSoNoModuloEArrastarJanelaNo2D` agora toca antes de arrastar, com comentário do pedido. Ele também passou a buscar a janela de novo depois do toque, porque o desenho é refeito.
+
+## TOQUE-ALCA (ETAPA 2 itens 26/27, Adauto 27/11): no módulo do 2D, tremida e pinça mexiam na medida e na posição — Claude 4
+- **Como reproduzir (toque real pelo CDP, Chromium a 430, "Balcão 2 portas + 4 gavetas" com zoom no módulo):**
+  - tremida de 5 px na bolinha da lateral (alça de medida `data-h`): largura 1200→1180, x 600→620;
+  - tremida de 5 px na divisória (`data-d`): posição 0,667→0,681;
+  - pinça com 1 dedo em cima de um botão do desenho (zoom) e o outro na alça: o módulo andava com o movimento do outro dedo (x 600→830);
+  - pinça em cima da porta escolhia a peça ("Peça escolhida: Porta"), como se fosse toque.
+- **Causa raiz (`editor.html`, `pointermove`/`pointerup` do `#svg`):**
+  - os arrastos `h` (alça), `d` (divisória), `s` (prateleira) e `tp` (tamponamento) não tinham a zona morta `SEL.mov`, que o arrasto do módulo (`m`) e da janela (`op`) já tinham;
+  - o `pointermove` não conferia qual dedo começou o arrasto: o 1º dedo que caiu fora do desenho não entrava em `ptrs`, o desenho via só 1 dedo e qualquer movimento arrastava;
+  - o `pointerup` do contador de toques não sabia que tinha havido pinça.
+- **Correção (componente compartilhado, sem lógica paralela):**
+  - `DN0` guarda o dedo e o ponto do `pointerdown`;
+  - alça, divisória, prateleira e tamponamento só andam depois de `SEL.mov` px (depois seguem o dedo como antes);
+  - o movimento de outro dedo desfaz o que andou (o mesmo `drag.m` que a pinça já usava) e para o arrasto;
+  - `PZG` marca gesto de 2 dedos, e pinça ou arrasto não contam como toque.
+- **Comportamento mantido:** arrasto de verdade na alça, na divisória e no módulo; 1 toque escolhe a peça; 2 toques no meio do vão abrem o acesso rápido; 4 toques travam.
+- **Teste novo:** `testTOQUEALCA_TremidaPincaEOutroDedoNaoMexemNoModulo`, com eventos de dedo (`pointerType: 'touch'`).
+  - Falha na 3ca951db em 4 pontos: tremidaAlca, tremidaDivisoria, pincaDedoFora, pincaNaPorta (que dava x 850 e peça escolhida).
+  - Passa depois a 430 e a 1366.
+- **Módulos semelhantes:** a alça, a divisória e o tamponamento são os mesmos para inferiores, superiores, torres e guarda-roupas (mesmo `drag`). O arrasto do módulo e da janela já tinham a zona morta.
+- **Mesma família, achado na auditoria (toque real, antes da correção):** a tremida de 5 px movia a geladeira 50 mm (x 300→350), a alça da geladeira mudava a largura (700→750), o painel ripado andava (1500→1550) e a alça do painel mudava a largura, e o recorte do forno da torre quente descia (ot 60→63).
+  - Causa: os arrastos `ap`, `aph`, `rp` e `ov` também não tinham a zona morta.
+  - Correção: a mesma zona morta.
+  - Teste: `testTOQUEALCA_EletroPainelEFornoNaoAndamComTremida`. Falha na 3ca951db (geladeira 355, alça 755, painel 1555/645, forno andou) e passa depois a 430, a 1366 e no iPad simulado.
+- **Observações da auditoria (sem correção, para decidir):**
+  - a alça da geladeira tem 6 px na tela com o ambiente inteiro à vista, menor que um dedo (risco identificado);
+  - a bolinha da alça (raio 15 no desenho) fica em cima da lateral e do tamponamento: 1 ou 2 toques na lateral não chegam na peça;
+  - 2 toques na lateral também giram o engrosso (EGT), e isso mexe no projeto.
+## CRUZA-3D-ID: peça cortada e desenhada no 3D com a identidade de outra peça (Code 1, 27/11, auditoria ETAPA 2 itens 24/40)
+- **Achado:** cruzamento automático dos 138 modelos do catálogo (em mm e em cm, Chromium a 1366). Por modelo, compara:
+  - campos do painel × dado do módulo;
+  - `partsOf` × grupos do corte (`cutGroups().map[*].src`, por `pk`);
+  - `partsOf` × caixas do 3D (`__boxes()`, por `pk`), com presença e medida;
+  - salvar e reabrir (`snapState` → `loadState`);
+  - mudar a largura e o botão ↶ (`#und`).
+- **Erro comprovado** (identidade; a medida e o corte estão certos):
+  - **Gaveta interna** (10 modelos, ex. "2P c/ Cab+Gav Int 600mm"): `Gaveta interna · lateral#n`, `· frente/costa#n` e `Fundo de gaveta interna (6 mm)#n` estão no `partsOf` e no corte, mas o 3D desenha a gaveta como um bloco 520 × 188,5 × 445 com o `pk` da `Gaveta interna · frente#n`. Nenhuma caixa do 3D leva o `pk` dessas peças: tocar nelas na lista não acende nada no 3D.
+  - **Aparador da sapateira** (18 modelos, ex. "Closet aberto · cabideiro + prateleiras (sem porta)"): `Sapateira · aparador#n` (577,5 × 15) está no `partsOf` e no corte; o 3D desenha a tira 577,5 × 40 × 15 com o `pk` da `Sapateira · prateleira inclinada#n`.
+  - **Área:** 3D (`build`), encaminhado ao Chefe. Não mexido aqui.
+- **Comportamento correto** (diferença técnica identificada, igual no corte e no 3D):
+  - Tamponamento 30 mm = face de 15 + engrosso (`… · engrosso 80#n`); no aéreo, a régua de 30 mm = 2 × 15 (`Tamponamento … (régua)#n`).
+  - O fundo (`Fundo#n`, `Fundo (lado do canto)#n`) entra no corte e no 3D, montado fora do `partsOf` do módulo, com os mesmos `pk` nos dois.
+  - Lateral de gaveta 57,8 no desenho e 57 no corte e no 3D (§5: o décimo vira folga). A nota da peça mostra a conta com decimal ("57,8 − 15 = 42,8").
+  - Itens `noCut` sem caixa no 3D: Decoração, Vão da torre, Nicho do forno/micro/geladeira, lado do canto L. São marcações, não peças.
+  - Salvar e reabrir: igual nos 138. Mudar a largura e ↶: volta igual nos 138.
+  - Campos a 1366 em mm: iguais ao dado nos 138. Em cm, a tela mostra 90 / 82 / 56 cm pro balcão 900 × 820 × 560 (print). O campo escondido que a sonda lia guarda mm.
+- **Não foi possível verificar aqui:** DXF (desligado, DXF_OFF); aparelho real.
 ## ITEM 13 (ETAPA 2, Adauto 26/11): custos fixos na biblioteca de preços — Claude 5 (commit 364c88b)
 - **Pedido:** custos fixos na BIBLIOTECA DE PREÇOS, junto dos materiais; vários (nome, descrição, R$ ou %); escolher por serviço com a % daquele serviço e a base à vista; editar, ativar/desativar, excluir; soma certa sem duplicar entre ambientes e o consolidado; orçamento guarda cópia; biblioteca nova só com o OK; fora do PDF, CSV e link.
 - **Antes:** o motor de 24/11 (`PR.cfxLib` + cópia `S.cfx`, `cfxCalc`, 5 garantias) já existia, mas a biblioteca só aparecia em Valores do projeto, sem ativar/desativar; e um custo fixo em R$ aplicado em dois ambientes do mesmo cliente somava duas vezes no orçamento de vários ambientes (cada ambiente leva o valor do próprio projeto).

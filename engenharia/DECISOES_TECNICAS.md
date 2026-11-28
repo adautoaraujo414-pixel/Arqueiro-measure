@@ -77,8 +77,27 @@ O usuário decide; o app executa corretamente. Nenhum botão vazio, nenhuma alte
 - **Gavetão:** é a mesma gaveta, só com a frente maior. A caixa segue a regra de hoje (`gavH` ou automática); não tem fórmula nova.
 - **Livre montagem:** converte para o módulo por vãos que já existe (`rgConvert`). Se a conversão não der, só avisa.
 - O app só muda o vão quando a pessoa toca na composição, e ↶ desfaz.
+
+
+## Toques no módulo do 2D (ETAPA 2 item 26, Adauto 27/11, decidido pelo Chefe 28/11)
+- 1 toque escolhe a peça, como antes.
+- 2 toques no meio do vão, inclusive na porta ou frente, abrem o acesso rápido.
+- 2 toques em peça da estrutura abrem a aba dela com o campo em destaque.
+- O giro do engrosso saiu do gesto de 2 toques na lateral e foi para o botão "Girar engrosso" no painel da lateral. Nada foi removido.
+- Alça de medida na borda de fora do módulo.
+- Pinça e arrasto nunca contam como toque.
+
+## Distância digitada no 2D (ETAPA 2 item 38, Adauto 27/11)
+- Ao digitar a distância (esquerda, direita, teto, pedra), o app pergunta: mover o módulo (só o espaçamento) ou redimensionar (só a peça, com o outro lado parado). Cancelar não muda nada.
+- Largura e altura digitadas seguem a convenção de antes (esquerda e chão parados) até o Adauto decidir.
+
 | 27/11/2026 | **Item 13 · custos fixos na biblioteca de preços** (Adauto 26/11; Claude 5). O mesmo motor de 24/11. A biblioteca (`PR.cfxLib`) aparece também na tela de preços, junto dos materiais, com ativar/desativar. Custo em R$ tem escopo: **por ambiente** (padrão, como antes) ou **uma vez por serviço** (`esc:'srv'`): no orçamento de vários ambientes entra só no 1º ambiente da lista que tem o custo (mesmo nome); os outros ambientes não somam de novo. Custo em % não tem escopo (proporcional: somado nos ambientes dá o mesmo % do total). A linha do % mostra a base e o valor dela | Adauto (pedido), Claude 5 (forma) | `testCustosFixosNaBibliotecaDePrecos…` |
 | 27/11/2026 | **Item 20 · fita manual por lado** (Adauto 26/11; Claude 5). Guardada por peça no módulo (`m.fitaMan[pk]`, o mesmo pk do corte) ou na peça avulsa do ArqueCut (`p.f`). Sem escolha = automático (`edgeSides`). Uma leitura só para plano, lista, metros de fita/orçamento e quadro do 3D | Adauto (pedido), Claude 5 (forma) | `testFitaManualPorLado…` |
 | 27/11/2026 | **Item 30 · N11: plano de corte por trabalho, não por tempo** (Claude 5). Os limites de tempo do otimizador viraram limite de trabalho (peças arrumadas): `CUTK=4000` (packOnce) e `CUTK2=1500` (packMax) peças por "ms" dos limites antigos, escolhidos para nunca cortar antes do limite de tentativas nos 142 modelos (s49). Mesmo projeto = mesmo plano em qualquer máquina e carga. Custo: obra muito grande fica um pouco mais lenta (medido) | Chefe (pedido), Claude 5 | `testPlanoDeCorteNaoDependeDoRelogio…`, s49 |
 | 27/11/2026 | **Item 31 · guarda sem escrever-e-desfazer** (Claude 5). As passadas de restrição trabalham numa sombra de x/b/w/h/d (mesmo objeto); o módulo só recebe o valor decidido. Mesmo resultado bit a bit (s50) | Chefe (pedido), Claude 5 | `testConfineAllRoomClampNaoEscrevem…`, s50 |
 | 28/11/2026 | **ETAPA 2 · item 21/2: "Unir" manual completo** (Chefe 28/11, §0 nenhuma função some). O "Unir" da Estrutura une tudo o que antes se unia sozinho, com escolha por peça no grupo: base inferior e rodapé (ligados ao unir), travessa frontal/régua corrida e moldura corrida (marcar). Até 2700 mm; passou, divide na junta dos módulos. Separar só aquela junta; desfazer. Campo `m.uneK` no grupo `m.une`. **Encaixe no 3D:** mexe só no próprio móvel; os outros voltam exatamente como estavam antes da conferência de colisão (o tamponamento automático do vizinho nunca muda sozinho). Conferido em 7 caminhos (criar ao lado, copiar, digitar a posição, arrastar no 2D, encaixar no 3D, digitar no 3D, afastar): vizinho igual bit a bit. |
+
+## Lateral do meio nas paredes laterais (Chefe 28/11, regra do Adauto: projeto antigo não muda sozinho)
+- O módulo criado a partir de 28/11 (`latMeioW=1`) tem a mesma construção em qualquer parede (lateral inteira junto das gavetas e travessa em peças).
+- O módulo de antes, numa parede lateral, segue como era. O painel avisa e oferece "Igualar ao fundo" (prévia e desfazer).
+- Abrir um projeto não grava nada.

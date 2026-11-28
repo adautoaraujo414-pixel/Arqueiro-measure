@@ -14507,6 +14507,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antigo"] as? String, "8.800 2.610", "projeto antigo: fita igual")
     }
 
+    // ETAPA 2 · item 2 · decisão do Adauto 28/11 (1): no canto em L e no canto cego a pessoa escolhe qual base passa inteira (A ou B), em base e
+    // rodapé; a outra encurta até encostar. Botões do Code 2 na seção "Bases unidas"; geometria do Claude 5 (cnPassa). Canto cego: só com a junta
+    // unida; a base do cego fica como está (motivo na tela), o rodapé escolhe. Desfazer.
+    func testEtapa2BaseQuePassaInteiraNoCantoLENoCantoCegoAouBComDesfazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};window.FITENCOLHE=1;var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+var o=[];var pc=function(m,re){return partsOf(m).filter(function(p){return re.test(p.name)}).map(function(p){return p.name.replace('(pedestal)','').trim()+' '+Math.round(p.cl)+'×'+Math.round(p.cw)}).join(', ')};
+/* canto L */
+loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.RD=3000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.tab=0;draw();panel();await W(100);document.querySelector('#bd [data-corner="e"]').click();await W(200);var c=S.mods[0];await W(900);
+S.m=c;draw();panel();await W(100);var bs=[].map.call(document.querySelectorAll('#bd [data-cnp]'),function(b){return b.dataset.cnp+(b.classList.contains('sel')?'*':'')+(b.disabled?'(x)':'')}).join(',');o.push('canto L botões '+bs);
+var a0=pc(c,/^(Base inferior|Rodapé \(pedestal\))/);document.querySelector('#bd [data-cnp="base|B"]').click();await W(200);o.push('B base: '+JSON.stringify(c.cnPassa)+' · '+a0+' → '+pc(c,/^(Base inferior|Rodapé \(pedestal\))/));
+await W(900);document.getElementById('und').click();await W(300);c=S.mods[0];o.push('desfaz: '+JSON.stringify(c.cnPassa||null)+' · '+pc(c,/^(Base inferior|Rodapé \(pedestal\))/));
+/* canto cego */
+var cg=null;CATS.forEach(function(k){(k.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!cg&&t&&!t.act&&/canto cego/i.test(t.n)&&!t.sup&&!/aéreo/i.test(t.n))cg=t})});o.push('modelo cego: '+(cg&&cg.n));
+loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.RD=3000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(cg)));var C=S.mods[0];C.x=0;draw();newTpl(T('Balcão 2 portas'));var A=S.m;S.tab=0;draw();panel();await W(100);document.querySelector('#bd [data-wing="e"]').click();await W(200);A.x=C.d+fBack(C)+lt(A);draw();await W(900);
+o.push('par '+(cnPassaCego(C)===A)+'/'+(cnPassaCego(A)===C));S.m=C;draw();panel();await W(100);o.push('cego antes de unir: '+(document.querySelector('#bd [data-cnp]')?'tem seletor':'sem seletor')+' · botão '+!!document.querySelector('#bd [data-une="w"]'));
+document.querySelector('#bd [data-une="w"]').click();await W(200);S.m=C;draw();panel();await W(100);bs=[].map.call(document.querySelectorAll('#bd [data-cnp]'),function(b){return b.dataset.cnp+(b.classList.contains('sel')?'*':'')+(b.disabled?'(x)':'')}).join(',');o.push('cego unido: '+(C.une===A.une)+' botões '+bs+' · motivo da base '+/descem na frente da base/.test(document.getElementById('bd').textContent));
+var r0=pc(C,/^Rodapé \(pedestal\)$/)+' | asa '+pc(A,/^Rodapé \(pedestal\)$/);document.querySelector('#bd [data-cnp="rod|B"]').click();await W(200);o.push('rod B: '+r0+' → '+pc(C,/^Rodapé \(pedestal\)$/)+' | asa '+pc(A,/^Rodapé \(pedestal\)$/));
+S.m=A;draw();panel();await W(100);o.push('na asa: '+[].map.call(document.querySelectorAll('#bd [data-cnp]'),function(b){return b.dataset.cnp+(b.classList.contains('sel')?'*':'')}).join(',')+' · '+(document.querySelector('#bd .note') ? [].map.call(document.querySelectorAll('#bd .note'),function(n){return n.textContent}).filter(function(t){return /A escolha fica/.test(t)}).join(''):''));
+return JSON.stringify({r:o.join(' | '),errs:__errs.length-e0});
+        """#)
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+        XCTAssertEqual(o["r"] as? String, "canto L botões base|A*,base|B,rod|A*,rod|B | B base: {\"base\":\"B\"} · Base inferior 894×560, Base inferior (lado do canto) 334×560, Rodapé 364×100, Rodapé  do lado 349×100 → Base inferior 334×560, Base inferior (lado do canto) 894×560, Rodapé 364×100, Rodapé  do lado 349×100 | desfaz: null · Base inferior 894×560, Base inferior (lado do canto) 334×560, Rodapé 364×100, Rodapé  do lado 349×100 | modelo cego: Balcão canto cego · cego na direita (porta na esquerda) | par true/true | cego antes de unir: sem seletor · botão true | cego unido: true botões base|A(x),base|B(x),rod|A,rod|B · motivo da base true | rod B: Rodapé 1000×100 | asa Rodapé 900×100 → Rodapé 489×100 | asa Rodapé 1485×100 | na asa: base|A,base|B,rod|A,rod|B* · A escolha fica no canto cego (módulo 1).", "canto L: B troca qual base passa inteira (rodapé igual), desfazer volta; cego: seletor só depois de unir, base fica (motivo), rodapé B: a da asa passa inteira")
+    }
+
     // ETAPA 2 · item 2, canto L (Chefe 28/11; parte do Code 2, a geometria da base atravessada é do Claude 5): o "Unir" vale no canto — com o
     // vizinho da fileira do fundo e com o 1º módulo da parede lateral (asa). Unir, separar cada junta e desfazer, pelos botões da Estrutura.
     func testEtapa2UnirNoCantoLComOFundoEComAAsaSepararEDesfazer() async throws {

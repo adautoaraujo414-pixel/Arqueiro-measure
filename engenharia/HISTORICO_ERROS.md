@@ -2778,6 +2778,12 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - a marca `gfk` faz tocar na caixa abrir a gaveta como antes;
   - aparador: a tira sai com o nome e a chave da peça `Sapateira · aparador`;
   - o `hlResolve` fica como rede (agora a caixa própria existe).
+- **Ajustes depois da família (124 testes; 4 auditorias do catálogo passaram a ver as peças com a sua chave):**
+  - a lateral tem o rebaixo de 6 × 6 do fundo, então o fundo não entra nela;
+  - a corrediça vai até a lateral da caixa, que deixa de ficar solta;
+  - o aparador fica na frente da ponta da prateleira inclinada, sem entrar nela;
+  - o aparador tirado pela 🗑 não fica no 3D;
+  - no teste de altura do partsOf, o aparador entra na exceção da prateleira inclinada, porque fica em pé na ponta dela com 40 de altura. Comentário do pedido no teste.
 - **Teste:** `testCRUZA3DID_GavetaInternaESapateiraComAChaveDeCadaPecaNo3D` (catálogo inteiro, 6 modelos). No HEAD falha (aparador sem caixa própria, bloco com a chave da frente); agora passa.
 
 ## TEX-METAL (ETAPA 2 item 4, Chefe 27/11): texturas e materiais de eletros e ferragens sem perder desempenho — Claude 3

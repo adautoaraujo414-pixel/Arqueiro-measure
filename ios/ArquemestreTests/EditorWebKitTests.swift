@@ -19808,6 +19808,25 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* Item 40 (parte financeira, Chefe 28/11: "peça que existe nas peças e no 3D tem que entrar no orçamento"): a gaveta do CAIXOTE (guarda-roupas,
+       torres, closet) tem o par de corrediça telescópica nas peças e no 3D, mas o orçamento contava 0 (o mCost só via o nome "Frente de gaveta").
+       Agora cada "Frente de gaveta (caixote)" conta 1 par de corrediça. Catálogo inteiro: frentes de gaveta = pares de corrediça no orçamento. */
+    func testItem40CorredicaDoCaixoteDeGavetasEntraNoOrcamento() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.cor=45;PR.coro=90;
+        loadState(initLimpo());S.W=4000;S.mods=[];newTpl(T('Estante torre aberta com gavetas embaixo'));draw();var m=S.mods[0],P=partsOf(m),fr=P.filter(function(p){return p.name==='Frente de gaveta (caixote)'}).length,cr=P.filter(function(p){return /^Corrediça telescópica \(caixote\)/.test(p.name)}).length;
+        var b=budget(),L=prAuto(b).filter(function(r){return r[0]==='cor'})[0];R.estante=fr+' frentes · '+cr+' corrediças nas peças · orçamento '+mCost(m).drw+' pares · linha '+(L?L[3]+' × '+r2(+PR.cor)+' = '+r2(L[3]*PR.cor):'-');
+        var bad=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!t||t.act||!t.w)return;loadState(initLimpo());S.mods=[];newTpl(JSON.parse(JSON.stringify(t)));draw();var mm=S.mods[0];if(!mm)return;var f=0;partsOf(mm).forEach(function(p){if(/^Frente de gaveta|^Frente \(porta tempero\)$|^Gaveta interna · frente$/.test(p.name))f+=(+p.qty||1)});var r=mCost(mm);if(f!==r.drw+(r.drwO||0))bad.push(t.n+' '+f+'≠'+(r.drw+(r.drwO||0)))})});R.catalogo=bad.length?bad.slice(0,5).join(' | '):'todas as gavetas com corrediça';
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["estante"] as? String, "3 frentes · 6 corrediças nas peças · orçamento 3 pares · linha 3 × 45 = 135", "as 3 gavetas do caixote: 3 pares de corrediça no orçamento")
+        XCTAssertEqual(o["catalogo"] as? String, "todas as gavetas com corrediça")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto, via Chefe 24/11): cada módulo (m.uid) e peça (m.uid|pk) com a mesma chave no editor (partsOf), no 3D,
     // na lista, no corte e no DXF; cópia ganha id novo (módulo e peças); salvar/reabrir e desfazer/refazer mantêm; Meus modelos ganha id novo; id que existe
     // nunca é trocado; id repetido ao abrir: avisa e só muda se a pessoa mandar

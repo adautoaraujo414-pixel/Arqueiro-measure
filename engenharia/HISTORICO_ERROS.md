@@ -3449,3 +3449,16 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Canto em L: antes era recusado com "Toque num módulo primeiro" (motivo falso). Agora diz que o LED de módulo não vai no canto em L e aponta o "💡 Toque na peça".
 - **s54 (6):** passa a medir o "Toque na peça" (combinado com o Claude 5).
 - **Teste:** testLEDQUALQUER confere a prévia, o lugar aceso, que nada é criado antes do OK e o LED aceso depois. Comentário com pedido e data.
+
+## LED-HOST · LED na porta caía na dobradiça; frente de gaveta não criava LED nem avisava — Claude 3 (s54 do Claude 5, 28/11)
+- **Reproduzir:** Aéreo 2 portas, lvlAdd(0,'Porta#1',1).
+  - No 5067fec, o LED era criado em cima da dobradiça, calado.
+  - Depois do LED-CAIXA, era recusado com "tem 12 mm e o perfil precisa de 12 mm" (43 das 44 recusas da s54).
+  - Gaveteiro: lvlAdd na Frente de gaveta não criava nada e não avisava.
+- **Causa:** lvlHost pegava a 1ª caixa com o pk (na porta, a dobradiça: b.ferr, 12×48×38) e pulava caixas com perfil (pf/poly; frente com cava). O aviso da face estreita exigia PW+1.
+- **Correção:**
+  - lvlHost usa a CHAPA: a maior caixa com o pk que não é ferragem. Peça com perfil usa a caixa que envolve o perfil. Sem chapa, avisa.
+  - O aviso aceita face = perfil (12 mm cabe).
+  - A dobradiça da própria peça conta como obstáculo no lvlFit.
+  - Projetos antigos: o dado do LED não muda; o desenho passa a ficar na chapa da porta (onde ele está vinculado).
+- **Teste:** testLEDHOST. Porta (frente e dentro) e frente de gaveta criam na chapa sem bater em nada; borda de 6 mm recusa com o aviso certo. Falha antes e passa depois.

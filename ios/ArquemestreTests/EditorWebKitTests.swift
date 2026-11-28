@@ -17494,6 +17494,27 @@ return JSON.stringify({out:nomes.length+' com correr · cruzando: '+(ruins.join(
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /// LED-HOST (s54 do Claude 5, 28/11): a peça que recebe o LED é a CHAPA da peça. Antes o lvlHost pegava a 1ª caixa com o pk — na porta era a
+    /// dobradiça (12 mm, b.ferr) e o LED era recusado com "tem 12 mm e precisa de 12 mm" (aviso contraditório) — e a frente de gaveta com perfil não
+    /// achava caixa e não criava nada, calada. A dobradiça da própria peça conta como obstáculo.
+    func testLEDHOST_LedNaChapaDaPortaEDaFrenteDeGavetaNaoNaDobradica() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;var MS=[];window.toast=function(t){MS.push(t)};window.ambMsg=function(t){MS.push(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length;
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+open3D();await W(200);
+var caso=async function(nm,pk,fi,rot){loadState(initLimpo());S.env='livre';S.W=4000;S.mods=[];newTpl(achar(nm));var m=S.mods[0];m.x=1500;draw();re3();__build();MS=[];var L=lvlAdd(0,pk,fi);__build();
+ if(!L){out.push(rot+': não criou · '+MS.join('/'));return}var BX=__boxes(),lb=BX.filter(function(b){return b.ledl&&b.ledl.id===L.id&&!b.nol}),chapa=BX.filter(function(b){return b.pk===pk&&/^0:/.test(String(b.nm))&&!b.ferr&&!b.ledl}).sort(function(a,b){return (b.x1-b.x0)*(b.y1-b.y0)*(b.z1-b.z0)-(a.x1-a.x0)*(a.y1-a.y0)*(a.z1-a.z0)})[0];
+ var naChapa=lb.every(function(b){return b.x0>=chapa.x0-1&&b.x1<=chapa.x1+1&&b.y0>=chapa.y0-1&&b.y1<=chapa.y1+1}),bate={};lb.forEach(function(b){BX.forEach(function(o){if(o.ledl||o.nol||!o.nm||o.a===0||o.gp)return;if(o.pk===pk&&!o.ferr)return;if(Math.min(b.x1,o.x1)-Math.max(b.x0,o.x0)>1&&Math.min(b.y1,o.y1)-Math.max(b.y0,o.y0)>1&&Math.min(b.z1,o.z1)-Math.max(b.z0,o.z0)>1)bate[String(o.nm)+(o.ferr?'(ferragem)':'')]=1})});
+ out.push(rot+': criou L'+L.L+' · '+(naChapa?'na chapa da peça':'FORA da chapa')+' · bate em: '+(Object.keys(bate).join(',')||'nada'))};
+await caso('Aéreo 2 portas','Porta#1',1,'porta · face da frente');await caso('Aéreo 2 portas','Porta#1',0,'porta · face de dentro');await caso('Gaveteiro 3 gavetas','Frente de gaveta#1',1,'frente de gaveta · frente');await caso('Aéreo 2 portas','Fundo#1',4,'fundo · borda 6 mm');
+return JSON.stringify({out:out.join(' | '),errs:__errs.length-e0});
+
+          """#)
+        XCTAssertEqual(o["out"] as? String, "porta · face da frente: criou L710 · na chapa da peça · bate em: nada | porta · face de dentro: criou L710 · na chapa da peça · bate em: nada | frente de gaveta · frente: criou L545 · na chapa da peça · bate em: nada | fundo · borda 6 mm: não criou · ⚠ O LED não cabe nesta face: ela tem 6 mm e o perfil precisa de 12 mm (nada foi criado).")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /// LED-TOQUE (Etapa 3 · 3.3/3.5, Chefe 28/11): o "💡 Toque na peça" usa a MESMA escolha do toque (window.pecaNoToque, do Claude 4): a superfície da frente
     /// no ponto, sem atravessar. O ponto tocado decide o trecho do LED (vão tocado da estante), o destino acende em laranja, e quando o dedo cai entre 2+ peças
     /// (ambig) aparece uma escolha simples — nada é criado até escolher. Precisa do pecaNoToque (claude/etapa2-claude4 @b3029da7) — vale na integração.

@@ -3474,3 +3474,13 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Teste:** testDESTAQUE com a régua da s54 (só caixas com o pk ou ppk escolhido) e os modelos dos achados.
   - Antes: canto em L 6/7 (Porta#2 → base); torre 21/23 (frentes com recorte → nada).
   - Depois: 100% nos 8 modelos.
+
+## LED-AMBIG · "Toque na peça" pedia escolha em 57% dos toques — Claude 3 (decisão do Chefe/Adauto 28/11)
+- **Antes:** qualquer peça a até 8 px (pecaNoToque.ambig) abria a escolha. Prévia da s54: 176/310 toques.
+- **Regra:** a peça da frente pelo pecaNoToque vai direto. A escolha só aparece quando o ponto é de verdade de outra peça: amostras a ±1 px, a peça do centro aparece em no máximo 1 das 4 e outra domina (2 ou mais). Peça fina vista de lado (2–3 px) vai direto.
+- **Alvo:** a peça-mãe (ppk), como a seleção; o engrosso do tamponamento leva para o tamponamento. A ferragem nunca é alvo (LED-HOST).
+- **Medições** (s54 P1–P5, editor juntado com o Claude 4):
+  - ±2 px: 66/310 escolhas (21%), peça 100%;
+  - ±1 px: 37/310 (11,9%), peça 99,6%;
+  - regra do centro: medindo.
+- **Teste:** testLEDTOQUE, com 3 partes: a quina vai direto na peça da frente; o toque claro põe o LED no 2º vão; com pecaNoToque simulado, a emenda pede escolha e a peça fina não. As chamadas usam window.pecaNoToque, o contrato combinado com o Claude 4.

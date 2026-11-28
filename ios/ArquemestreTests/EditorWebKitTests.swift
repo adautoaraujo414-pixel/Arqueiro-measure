@@ -17526,16 +17526,21 @@ var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(functio
 loadState(initLimpo());S.env='livre';S.W=4000;S.mods=[];newTpl(achar('Estante aberta'));var m=S.mods[0];m.x=1500;draw();open3D();await W(400);out.push('pecaNoToque '+(typeof window.pecaNoToque==='function'?'ok':'FALTA (vem do Claude 4)'));
 var cv=document.getElementById('cv3'),rc=cv.getBoundingClientRect();__build();var Lb=__boxes().filter(function(b){return b.pk==='Lateral esquerda#1'&&/^0:/.test(String(b.nm))})[0],prs=__boxes().filter(function(b){return /^0:Prateleira/.test(String(b.nm))}).map(function(b){return Math.round(b.y0)}).filter(function(v,i,a){return a.indexOf(v)===i}).sort(function(a,b){return a-b});
 var yv=(prs[0]+prs[1])/2,zc=(Lb.z0+Lb.z1)/2,tap=function(x,y){var o={bubbles:true,cancelable:true,pointerId:7,isPrimary:true,clientX:rc.left+x,clientY:rc.top+y,pointerType:'touch',button:0};cv.dispatchEvent(new PointerEvent('pointerdown',Object.assign({buttons:1},o)));cv.dispatchEvent(new PointerEvent('pointerup',Object.assign({buttons:0},o)))};
-/* 1) toque na quina (várias peças a poucos px): escolha simples, nada criado, o destino acende */
-var sp=__p3(Lb.x1+0.5,yv,zc),pq=pecaNoToque(sp[0],sp[1]);window.LEDPICK=1;MS=[];tap(sp[0],sp[1]);await W(250);var E=document.getElementById('ledesc'),nb=E?E.querySelectorAll('[data-ledesc]:not([data-ledesc="x"])').length:0;
-out.push('ambíguo: '+(pq.ambig||[]).length+' outras · escolha '+(E?nb+' botões':'NÃO apareceu')+' · LED criado '+(m.leds||[]).length+' · aceso '+(window.SEL3?SEL3.pk:'-'));
-if(E){var b1=E.querySelector('[data-ledesc="1"]');b1.click();await W(150);var L1=(m.leds||[])[0];out.push('escolheu 2ª: LED na '+(L1?L1.pk:'nada')+' · escolha fechada '+!document.getElementById('ledesc'));m.leds=[]}
+/* 1) toque na quina (peças vizinhas a poucos px, mas a da frente é inequívoca): o LED vai direto na peça da frente (peça-mãe), sem escolha — decisão do Chefe/Adauto 28/11 */
+var sp=__p3(Lb.x1+0.5,yv,zc),pq=pecaNoToque(sp[0],sp[1]);window.LEDPICK=1;MS=[];tap(sp[0],sp[1]);await W(250);var E=document.getElementById('ledesc'),L0=(m.leds||[])[0];
+out.push('quina: frente '+(pq.ppk||pq.pk)+' · escolha '+(E?'APARECEU':'não')+' · LED '+(L0?L0.pk:'nenhum')+' · aceso '+(window.SEL3?SEL3.pk:'-'));m.leds=[];
 /* 2) toque claro na face de dentro da lateral, no 2º vão: o LED nasce nesse vão e a lateral acende */
 try{__cam(-0.55,0.12,0.9)}catch(_){}await W(200);rc=cv.getBoundingClientRect();__build();sp=__p3(Lb.x1+0.5,yv,zc);pq=pecaNoToque(sp[0],sp[1]);window.LEDPICK=1;MS=[];tap(sp[0],sp[1]);await W(250);var L=(m.leds||[])[0];
-out.push('claro: '+pq.pk+' '+pq.face+' · LED '+(L?L.pk+' y '+Math.round(Lb.y0+L.u)+'..'+Math.round(Lb.y0+L.u+L.L):'nenhum')+' (2º vão '+(prs[0]+15)+'..'+prs[1]+') · aceso '+(window.SEL3?SEL3.pk:'-'));
+out.push('claro: '+pq.pk+' '+pq.face+' · LED '+(L?L.pk+' y '+Math.round(Lb.y0+L.u)+'..'+Math.round(Lb.y0+L.u+L.L):'nenhum')+' (2º vão '+(prs[0]+15)+'..'+prs[1]+') · aceso '+(window.SEL3?SEL3.pk:'-'));m.leds=[];
+/* 3) a regra da escolha, com o pecaNoToque simulado no ponto e a ±1 px: emenda de verdade (o centro quase some, outra peça domina) pede escolha; peça fina de lado (2–3 px) vai direto */
+var pnt0=window.pecaNoToque,fake=function(cen,viz){var n=0;window.pecaNoToque=function(x,y){var q=n===0?cen:viz[(n-1)%4];n++;return {mi:0,pk:q,ppk:null,face:'frente',ponto:[Lb.x0,yv,zc]}}};
+fake('Lateral esquerda#1',['Fundo#1','Fundo#1','Lateral esquerda#1','Fundo#1']);window.LEDPICK=1;tap(sp[0],sp[1]);await W(200);E=document.getElementById('ledesc');var r1=E?E.querySelectorAll('[data-ledesc]:not([data-ledesc="x"])').length+' opções':'direto';if(E)E.querySelector('[data-ledesc="x"]').click();m.leds=[];
+fake('Lateral esquerda#1',['Tamponamento esquerdo#1','Prateleira#1','Lateral esquerda#1','Lateral esquerda#1']);window.LEDPICK=1;tap(sp[0],sp[1]);await W(200);E=document.getElementById('ledesc');var r2=E?'ESCOLHA':'direto';if(E)E.querySelector('[data-ledesc="x"]').click();window.pecaNoToque=pnt0;m.leds=[];window.LEDPICK=0;
+out.push('emenda de verdade: '+r1+' · peça fina de lado: '+r2);
 document.getElementById('v3x').click();return JSON.stringify({out:out.join(' | '),errs:__errs.length-e0});
           """#)
-        XCTAssertEqual(o["out"] as? String, "pecaNoToque ok | ambíguo: 3 outras · escolha 4 botões · LED criado 0 · aceso Tamponamento esquerdo · engrosso 80#1 | escolheu 2ª: LED na Fundo#1 · escolha fechada true | claro: Lateral esquerda#1 dir · LED Lateral esquerda#1 y 436..729 (2º vão 434..731) · aceso Lateral esquerda#1")
+        /* LED-AMBIG (Chefe/Adauto 28/11): escolha só na emenda de verdade; a peça da frente inequívoca vai direto (antes qualquer peça a 8 px pedia escolha) */
+        XCTAssertEqual(o["out"] as? String, "pecaNoToque ok | quina: frente Tamponamento esquerdo#1 · escolha não · LED Tamponamento esquerdo#1 · aceso Tamponamento esquerdo#1 | claro: Lateral esquerda#1 dir · LED Lateral esquerda#1 y 436..729 (2º vão 434..731) · aceso Lateral esquerda#1 | emenda de verdade: 2 opções · peça fina de lado: direto")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

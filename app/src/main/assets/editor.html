@@ -12092,7 +12092,7 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  function scan(){IDS.forEach(function(id){try{put(document.getElementById(id))}catch(_){}})}
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-minb]');if(!b)return;e.stopPropagation();e.preventDefault();var el=b.parentNode;MIN[el.id]=!MIN[el.id];put(el)},true);
  ['pointerdown','pointerup'].forEach(function(n){document.addEventListener(n,function(e){if(e.target&&e.target.closest&&e.target.closest('[data-minb]'))e.stopPropagation()},true)});
- setInterval(scan,500);window.__minScan=scan;
+ setInterval(scan,500);window.__minScan=scan;/* MINB-JA (Chefe 28/11): quadro redesenhado por um toque (ex.: aba Teto do Ambiente) ficava sem o ▁ até a próxima volta de 500 ms; agora volta logo depois do toque ou da digitação */['click','change','input'].forEach(function(n){document.addEventListener(n,function(){setTimeout(scan,0)},true)});/* na captura: o toque que redesenha o quadro costuma parar a propagação */
 })();
 </script>
 <script>

@@ -3342,3 +3342,13 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Esse «▁» oscila também na mesma sequência: a ParteB1 rodada 2 vezes a 430 alcançou numa e não na outra; a 1366 alcança. É da descoberta por exploração, não da divisão.
   - Ajustes inteiro: 121. Soma das partes: 122, faltando 0.
 - **testouBastante:** mínimo de cada parte (40, 4, 4, 45 · 25, 40, 28). A soma passa dos 30/40 dos testes inteiros. Comentário NADA-DIVIDIDO nos testes.
+
+## MINB-JA (Chefe 28/11): o «▁» de Ambiente › Teto ora entrava, ora não, na ParteB1 — Claude 4
+- **Causa raiz:** o botão de minimizar dos quadros (`[data-minb]`) é posto por um `setInterval(scan, 500)`.
+  - Quando um toque redesenha o quadro (aba Teto do it4), o «▁» some e só volta na próxima volta, em até 500 ms.
+  - A sonda lê a tela 90 ms depois do toque: às vezes ele já estava, às vezes não. Para a pessoa, o «▁» piscava.
+- **Correção (app):** depois de cada clique, change e input (na captura, porque o toque que redesenha costuma parar a propagação), o scan roda logo em seguida (`setTimeout(scan,0)`). O intervalo de 500 ms continua.
+- **Prova:**
+  - medido no navegador: o «▁» presente a 0 e a 90 ms depois de "Teto" (antes: ausente);
+  - ParteB1 a 430, 3 de 3 rodadas com o «▁» pelo mesmo caminho (Ambiente › Teto › «▁»), 55 controles;
+  - os 12 NadaDeEnfeite passam a 1366.

@@ -3383,3 +3383,18 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - `testCantoLBaseAtravessadaLadoAouBBaseERodapeEspelhadoSemSobreposicao`: E/D × A/B, base e rodapé separados, partsOf = 3D = corte, mesma área no orçamento, 0 sobreposição, laterais por fora, salvar/reabrir, desfazer.
   - `testCantoCegoRodapeAtravessadoLadoAouBEncostaOuPassaInteiroSemSobreposicao`: E/D × sem escolha/A/B, 0 sobreposição entre TODAS as peças dos dois (portas, régua, laterais, fundo), partsOf = 3D = corte, base fica e avisa, não anda sozinho, tamponamento, sem Unir, salvar/reabrir, desfazer.
 - **Outros módulos:** o aéreo não tem base nem rodapé. O canto do guarda-roupa usa o mesmo bloco do canto L. Os pés de metal ficam de fora porque não têm peça corrida. As corridas (`moldRuns`/`lrRows`) leem `cl`/`rodLados`, então acompanham.
+
+## Matriz de dispositivos (Code 1, 28/11): 3 achados do Chefe para o Code 2 — Code 2
+- **(1) S.teto={} gravado só por trocar de aba no 🧱 Ambiente.**
+  - Causa: o tratador de cliques do painel fazia `S.teto=S.teto||{}` antes de saber se algum valor do teto ia mudar.
+  - Correção: o S.teto nasce só ao escolher um valor (ligar/esconder, cor, veio, rebaixo).
+  - Varredura dos outros painéis (🧱 Ambiente e abas, abas do módulo, Ajustes, Valores, Plano de corte, Preços, todos os botões do cabeçalho): nenhum outro grava nada só por abrir ou fechar.
+  - Teste: `testEtapa2AbrirEFecharPaineisNaoMudaOProjetoNemCriaTeto`. Antes falha com "teto:undefined→{}"; depois passa.
+- **(2) Liberdade de composição, mover no 3D a 375, "não pergunta ao soltar".** Não é defeito do app.
+  - O teste mandava só o 1º movimento ao canvas e os demais ao #v3. A 375 o 1º passo (9,1 px) não passa a zona morta de 10 px, e o arraste nunca começava. A 430 o passo é 10,4 px.
+  - No toque de verdade, todo movimento vai ao elemento onde o dedo encostou. Com isso, a 375 o móvel anda e a pergunta aparece.
+  - Teste ajustado (todos os movimentos no canvas), com comentário. Passa a 375×667, 430 e 1366.
+- **(3) Plano de corte a 375×2: 4 textos cruzando o contorno (o "#11" da torre por vãos).**
+  - Causa: com densidade 2, o plano sai pequeno na tela e a fonte desce mais (≈0,35 da letra) do que a métrica medida a 100 px (0,26). Era o mesmo efeito do iPad (CPMET-IPAD), que só ligava no iPad.
+  - Correção: a mesma medida em escala pequena vale para densidade ≥ 2. O computador (densidade 1) fica idêntico.
+  - Conferido: plano legível (3 terços, cm/mm), CORTEPRIORIDADE, NOMEIPAD e zoom passam 10/10 a 375×667×2, 430×900×3 e 1366.

@@ -14423,7 +14423,7 @@ final class EditorWebKitTests: XCTestCase {
         open3D();await W(900);__cam(0,0.25,1);await W(200);__build();var cv=document.querySelector('#v3 canvas'),M_=document.getElementById('v3');
         var ev=function(tp,x,y,el){(el||cv).dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,pointerType:'touch',button:0,buttons:tp==='pointerup'?0:1,isPrimary:true}))};
         var ctr=function(i,fx){var bb=null;__boxes().forEach(function(q){if(String(q.nm||'').indexOf(i+':')!==0||/Rodapé|Base inferior/.test(q.nm))return;if(!bb)bb={x0:q.x0,x1:q.x1,y0:q.y0,y1:q.y1,z0:q.z0,z1:q.z1};else{bb.x0=Math.min(bb.x0,q.x0);bb.x1=Math.max(bb.x1,q.x1);bb.y0=Math.min(bb.y0,q.y0);bb.y1=Math.max(bb.y1,q.y1);bb.z1=Math.max(bb.z1,q.z1)}});/* perto do topo do móvel (no celular a barra do 3D cobre a parte de baixo da tela) */var p=__p3(fx?bb.x0+(bb.x1-bb.x0)*fx:(bb.x0+bb.x1)/2,bb.y1-120,bb.z1),rc=cv.getBoundingClientRect();return [rc.left+p[0],rc.top+p[1]]};
-        var dlg=0,drag=async function(i,dx,n,fx){n=n||10;__build();var c=ctr(i,fx);ev('pointerdown',c[0],c[1]);await W(420);for(var s=1;s<=n;s++){ev('pointermove',c[0]+dx*s/n,c[1],s>1?M_:cv);if(aberto())dlg++}ev('pointerup',c[0]+dx,c[1],M_);await W(250)};
+        var dlg=0,drag=async function(i,dx,n,fx){n=n||10;__build();var c=ctr(i,fx);ev('pointerdown',c[0],c[1]);await W(420);/* MATRIZ 375 (Code 1/Chefe 28/11): no toque de verdade todo movimento vai pro elemento onde o dedo encostou (o canvas). Antes o teste mandava só o 1º pro canvas e o resto pro #v3: a 375 o 1º passo (9 px) não passava da zona morta de 10 px e o arraste nunca começava (a 430 o passo é 10,4 px). O app é o mesmo */for(var s=1;s<=n;s++){ev('pointermove',c[0]+dx*s/n,c[1],cv);if(aberto())dlg++}ev('pointerup',c[0]+dx,c[1],M_);await W(250)};
         var px=function(mm){var a=__p3(0,700,600),b=__p3(mm,700,600);return b[0]-a[0]},sob=function(i,j){return libColide(S.mods[i]).indexOf(S.mods[j])>=0};
         var J0=JSON.stringify(S.mods[0]);dlg=0;await drag(1,px(-1400));R.atravessa='durante '+dlg+' · ao soltar '+(aberto()?'pergunta':'sem pergunta')+' · esperando a resposta por cima '+sob(1,0);bt('0');await W(100);R.cancelar=Math.round(S.mods[1].x)+' · vizinho igual '+(JSON.stringify(S.mods[0])===J0);
         await W(800);await drag(1,px(-1400));bt('1');await W(100);var X1=S.mods[1].x;R.colocar='por cima '+sob(1,0)+' · '+(S.mods[1].lvok||[]).length+' par';
@@ -14505,6 +14505,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["orcamento"] as? String, "true", "o orçamento soma a mesma fita do módulo")
         XCTAssertEqual(o["desfez"] as? String, "plano [,,,] · fita na cor 8.800")
         XCTAssertEqual(o["antigo"] as? String, "8.800 2.610", "projeto antigo: fita igual")
+    }
+
+    // Chefe 28/11 (matriz do Code 1): abrir e fechar painéis não muda o projeto. Antes, só trocar de aba no 🧱 Ambiente gravava S.teto={} no
+    // projeto (snapState mudava). Agora o S.teto só nasce quando um valor do teto é escolhido. Confere o 🧱 Ambiente e as abas, as abas do
+    // módulo, Ajustes, Valores, Plano de corte, Preços e todos os botões do cabeçalho: snapState igual.
+    func testEtapa2AbrirEFecharPaineisNaoMudaOProjetoNemCriaTeto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+var dk=function(a,b){a=JSON.parse(a);b=JSON.parse(b);return Object.keys(Object.assign({},a,b)).filter(function(k){return JSON.stringify(a[k])!==JSON.stringify(b[k])}).map(function(k){return k+':'+String(JSON.stringify(a[k])).slice(0,40)+'→'+String(JSON.stringify(b[k])).slice(0,60)}).join(', ')||'igual'};
+loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));S.m=null;draw();await W(900);var o=[];
+var chk=async function(nome,fn){var s0=JSON.stringify(snapState());try{await fn()}catch(e){o.push(nome+': ERRO '+e.message);return}await W(150);var d=dk(s0,JSON.stringify(snapState()));if(d!=='igual')o.push(nome+': '+d)};
+var clk=function(sel){var b=document.querySelector(sel);if(b)b.click();return !!b};
+await chk('3D abrir/fechar',async function(){open3D();await W(300);try{close3D()}catch(_){}});
+await chk('Ambiente e abas',async function(){open3D();await W(300);clk('#v3wal');await W(200);for(const t of [].slice.call(document.querySelectorAll('[data-qwtab]'))){t.click();await W(100)}clk('#v3wal');await W(100);try{close3D()}catch(_){}});
+await chk('abas do módulo',async function(){S.m=S.mods[0];for(var t=0;t<12;t++){S.tab=t;draw();panel();await W(30)}S.m=null;draw()});
+await chk('Ajustes',async function(){try{stdOpen()}catch(_){}await W(200);var tb=[].slice.call(document.querySelectorAll('#stdm [data-std],#stdm [data-stdt]'));for(const b of tb.slice(0,20)){b.click();await W(50)}try{document.getElementById('stdm').hidden=true}catch(_){}});
+await chk('Valores',async function(){clk('#vlb');await W(300);try{document.getElementById('vlm').hidden=true}catch(_){}});
+await chk('Plano de corte',async function(){openCut();await W(300);try{document.getElementById('cutm').hidden=true}catch(_){}});
+await chk('Preços',async function(){try{prRender();document.getElementById('prm').hidden=false;await W(200);document.getElementById('prm').hidden=true}catch(_){}});
+for(const id of ['clb','lzb','prb','b3d','cutb','mcb','vlb','shb','ntb','gdb','pv2db','med2b','plv','zi','zo','zr']){await chk('cabeçalho '+id,async function(){var b=document.getElementById(id);if(!b||!b.offsetParent)return;b.click();await W(300);document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));await W(100);[].forEach.call(document.querySelectorAll('[id$="m"]:not([hidden])'),function(x){if(x.style&&getComputedStyle(x).position==='fixed')x.hidden=true});try{close3D()}catch(_){}try{if(window.mcOff)mcOff()}catch(_){}})}
+var r=o.join(' | ')||'nada mudou';open3D();await W(300);document.getElementById('v3wal').click();await W(200);document.querySelector('[data-qwtab="T"]').click();await W(150);var sim=document.querySelector('[data-qtt="1"]');if(sim){sim.click();await W(150)}var criou=!!(S.teto&&S.teto.on);document.getElementById('v3wal').click();try{close3D()}catch(_){}
+        return JSON.stringify({r:r,teto:'escolher o teto cria '+criou,errs:__errs.length-e0});
+        """#)
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+        XCTAssertEqual(o["r"] as? String, "nada mudou", "abrir/fechar painel e trocar de aba não grava nada no projeto")
+        XCTAssertEqual(o["teto"] as? String, "escolher o teto cria true", "escolher um valor do teto continua criando e gravando")
     }
 
     // ETAPA 2 · item 2 · decisão do Adauto 28/11 (1): no canto em L e no canto cego a pessoa escolhe qual base passa inteira (A ou B), em base e

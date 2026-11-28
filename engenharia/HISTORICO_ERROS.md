@@ -3396,3 +3396,10 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - D: a régua não cruza a asa e a face da porta está em 581, então a base estica +40.
 - No B a base da asa também não passa por baixo da porta (entraria 5 mm): fica igual ao A, e `cnPassaInfo` diz o porquê. A base do cego não muda.
 - A base atravessada também sai do contorno da CANTO-SOZINHO (senão o módulo andaria ao ser mexido).
+
+## CANTO-NASCE · as duas versões (Chefe 28/11, aguardando o Adauto · conflito com o PEDIDO 52) — Claude 5
+- **Conflito:** o PEDIDO 52 diz "chegando perto, encostam certinho" (ímã automático). A regra de 27/11 diz "o app não altera uma vírgula sozinho". O Chefe levou ao Adauto e pediu que o cdfe7a8 não seja integrado até a resposta.
+- **Chave `window.CANTO_IMA_ARRASTO`:**
+  - **A (false, padrão hoje):** nada encosta sozinho, nem no arrasto; tudo vira "Encostar no canto".
+  - **B (true, leitura do Chefe):** o ímã vale só no ARRASTO da própria pessoa. O gesto é detectado assim: o x ou a parede do módulo escolhido mudou entre encostar e soltar o dedo (`pointerdown`/`pointerup` em captura). Ele encosta e o ↶ desfaz o gesto inteiro. Criar, trocar tamponamento, mudar largura e digitar continuam só sugerindo, com o x igual bit a bit.
+- **Teste:** `testCantoImaDuasVersoesArrastoDaPessoaEncostaSoNaVersaoBORestoSoSugere` cobre as duas versões. Se o Adauto escolher B: basta pôr a chave em `true` e acrescentar ao teste do PEDIDO 52 os casos com gesto ("encostados", como era).

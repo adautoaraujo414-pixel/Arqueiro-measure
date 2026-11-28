@@ -20276,6 +20276,33 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // CANTO-NASCE · AS DUAS VERSÕES (Chefe 28/11, aguardando o Adauto): A (padrão, CANTO_IMA_ARRASTO=false) nada encosta sozinho, nem no arrasto · B (=true) o ímã do PEDIDO 52
+    // vale só no ARRASTO da própria pessoa (soltou perto do canto → encosta, ↶ volta); criar, tamponamento e largura continuam só sugerindo, x igual bit a bit
+    func testCantoImaDuasVersoesArrastoDaPessoaEncostaSoNaVersaoBORestoSoSugere() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;draw();
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var pe=function(tp){window.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,pointerId:7,isPrimary:true,clientX:5,clientY:5}))};
+        var mk=async function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();await W(400);newTpl(T('Balcão canto cego · cego na esquerda (porta na direita)'));S.mods[0].x=0;draw();await W(500);addWing('e');var w=S.mods[S.mods.length-1];draw();await W(1500);draw();await W(300);try{libSugLimpa()}catch(_){}return w};
+        var sug=function(){var b=document.getElementById('libsug');return b&&!b.hidden&&/Encostar no canto/.test(b.textContent)?(b.textContent.match(/x [0-9.]+ → [0-9.]+/)||[''])[0]:'sem sugestão'};
+        for(const ver of ['A','B']){window.CANTO_IMA_ARRASTO=ver==='B';var w=await mk();await W(800);
+          /* arrasto da pessoa: encosta o dedo com o módulo escolhido, ele anda até 610 e solta */S.m=w;pe('pointerdown');w.x=610;draw();pe('pointerup');await W(1500);draw();await W(400);R[ver+'arrasto']=w.x+' · '+sug();
+          if(ver==='B'){await W(800);document.getElementById('und').click();await W(200);R.Bdesfaz=S.mods[S.mods.length-1].x;w=S.mods[S.mods.length-1];w.x=610;draw();await W(1500);draw();await W(400)}
+          /* outras ações, sem arrasto: o x não muda nem um bit */var x0=w.x;w.tl=!w.tl;draw();await W(1500);draw();await W(400);R[ver+'tamp']=Object.is(w.x,x0)+' · '+sug();w.w=800;draw();await W(1500);draw();await W(400);R[ver+'largura']=Object.is(w.x,x0)+' · '+sug()}
+        window.CANTO_IMA_ARRASTO=false;R.padrao=window.CANTO_IMA_ARRASTO;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["Aarrasto"] as? String, "610 · x 610 → 621", "versão A: o arrasto também só sugere")
+        XCTAssertEqual(o["Barrasto"] as? String, "621 · sem sugestão", "versão B: soltou perto do canto, o ímã encosta (PEDIDO 52)")
+        XCTAssertEqual(o["Bdesfaz"] as? Double, 600, "versão B: ↶ desfaz o gesto inteiro (arrasto + ímã, 1 passo do histórico), como era no PEDIDO 52")
+        XCTAssertEqual(o["Atamp"] as? String, "true · x 610 → 651", "A: tamponamento não mexe no x")
+        XCTAssertEqual(o["Alargura"] as? String, "true · x 610 → 651", "A: largura não mexe no x")
+        XCTAssertEqual(o["Btamp"] as? String, "true · x 610 → 651", "B: tamponamento não mexe no x (não é arrasto)")
+        XCTAssertEqual(o["Blargura"] as? String, "true · x 610 → 651", "B: largura não mexe no x")
+        XCTAssertEqual(o["padrao"] as? Bool, false, "padrão = versão A até o Adauto responder")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // ITEM 2 · BASE ATRAVESSADA NO CANTO CEGO (Adauto 28/11; leitura do Chefe 28/11, opção c): o cego e o 1º módulo da parede lateral (2 módulos retos) hoje não se
     // encostam. Com a junta unida e a escolha no cego, o RODAPÉ: A = o do cego passa inteiro e o da asa vai até ENCOSTAR · B = o da asa passa inteiro até o rodapé
     // traseiro do cego e o do cego encurta onde a asa cruza. E e D, 0 sobreposição entre TODAS as peças dos dois (portas, régua espaçadora, laterais, fundo),

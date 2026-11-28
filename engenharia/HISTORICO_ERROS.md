@@ -2937,3 +2937,8 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Validação:** sonda `tools/sondas/s50_guarda_sem_escrita.js` (120 modelos postos fora do lugar + cozinha sobreposta; desenhar, 3D, campo, parede menor): projeto e avisos iguais ao código antigo, bit a bit. Desempenho do `draw`/`partsOf` igual.
 - **Teste:** `testConfineAllRoomClampNaoEscrevemNosModulosMesmoResultado` (espião nos campos). No c38c9ba: 8 escritas em x e 10 em b; agora 0, mesmo lugar e mesmos avisos.
 - **Fora (classificação):** o `sanM` (dentro do `partsOf`) regrava o mesmo valor (não muda nada) — comportamento correto. Pedra e móveis soltos no `roomClamp` ainda usam escrever-e-desfazer (mesmo mecanismo) — risco identificado, não pedido.
+
+## INTEGRAÇÃO 28/11 · testValoresCobraAChapaPeloQueFoiUsadoNaoAChapaInteira "linhasDeChapaComOMesmoPreco: 0 · esperado 1" — Claude 5
+- **Reproduzido** na integração 48b46033 (a 1366); no ramo do Claude 5 (itens 13/20/30/31) passava.
+- **Causa (não é o item 13):** o teste precisa de 2 linhas de chapa com o mesmo preço; vinham da "Travessa frontal (régua corrida)" de 2700 (sem nome de cor, 2º grupo de chapa de cor). O item 21 (a74b638, aprovado) não une mais travessa sozinho e o "Unir" manual une só base e rodapé; a régua corrida continua só no projeto antigo (módulos sem `unV`).
+- **Correção (só o cenário do teste, a conferência é a mesma):** os balcões vêm de um arquivo antigo (salvo sem `unV`, reaberto), como o item 21 manda deixar. Comentário no teste com o pedido e a data. Passa 13/13; os 9 testes de custos, fita, N11, confineAll, item 34 e ambientes também passam no integrado.

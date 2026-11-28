@@ -66,5 +66,29 @@ A bateria inteira não cabe em mais um simulador: o iPhone já usa 2 passos de 7
 
 Precisa da autorização do Adauto (mexe no CI). Não foi feito.
 
-## 5. Resultado das rodadas a mais
-(preenchido quando as baterias de 375 × 667 × 2 e 820 × 1180 × 2 terminarem)
+## 5. Resultado das rodadas a mais (integração 3 `888603db`, Chromium sem tela, 28/11)
+| Tamanho | Bateria inteira | Repetidas sozinhas, máquina parada | Em 430 × 900 × 3 |
+|---|---|---|---|
+| 375 × 667 × 2 (iPhone SE) | 629/641 (12 falhas) | as 12 falham de novo | as 12 passam |
+| 375 × 900 × 2 (largura do SE, tela alta) | — | 3 passam, 9 falham | — |
+| 820 × 1180 × 2 (iPad comum) | 632/641 (9 falhas) | 5 passam, 4 falham | as que rodaram passam |
+
+### 375 de largura (iPhone SE, 13 mini): 9 falhas que dependem da largura
+**Risco real, não verificado em aparelho:** o comportamento muda na tela estreita. São toques que pegam outra coisa, e o 2D, que fica menor, deixa os alvos pequenos.
+- `testCooktopToqueNaBocaAcendeSemSelecionar`: o toque na boca do cooktop não acende (`isx2` null).
+- `testDoisToquesFuncionamNaGeladeiraENasTorresComPrateleira`: 2 toques na geladeira duplex não fazem nada.
+- `testTOQUEPECA_DoisToquesNoMeioAcessoRapidoNaPecaEdicaoDela`: 2 toques na base dão acesso rápido sem abrir a edição da peça.
+- `testLiberdadeDeComposicaoMoverNo3DECantoPerguntaAoSoltarParAceitoDesfazE2DIgual3D`: ao soltar por cima, não pergunta (§12).
+- `testTrocarDeParedeEMexerNaGeladeiraNaoMoveNenhumMovel`: `doisToques` falso.
+- `testLedNoRipadoDoisToquesDePerto…`: o toque fora abre o LED do vão 8 em vez de avisar.
+- `testDoisToquesNoVaoDeCimaAteOTeto…`: erro no teste (nada achado no toque).
+- `testEdicaoAmbiente3DParedeNo2DEAbasLimpas`: `min` falso.
+- `testPlanoDeCorteLegivelTextoNaoCruzaFitaNem…PrimeiroTerco`: 4 textos cruzam o contorno da peça. Ex.: "Torre por vãos · micro-ondas + forno + gavetas", "#11".
+
+**Só altura (passam em 375 × 900):** `testTocarEmQualquerMedidaDoVaoEDigitar`, `testToqueNoVaoComoNoIPhone…`, `testEtapa2VizinhoIgualBitABit…`. O teste procura o elemento abaixo da área visível de 667.
+
+### 820 × 1180 (iPad comum): 4 falhas, não foi possível verificar aqui
+`testFornoDaTorrePorVaosAbreNoToqueEmQualquerPonto`, `testDepuradorDeEmbutirNasDuasMontagens`, `testNadaDeEnfeite3DEValoresParteB…` e `testDESFAZERTODOS_EspelhoEMoverNo3D`.
+- Todas dependem da animação ou do desenho do 3D.
+- Aqui o 3D é desenhado pelo processador (SwiftShader), e a área de 1640 × 2360 pixels deixa os quadros lentos: a porta do depurador estava no meio do caminho quando foi medida.
+- O iPad 13", maior, passa esses testes no `ios.yml` com o simulador. Não dá pra concluir defeito.

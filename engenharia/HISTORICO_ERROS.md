@@ -3463,3 +3463,4 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Os 2 toques no meio do vão das gavetas (sobre a frente de gaveta) pegavam a "Travessa frontal", que fica atrás das frentes. Isso abria a edição; o painel rolava e o resto do roteiro caía fora da tela.
   - Correção: a faixa só vale pra peça fina que aparece em algum ponto (a base a 375 aparece numa tira embaixo da porta). Peça toda coberta não ganha faixa, e o meio do vão volta a ser o acesso rápido.
   - Prova: ParedeEsquerdaToque, PuxadorBola, TOQUEPECA e ToqueNoVao passam a 430, 375 e 1366.
+- **PASSO-375, revisto (28/11):** fica a correção do Code 2 (bbe5e688), que manda todos os pointermove ao canvas, como o toque real faz, e não depende da zona morta. O ajuste do passo ≥ 11 px (da053985) foi desfeito neste ramo. Sem o bbe5e688, o teste falha a 375 neste ramo sozinho; integrado, passa.

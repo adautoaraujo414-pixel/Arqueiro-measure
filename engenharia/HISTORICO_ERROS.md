@@ -2973,3 +2973,10 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - `testPlanoDeCortePecaBranca…` e `testValoresCobra…` montam a união pelo "Unir", com base, rodapé, travessa e moldura marcadas, e voltaram aos valores ORIGINAIS.
   - Prova das contagens que subiram: com o "unir sozinho" antigo forçado numa cópia do editor, `testMedidaDePeca…`, `testPlanoDeCorteTodaPeca…`, `testFASE5…` e `testNOMEIPAD…` voltam exatamente a 6308, 12836, 284/142 e 281/257/271. A diferença é só a união.
   - Testes novos: `testEtapa2UnirManualTravessaEMolduraCorridaPeloBotaoComCorte` e `testEtapa2VizinhoIgualBitABitEmTodoCaminhoDeMoverCriarCopiarEncaixar`.
+
+## TAMP-JUNTA · ponto 3 (Chefe 28/11): posição digitada tirava sozinho o tamponamento da junta do próprio módulo — Code 2
+- **Causa:** o `setv('x')` desligava o automático dos dois lados do módulo editado e só devolvia o lado que continuava exposto. O lado encostado ficava sem tamponamento, sem a pessoa decidir. O arraste já seguia a §12, porque passava pelo embrulho do `tampJunta`.
+- **Correção:** o lado da junta volta ligado no próprio módulo, e a retirada entra na sugestão "Tirar tamponamento da junta", com prévia e desfazer. O botão novo vale para o arraste e para a posição digitada.
+- **Testes:**
+  - novo: `testEtapa2MovidoMantemTamponamentoDaJuntaSugestaoTirarComPreviaEDesfazer` (digitar, arrastar, aplicar, desfazer, projeto antigo);
+  - `testB24…` v5 atualizado com comentário: antes "tr0", agora "tra".

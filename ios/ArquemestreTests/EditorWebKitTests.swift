@@ -14505,6 +14505,41 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["separa"] as? String, "Base inferior (contínua, sob as laterais) 1800×1 | Base inferior (contínua, sob as laterais) 1800×1 | Moldura de acabamento 900×4 | Rodapé (pedestal) contínuo · frente e trás 1800×2 | Rodapé (pedestal) contínuo · frente e trás 1800×2 | Travessa frontal (régua corrida) 1800×1 | Travessa frontal (régua corrida) 1800×1", "separar só a junta do meio: dois grupos de 1800")
     }
 
+    // DECISÃO do Chefe 28/11 (ponto 3, §12/TAMP-JUNTA): o módulo ARRASTADO ou DIGITADO mantém o tamponamento da junta; tirar vira a sugestão
+    // "Tirar tamponamento da junta", com prévia do que sai, aplicar num toque e desfazer. O vizinho fica igual. Projeto antigo aberto: igual.
+    func testEtapa2MovidoMantemTamponamentoDaJuntaSugestaoTirarComPreviaEDesfazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.FITENCOLHE=1;var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var can=function(m){/* wing ausente = 0 (parede do fundo): o loadState grava 0, é o mesmo lugar */return JSON.stringify(m,function(k,v){if(k==='wing'&&!v)return undefined;return v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce(function(a,x){a[x]=v[x];return a},{}):v})};
+        var pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var tp=function(m){return 'x'+Math.round(m.x)+' tl'+(m.tl?(m.tlAuto?'a':'m'):'0')+' tr'+(m.tr?(m.trAuto?'a':'m'):'0')};
+        var cena=async function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2700;S.wl={L:'p',R:'p'};S.stones=[];draw();atArm();newTpl(T('Balcão 1 porta'));draw();await W(60);var b=S.mods[0];b.x=1000;draw();await W(60);atArm();newTpl(T('Balcão 2 portas'));draw();await W(60);var a=S.mods[1];a.x=2500;a.tl=true;a.tlAuto=1;a.tlW=30;libSugLimpa();S.m=a;draw();panel();await W(900);return {a:a,b:b}};
+        var bar=function(){var b=document.getElementById('libsug');return b&&!b.hidden?b.textContent.replace(/\s+/g,' ').trim():'sem barra'};
+        var cut=function(){var n=0;S.mods.forEach(function(m){cutLines(m).forEach(function(l){if(/^Tamponamento (esquerdo|direito)/.test(l.name||''))n+=l.qty||1})});return n};
+        /* digitar a posição encostando no vizinho */
+        var c=await cena(),jb=can(c.b),n0=cut();setv('x',c.b.x+c.b.w);await W(300);
+        R.digitar='movido '+tp(c.a)+' · vizinho '+(can(c.b)===jb?'igual':'MUDOU')+' · corte '+n0+'→'+cut();R.barraDigitar=bar();
+        await W(900);document.querySelector('#libsug [data-libsug="ok"]').click();await W(200);R.aplicou='movido '+tp(c.a)+' · vizinho '+tp(c.b)+' · corte '+cut();
+        await W(900);document.getElementById('und').click();await W(300);var a2=S.mods[1],b2=S.mods[0];var dk=function(a,b){a=JSON.parse(a);b=JSON.parse(b);return Object.keys(Object.assign({},a,b)).filter(function(k){return JSON.stringify(a[k])!==JSON.stringify(b[k])}).map(function(k){return k+':'+JSON.stringify(a[k])+'→'+JSON.stringify(b[k])}).join(',')};R.desfez='movido '+tp(a2)+' · vizinho '+(can(b2)===jb?'igual':'MUDOU '+dk(jb,can(b2)));
+        /* arrastar no 2D até encostar */
+        c=await cena();jb=can(c.b);var svg=document.getElementById('svg'),rc=document.querySelector('#mod[data-mi="1"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/c.a.h,x=rc.left+rc.width*.5,y=rc.top+rc.height*.5,el=document.elementFromPoint(x,y)||svg,tx=-(c.a.x-(c.b.x+c.b.w))*cpm-12;pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=6;i++){pe('pointermove',svg,x+tx*i/6,y);await W(20)}pe('pointerup',svg,x+tx,y);await W(400);
+        R.arrastar='movido '+tp(c.a)+' · vizinho '+(can(c.b)===jb?'igual':'MUDOU');R.barraArrastar=bar();
+        /* projeto antigo: abrir não muda nada nem sugere */
+        c=await cena();var st=JSON.parse(JSON.stringify(snapState()));c.a.x=c.b.x+c.b.w+30;st=JSON.parse(JSON.stringify(snapState()));var j0=JSON.stringify(st.mods);loadState(st);draw();await W(300);var jn=S.mods.map(can).join('|'),jo=JSON.parse(j0).map(can).join('|');R.antigo=(jn===jo?'igual':'MUDOU')+' · '+bar();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+        XCTAssertEqual(o["digitar"] as? String, "movido x1450 tla tra · vizinho igual · corte 15→15", "digitou encostado: os dois tamponamentos da junta FICAM")
+        XCTAssertEqual(o["barraDigitar"] as? String, "🔧 Junção: dá pra tirar o tamponamento da junta de 2 módulos — módulo 1: tamponamento direito sai · módulo 2: tamponamento esquerdo sai (nada mudou sozinho).Tirar tamponamento da junta✕", "sugestão com prévia")
+        XCTAssertEqual(o["aplicou"] as? String, "movido x1450 tl0 tra · vizinho x1000 tl0 tr0 · corte 5", "o botão tira os dois da junta (lista de corte junto)")
+        XCTAssertEqual(o["desfez"] as? String, "movido x1450 tla tra · vizinho igual", "desfazer devolve os dois")
+        XCTAssertEqual(o["arrastar"] as? String, "movido x1510 tla tra · vizinho igual", "arrastou: o movido mantém o tamponamento e para fora do do vizinho")
+        XCTAssertEqual(o["barraArrastar"] as? String, "🔧 Junção: dá pra tirar o tamponamento da junta de 2 módulos — módulo 1: tamponamento direito sai · módulo 2: tamponamento esquerdo sai, encosta (x 1450) (nada mudou sozinho).Tirar tamponamento da junta✕")
+        XCTAssertEqual(o["antigo"] as? String, "igual · sem barra", "projeto antigo aberto: nada muda, nenhuma sugestão")
+    }
+
     // §12 / TAMP-JUNTA (Chefe 28/11): módulo que já existe nunca perde nem ganha tamponamento sozinho, em nenhum caminho: criar ao lado, copiar,
     // digitar a posição, arrastar no 2D, encaixar no 3D, digitar a posição no 3D e afastar da parede. O vizinho fica igual bit a bit.
     func testEtapa2VizinhoIgualBitABitEmTodoCaminhoDeMoverCriarCopiarEncaixar() async throws {
@@ -18991,7 +19026,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v2"] as? String, "e volta: x5 tl0 tra · peças iguais true", "voltou: tudo igual")
         XCTAssertEqual(o["v3"] as? String, "digitou 25: x25 tl0 tra", "B05: 25 fica 25, sem vão nem empurrão")
         XCTAssertEqual(o["v4"] as? String, "manual: x305 tl0 trm M", "manual nunca muda")
-        XCTAssertEqual(o["v5"] as? String, "encostou: x2100 tl0 tr0", "encostou no outro: o automático da junta sai (TAMP-JUNTA de sempre)")
+        XCTAssertEqual(o["v5"] as? String, "encostou: x2100 tl0 tra", "DECISÃO do Chefe 28/11 (ponto 3, §12/TAMP-JUNTA): o módulo digitado MANTÉM o tamponamento da junta; tirar vira a sugestão \"Tirar tamponamento da junta\" (antes saía sozinho: tr0)")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 

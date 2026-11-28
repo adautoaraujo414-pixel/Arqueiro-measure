@@ -15278,7 +15278,7 @@ final class EditorWebKitTests: XCTestCase {
         var base=function(n){return String(n).split(' · ')[0]},nomes={};cutLines(a).forEach(function(l){(l.names||[]).forEach(function(n){nomes[base(n)]=1})});var p1=plano(a),fora=p1.L.filter(function(n){return /esquerd|direit/.test(n)&&!nomes[base(n)]});
         R.novo_espE=String(!!a.espE);R.novo_nomes_iguais=fora.length?'diferente: '+fora.join(', '):'igual';
         /* 2. móvel ANTIGO na esquerda com o tamponamento tirado do corte pela identidade: Desespelhar não traz a peça de volta nem tira outra */
-        cena();newTpl(T('Balcão porta + gavetas'));var o=S.m;delete o.espN;delete o.espE;o.tl=true;o.tr=false;o.tlM=o.trM=1;delete o.tlAuto;delete o.trAuto;o.wing='e';o.x=1500;loadState(JSON.parse(JSON.stringify(snapState())));draw();o=S.mods[0];
+        cena();newTpl(T('Balcão porta + gavetas'));var o=S.m;delete o.espN;delete o.espE;/* LATMEIO-PAREDE (Chefe 28/11): móvel de antes também não tem o campo novo latMeioW */delete o.latMeioW;o.tl=true;o.tr=false;o.tlM=o.trM=1;delete o.tlAuto;delete o.trAuto;o.wing='e';o.x=1500;loadState(JSON.parse(JSON.stringify(snapState())));draw();o=S.mods[0];
         var pk=partsOf(o).filter(function(p){return /^Tamponamento/.test(p.name)})[0].pk;var ids=pcIds([{mi:0,pk:pk,n:1}],true);ids.forEach(function(id){S.cutOff[id]=1});
         var q0=plano(o),cl0=JSON.stringify(cutLines(o).map(function(l){return l.qty+'x'+l.L+'x'+l.W}).sort());
         window.espDesespelhar(o);draw();var q1=plano(o),cl1=JSON.stringify(cutLines(o).map(function(l){return l.qty+'x'+l.L+'x'+l.W}).sort());
@@ -20227,6 +20227,38 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["redimImpossivel"] as? String, "↔ Mover o módulo (só o espaçamento) / ⇔ Redimensionar (só a peça) / ✕ Cancelar (nada muda)")
         XCTAssertEqual((o["redimDesligado"] as? String)?.hasPrefix("desligado: a largura ficaria"), true, "opção impossível aparece desligada com o motivo")
         XCTAssertEqual(o["apiDireta"] as? String, "x 1810 · larg 1200 · esq 250", "modGapSet direto continua aplicando (testes e outras telas)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // LATMEIO-PAREDE (risco achado pelo Claude 4, decisão do Chefe 28/11, regra do Adauto "projeto antigo não muda sozinho"): o mesmo balcão saía com
+    // outra construção nas paredes laterais (latMeioFam tinha !m.wing): "Divisória 1" 620 + travessa única 1200, em vez da "Lateral do meio" 690 com rebaixo
+    // + travessas 795 e 405 do fundo. Agora o módulo NOVO (latMeioW=1, gravado na criação) é igual em qualquer parede; o de antes (sem o campo) abre e salva
+    // igual bit a bit e segue como era, com aviso "Construção diferente do fundo" e o botão "Igualar ao fundo" (prévia, desfazer).
+    func testLATMEIOPAREDE_ModuloNovoIgualEmQualquerParedeAntigoNaoMuda() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var corte=function(m){return cutLines(m).map(function(l){return Math.round(l.L)+'x'+Math.round(l.W)+'x'+l.qty}).sort().join(' ')};
+        var d3=function(){__build();return __boxes().filter(function(b){return /^0:(Lateral do meio|Divis[óo]ria \d)/.test(String(b.nm))}).map(function(b){return String(b.nm).split(':')[1].replace(/#.*/,'')}).filter(function(v,i,a){return a.indexOf(v)===i}).join(',')};
+        loadState(initLimpo());S.env='cozinha';S.W=3200;S.H=2700;S.mods=[];S.stones=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));var m=S.mods[0];m.x=1000;S.m=m;draw();await W(300);
+        R.novoTemCampo='latMeioW '+m.latMeioW+' latMeio '+m.latMeio;var cF=corte(m);
+        m.wing='d';draw();await W(200);R.novoNaLateral=(corte(m)===cF?'corte = fundo':'DIFERENTE')+' · 3D '+d3();
+        /* projeto antigo: o mesmo módulo sem o campo, na parede lateral */
+        delete m.latMeioW;draw();var velho=JSON.stringify(snapState());loadState(JSON.parse(velho));draw();await W(300);m=S.mods[0];S.m=m;
+        R.abreSalvaIgual=JSON.stringify(snapState())===velho?'igual bit a bit':'MUDOU';R.antigo=(corte(m)===cF?'= fundo (MUDOU SOZINHO)':'construção de antes')+' · 3D '+d3();
+        S.tab=0;panel();await W(200);var av=document.querySelector('#bd [data-lmwav]');R.aviso=av?'aviso'+(/Prévia: sai .*Divisória .* entra .*Lateral do meio/.test(av.textContent)?' com prévia':' SEM PRÉVIA: '+av.textContent.slice(0,120)):'SEM AVISO';
+        await W(800);var H0=HIST.length;document.querySelector('#bd [data-lmwig]').click();await W(400);R.igualou=(corte(S.mods[0])===cF?'corte = fundo':'DIFERENTE')+' · 3D '+d3()+' · campo '+S.mods[0].latMeioW+' · desfazer +'+(HIST.length-H0)+(document.querySelector('#bd [data-lmwav]')?' · AVISO FICOU':'');
+        await W(800);$('und').click();await W(400);R.desfez=(corte(S.mods[0])===cF?'= fundo':'construção de antes')+' · campo '+S.mods[0].latMeioW;
+        S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["novoTemCampo"] as? String, "latMeioW 1 latMeio 1", "módulo novo ganha o campo na criação")
+        XCTAssertEqual(o["novoNaLateral"] as? String, "corte = fundo · 3D Lateral do meio 1", "módulo novo na parede lateral = fundo (lista/corte e 3D)")
+        XCTAssertEqual(o["abreSalvaIgual"] as? String, "igual bit a bit", "projeto antigo abre e salva igual")
+        XCTAssertEqual(o["antigo"] as? String, "construção de antes · 3D Divisória 1", "projeto antigo não muda sozinho")
+        XCTAssertEqual(o["aviso"] as? String, "aviso com prévia")
+        XCTAssertEqual(o["igualou"] as? String, "corte = fundo · 3D Lateral do meio 1 · campo 1 · desfazer +1")
+        XCTAssertEqual(o["desfez"] as? String, "construção de antes · campo undefined")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

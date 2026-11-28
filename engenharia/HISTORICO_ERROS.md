@@ -3088,3 +3088,17 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - com engrosso;
   - com o móvel livre deslocado e girado 90°.
   - Falha na 6ae7f4af e passa a 430 e a 1366. Os 11 testes da planta passam.
+
+## LATMEIO-PAREDE (risco achado pelo Claude 4 na troca de parede; decisão do Chefe 28/11) — Claude 4
+- **Investigação:** a inversão da divisão ao trocar de parede (0,667 → 0,333) **não é erro**. É o PAREDE-ESQ-NOVO (Adauto 22/11): na parede esquerda o móvel novo é guardado virado para ficar igual para quem olha. Medido na vista da parede esquerda: gavetas a 83% da esquerda de quem olha, igual ao fundo.
+- **Erro de verdade achado na mesma sonda:** o mesmo balcão (dado igual, só o `wing` muda) saía com outra construção nas paredes laterais, esquerda e direita.
+  - Fundo: "Lateral do meio" 690 com rebaixo, travessas 795 + 405 (LAT-MEIO, Adauto 23/11).
+  - Laterais: "Divisória 1" 620 e travessa única de 1200.
+  - Causa: `latMeioFam` tinha `!m.wing`, que a proposta aprovada (PROPOSTA_LATERAL_INTEIRA) não pede. Fere §4.
+- **Correção (decisão do Chefe, opção b, sem gravar nada ao abrir):**
+  - `latMeioFam` vale para módulo fora de parede lateral ou com `latMeioW===1`.
+  - O módulo novo ganha `latMeioW=1` na criação (`newTpl` e `newMod`) e é igual em qualquer parede.
+  - O módulo de antes (sem o campo) abre e salva igual bit a bit e segue a construção de antes.
+  - Na parede lateral, o painel mostra "⚠ Construção diferente do fundo" com a prévia (sai Divisória…, entra Lateral do meio…) e o botão "Igualar ao fundo", com desfazer. O botão grava o campo.
+- **Teste novo:** `testLATMEIOPAREDE_ModuloNovoIgualEmQualquerParedeAntigoNaoMuda`. Confere: novo na lateral = fundo (corte e 3D); antigo abre e salva igual e não muda; aviso com prévia; botão iguala; desfazer volta. Passa a 430 e a 1366.
+- **Teste ajustado:** `testPlanoDeCorteParedeEsquerda…` monta o "móvel antigo" apagando também o `latMeioW` (o de antes não tem o campo), com comentário. A expectativa (38) não mudou.

@@ -94,3 +94,8 @@ O usuário decide; o app executa corretamente. Nenhum botão vazio, nenhuma alte
 | 27/11/2026 | **Item 20 · fita manual por lado** (Adauto 26/11; Claude 5). Guardada por peça no módulo (`m.fitaMan[pk]`, o mesmo pk do corte) ou na peça avulsa do ArqueCut (`p.f`). Sem escolha = automático (`edgeSides`). Uma leitura só para plano, lista, metros de fita/orçamento e quadro do 3D | Adauto (pedido), Claude 5 (forma) | `testFitaManualPorLado…` |
 | 27/11/2026 | **Item 30 · N11: plano de corte por trabalho, não por tempo** (Claude 5). Os limites de tempo do otimizador viraram limite de trabalho (peças arrumadas): `CUTK=4000` (packOnce) e `CUTK2=1500` (packMax) peças por "ms" dos limites antigos, escolhidos para nunca cortar antes do limite de tentativas nos 142 modelos (s49). Mesmo projeto = mesmo plano em qualquer máquina e carga. Custo: obra muito grande fica um pouco mais lenta (medido) | Chefe (pedido), Claude 5 | `testPlanoDeCorteNaoDependeDoRelogio…`, s49 |
 | 27/11/2026 | **Item 31 · guarda sem escrever-e-desfazer** (Claude 5). As passadas de restrição trabalham numa sombra de x/b/w/h/d (mesmo objeto); o módulo só recebe o valor decidido. Mesmo resultado bit a bit (s50) | Chefe (pedido), Claude 5 | `testConfineAllRoomClampNaoEscrevem…`, s50 |
+
+## Lateral do meio nas paredes laterais (Chefe 28/11, regra do Adauto: projeto antigo não muda sozinho)
+- O módulo criado a partir de 28/11 (`latMeioW=1`) tem a mesma construção em qualquer parede (lateral inteira junto das gavetas e travessa em peças).
+- O módulo de antes, numa parede lateral, segue como era. O painel avisa e oferece "Igualar ao fundo" (prévia e desfazer).
+- Abrir um projeto não grava nada.

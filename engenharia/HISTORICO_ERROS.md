@@ -3365,3 +3365,13 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Confere tocar de novo no tamponamento (livre e cozinha) e o gesto pelo chão.
   - Confere 17 pontos inequívocos de peças em volta do tamponamento (iso, frente e lado), com a verdade dada pelo raio, como na s54.
   - No ANTES (cópia b780ebf0, sem estas duas correções): x 5→800 e 8 pontos errados. Depois: passa a 1366 e a 430.
+
+## TOQUE-FINA e COOK-375 (telas de 375, matriz do Code 1, Chefe 28/11) — Claude 4
+- **TOQUE-FINA (erro comprovado a 375×667):** 2 toques na base davam o acesso rápido em vez da edição dela (`testTOQUEPECA…`).
+  - Causa raiz: a 375 a base fica com 3 px na tela, e a porta sobreposta (desenhada por cima) cobria o meio dela por arredondamento (a 430 a base ficava por cima).
+  - Correção (`pcEdAlvo`): peça da estrutura desenhada mais fina que `SEL.div` (12 px) ganha uma faixa de 12 px em volta do meio dela nos 2 toques de editar. É a mesma ideia do `latBorda` da lateral. O meio do vão continua abrindo o acesso rápido.
+  - Prova: TOQUEPECA passa a 375 e a 430. Rodado com a máquina livre: sob carga 28 ele levou 220 s e trocou os passos.
+- **COOK-375 (erro comprovado a 375×667):** o toque no vidro fora das bocas não abria o quadro do cooktop (`isx2` null).
+  - Causa raiz: `onBurner` dava no mínimo 12 px de raio por boca. A 375 a boca desenhada tem 9 px e fica a 12–16 px do meio do vidro, então o mínimo engolia o meio.
+  - Correção: o mínimo do dedo vai até 70% da distância da boca ao meio do vidro. A 1366 nada muda (raio desenhado 16 px).
+  - Prova: os 7 testes de cooktop passam a 375, 430 e 1366.

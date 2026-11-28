@@ -14521,6 +14521,45 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antigo"] as? String, "8.800 2.610", "projeto antigo: fita igual")
     }
 
+    // CANTO CEGO · divisória de 8 cm e prateleira atrás (Adauto 28/11, com print; resposta "Prateleira atrás"): módulo NOVO nasce com a divisória
+    // de 80 mm encostada na frente e a prateleira inteira de lateral a lateral atrás dela até o fundo (interna − 80), sem recorte; inferior,
+    // superior e torre, E e D; editar a divisória (a prateleira acompanha); prateleira digitada fica; projeto antigo intacto com botão
+    // "Divisória com 8 cm" e desfazer/refazer; salvar e reabrir; duplicar; 3D sem sobreposição; corte e fita certos
+    func testEtapa2CantoCegoDivisoria8cmPrateleiraInteiraAtras() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},R={},e0=__errs.length;
+        var L=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&/cego/i.test(t.n)&&L.indexOf(t)<0)L.push(t)})});
+        var pc=function(m){return partsOf(m).filter(function(p){return /^(Divisória \d|Prateleira)/.test(p.name)}).map(function(p){return p.name.replace(/ \d+$/,'')+' '+Math.round(p.cl)+'x'+Math.round(p.cw)}).join(', ')};
+        var ov=function(a,b){var dx=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),dy=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),dz=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);return dx>.5&&dy>.5&&dz>.5};
+        var novo=function(t){loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[0];m.shv=[.5];S.m=m;S.tab=0;draw();panel();return m};
+        open3D();await W(300);
+        /* catálogo inteiro: nasce com 80, prateleira inteira atrás, 3D sem sobrepor */var cat=[];L.forEach(function(t){var m=novo(t);__build();var B=__boxes().filter(function(b){return /^0:(Divisória \d|Prateleira)/.test(String(b.nm))&&(b.z1-b.z0)>2}),bad=0;B.forEach(function(a,i){B.forEach(function(b,j){if(i<j&&ov(a,b))bad++})});cat.push((t.sup?'sup':+t.h>=1500?'torre':'inf')+(/cego na esquerda|esquerdo/.test(t.n)?'E':'D')+' '+m.cgDivP+' '+pc(m)+' sobrepõe '+bad)});R.catalogo=cat.join(' | ');
+        var t0=L.filter(function(t){return /^Balcão canto cego · cego na direita/.test(t.n)})[0];
+        /* corte e fita: a divisória 620 × 80 com fita na frente (borda comprida); a prateleira com fita na frente */var m=novo(t0);var cl=cutLines(m).filter(function(l){return /^(Divisória|Prateleira)/.test(l.name||'')}).map(function(l){return l.qty+'× '+l.L+'x'+l.W+' fita '+edgeSidesOf(m,{name:(l.names||[])[0],pk:(l.pks||[])[0]})});R.corte=cl.join(', ');await W(900);
+        /* editar a divisória: a prateleira acompanha · digitar a prateleira: vale o digitado */var f=document.querySelector('#bd [data-cgdivd]');f.value='100';f.dispatchEvent(new Event('change',{bubbles:true}));R.divisoria100=pc(S.mods[0]);await W(900);
+        var g=document.querySelector('#bd [data-cgpratd]');g.value='400';g.dispatchEvent(new Event('change',{bubbles:true}));R.prateleira400=pc(S.mods[0]);
+        await W(900);document.getElementById('und').click();await W(250);R.desfaz=pc(S.mods[0]);document.getElementById('red').click();await W(250);R.refaz=pc(S.mods[0]);
+        var st=JSON.parse(JSON.stringify(snapState()));loadState(st);draw();R.reabre=pc(S.mods[0]);
+        S.m=S.mods[0];S.tab=0;draw();panel();await W(100);var cp=document.querySelector('#bd [data-mcopy]');if(cp){cp.click();await W(200)}R.duplicar=S.mods.length+' módulos · cópia '+(S.mods[1]?pc(S.mods[1])+' cgDivP '+S.mods[1].cgDivP:'-');
+        /* projeto antigo (sem a marca): igual; o botão aplica e desfaz */var old=JSON.parse(JSON.stringify(novo(t0)));delete old.cgDivP;var st2=JSON.parse(JSON.stringify(initLimpo()));st2.mods=[old];loadState(st2);draw();var mo=S.mods[0];R.antigo=pc(mo)+' cgDivP '+mo.cgDivP;S.m=mo;S.tab=0;draw();panel();await W(900);
+        document.querySelector('#bd [data-cgdivp="80"]').click();await W(150);R.botao=pc(S.mods[0]);await W(900);document.getElementById('und').click();await W(250);R.botaoDesfaz=pc(S.mods[0]);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["catalogo"] as? String, "infD 80 Divisória 620x80, Prateleira solta 970x480 sobrepõe 0 | infE 80 Divisória 620x80, Prateleira solta 970x480 sobrepõe 0 | supD 80 Divisória 720x80, Prateleira solta 870x270 sobrepõe 0 | supE 80 Divisória 720x80, Prateleira solta 870x270 sobrepõe 0 | torreE 80 Divisória 2270x80, Prateleira solta 970x470, Prateleira interna 970x470 sobrepõe 0 | torreD 80 Divisória 2270x80, Prateleira solta 970x470, Prateleira interna 970x470 sobrepõe 0 | torreE 80 Divisória 2270x80, Prateleira solta 1386x470, Prateleira interna 1386x470 sobrepõe 0 | torreD 80 Divisória 2270x80, Prateleira solta 1386x470, Prateleira interna 1386x470 sobrepõe 0", "módulo novo: divisória de 80, prateleira inteira atrás (interna − 80), 3D sem sobrepor, E/D, inferior/superior/torre")
+        XCTAssertEqual(o["corte"] as? String, "1× 620x80 fita B, 1× 970x480 fita B", "corte com 80 de largura; fita na borda da frente")
+        XCTAssertEqual(o["divisoria100"] as? String, "Divisória 620x100, Prateleira solta 970x460", "a prateleira acompanha a divisória")
+        XCTAssertEqual(o["prateleira400"] as? String, "Divisória 620x100, Prateleira solta 970x400", "prateleira digitada: vale o digitado")
+        XCTAssertEqual(o["desfaz"] as? String, "Divisória 620x100, Prateleira solta 970x460")
+        XCTAssertEqual(o["refaz"] as? String, "Divisória 620x100, Prateleira solta 970x400")
+        XCTAssertEqual(o["reabre"] as? String, "Divisória 620x100, Prateleira solta 970x400")
+        XCTAssertEqual(o["duplicar"] as? String, "2 módulos · cópia Divisória 620x100, Prateleira solta 970x400 cgDivP 100")
+        XCTAssertEqual(o["antigo"] as? String, "Divisória 620x560, Prateleira solta 429x530, Prateleira solta 526x530 cgDivP undefined", "projeto antigo intacto")
+        XCTAssertEqual(o["botao"] as? String, "Divisória 620x80, Prateleira solta 970x480", "botão \"Divisória com 8 cm\" no projeto antigo")
+        XCTAssertEqual(o["botaoDesfaz"] as? String, "Divisória 620x560, Prateleira solta 429x530, Prateleira solta 526x530")
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+    }
+
     // AUDITORIA 3.9 · item 4 aprovado pelo Chefe 28/11 ("a vista representa fielmente o projeto"; "L representado errado"): nas paredes laterais
     // a perna do canto em L aparece, das mesmas caixas do 3D do módulo do canto (partsOf), no começo da parede (direita na esquerda espelhada,
     // esquerda na direita). Só desenho: o projeto não muda. O toque nela escolhe o canto (o mesmo móvel, na parede do fundo). No fundo não desenha

@@ -3432,3 +3432,10 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - virar canto deixava molduras que sumiam ao reabrir (`cnVira` sem a regra do canto).
 - Troca de parede, câmera e reabrir: iguais bit a bit nos ambientes L e cantos cegos.
 - Para decisão: a perna do canto não aparece na vista lateral (igual no publicado).
+
+## Canto cego (Adauto 28/11): a divisória ia até o fundo e atrapalhava a prateleira — Code 2
+- Antes: divisória com a profundidade toda (560), e a prateleira em 2 pedaços (um por vão).
+- Agora (módulo novo, ou pelo botão no antigo): divisória de 80 encostada na frente e prateleira inteira atrás.
+- Projeto antigo intacto.
+- Teste: `testEtapa2CantoCegoDivisoria8cmPrateleiraInteiraAtras`. Cobre catálogo inteiro E/D/inferior/superior/torre sem sobreposição no 3D, corte e fita, editar, digitar, desfazer/refazer, reabrir, duplicar, antigo e botão.
+- Prints: `diagnosticos/etapa2/code2/cego_div8_{antes,depois}.png`.

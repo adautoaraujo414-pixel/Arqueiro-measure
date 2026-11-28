@@ -3481,3 +3481,17 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Nos pontos que divergem, a escolha nova bate com a verdade exata. Ex.: vista [1.1, 0.4], ponto 676,202: o `__rayMod` dizia "Porta", e a escolha e o raio exato dizem "Lateral esquerda".
   - Correção do oráculo, não do teste: o `lbtRay` ganha o modo exato (opcional, só o `__rayMod` usa); os outros usos não mudam.
   - Os 18 testes de toque no 3D, LED e lbt passam a 1366 e a 430.
+
+## MOVE-ELETRO e eletro na frente (s54 do catálogo inteiro, 28/11) — Claude 4
+- **s54 de falhas de seleção com o RAIO-EXATO (catálogo inteiro, 1366):**
+  - todas as peças 95,1% → 97,4%; vizinho 3 → 0; pequenas 93,4% → 97,5%; p95 11,6 ms.
+  - Inequívocos: 99,4%. As 15 que sobram são todas da "Caixa da geladeira" (side by side e duplex).
+- **Causa nas 15:**
+  - (a) Onde a geladeira está na frente do tamponamento, a verdade da s54 (só caixas de módulo) apontava o tamponamento escondido. O toque, certo, vai pra geladeira.
+  - (b) O toque seguinte da sonda caía no "mudar a geladeira de lugar" que o toque anterior deixou armado (a limpeza da sonda não desarma o `FRMV`).
+- **Erro comprovado do app (família do MOVE-750):** escolher a geladeira e tocar de novo nela dava "📍 Geladeira mudou de lugar · Em cima, na altura 2500 mm" e gravava um passo no desfazer. Ela não sai do lugar (fica presa na caixa), então o aviso é falso.
+  - Causa: o raio do "lugar novo" (`lbtRay`) ignora as caixas do próprio eletro e bate no que está atrás.
+  - Correção: se a superfície da frente no ponto é o próprio eletro, ele continua escolhido e o app avisa "já está escolhido · toque 2 vezes onde quer ele".
+- **`pecaNoToque`:** se o que está na frente no ponto não é peça de módulo (eletro, pedra, painel), devolve `null`, como o toque. Antes devolvia a peça escondida atrás.
+- **Teste:** `testMOVEELETRO_TocarDeNovoNoEletroNaoMudaDeLugarEPecaAtrasNaoE`. Falha no f4f6c34e ("DIZ QUE MUDOU DE LUGAR"; "devolveu peça escondida") e passa depois. Os 31 testes de geladeira, eletro, ETAPA3 e PECANOTOQUE passam a 1366 e a 430.
+- **Para a s54 (Claude 5):** a verdade precisa contar eletros na frente, e a limpeza entre toques precisa desarmar o "mudar eletro de lugar".

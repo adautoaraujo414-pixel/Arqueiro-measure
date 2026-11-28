@@ -21113,6 +21113,26 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // MOVE-ELETRO (família do MOVE-750, 28/11, achado pela s54): no 3D, escolher a geladeira e tocar de novo nela levava a geladeira sozinha pra cima
+    // da caixa (altura 2500): o "mudar de lugar" pendente lançava o raio ignorando o próprio eletro. E a pecaNoToque não devolve a peça escondida atrás do eletro.
+    func testMOVEELETRO_TocarDeNovoNoEletroNaoMudaDeLugarEPecaAtrasNaoE() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&/side by side/.test(t.n))it=t})});
+        loadState(initLimpo());S.env='livre';S.room='livre';S.W=8000;S.H=3200;draw();newTpl(JSON.parse(JSON.stringify(it)));S.m=null;window.SEL3=null;draw();open3D();await W(600);var bi=document.querySelector('#v3 [data-v="iso"]');if(bi)bi.click();await W(60);try{re3()}catch(_){}
+        var f=S.fr[0],pos=function(){var g=S.fr.filter(function(q){return q.id===f.id})[0];return g?[Math.round(g.x),Math.round(g.y),Math.round(+g.b||0)].join(','):'sumiu'},p0=pos();
+        var PROJ=function(c){var P=window.PM3,d=function(r){return r[0]*c[0]+r[1]*c[1]+r[2]*c[2]+r[3]},w=d(P.W);return [(d(P.X)/w+1)/2*P.w,(1-d(P.Y)/w)/2*P.h]};
+        var fb=__boxes().filter(function(b){return b.fr===f.id}),bb={x0:1e9,x1:-1e9,y0:1e9,y1:-1e9,z1:-1e9};fb.forEach(function(b){bb.x0=Math.min(bb.x0,b.x0);bb.x1=Math.max(bb.x1,b.x1);bb.y0=Math.min(bb.y0,b.y0);bb.y1=Math.max(bb.y1,b.y1);bb.z1=Math.max(bb.z1,b.z1)});
+        var c=PROJ([(bb.x0+bb.x1)/2,(bb.y0+bb.y1)/2,bb.z1]),am=function(){var e=document.getElementById('amsg');return e?e.textContent:''};__sel3(c[0],c[1]);__sel3(c[0],c[1]);await W(50);R.deNovo=(pos()===p0?'parada':'MUDOU '+p0+'→'+pos())+' · '+(/já está escolhid/.test(am())?'avisa que já está escolhida':/mudou de lugar/.test(am())?'DIZ QUE MUDOU DE LUGAR':'aviso: '+am().slice(0,40));
+        R.pecaAtras=window.pecaNoToque(c[0],c[1])===null?'null (eletro na frente)':'devolveu peça escondida';
+        window.__sel3(-99999,-99999);window.SEL3=null;document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["deNovo"] as? String, "parada · avisa que já está escolhida", "tocar de novo na geladeira escolhida não muda ela de lugar nem diz que mudou")
+        XCTAssertEqual(o["pecaAtras"] as? String, "null (eletro na frente)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // PECA-NO-TOQUE (Chefe 28/11): window.pecaNoToque(x,y) é a escolha do toque do 3D (a mesma do sel3, sem copiar), pro LED e o destaque do Claude 3:
     // devolve {mi, pk, face, ponto, via, ambig} igual ao que o toque escolheria e não seleciona nem muda nada.
     func testPECANOTOQUE_MesmaEscolhaDoToqueSemMudarNada() async throws {

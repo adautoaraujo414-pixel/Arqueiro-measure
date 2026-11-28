@@ -3375,3 +3375,9 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Causa raiz: `onBurner` dava no mínimo 12 px de raio por boca. A 375 a boca desenhada tem 9 px e fica a 12–16 px do meio do vidro, então o mínimo engolia o meio.
   - Correção: o mínimo do dedo vai até 70% da distância da boca ao meio do vidro. A 1366 nada muda (raio desenhado 16 px).
   - Prova: os 7 testes de cooktop passam a 375, 430 e 1366.
+
+## GELA-375 (tela de 375, Chefe 28/11) — Claude 4
+- **Erro comprovado a 375×667:** 2 toques na geladeira duplex dentro da caixa não abriam nada (`testDoisToquesFuncionamNaGeladeira…`, e o `doisToques` do `testTrocarDeParedeEMexerNaGeladeira…`).
+- **Causa raiz:** depois do 1º toque a geladeira fica escolhida e ganha a alça de medida (`circle data-aph="w"`). A 375 a geladeira tem 37 px na tela e a alça cobre o meio dela. Os 2 toques caíam na alça, que não é eletro nem prateleira, e o handler não achava o módulo de baixo.
+- **Correção:** nos 2 toques, a alça do eletro conta igual ao eletro e ao puxador da prateleira (regra DUPLO-TOQUE de 18/11): vale o módulo de baixo. 1 toque e arrasto na alça seguem iguais.
+- **Prova:** os 15 testes com geladeira passam a 375, 430 e 1366.

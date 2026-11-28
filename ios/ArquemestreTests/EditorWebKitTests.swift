@@ -17382,6 +17382,24 @@ document.getElementById('pv2db').click();out.push('errs '+(__errs.length-e0));re
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /// CORRER-TRILHO (varredura visual 3D do Chefe, 28/11): com todas as folhas de correr abertas, nenhuma folha entra em outra do MESMO trilho
+    /// (antes, no guarda-roupa de 3 folhas, a 1ª e a 3ª iam as duas pra x 828..1642 no trilho da frente). Confere o catálogo inteiro; medidas e partsOf não mudam.
+    func testCORRERTRILHO_FolhasAbertasNaoEntramUmaNaOutraNoMesmoTrilho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var e0=__errs.length,nomes=[],ruins=[],med=[];
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.n&&nomes.indexOf(t.n)<0){try{loadState(initLimpo());S.env='livre';S.W=6000;S.mods=[];newTpl(JSON.parse(JSON.stringify(t)));if(partsOf(S.mods[0]).filter(function(p){return p.name==='Porta de correr'}).length>=2)nomes.push(t.n)}catch(_){}}})});
+for(const n of nomes){loadState(initLimpo());S.env='livre';S.W=6000;S.mods=[];newTpl(achar(n));var m=S.mods[0],p0=JSON.stringify(partsOf(m).map(function(p){return [p.name,p.w,p.h]}));(m.v||[]).forEach(function(v){v.open=true});draw();open3D();await W(150);var A=__ang();Object.keys(A.t).forEach(function(k){A.g[k]=A.t[k]});__build();
+ var F=__boxes().filter(function(b){return /:Porta de correr$/.test(String(b.nm))&&(b.x1-b.x0)>100}),k=0;
+ for(var i=0;i<F.length;i++)for(var j=i+1;j<F.length;j++){var a=F[i],b=F[j];if(a.pk===b.pk)continue;if(Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>1&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>0.5&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>1)k++}
+ if(k)ruins.push(n+' '+k);if(JSON.stringify(partsOf(m).map(function(p){return [p.name,p.w,p.h]}))!==p0)med.push(n);document.getElementById('v3x').click()}
+return JSON.stringify({out:nomes.length+' com correr · cruzando: '+(ruins.join(' | ')||'nenhum')+' · peças mudaram: '+(med.join(' | ')||'nenhuma'),errs:__errs.length-e0});
+          """#)
+        XCTAssertEqual(o["out"] as? String, "8 com correr · cruzando: nenhum · peças mudaram: nenhuma", "folha de correr aberta não entra em outra do mesmo trilho")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /// ETAPA 2 · item 9 (Chefe 28/11, mesma regra do TOQUE-ALCA do Claude 4): na perspectiva do 2D a tremida (5 px) não move o móvel, e a pinça que começa
     /// em cima dele (1º dedo anda antes do 2º cair) devolve o móvel pro lugar, sem passo extra no desfazer.
     func testE2ITEM9_TremidaEPincaNaoMovemOMovelNaPerspectiva() async throws {

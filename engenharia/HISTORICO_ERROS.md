@@ -3222,3 +3222,11 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - A sonda s51 (agora com salvar/desfazer/reabrir) aciona cada controle e, se ele mudou o projeto: espera o salvamento automático e confere que o arquivo é o estado da tela; toca ↶ e confere que volta ao estado de antes; reabre o arquivo e confere igual. Se mudou preços: confere que ficou gravado.
 - Resultado a 1366: Valores 23 controles que mudam o projeto, Preços 77, Plano de corte 61, ArqueCut 8 → todos salvam, desfazem e reabrem iguais; preços gravados. Clientes: nenhum controle muda o projeto aberto (cria/abre outro).
 - 1ª rodada acusou "não desfaz" por erro da sonda (reabria antes de desfazer e mexia no histórico); corrigida a ordem.
+
+## CORRER-TRILHO · folhas de correr abertas entrando uma na outra no mesmo trilho — Claude 3 (varredura visual 3D, Chefe 28/11)
+- **Módulo:** 3D (desenho das portas de correr). Família investigada: todos os 8 itens do catálogo com 2+ folhas de correr (guarda-roupas, armário da sala, portas de correr avulsas).
+- **Reproduzir:** Guarda-roupa correr 3 folhas → abrir todas → 3D. Folhas 1 e 3 (trilho da frente) iam as duas para x 828..1642 (uma dentro da outra).
+- **Causa raiz:** o 3D corria toda folha aberta (largura − 30) para o seu lado sem olhar as outras folhas do mesmo trilho. Com 2 folhas (trilhos diferentes) não aparece; com 3 folhas, a 1 e a 3 dividem o trilho da frente.
+- **Correção (só 3D, sem caixa nem medida):** em editor.html, no desenho de 'Porta de correr': folha cujo caminho cruza uma folha de número menor já aberta no mesmo trilho fica fechada; e a folha que corre para até encostar na folha parada do mesmo trilho (antes entrava 30 mm nela). partsOf, lista, corte e orçamento não mudam.
+- **Teste:** testCORRERTRILHO_FolhasAbertasNaoEntramUmaNaOutraNoMesmoTrilho (catálogo inteiro; também confere que as peças não mudam). Falha antes (HEAD 949e3f0c: "cruzando: Guarda-roupa correr 3 folhas 1"), passa depois. Nos outros 7 itens com correr, posição das folhas idêntica antes/depois.
+- **Evidência:** tools/sondas/etapa2_c3/correr_trilho_antes_depois.png (1366 e 430). Render 8–12 ms.

@@ -20221,18 +20221,52 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // ERRO CANTO-NASCE (Chefe 28/11, regra "o app não mexe uma vírgula"): o 1º módulo da parede lateral criado junto do canto cego andava SOZINHO de 600 pra 621
+    // (E) / 651 (D) ~1 s depois (CANTO-SOZINHO encostando na régua espaçadora). Agora fica onde nasceu e aparece "Encostar no canto" com a prévia (x antes → depois),
+    // aplica num toque, ↶ desfaz. Quem a pessoa mexe continua encostando como sempre. Projeto aberto: nada se mexe. Também: projeto aberto com o mesmo desenho do anterior
+    // (assinatura igual) passou a ser conferido
+    func testCantoNasceModuloNovoNaParedeLateralNaoAndaSozinhoViraSugestaoComDesfazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;draw();
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        for(const sd of ['e','d']){for(const vez of [1,2]){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();await W(400);newTpl(T(sd==='e'?'Balcão canto cego · cego na esquerda (porta na direita)':'Balcão canto cego · cego na direita (porta na esquerda)'));var m=S.mods[0];m.x=sd==='e'?0:S.W-m.w;draw();await W(600);
+          addWing(sd);var w=S.mods[S.mods.length-1];draw();await W(1500);draw();await W(400);var bar=document.getElementById('libsug'),sug=!!bar&&!bar.hidden&&/Encostar no canto/.test(bar.textContent)?(bar.textContent.match(/x [0-9.]+ → [0-9.]+/)||[''])[0]:'sem sugestão';
+          R[sd+vez]=w.x+' · '+sug}
+          if(bar&&!bar.hidden){await W(800);bar.querySelector('[data-libsug="ok"]').click();await W(80)}R[sd+'aplica']=w.x;await W(800);document.getElementById('und').click();await W(200);var w2=S.mods[S.mods.length-1];R[sd+'desfaz']=w2.x;
+          var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();await W(1500);draw();await W(400);R[sd+'reabre']=S.mods[S.mods.length-1].x;
+          var w3=S.mods[S.mods.length-1];w3.x=+w3.x+10;draw();await W(1500);draw();await W(400);R[sd+'mexido']=w3.x}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["e1"] as? String, "600 · x 600 → 621", "E: fica onde nasceu (antes andava sozinho pra 621) e sugere encostar com a prévia")
+        XCTAssertEqual(o["e2"] as? String, "600 · x 600 → 621", "E: igual na 2ª vez (projeto com o mesmo desenho do anterior também é conferido)")
+        XCTAssertEqual(o["eaplica"] as? Double, 621, "o botão encosta")
+        XCTAssertEqual(o["edesfaz"] as? Double, 600, "↶ volta pra onde nasceu")
+        XCTAssertEqual(o["ereabre"] as? Double, 600, "projeto aberto: nada se mexe")
+        XCTAssertEqual(o["emexido"] as? Double, 621, "quem a pessoa mexe encosta como sempre (610 → 621)")
+        XCTAssertEqual(o["d1"] as? String, "600 · x 600 → 651", "D: fica onde nasceu (antes andava sozinho pra 651)")
+        XCTAssertEqual(o["d2"] as? String, "600 · x 600 → 651", "D: igual na 2ª vez")
+        XCTAssertEqual(o["daplica"] as? Double, 651, "o botão encosta")
+        XCTAssertEqual(o["ddesfaz"] as? Double, 600, "↶ volta")
+        XCTAssertEqual(o["dreabre"] as? Double, 600, "projeto aberto: nada se mexe")
+        XCTAssertEqual(o["dmexido"] as? Double, 651, "quem a pessoa mexe encosta como sempre")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // ITEM 2 · BASE ATRAVESSADA NO CANTO CEGO (Adauto 28/11; leitura do Chefe 28/11, opção c): o cego e o 1º módulo da parede lateral (2 módulos retos) hoje não se
     // encostam. Com a junta unida e a escolha no cego, o RODAPÉ: A = o do cego passa inteiro e o da asa vai até ENCOSTAR · B = o da asa passa inteiro até o rodapé
     // traseiro do cego e o do cego encurta onde a asa cruza. E e D, 0 sobreposição entre TODAS as peças dos dois (portas, régua espaçadora, laterais, fundo),
-    // partsOf = 3D = corte, sem escolha = como hoje. BASE: o painel cego/porta desce na frente dela → fica como está e o app diz o porquê (decisão pendente com o Adauto).
+    // partsOf = 3D = corte, sem escolha = como hoje. BASE (Chefe 28/11, opção b): a da asa vai até a face da porta/régua do cego, sem entrar; no B igual (não passa por baixo da porta) e avisa.
     // O módulo não anda sozinho por causa do rodapé atravessado (CANTO-SOZINHO). Tamponamento da asa entre os dois = não mexe e avisa. Salvar/reabrir, desfazer
     func testCantoCegoRodapeAtravessadoLadoAouBEncostaOuPassaInteiroSemSobreposicao() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
         var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;draw();open3D();await W(300);
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
-        /* o 1º da parede lateral encosta sozinho na régua espaçadora do cego logo depois de entrar (CANTO-SOZINHO, como sempre foi): espera assentar antes de escolher */
-        var mk=async function(sd,v,tl){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(sd==='e'?'Balcão canto cego · cego na esquerda (porta na direita)':'Balcão canto cego · cego na direita (porta na esquerda)'));var m=S.mods[0];m.x=sd==='e'?0:S.W-m.w;m.rod=true;m.base=true;draw();addWing(sd);var w=S.mods[S.mods.length-1];w.rod=true;w.base=true;w.tl=!!tl;draw();await W(1200);draw();await W(300);m.une=w.une='u1';m.unV=w.unV=1;if(v)m.cnPassa={base:v,rod:v};draw();return [m,w]};
+        /* ERRO CANTO-NASCE (Chefe 28/11): o 1º da parede lateral NÃO encosta mais sozinho na régua espaçadora do cego; fica onde nasceu (600) e aparece "Encostar no canto".
+           Aqui a pessoa toca no botão (é o que ela faria) antes de escolher A/B · R.nasce guarda onde ele ficou sem o toque */
+        var mk=async function(sd,v,tl){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(sd==='e'?'Balcão canto cego · cego na esquerda (porta na direita)':'Balcão canto cego · cego na direita (porta na esquerda)'));var m=S.mods[0];m.x=sd==='e'?0:S.W-m.w;m.rod=true;m.base=true;draw();addWing(sd);var w=S.mods[S.mods.length-1];w.rod=true;w.base=true;w.tl=!!tl;draw();await W(1200);draw();await W(300);
+          R['nasce'+sd]=w.x;var bar=document.getElementById('libsug');if(bar&&!bar.hidden&&/encostar/i.test(bar.textContent)){bar.querySelector('[data-libsug="ok"]').click();await W(60)}m.une=w.une='u1';m.unV=w.unV=1;if(v)m.cnPassa={base:v,rod:v};draw();return [m,w]};
         var NM=/^(Base inferior|Rodapé \(pedestal\)|Rodapé traseiro \(pedestal\))$/;
         var cl=function(o){return partsOf(o).filter(function(p){return NM.test(p.name)}).map(function(p){return p.cl}).join('/')};
         var med=function(mw){__build();var bx=__boxes().filter(function(q){return /^[01]:/.test(String(q.nm))&&!/puxador|Puxador|Pedra/i.test(String(q.nm))&&(q.x1-q.x0)>=2&&(q.z1-q.z0)>=2&&(q.y1-q.y0)>=2});var ov=0;
@@ -20240,7 +20274,7 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
           var L=function(k,re,ax){return bx.filter(function(q){return String(q.nm)[0]===k&&re.test(String(q.nm).slice(2))}).map(function(q){return Math.round(q[ax+'1']-q[ax+'0'])}).join('/')};
           var C=cutLines(mw[0]).concat(cutLines(mw[1])).filter(function(l){return (l.names||[]).some(function(n){return NM.test(n)})}).map(function(l){return l.L}).join('/');
           return cl(mw[0])+' ; '+cl(mw[1])+' · 3d '+L('0',NM,'x')+' ; '+L('1',NM,'z')+' · corte '+C+' · ov '+ov};
-        for(const sd of ['e','d'])for(const v of ['','A','B']){var mw=await mk(sd,v);R[sd+(v||'0')]=med(mw);R[sd+(v||'0')+'x']=mw[1].x;R[sd+(v||'0')+'par']=window.cnPassaCego(mw[0])===mw[1]&&window.cnPassaCego(mw[1])===mw[0];if(v)R[sd+v+'info']=/painel cego/.test(cnPassaInfo(mw[0]))}
+        for(const sd of ['e','d'])for(const v of ['','A','B']){var mw=await mk(sd,v);R[sd+(v||'0')]=med(mw);R[sd+(v||'0')+'x']=mw[1].x;R[sd+(v||'0')+'par']=window.cnPassaCego(mw[0])===mw[1]&&window.cnPassaCego(mw[1])===mw[0];if(v)R[sd+v+'info']=cnPassaInfo(mw[0])}
         /* mexer no da parede lateral depois de escolher B: anda como sempre (encosta no cego), não pula por causa do rodapé que passa por trás */
         for(const v of ['','B']){var mw=await mk('e',v);await W(800);mw[1].x=mw[1].x+10;draw();await W(1500);draw();await W(300);R['anda'+(v||'0')]=mw[1].x}
         var mw=await mk('e','B');var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();R.reabre=cl(S.mods[0])+' ; '+cl(S.mods[1]);
@@ -20250,29 +20284,30 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["e0"] as? String, "1000/1000/1000 ; 900/900/900 · 3d 1000/1000/1000 ; 900/900/900 · corte 1000/1000/1000/900/900/900 · ov 0", "cego E sem escolha: como hoje")
-        XCTAssertEqual(o["eA"] as? String, "1000/1000/1000 ; 900/1005/1005 · 3d 1000/1000/1000 ; 900/1005/1005 · corte 1000/1000/1000/900/1005/1005 · ov 0", "cego E · A: o rodapé do cego inteiro; o da asa vai +105 até encostar nele (a base fica)")
-        XCTAssertEqual(o["eB"] as? String, "1000/469/469 ; 900/1485/1485 · 3d 1000/469/469 ; 900/1485/1485 · corte 1000/469/469/900/1485/1485 · ov 0", "cego E · B: o rodapé da asa passa inteiro até o traseiro do cego; o do cego encurta onde ela cruza")
+        XCTAssertEqual(o["eA"] as? String, "1000/1000/1000 ; 900/1005/1005 · 3d 1000/1000/1000 ; 900/1005/1005 · corte 1000/1000/1000/900/1005/1005 · ov 0", "cego E · A: rodapé da asa +105 até encostar no do cego · base da asa já está na face da régua espaçadora (621): fica 900")
+        XCTAssertEqual(o["eB"] as? String, "1000/469/469 ; 900/1485/1485 · 3d 1000/469/469 ; 900/1485/1485 · corte 1000/469/469/900/1485/1485 · ov 0", "cego E · B: rodapé da asa inteiro até o traseiro do cego, o do cego encurta · base igual ao A")
         XCTAssertEqual(o["d0"] as? String, "1000/1000/1000 ; 900/900/900 · 3d 1000/1000/1000 ; 900/900/900 · corte 1000/1000/1000/900/900/900 · ov 0", "cego D sem escolha: como hoje")
-        XCTAssertEqual(o["dA"] as? String, "1000/1000/1000 ; 900/1005/1005 · 3d 1000/1000/1000 ; 900/1005/1005 · corte 1000/1000/1000/900/1005/1005 · ov 0", "cego D · A (espelho do E)")
-        XCTAssertEqual(o["dB"] as? String, "1000/499/499 ; 900/1485/1485 · 3d 1000/499/499 ; 900/1485/1485 · corte 1000/499/499/900/1485/1485 · ov 0", "cego D · B (o cego fica em 2965–3965 na parede: encurta 501)")
+        XCTAssertEqual(o["dA"] as? String, "1000/1000/1000 ; 940/1005/1005 · 3d 1000/1000/1000 ; 940/1005/1005 · corte 1000/1000/1000/940/1005/1005 · ov 0", "cego D · A: base da asa +40 até a face da porta do cego (581), sem entrar (a régua do D não cruza a asa)")
+        XCTAssertEqual(o["dB"] as? String, "1000/499/499 ; 940/1485/1485 · 3d 1000/499/499 ; 940/1485/1485 · corte 1000/499/499/940/1485/1485 · ov 0", "cego D · B (o cego fica em 2965–3965: encurta 501)")
+        XCTAssertEqual(o["nascee"] as? Double, 600, "ERRO CANTO-NASCE (Chefe 28/11): o 1º da parede lateral fica onde nasceu (E) · antes andava sozinho pra 621")
+        XCTAssertEqual(o["nasced"] as? Double, 600, "ERRO CANTO-NASCE (Chefe 28/11): fica onde nasceu (D)")
         XCTAssertEqual(o["eApar"] as? Bool, true, "cnPassaCego acha o par nos dois sentidos")
-        XCTAssertEqual(o["eAinfo"] as? Bool, true, "a base fica como está e o app diz o porquê (painel cego desce na frente dela)")
-        XCTAssertEqual(o["eAx"] as? Double, 621, "o módulo da parede lateral fica onde estava")
+        XCTAssertEqual(o["eAx"] as? Double, 621, "encostado pelo botão \"Encostar no canto\" e não sai do lugar com a escolha")
         XCTAssertEqual(o["eBpar"] as? Bool, true, "cnPassaCego acha o par nos dois sentidos")
-        XCTAssertEqual(o["eBinfo"] as? Bool, true, "a base fica como está e o app diz o porquê (painel cego desce na frente dela)")
-        XCTAssertEqual(o["eBx"] as? Double, 621, "o módulo da parede lateral fica onde estava")
+        XCTAssertEqual(o["eBx"] as? Double, 621, "encostado pelo botão \"Encostar no canto\" e não sai do lugar com a escolha")
         XCTAssertEqual(o["dApar"] as? Bool, true, "cnPassaCego acha o par nos dois sentidos")
-        XCTAssertEqual(o["dAinfo"] as? Bool, true, "a base fica como está e o app diz o porquê (painel cego desce na frente dela)")
-        XCTAssertEqual(o["dAx"] as? Double, 621, "o módulo da parede lateral fica onde estava")
+        XCTAssertEqual(o["dAx"] as? Double, 621, "encostado pelo botão \"Encostar no canto\" e não sai do lugar com a escolha")
         XCTAssertEqual(o["dBpar"] as? Bool, true, "cnPassaCego acha o par nos dois sentidos")
-        XCTAssertEqual(o["dBinfo"] as? Bool, true, "a base fica como está e o app diz o porquê (painel cego desce na frente dela)")
-        XCTAssertEqual(o["dBx"] as? Double, 621, "o módulo da parede lateral fica onde estava")
-        XCTAssertEqual(o["anda0"] as? Double, 621, "sem escolha: mexido 10 mm, volta a encostar no cego (como sempre)")
+        XCTAssertEqual(o["dBx"] as? Double, 621, "encostado pelo botão \"Encostar no canto\" e não sai do lugar com a escolha")
+        XCTAssertEqual(o["eAinfo"] as? String, "", "A: nada a avisar")
+        XCTAssertEqual(o["eBinfo"] as? String, "Base: no canto cego a base da parede lateral não passa por baixo do painel/porta do cego (eles descem na frente da base); no B ela para na face deles, igual ao A", "B: diz por que a base não passa inteira")
+        XCTAssertEqual(o["dBinfo"] as? String, "Base: no canto cego a base da parede lateral não passa por baixo do painel/porta do cego (eles descem na frente da base); no B ela para na face deles, igual ao A")
+        XCTAssertEqual(o["anda0"] as? Double, 621, "sem escolha: mexido 10 mm, volta a encostar no cego (quem a pessoa mexe encosta como sempre)")
         XCTAssertEqual(o["andaB"] as? Double, 621, "com o B: igual (sem a correção pulava sozinho pra 1216 por causa do rodapé que passa por trás)")
         XCTAssertEqual(o["reabre"] as? String, "1000/469/469 ; 900/1485/1485", "salvar e reabrir mantém")
         XCTAssertEqual(o["tamp"] as? String, "1000/1000/1000 ; 900/900/900 · avisa", "tamponamento da asa entre os dois: não mexe e diz o porquê")
         XCTAssertEqual(o["semUnir"] as? String, "1000/1000/1000 ; 900/900/900", "sem a junta unida pelo Unir, a escolha não mexe em nada")
-        XCTAssertEqual(o["antesDesfaz"] as? String, "900/1005/1005")
+        XCTAssertEqual(o["antesDesfaz"] as? String, "940/1005/1005")
         XCTAssertEqual(o["desfaz"] as? String, "900/900/900 · -", "↶ desfaz a escolha")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }

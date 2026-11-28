@@ -3375,3 +3375,22 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - `testCantoLBaseAtravessadaLadoAouBBaseERodapeEspelhadoSemSobreposicao`: E/D × A/B, base e rodapé separados, partsOf = 3D = corte, mesma área no orçamento, 0 sobreposição, laterais por fora, salvar/reabrir, desfazer.
   - `testCantoCegoRodapeAtravessadoLadoAouBEncostaOuPassaInteiroSemSobreposicao`: E/D × sem escolha/A/B, 0 sobreposição entre TODAS as peças dos dois (portas, régua, laterais, fundo), partsOf = 3D = corte, base fica e avisa, não anda sozinho, tamponamento, sem Unir, salvar/reabrir, desfazer.
 - **Outros módulos:** o aéreo não tem base nem rodapé. O canto do guarda-roupa usa o mesmo bloco do canto L. Os pés de metal ficam de fora porque não têm peça corrida. As corridas (`moldRuns`/`lrRows`) leem `cl`/`rodLados`, então acompanham.
+
+## CANTO-NASCE (28/11): o 1º módulo da parede lateral criado junto do canto cego andava SOZINHO até encostar — Claude 5
+- **Erro** (era risco no ITEM2-ATRAVESSADA; o Chefe classificou como erro em 28/11 pela regra "o app não mexe uma vírgula"): ao criar o 1º módulo da parede lateral junto de um canto cego, ele nasce em 600 e, ~1 s depois, anda sozinho para 621 (E) ou 651 (D), encostando na régua espaçadora do cego.
+- **Reproduzir:** Balcão canto cego + "módulo na lateral" (addWing). Espere 1,5 s: x passa de 600 para 621/651 sem nenhum toque. Sonda p8c no código de antes: 600 → 651.
+- **Causa:** CANTO-SOZINHO (`rodar`, no IIFE de `cantoEncosta`) faz andar até encostar quem "foi mexido ou acabou de entrar" (POS sem anotação). O módulo recém-criado contava como mexido.
+- **Correção:**
+  - O módulo que ACABOU DE NASCER (`!POS.has`) não anda. Fica onde nasceu e vira a sugestão `libSugere(...,'encosta')`: "Canto: dá pra encostar o módulo no módulo do canto (x 600 → 621 mm)", botão "Encostar no canto", desfazer.
+  - Quem a pessoa arrastou ou digitou continua encostando como sempre.
+  - Sugestão velha (o módulo já saiu da posição) some.
+  - Ao abrir um projeto a assinatura (`SIG`) é zerada: um projeto com o mesmo desenho do anterior não era conferido, e por isso a sugestão aparecia só às vezes.
+- **Teste:** `testCantoNasceModuloNovoNaParedeLateralNaoAndaSozinhoViraSugestaoComDesfazer` (E e D, 2 vezes seguidas, aplicar, desfazer, reabrir, mexido). Falha antes e passa depois. O `testCantoCegoRodape…` passou a encostar pelo botão.
+- **Risco (não mexido, de outro agente):** a prévia pode sair diferente do resultado quando o tamponamento automático da asa aparece ou some com a folga (ex.: prévia 651, depois 621). E quem a pessoa mexe (até trocar o tamponamento) ainda anda até encostar, como sempre foi. Fica para o Chefe decidir se também vira sugestão.
+
+## ITEM2-ATRAVESSADA · base do canto cego (Chefe 28/11, opção b) — Claude 5
+- A base da asa vai até a face do 1º obstáculo real do cego que cruza com ela: porta, painel cego ou régua espaçadora (descem 5 mm na frente da base). Ela não entra nesse obstáculo.
+  - E: a régua cruza a asa, face em 621. A base fica 900 com a asa encostada (antes da escolha ela entrava 21 na régua quando a asa estava em 600).
+  - D: a régua não cruza a asa e a face da porta está em 581, então a base estica +40.
+- No B a base da asa também não passa por baixo da porta (entraria 5 mm): fica igual ao A, e `cnPassaInfo` diz o porquê. A base do cego não muda.
+- A base atravessada também sai do contorno da CANTO-SOZINHO (senão o módulo andaria ao ser mexido).

@@ -17433,12 +17433,13 @@ document.getElementById('pv2db').click();out.push('errs '+(__errs.length-e0));re
           var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
           for(const n of ['Aéreo basculante','Rack com portas basculantes','Rack suspenso basculante']){loadState(initLimpo());S.mods=[];newTpl(achar(n));var m=S.mods[0];draw();open3D();await W(200);
             var conta=function(){var A=__ang();Object.keys(A.t).forEach(function(k){A.g[k]=A.t[k]});__build();var B=__boxes().filter(function(b){return /^0:Ferragem da basculante$/.test(String(b.nm))});
-              var calco=B.filter(function(b){return Math.round(b.x1-b.x0)===48&&b.ferr}).length,pis=B.filter(function(b){return !b.pf&&Math.round(b.x1-b.x0)===9}).length;return calco+' dobradiça(s)'+(pis?' + pistão':'')+(B.every(function(b){return b.ferr})?' metálicas':' COR DA PORTA')};
-            var hw=(hwOf(m)['Dobradiça 35 mm (caneco)']||{}).n||0,fe=conta();m.v.forEach(function(v){v.open=true});draw();re3();await W(50);var ab=conta();
+              var calco=B.filter(function(b){return Math.round(b.x1-b.x0)===48&&b.ferr}).length,pis=B.filter(function(b){return b.pist}).length/2;return calco+' dobradiça(s)'+(pis?' + '+pis+' pistão/articulador':'')+(B.every(function(b){return b.ferr})?' metálicas':' COR DA PORTA')};
+            var hO_=hwOf(m),hw=((hO_['Dobradiça 35 mm (caneco)']||{}).n||0)+' + '+Object.keys(hO_).filter(function(k){return /pist|articul/i.test(k)}).reduce(function(s,k){return s+hO_[k].n},0)+' pistão/articulador',fe=conta();m.v.forEach(function(v){v.open=true});draw();re3();await W(50);var ab=conta();
             out.push(n+': orçamento '+hw+' · fechada '+fe+' · aberta '+ab);document.getElementById('v3x').click()}
           return JSON.stringify({out:out.join(' | '),errs:__errs.length-e0});
           """#)
-        XCTAssertEqual(o["out"] as? String, "Aéreo basculante: orçamento 2 · fechada 2 dobradiça(s) metálicas · aberta 2 dobradiça(s) metálicas | Rack com portas basculantes: orçamento 4 · fechada 4 dobradiça(s) metálicas · aberta 4 dobradiça(s) metálicas | Rack suspenso basculante: orçamento 4 · fechada 4 dobradiça(s) metálicas · aberta 4 dobradiça(s) metálicas", "o 3D desenha as dobradiças que o orçamento cobra, sem pistão que não está nas ferragens")
+        /* PISTAO (decisão do Adauto 28/11, DECISOES_TECNICAS @888603db): o pistão/articulador agora ENTRA nas ferragens e no orçamento, e o 3D desenha a mesma quantidade (antes: "sem pistão que não está nas ferragens") */
+        XCTAssertEqual(o["out"] as? String, "Aéreo basculante: orçamento 2 + 2 pistão/articulador · fechada 2 dobradiça(s) + 2 pistão/articulador metálicas · aberta 2 dobradiça(s) + 2 pistão/articulador metálicas | Rack com portas basculantes: orçamento 4 + 4 pistão/articulador · fechada 4 dobradiça(s) + 4 pistão/articulador metálicas · aberta 4 dobradiça(s) + 4 pistão/articulador metálicas | Rack suspenso basculante: orçamento 4 + 4 pistão/articulador · fechada 4 dobradiça(s) + 4 pistão/articulador metálicas · aberta 4 dobradiça(s) + 4 pistão/articulador metálicas", "o 3D desenha as dobradiças e os pistões que o orçamento cobra")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
@@ -17484,6 +17485,36 @@ for(const n of nomes){loadState(initLimpo());S.env='livre';S.W=6000;S.mods=[];ne
 return JSON.stringify({out:nomes.length+' com correr · cruzando: '+(ruins.join(' | ')||'nenhum')+' · peças mudaram: '+(med.join(' | ')||'nenhuma'),errs:__errs.length-e0});
           """#)
         XCTAssertEqual(o["out"] as? String, "8 com correr · cruzando: nenhum · peças mudaram: nenhuma", "folha de correr aberta não entra em outra do mesmo trilho")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// PISTAO (decisão do Adauto 28/11, DECISOES_TECNICAS @888603db): o pistão a gás (abre pra cima) / articulador (abre pra baixo) da basculante entra nas
+    /// ferragens (hwOf) e no orçamento, com quantidade por porta editável no vão e preço unitário nos valores (PR.pistao), sem duplicar; o 3D desenha a mesma
+    /// quantidade, fechada e aberta. Salvar/reabrir mantém; desfazer volta.
+    func testPISTAO_BasculanteListaOrcamentoE3DComQuantidadeEPrecoEditaveis() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length,pp=PR.pistao;
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+var tresD=function(){var A=__ang();Object.keys(A.t).forEach(function(k){A.g[k]=A.t[k]});__build();return __boxes().filter(function(b){return b.pist}).length/2};
+var lista=function(m){var h=hwOf(m);return Object.keys(h).filter(function(k){return /pist|articul/i.test(k)}).map(function(k){return k+' '+h[k].n}).join(', ')};
+for(const n of ['Aéreo basculante','Rack com portas basculantes','Rack suspenso basculante']){loadState(initLimpo());S.mods=[];newTpl(achar(n));var m=S.mods[0];draw();open3D();await W(200);
+ PR.pistao=0;var c0=budget().tot;PR.pistao=30;var b=budget(),R=prAuto(b).filter(function(r){return r[0]==='pistao'})[0],fe=tresD();m.v.forEach(function(v){v.open=true});draw();re3();await W(50);
+ out.push(n+': lista '+lista(m)+' · orçamento '+(R?R[3]:'?')+' un, custo +R$ '+Math.round(b.tot-c0)+' · 3D fechada '+fe+' aberta '+tresD());document.getElementById('v3x').click()}
+/* quantidade por porta no vão: −, salvar/reabrir, desfazer */
+loadState(initLimpo());S.mods=[];newTpl(achar('Aéreo basculante'));draw();await W(800);S.m=S.mods[0];S.tab=3;S.sv=0;panel();var bt=document.querySelector('[data-pisq="-1"]');if(bt)bt.click();await W(50);
+var m=S.mods[0],tela=(document.querySelector('[data-pisqv]')||{}).textContent;out.push('menos 1: tela '+tela+' · lista '+lista(m)+' · orçamento '+prAuto(budget()).filter(function(r){return r[0]==='pistao'})[0][3]);
+await W(800);document.getElementById('und').click();await W(100);out.push('desfazer: '+lista(S.mods[0]));
+await W(800);S.m=S.mods[0];S.tab=3;S.sv=0;panel();document.querySelector('[data-pisq="-1"]').click();await W(50);var js=JSON.stringify(snapState());loadState(JSON.parse(js));draw();out.push('salvo e reaberto: '+lista(S.mods[0]));
+/* editor por vãos (nó do vão): ⬆ basculante + quantidade por porta */
+S.mods=[];S.stones=[];S.fr=[];S.env='quarto';S.room='quarto';S.W=4000;S.H=2700;draw();var cq=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(cq.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var mv=S.m;soloOn(mv);
+var C=function(q){var e=document.querySelector(q);if(e)e.click();return !!e};RG.sel={mi:0,path:'r'};RG.tab='div';panel();C('[data-rga="sp|h|2"]');RG.sel={mi:0,path:'r.0'};RG.tab='por';panel();var ok1=C('[data-rga="dbas|up"]');var ok2=C('[data-rga="pisq|1"]');
+var telaV=(document.querySelector('[data-pisqv]')||{}).textContent,bxV=0;open3D();await W(300);bxV=tresD();document.getElementById('v3x').click();out.push('por vãos: basculante '+ok1+' · mais 1 '+ok2+' · lista '+lista(mv)+' · tela '+telaV+' · 3D '+bxV);
+var temPreco=PRLIST.some(function(x){return x[0]==='pistao'});PR.pistao=pp;
+return JSON.stringify({out:out.join(' | '),preco:temPreco,errs:__errs.length-e0});
+          """#)
+        XCTAssertEqual(o["out"] as? String, "Aéreo basculante: lista Pistão a gás (basculante · abre pra cima) 2 · orçamento 2 un, custo +R$ 60 · 3D fechada 2 aberta 2 | Rack com portas basculantes: lista Articulador (basculante · abre pra baixo) 4 · orçamento 4 un, custo +R$ 120 · 3D fechada 4 aberta 4 | Rack suspenso basculante: lista Articulador (basculante · abre pra baixo) 4 · orçamento 4 un, custo +R$ 120 · 3D fechada 4 aberta 4 | menos 1: tela 1 · lista Pistão a gás (basculante · abre pra cima) 1 · orçamento 1 | desfazer: Pistão a gás (basculante · abre pra cima) 2 | salvo e reaberto: Pistão a gás (basculante · abre pra cima) 1 | por vãos: basculante true · mais 1 true · lista Pistão a gás (basculante · abre pra cima) 3 · tela 3 · 3D 3")
+        XCTAssertEqual(o["preco"] as? Bool, true, "preço unitário do pistão nos valores")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

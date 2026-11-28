@@ -3355,3 +3355,21 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Chromium novo com 1 aba só (a do editor): 20/20 PASSAM nos dois códigos.
 - **Causa provável:** com outra aba aberta, a aba do teste não é a que tem o foco; foco, teclado e eventos de campo não chegam como no app (só nesses testes, que dependem do foco real do campo).
 - **Como rodar:** a bateria precisa de um Chromium com UMA aba, a do editor (`curl -X PUT ".../json/new?<editor>"` e fechar o `about:blank`). Nada no código muda.
+
+## PISTAO · pistão/articulador da basculante fora das ferragens e do orçamento — Claude 3 (decisão do Adauto 28/11, DECISOES_TECNICAS @888603db)
+- **Pedido:** o pistão entra nas ferragens (hwOf) e no orçamento; quantidade e valor unitário editáveis; sem duplicar; desenho 3D religado, metálico, abrindo com a porta; vale no aéreo basculante e nos racks basculantes; lista = orçamento = 3D.
+- **Antes:** só o desenho existia, guardado e desligado (BAS-DOB). Ele só apareceria se o hwOf tivesse pistão, e o hwOf nunca tinha. O orçamento não cobrava. O item manual 'Pistão / articulador' de Outros materiais existia, sem quantidade automática.
+- **Uma conta só (window.pisDe):**
+  - cada 'Porta' do partsOf em vão basculante leva pisQ(vão) peças: padrão 2, um de cada lado, igual ao desenho;
+  - abre pra cima = pistão a gás, abre pra baixo = articulador;
+  - quem usa a conta: hwOf (lista), mCost.pis → budget (hw: pis × PR.pistao), prAuto (linha 'Pistão a gás / articulador (basculante)' com preço editável, em PRLIST) e o 3D (window.__BASPIS = pisQ do vão; caixas marcadas b.pist, fechada e aberta).
+- **Quantidade editável:** −/＋ "Pistões por porta" no vão, nos dois painéis.
+  - Painel antigo: m.v[i].pisQ.
+  - Editor por vãos: n.p.pisQ, levado para p.basv.
+- **Duplicidade:** a linha automática avisa quando o item manual 'Pistão / articulador' também tem quantidade no projeto (não apaga nada sozinha).
+- **Preço:** começa em R$ 0, como os preços novos (LED-LIVRE).
+- **Projeto antigo:** nada é gravado; vale o padrão 2.
+- **Testes:**
+  - testPISTAO_BasculanteListaOrcamentoE3DComQuantidadeEPrecoEditaveis: aéreo, 2 racks e editor por vãos; −, desfazer, salvar e reabrir. Falha antes (HEAD 888603db: sem linha 'pistao') e passa depois.
+  - testBASDOB: expectativa mudou pelo pedido (comentário com a data).
+- **Evidência:** tools/sondas/etapa2_c3/pistao_basculante_antes_depois.png. Render 4–5 ms.

@@ -9677,7 +9677,10 @@ final class EditorWebKitTests: XCTestCase {
         var p=rled3api.pt(a.id,9,.5);tap(p[0],p[1]);await W(110);tap(p[0],p[1]);await W(650);var bx=document.getElementById('rp3b');
         R.abertoOutroVao=JSON.stringify(rled3api.st().g)+' · quadro do painel '+(bx&&!bx.hidden?'ABERTO':'fechado')+' · peça em edição '+(window.SEL3?'SIM':'não')+' · quadro de item '+(fx3api.isx()?'ABERTO':'fechado');
         /* toque fora do ripado (parede): continua no LED, avisa, não cria nada */
-        var n0=S.rp.length+S.mods.length+S.fr.length;tap(20,rc.height*.45);await W(200);R.toqueFora=aberta()+' · '+amsg().slice(0,44)+' · criou '+(S.rp.length+S.mods.length+S.fr.length-n0);
+        /* LED-FORA (Chefe 28/11, matriz do Code 1 a 375): a 375 o x=20 fica em cima da 1ª ripa (o ripado chega na borda da tela) e o app troca pro vão tocado, que é o certo.
+           O toque "fora" agora procura um ponto da tela sem ripado embaixo (rled3api.at nulo), a mesma regra de antes em qualquer largura. */
+        var fx_=20,fy_=rc.height*.45;(function(){for(var yy=.45;yy<=.95;yy+=.05)for(var xx=4;xx<rc.width;xx+=6){if(rled3api.at(xx,rc.height*yy,a.id)===null){fx_=xx;fy_=rc.height*yy;return}}})();
+        var n0=S.rp.length+S.mods.length+S.fr.length;tap(fx_,fy_);await W(200);R.toqueFora=aberta()+' · '+amsg().slice(0,44)+' · criou '+(S.rp.length+S.mods.length+S.fr.length-n0);
         /* os botões da barra não ficam um em cima do outro nem em cima dos botões de cima do 3D, e cabem na tela */
         var bs=[].slice.call(bar().querySelectorAll('button')).map(function(b){return b.getBoundingClientRect()}),sob=0;for(var i=0;i<bs.length;i++)for(var j=i+1;j<bs.length;j++){var A=bs[i],B=bs[j];if(A.left<B.right-1&&A.right>B.left+1&&A.top<B.bottom-1&&A.bottom>B.top+1)sob++}
         var br=bar().getBoundingClientRect(),tops=[].slice.call(document.querySelectorAll('#v3 button')).filter(function(b){return !bar().contains(b)&&b.offsetParent!==null}).map(function(b){return b.getBoundingClientRect()}).filter(function(q){return q.width>0&&q.left<br.right&&q.right>br.left&&q.top<br.bottom&&q.bottom>br.top}).length;

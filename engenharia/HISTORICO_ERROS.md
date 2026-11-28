@@ -3414,3 +3414,9 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Correção revista: dar pk de peça quebrou a regra "o 3D não inventa peça" (testCatalogoInteiroMesmaPeca e testToPecaQueO3DOfereceApagar). Ferragem não é peça. A corrediça fica sem pk, identificada pelo nome e marcada ferr=1, como a dobradiça.
   - testDESTAQUE: caixa sem pk só se for ferragem marcada.
 - **Auditoria de LED do catálogo (antes × depois, normal e espelhado):** rodando. A tabela vai para o Chefe e para o Claude 5 medir.
+
+## LED-FORA · "toque fora do ripado abre o LED do vão 8" a 375 (matriz do Code 1) — Claude 3 (Chefe 28/11)
+- **Reproduzido** a 375×812: o teste toca em (20 px, 45%) achando que é parede. Nessa largura o ripado chega na borda da tela: rled3api.at(20, …) acha o vão 0 (centro em x 39), e o toque cai em cima da 1ª ripa.
+- **Comportamento do app: correto** (regra do LED no ripado: o dedo não precisa acertar os 15 mm do vão; troca para o vão tocado). O vão foi de 9 para 0. A mensagem "Vão 8" era a anterior, que continuou na tela. O LED não foi para outro lugar: foi para onde o dedo tocou.
+- **Teste:** o toque "fora" agora procura um ponto da tela sem ripado embaixo (rled3api.at nulo). A expectativa é a mesma de antes ("Toque num vão do ripado", nada criado), em qualquer largura. Comentário no teste com pedido e data.
+- **Validação:** os 3 testes LedNoRipado passam a 375 e a 1366.

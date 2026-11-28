@@ -14706,7 +14706,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["conf"] as? NSNumber)?.intValue, 1938, "assinaturas conferidas")
         XCTAssertEqual(o["falta"] as? String, "nenhum", "nenhum controle sumiu")
         // FRENTE-COMP (Adauto 26/11, ETAPA 2 item 19): a seção nova "Composição da frente" (aba Estrutura, só nos de baixo) traz os 5 botões das composições
-        XCTAssertEqual(o["novas"] as? String, "Balcão 2 portas#0 button:submit[fc=1gB] ; Balcão 2 portas#0 button:submit[fc=2g1G] ; Balcão 2 portas#0 button:submit[fc=2g] ; Balcão 2 portas#0 button:submit[fc=3G] ; Balcão 2 portas#0 button:submit[fc=livre] ; Guarda-roupa 2 vãos#2 button:submit[k=oven] ; Guarda-roupa 2 vãos#2 button:submit[k=tempero]", "os 2 que voltaram e as 5 composições da frente")
+        XCTAssertEqual(o["novas"] as? String, "Balcão 2 portas#0 button:submit[fc=1gB] ; Balcão 2 portas#0 button:submit[fc=2g1G] ; Balcão 2 portas#0 button:submit[fc=2g] ; Balcão 2 portas#0 button:submit[fc=3G] ; Balcão 2 portas#0 button:submit[fc=livre] ; Balcão 2 portas#0 input:checkbox[tt=teto] ; Aéreo 2 portas#0 input:checkbox[tt=teto] ; Guarda-roupa 2 vãos#0 input:checkbox[tt=teto] ; Guarda-roupa 2 vãos#2 button:submit[k=oven] ; Guarda-roupa 2 vãos#2 button:submit[k=tempero] ; Despenseiro#0 input:checkbox[tt=teto]", "só os 2 que voltaram + os 5 da Composição da frente (item 19) + a caixinha nova \"Base de cima (teto)\" (ETAPA 2 item 22, Adauto 27/11, aprovado pelo Chefe)")
         XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
     }
 

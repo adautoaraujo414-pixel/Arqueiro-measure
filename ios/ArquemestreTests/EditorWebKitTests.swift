@@ -14567,7 +14567,8 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
-        XCTAssertEqual(o["catalogo"] as? String, "true · trocas 266 · fora (canto, sem tampo, sem laterais) 6 · gaveta no lugar 6", "catálogo inteiro: cada caixinha mexe só na própria peça")
+        /* item 7: os 2 cantos cegos do catálogo nascem com cgTrav (travessas deitadas próprias); travessa/teto do item 22 continuam valendo no cego antigo, sem cgTrav — antes 266/6 (combinado com o Code 2, 28/11; sem a marca ao nascer volta a 266/6) */
+        XCTAssertEqual(o["catalogo"] as? String, "true · trocas 262 · fora (canto, sem tampo, sem laterais) 8 · gaveta no lugar 6", "catálogo inteiro: cada caixinha mexe só na própria peça")
         XCTAssertEqual(o["aereo"] as? String, "970×70 y15 · teto 1000×350 y0 · caixa true · só ela true · tela parada true · 3D sobrepõe 0 · corte 1 dxf 1")
         XCTAssertEqual(o["aereoDesfaz"] as? String, "- · true")
         XCTAssertEqual(o["alto"] as? String, "870×70 y15 · teto 900×550 y0 · 3D sobrepõe 0")

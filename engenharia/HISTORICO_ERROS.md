@@ -2812,3 +2812,74 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Vidros e puxadores já tinham material próprio (vidro 8,5; puxador pelo acabamento) e ficam como estão.
 - **Teste:** `testE2ITEM4_FerragensEEletroEmbutidoComMaterialDeMetalSemMudarCaixa` (também liga e desliga o VIS-MAT e compara todas as caixas). Falha no 33ffaf05; agora passa.
 - **Print:** `tools/sondas/etapa2_c3/item4_metal_forno_dobradica_antes_depois.png`.
+## ETAPA 2 itens 10 e 11 (26/11): ordem da aba Divisões e modelos de porta — Claude 4
+- **Item 10 (R6).** Na aba Divisões, o bloco "÷ Dividir por igual (módulos lado a lado)" aparecia antes das divisões.
+  - Agora a ordem é: vão, prateleiras, divisórias, Avançado e, por último, "Dividir por igual".
+  - Muda só a ordem (`modBar(semEq)` na aba 1 e o `eqHtml()` no fim da aba). Nas outras abas o bloco fica onde estava.
+  - Teste `testDIVORDEM_…`: falha no 3174dbd8 e passa agora.
+- **Item 11, tela (R7).** Na aba Portas, "Modelo da porta" agora mostra os 9 modelos com miniatura. Os 3 Provençal só existiam em "Estilos de porta"; o botão deles é o mesmo `data-est` do quadro, então aplica pela prévia, em uma porta ou em todas, como hoje.
+  - "Usados recentemente": até 6 modelos, guardados em `PR.portaRec` (prices.json). O Provençal entra na lista só quando a pessoa confirma em Aplicar.
+  - Ordem: tudo o que é da porta vem antes; "2 · Puxador da porta" e "🔧 Puxadores (alça e ponto)" vão para o fim. Nada saiu; os botões são os mesmos, com 3 `data-est` a mais na grade.
+  - Teste `testPORTAMODELOS_…`: falha no 3174dbd8 e passa agora.
+  - Dois testes antigos fixavam a ordem anterior e tiveram a expectativa atualizada, com comentário do pedido e da data: `testAbaPortasSimplesEMinimizarQuadros` (puxador na posição 9 → 12) e `testEstilosDePortaPreviaAplicarEmMassaUmDesfazerESalvar` (Estilos agora vem antes do puxador).
+- **Evidência:** `engenharia/evidencias/etapa2/item10_antes_depois.png` e `item11_antes_depois.png`.
+- **Item 12 (Adauto 26/11; "pós-cava" = Tamponamento inferior, confirmado).** Na aba Tamponamentos a ordem agora é: esquerdo, direito, engrosso cava, inferior, superior, peças.
+  - Só muda a ordem da concatenação em `tampHtml`: os controles são os mesmos (mesmo hash no teste) e não há seção "Pós cava".
+  - Teste `testTAMPORDEM_…`: falha no bd2de0db e passa agora.
+  - `testTamponamentoInvertido…` tinha a ordem das opções "Inverter" na tela; a expectativa mudou de "tt tb" para "tb tt", com comentário do pedido.
+  - Os 40 testes de tamponamento passam.
+
+## ETAPA 2 item 19 (26–27/11): composição da frente nos módulos de baixo — Claude 4
+- **B (aa723095):** no `DRW_`, o campo `v.gf` reparte as frentes pela proporção. O total, as folgas, as réguas do cava e a regra da caixa ficam os de hoje. Sem `gf`, os 142 modelos do catálogo saem iguais bit a bit (hash `115l8ej`), e os 180 testes de gaveta passam.
+- **C (9e80e24a):** vão misto "1 gaveta + basculante", feito como espelho do vão de porta com gavetas embaixo (`gx`). A travessa entra como "Prateleira fixa (embaixo da gaveta)".
+  - **Achado no caminho:** a porta usava o `tX_` (travessa frontal do topo do módulo) e subia por cima da gaveta. Agora, só nesse vão, o `tX_` fica zerado durante a porta e é restaurado depois.
+- **Tela (este commit):** seção "Composição da frente" na aba Estrutura, só nos módulos de baixo. Padrões nos Ajustes; `fcMisto`/`fcAplica`.
+- **Teste `testFRENTECOMP_ComposicoesDaFrente…`:** cobre os 14 erros de sincronização no vão misto.
+  - partsOf = 3D (altura de cada peça) = lista = corte = plano = orçamento;
+  - salvar/reabrir, duplicar e ↶;
+  - trocar de composição não deixa peça velha;
+  - um vão não mexe no outro (medida, posição e nota);
+  - Ajustes valem só para composição nova; cada módulo muda a dele; livre montagem e ↶.
+- **Risco identificado (comportamento que já existia, não mudou):** a chave da peça (`pk`) é numerada por nome no módulo inteiro. Pôr uma frente de gaveta num vão renumera as frentes dos outros vãos ("#1" vira "#2"). O mesmo acontece hoje ao trocar porta por gavetas pelo menu do vão.
+- **Item 11 (9225834e):** o `data-pmod` mudava a assinatura dos botões de modelo, e `testMenusPorTipoInventario…` os acusava como sumidos. Saiu.
+- **Teste de inventário:** a lista de "novas" ganhou os 5 botões de composição, com comentário do pedido.
+
+## TOQUE-JANELA (ETAPA 2 item 25, Adauto 27/11): no desenho de frente, a janela arrastava no primeiro contato do dedo — Claude 4
+- **Antes (toque real pelo CDP, Chromium a 430):** o `pointerdown` em `[data-op2]` já iniciava o arrasto (`snap()` e `drag={t:'op'}`), então o dedo que tremia movia a janela. 1 toque não selecionava e 2 toques não abriam nada.
+- **Correção:** vale para janela, porta, abertura e vão da parede (mesmo `data-op2`).
+  - 1 toque (ao soltar, sem arrasto e sem pinça) seleciona e mostra o contorno azul.
+  - 2 toques abrem a configuração dela: aba Ambiente, quadro dela em destaque.
+  - Arrastar só com ela já selecionada, depois do limite de toque (`SEL.mov`); o desfazer só é gravado quando o arrasto começa de verdade.
+  - Tocar fora tira a seleção.
+  - Usa o mesmo `tapCount`/`SEL` do módulo.
+- **Teste novo:** `testTOQUEJANELA_…`, com eventos de dedo (`pointerType: 'touch'`), a 430 e com o iPad simulado. A sonda com toque real do CDP dá o mesmo resultado.
+- **Teste atualizado:** `testFocarSoNoModuloEArrastarJanelaNo2D` agora toca antes de arrastar, com comentário do pedido. Ele também passou a buscar a janela de novo depois do toque, porque o desenho é refeito.
+
+## TOQUE-ALCA (ETAPA 2 itens 26/27, Adauto 27/11): no módulo do 2D, tremida e pinça mexiam na medida e na posição — Claude 4
+- **Como reproduzir (toque real pelo CDP, Chromium a 430, "Balcão 2 portas + 4 gavetas" com zoom no módulo):**
+  - tremida de 5 px na bolinha da lateral (alça de medida `data-h`): largura 1200→1180, x 600→620;
+  - tremida de 5 px na divisória (`data-d`): posição 0,667→0,681;
+  - pinça com 1 dedo em cima de um botão do desenho (zoom) e o outro na alça: o módulo andava com o movimento do outro dedo (x 600→830);
+  - pinça em cima da porta escolhia a peça ("Peça escolhida: Porta"), como se fosse toque.
+- **Causa raiz (`editor.html`, `pointermove`/`pointerup` do `#svg`):**
+  - os arrastos `h` (alça), `d` (divisória), `s` (prateleira) e `tp` (tamponamento) não tinham a zona morta `SEL.mov`, que o arrasto do módulo (`m`) e da janela (`op`) já tinham;
+  - o `pointermove` não conferia qual dedo começou o arrasto: o 1º dedo que caiu fora do desenho não entrava em `ptrs`, o desenho via só 1 dedo e qualquer movimento arrastava;
+  - o `pointerup` do contador de toques não sabia que tinha havido pinça.
+- **Correção (componente compartilhado, sem lógica paralela):**
+  - `DN0` guarda o dedo e o ponto do `pointerdown`;
+  - alça, divisória, prateleira e tamponamento só andam depois de `SEL.mov` px (depois seguem o dedo como antes);
+  - o movimento de outro dedo desfaz o que andou (o mesmo `drag.m` que a pinça já usava) e para o arrasto;
+  - `PZG` marca gesto de 2 dedos, e pinça ou arrasto não contam como toque.
+- **Comportamento mantido:** arrasto de verdade na alça, na divisória e no módulo; 1 toque escolhe a peça; 2 toques no meio do vão abrem o acesso rápido; 4 toques travam.
+- **Teste novo:** `testTOQUEALCA_TremidaPincaEOutroDedoNaoMexemNoModulo`, com eventos de dedo (`pointerType: 'touch'`).
+  - Falha na 3ca951db em 4 pontos: tremidaAlca, tremidaDivisoria, pincaDedoFora, pincaNaPorta (que dava x 850 e peça escolhida).
+  - Passa depois a 430 e a 1366.
+- **Módulos semelhantes:** a alça, a divisória e o tamponamento são os mesmos para inferiores, superiores, torres e guarda-roupas (mesmo `drag`). O arrasto do módulo e da janela já tinham a zona morta.
+- **Mesma família, achado na auditoria (toque real, antes da correção):** a tremida de 5 px movia a geladeira 50 mm (x 300→350), a alça da geladeira mudava a largura (700→750), o painel ripado andava (1500→1550) e a alça do painel mudava a largura, e o recorte do forno da torre quente descia (ot 60→63).
+  - Causa: os arrastos `ap`, `aph`, `rp` e `ov` também não tinham a zona morta.
+  - Correção: a mesma zona morta.
+  - Teste: `testTOQUEALCA_EletroPainelEFornoNaoAndamComTremida`. Falha na 3ca951db (geladeira 355, alça 755, painel 1555/645, forno andou) e passa depois a 430, a 1366 e no iPad simulado.
+- **Observações da auditoria (sem correção, para decidir):**
+  - a alça da geladeira tem 6 px na tela com o ambiente inteiro à vista, menor que um dedo (risco identificado);
+  - a bolinha da alça (raio 15 no desenho) fica em cima da lateral e do tamponamento: 1 ou 2 toques na lateral não chegam na peça;
+  - 2 toques na lateral também giram o engrosso (EGT), e isso mexe no projeto.

@@ -1111,7 +1111,7 @@ final class EditorWebKitTests: XCTestCase {
           S.W=5610;S.H=2600;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];draw();var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Balcão 2 portas'));S.mods[0].x=1400;S.ops=[{id:7,t:'janela',x:1500,b:1100,w:1700,h:600}];draw();
           var g=document.querySelector('#svg [data-op2="7"] rect'),rc=g.getBoundingClientRect(),x=rc.left+rc.width/2,y=rc.top+rc.height/2,svg=document.getElementById('svg'),ev=function(tp,el,cx,cy){el.dispatchEvent(new PointerEvent(tp,{clientX:cx,clientY:cy,pointerId:1,bubbles:true,isPrimary:true,pointerType:'touch'}))};
-          ev('pointerdown',g,x,y);ev('pointermove',svg,x+40,y-20);ev('pointermove',svg,x+60,y-25);ev('pointerup',svg,x+60,y-25);R.janela=S.ops[0].x!==1500&&S.ops[0].b!==1100;
+          /* TOQUE-JANELA (Adauto 27/11, ETAPA 2 item 25): 1 toque seleciona e só a janela selecionada arrasta: toca antes, depois arrasta */ev('pointerdown',g,x,y);ev('pointerup',g,x,y);await new Promise(function(r){setTimeout(r,450)});g=document.querySelector('#svg [data-op2="7"] rect');ev('pointerdown',g,x,y);ev('pointermove',svg,x+40,y-20);ev('pointermove',svg,x+60,y-25);ev('pointerup',svg,x+60,y-25);R.janela=S.ops[0].x!==1500&&S.ops[0].b!==1100;
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["so"] as? Bool, true, "só as peças do módulo focado aparecem")
@@ -1119,7 +1119,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["barra"] as? Bool, true, "barra do foco com as vistas")
         XCTAssertEqual(o["lado"] as? String, "side", "vista de lado no foco")
         XCTAssertEqual(o["volta"] as? Bool, true, "↩ volta pro ambiente com tudo")
-        XCTAssertEqual(o["janela"] as? Bool, true, "janela arrasta no 2D mesmo com móvel embaixo")
+        XCTAssertEqual(o["janela"] as? Bool, true, "janela arrasta no 2D mesmo com móvel embaixo (depois de selecionada com 1 toque · item 25, 27/11)")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
@@ -4633,7 +4633,9 @@ final class EditorWebKitTests: XCTestCase {
           /* com vidro ligado as opções já vêm abertas */m.v[0].open=false;m.v[0].vidro=true;panel();R.abertoComVidro=document.querySelector('#bd [data-pmais]').open;
           R.errs=__errs;return JSON.stringify(R);
           """#)
-        XCTAssertEqual(o["ordem"] as? String, "4<6<7<8<9", "vão, quantas portas, mais opções, puxador (sem Travar e Anti-erros no painel desde 15/11)")
+        // PORTA-MODELOS (Adauto 26/11, ETAPA 2 item 11): o que é da porta vem antes dos puxadores. Entre "Mais opções" (8) e "2 · Puxador da porta"
+        // entram "Estilos de porta", o quadro dos estilos e a medida da folha (antes vinham depois do puxador): o puxador passa de 9 pra 12
+        XCTAssertEqual(o["ordem"] as? String, "4<6<7<8<12", "vão, quantas portas, mais opções, (estilos e folha), puxador (sem Travar e Anti-erros no painel desde 15/11)")
         XCTAssertEqual(o["fechado"] as? Bool, true)
         XCTAssertEqual(o["dentro"] as? Bool, true, "abrir, vidro, furo e basculante guardados")
         XCTAssertEqual(o["umaPorta"] as? Int, 1)
@@ -7198,7 +7200,8 @@ final class EditorWebKitTests: XCTestCase {
                   R.errs=__errs.length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["normal"] as? String, "esquerdo: 4 réguas · face à esquerda da moldura · espessura total 30 | direito: 4 réguas · face à direita da moldura · espessura total 30 | de cima: 4 réguas · face em cima da moldura · espessura total 30 | de baixo: 4 réguas · face embaixo da moldura · espessura total 30")
-        XCTAssertEqual(o["opcoesNaAba"] as? String, "tlInv trInv ttInv tbInv")
+        // TAMP-ORDEM (Adauto 26/11, ETAPA 2 item 12): a seção do inferior (pós-cava) passou pra antes da do superior; as 4 opções são as mesmas, só a ordem na tela
+        XCTAssertEqual(o["opcoesNaAba"] as? String, "tlInv trInv tbInv ttInv")
         XCTAssertEqual(o["inverteuEsquerdo"] as? String, "true · 4 réguas · face à direita da moldura · espessura total 30 · direito face à direita da moldura · espessura total 30")
         XCTAssertEqual(o["no2D"] as? String, "esquerdo true · direito false · Tamponamento esquerdo · 800 × 375 mm · MDF 30")
         XCTAssertEqual(o["corteIgual"] as? String, "true · 2× 800×375 | 4× 800×80 | 4× 215×80 · ATENÇÃO: INVERTIDO (parte lisa pra dentro, réguas por fora) só em: Tamponamento esquerdo")
@@ -14581,7 +14584,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["combos"] as? String, "44/44", "as 44 combinações de móvel × aba")
         XCTAssertEqual((o["conf"] as? NSNumber)?.intValue, 1938, "assinaturas conferidas")
         XCTAssertEqual(o["falta"] as? String, "nenhum", "nenhum controle sumiu")
-        XCTAssertEqual(o["novas"] as? String, "Guarda-roupa 2 vãos#2 button:submit[k=oven] ; Guarda-roupa 2 vãos#2 button:submit[k=tempero]", "só os 2 que voltaram")
+        // FRENTE-COMP (Adauto 26/11, ETAPA 2 item 19): a seção nova "Composição da frente" (aba Estrutura, só nos de baixo) traz os 5 botões das composições
+        XCTAssertEqual(o["novas"] as? String, "Balcão 2 portas#0 button:submit[fc=1gB] ; Balcão 2 portas#0 button:submit[fc=2g1G] ; Balcão 2 portas#0 button:submit[fc=2g] ; Balcão 2 portas#0 button:submit[fc=3G] ; Balcão 2 portas#0 button:submit[fc=livre] ; Guarda-roupa 2 vãos#2 button:submit[k=oven] ; Guarda-roupa 2 vãos#2 button:submit[k=tempero]", "os 2 que voltaram e as 5 composições da frente")
         XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
     }
 
@@ -18296,7 +18300,7 @@ final class EditorWebKitTests: XCTestCase {
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
         loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));S.mods[2].v[0].vidro=true;S.m=S.mods[0];S.sv=0;S.tab=3;draw();panel();await W(900);
         var Q=function(s){var e=document.querySelector(s);if(!e)throw new Error('sem '+s);return e},inp=function(k,v){var e=Q('[data-estn="'+k+'"]');e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}))};
-        var secs=[].map.call(document.querySelectorAll('#bd .sec'),function(e){return e.textContent.replace(/[⌃⌄]/g,'').trim()});R.sec=secs.indexOf('Estilos de porta')>secs.indexOf('2 · Puxador da porta')&&secs.indexOf('1 · Quantas portas neste vão')>=0;
+        var secs=[].map.call(document.querySelectorAll('#bd .sec'),function(e){return e.textContent.replace(/[⌃⌄]/g,'').trim()});/* PORTA-MODELOS (Adauto 26/11, ETAPA 2 item 11): Estilos de porta passou pra antes do puxador (o que é da porta primeiro, puxadores embaixo) */R.sec=secs.indexOf('Estilos de porta')>=0&&secs.indexOf('Estilos de porta')<secs.indexOf('2 · Puxador da porta')&&secs.indexOf('1 · Quantas portas neste vão')>=0;
         Q('[data-est="t|simples"]').click();Q('[data-est="rw|40"]').click();inp('off','60');R.rascunho=JSON.stringify(S.mods[0].v[0].est||null);
         Q('[data-estdq="1"]').click();Q('[data-est="t|simples"]').click();Q('[data-estap="porta"]').click();R.p1=Q('#estprev [data-estn2]').textContent;Q('#estprev [data-estok]').click();
         R.so=JSON.stringify(Object.keys(S.mods[0].v[0].estQ||{}))+' '+partsOf(S.mods[0]).filter(function(p){return /^Régua/.test(p.name)}).map(function(p){return p.dq}).filter(function(v,i,a){return a.indexOf(v)===i}).join();
@@ -18308,7 +18312,7 @@ final class EditorWebKitTests: XCTestCase {
         var m=S.mods[0];m.v[0].est={t:'simples',c:'regua',rw:50,off:50};var r1=partsOf(m).filter(function(p){return / · régua de cima$/.test(p.pk)})[0].cl;m.w=1000;var r2=partsOf(m).filter(function(p){return / · régua de cima$/.test(p.pk)})[0].cl;R.acompanha=r2-r1;
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["sec"] as? Bool, true, "Estilos de porta dentro da aba Portas, depois do puxador; seções de antes continuam")
+        XCTAssertEqual(o["sec"] as? Bool, true, "Estilos de porta dentro da aba Portas, antes do puxador (ETAPA 2 item 11, 26/11); seções de antes continuam")
         XCTAssertEqual(o["rascunho"] as? String, "null", "escolher no quadro não muda o projeto antes de aplicar")
         XCTAssertEqual(o["p1"] as? String, "1 porta/frente muda")
         XCTAssertEqual(o["so"] as? String, "[\"1\"] 1", "somente esta porta: só a porta 2")
@@ -19973,6 +19977,324 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ipad"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 22", "métrica do iPad: a régua 815×30 ganha o callout e só sai a etiqueta da sobra que ficaria embaixo (antes: sem identificação 1)")
         XCTAssertEqual(o["ipad113"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 23", "métrica do iPad medida (iOS 708): o mesmo que o iPad deu no CI")
         XCTAssertEqual(o["e"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // TOQUE-ALCA (Adauto 27/11, ETAPA 2 itens 26/27, auditoria de toques com dedo de verdade): no módulo do 2D, com eventos de DEDO (pointerType touch):
+    // tremida de 5 px na alça de medida (bolinha da lateral) mudava a largura 1200→1180 e na divisória mudava a posição; pinça com 1 dedo fora do desenho
+    // (em cima de um botão) arrastava o módulo com o movimento do outro dedo (x 600→830); pinça contava como toque e escolhia peça.
+    // Agora: tremida não mexe, outro dedo não arrasta, pinça e arrasto não contam como toque; o que já existia continua (arrasto de verdade mexe,
+    // 1 toque escolhe a peça, 2 toques no meio do vão abrem o acesso rápido).
+    func testTOQUEALCA_TremidaPincaEOutroDedoNaoMexemNoModulo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var sv=function(){return document.getElementById('svg')},pid=40;
+        var ev=function(tp,x,y,id,el){el=el||document.elementFromPoint(x,y)||sv();el.dispatchEvent(new PointerEvent(tp,{clientX:x,clientY:y,pointerId:id,bubbles:true,cancelable:true,isPrimary:id===pid,pointerType:'touch',width:16,height:16,pressure:tp==='pointerup'?0:0.5}))};
+        var tap=async function(x,y){pid++;ev('pointerdown',x,y,pid);await W(50);ev('pointerup',x,y,pid)};
+        /* o desenho captura o dedo (setPointerCapture): o resto do gesto vai pro svg, mesmo que a peça seja redesenhada */
+        var arr=async function(x,y,dx,dy,n){pid++;var id=pid,el=document.elementFromPoint(x,y);ev('pointerdown',x,y,id);if(el&&sv().contains(el))el=sv();for(var i=1;i<=n;i++){await W(16);ev('pointermove',x+dx*i/n,y+dy*i/n,id,el)}ev('pointerup',x+dx,y+dy,id,el)};
+        var pin=async function(x,y){pid++;var a=pid;pid++;var b=pid;ev('pointerdown',x-30,y,a);ev('pointerdown',x+30,y,b);for(var i=1;i<=6;i++){await W(16);ev('pointermove',x-30-8*i,y,a);ev('pointermove',x+30+8*i,y,b)}ev('pointerup',x-78,y,a);ev('pointerup',x+78,y,b)};
+        /* 1º dedo cai fora do desenho (num botão), o 2º cai na alça; o movimento do 1º chega no desenho */
+        var pinFora=async function(x,y){pid++;var a=pid;pid++;var b=pid;var el=document.elementFromPoint(x,y);ev('pointerdown',x-30,y,a,document.body);ev('pointerdown',x,y,b,el);el=sv();for(var i=1;i<=6;i++){await W(16);ev('pointermove',x-30-8*i,y,a,el);ev('pointermove',x+2,y,b,el)}ev('pointerup',x-78,y,a,document.body);ev('pointerup',x+2,y,b,el)};
+        var ini=async function(){try{vmenuClose()}catch(_){}loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2400;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.mods[0].x=600;S.m=S.mods[0];S.tab=0;draw();panel();window.PSEL=null;await W(500);
+          for(var it=0;it<4;it++){var L=[].slice.call(document.querySelectorAll('#svg [data-p]')),X0=1e9,Y0=1e9,X1=-1e9,Y1=-1e9;L.forEach(function(e){var r=e.getBoundingClientRect();X0=Math.min(X0,r.x);Y0=Math.min(Y0,r.y);X1=Math.max(X1,r.right);Y1=Math.max(Y1,r.bottom)});var Q=sv().getBoundingClientRect(),f=Math.min(Q.width*0.8/(X1-X0),Q.height*0.8/(Y1-Y0)),a=sv().getScreenCTM().a;if(Math.abs(f-1)>0.02)zoom(f);else{VB.x+=((X0+X1)/2-(Q.x+Q.width/2))/a;VB.y+=((Y0+Y1)/2-(Q.y+Q.height/2))/a;setVB()}draw()}await W(300)};
+        var cen=function(sel){var e=document.querySelector(sel);if(!e)return null;var r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}};
+        var porta=function(){var m=S.mods[0],P=partsOf(m),e=[].filter.call(document.querySelectorAll('#svg [data-p]'),function(q){return /^Porta/.test((P[+q.dataset.p]||{}).name||'')})[0],r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}};
+        var vm=function(){var e=document.getElementById('vmenu');return !!(e&&e.getClientRects().length&&getComputedStyle(e).display!=='none')};
+        var est=function(){var m=S.mods[0];return 'x '+m.x+' · larg '+m.w+' · div '+(m.div||[]).map(function(d){return Math.round(d*1000)}).join(',')+(window.PSEL?' · peça escolhida':'')+(vm()?' · acesso rápido':'')};
+        await ini();R.inicio=est();
+        var h=cen('#svg [data-h="l"]');await arr(h.x,h.y,4,3,4);await W(300);R.tremidaAlca=est();
+        await ini();h=cen('#svg [data-h="l"]');await arr(h.x,h.y,60,0,8);await W(300);R.arrastoAlca=est();
+        await ini();var d=cen('#svg [data-d="0"]');await arr(d.x,d.y,4,3,4);await W(300);R.tremidaDivisoria=est();
+        await ini();d=cen('#svg [data-d="0"]');await arr(d.x,d.y,60,0,8);await W(300);R.arrastoDivisoria=(S.mods[0].div[0]!==0.6667)?'andou':'parada';
+        await ini();h=cen('#svg [data-h="l"]');await pinFora(h.x,h.y);await W(500);R.pincaDedoFora=est();
+        await ini();var p=porta();await pin(p.x,p.y);await W(800);R.pincaNaPorta=est();
+        await ini();p=porta();await tap(p.x,p.y);await W(800);R.umToquePorta=est();
+        await ini();p=porta();await tap(p.x,p.y);await W(90);await tap(p.x,p.y);await W(800);R.doisToquesPorta=est();
+        await ini();p=porta();await arr(p.x,p.y,60,0,8);await W(500);R.arrastoModulo=S.mods[0].x!==600?'andou':'parado';
+        try{vmenuClose()}catch(_){}S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["inicio"] as? String, "x 600 · larg 1200 · div 667")
+        XCTAssertEqual(o["tremidaAlca"] as? String, "x 600 · larg 1200 · div 667", "tremida na alça de medida não muda a largura")
+        XCTAssertNotEqual(o["arrastoAlca"] as? String, "x 600 · larg 1200 · div 667", "arrasto de verdade na alça continua mudando a medida")
+        XCTAssertEqual(o["tremidaDivisoria"] as? String, "x 600 · larg 1200 · div 667", "tremida na divisória não muda a posição")
+        XCTAssertEqual(o["arrastoDivisoria"] as? String, "andou", "arrasto de verdade na divisória continua")
+        XCTAssertEqual(o["pincaDedoFora"] as? String, "x 600 · larg 1200 · div 667", "movimento do outro dedo não arrasta o módulo")
+        XCTAssertEqual(o["pincaNaPorta"] as? String, "x 600 · larg 1200 · div 667", "pinça não conta como toque: não escolhe peça nem abre menu")
+        XCTAssertEqual(o["umToquePorta"] as? String, "x 600 · larg 1200 · div 667 · peça escolhida", "1 toque continua escolhendo a peça")
+        XCTAssertEqual(o["doisToquesPorta"] as? String, "x 600 · larg 1200 · div 667 · acesso rápido", "2 toques no meio do vão continuam abrindo o acesso rápido")
+        XCTAssertEqual(o["arrastoModulo"] as? String, "andou", "arrasto do módulo continua")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // TOQUE-ALCA (Adauto 27/11, ETAPA 2 item 27, mesma família): tremida de 5 px com o dedo movia a geladeira 50 mm (x 300→350), a alça dela mudava
+    // a largura (700→750), o painel ripado andava (x 1500→1550) e a alça dele mudava a largura, e o recorte do forno da torre descia (ot 60→63).
+    // Agora tremida e pinça não mexem; o arrasto de verdade continua.
+    func testTOQUEALCA_EletroPainelEFornoNaoAndamComTremida() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var sv=function(){return document.getElementById('svg')},pid=70;
+        var ev=function(tp,x,y,id,el){el=el||document.elementFromPoint(x,y)||sv();el.dispatchEvent(new PointerEvent(tp,{clientX:x,clientY:y,pointerId:id,bubbles:true,cancelable:true,isPrimary:id===pid,pointerType:'touch',width:16,height:16,pressure:tp==='pointerup'?0:0.5}))};
+        var tap=async function(x,y){pid++;ev('pointerdown',x,y,pid);await W(50);ev('pointerup',x,y,pid)};
+        /* o desenho captura o dedo (setPointerCapture): o resto do gesto vai pro svg */
+        var arr=async function(x,y,dx,dy,n){pid++;var id=pid,el=document.elementFromPoint(x,y);ev('pointerdown',x,y,id);if(el&&sv().contains(el))el=sv();for(var i=1;i<=n;i++){await W(16);ev('pointermove',x+dx*i/n,y+dy*i/n,id,el)}ev('pointerup',x+dx,y+dy,id,el)};
+        var pin=async function(x,y){pid++;var a=pid;pid++;var b=pid;ev('pointerdown',x-30,y,a);ev('pointerdown',x+30,y,b);for(var i=1;i<=6;i++){await W(16);ev('pointermove',x-30-8*i,y,a,sv());ev('pointermove',x+30+8*i,y,b,sv())}ev('pointerup',x-78,y,a,sv());ev('pointerup',x+78,y,b,sv())};
+        var cen=function(q){var e=document.querySelector('#svg '+q);if(!e)return null;var r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}};
+        var ini=async function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2600;S.H=2700;S.stones=[];S.mods=[];S.fr=[{id:77,t:'geladeira',x:300,y:0,w:700,h:1800,d:750,b:0}];S.rp=[{id:21,liso:true,x:1500,b:0,w:700,h:2400}];S.tab=0;window.SELAP=0;window.RPSEL=0;draw();panel();await W(500)};
+        var est=function(){var g=S.fr[0],p=S.rp[0];return 'geladeira '+g.x+'/'+g.w+' · painel '+p.x+'/'+p.w};
+        var caso=async function(sel,pre,g){await ini();if(pre){var a=cen(pre);await tap(a.x,a.y);await W(500)}var p=cen(sel);if(!p)return 'sem '+sel;if(g==='tremida')await arr(p.x,p.y,4,3,4);else if(g==='pinca')await pin(p.x,p.y);else await arr(p.x,p.y,60,0,8);await W(400);return est()};
+        await ini();R.inicio=est();
+        R.geladeiraTremida=await caso('[data-ap="77"]',null,'tremida');R.geladeiraPinca=await caso('[data-ap="77"]',null,'pinca');R.geladeiraArrasto=await caso('[data-ap="77"]',null,'arrasto');
+        R.alcaGeladeiraTremida=await caso('[data-aph="w"]','[data-ap="77"]','tremida');R.alcaGeladeiraArrasto=await caso('[data-aph="w"]','[data-ap="77"]','arrasto');
+        R.painelTremida=await caso('[data-rp="21"]',null,'tremida');R.painelPinca=await caso('[data-rp="21"]',null,'pinca');R.painelArrasto=await caso('[data-rp="21"]','[data-rp="21"]','arrasto');
+        R.alcaPainelTremida=await caso('[data-rph="21|l"]','[data-rp="21"]','tremida');R.alcaPainelArrasto=await caso('[data-rph="21|l"]','[data-rp="21"]','arrasto');
+        /* recorte do forno da torre quente (arrasto ov) */
+        var forno=async function(g){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2400;S.H=2700;S.stones=[];S.mods=[];S.fr=[];S.rp=[];draw();newTpl(T('Torre quente (forno)'));S.mods[0].x=600;S.m=S.mods[0];S.tab=0;draw();panel();await W(500);
+          var e=[].filter.call(document.querySelectorAll('#svg [data-ovd]'),function(q){return q.closest('#mod')})[0];if(!e)return 'sem forno';var r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,v=S.mods[0].v[0],a0=v.ot;if(g==='tremida')await arr(x,y,4,3,4);else await arr(x,y,0,40,8);await W(400);return S.mods[0].v[0].ot===a0?'parado':'andou'};
+        R.fornoTremida=await forno('tremida');R.fornoArrasto=await forno('arrasto');
+        S.fr=[];S.rp=[];S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        let ini = "geladeira 300/700 · painel 1500/700"
+        XCTAssertEqual(o["inicio"] as? String, ini)
+        XCTAssertEqual(o["geladeiraTremida"] as? String, ini, "tremida não move a geladeira")
+        XCTAssertEqual(o["geladeiraPinca"] as? String, ini, "pinça não move a geladeira")
+        XCTAssertNotEqual(o["geladeiraArrasto"] as? String, ini, "arrasto de verdade move a geladeira")
+        XCTAssertEqual(o["alcaGeladeiraTremida"] as? String, ini, "tremida na alça não muda a medida da geladeira")
+        XCTAssertNotEqual(o["alcaGeladeiraArrasto"] as? String, ini, "arrasto na alça muda a medida")
+        XCTAssertEqual(o["painelTremida"] as? String, ini, "tremida não move o painel")
+        XCTAssertEqual(o["painelPinca"] as? String, ini, "pinça não move o painel")
+        XCTAssertNotEqual(o["painelArrasto"] as? String, ini, "arrasto de verdade move o painel")
+        XCTAssertEqual(o["alcaPainelTremida"] as? String, ini, "tremida na alça não muda a medida do painel")
+        XCTAssertNotEqual(o["alcaPainelArrasto"] as? String, ini, "arrasto na alça muda a medida do painel")
+        XCTAssertEqual(o["fornoTremida"] as? String, "parado", "tremida não mexe no recorte do forno")
+        XCTAssertEqual(o["fornoArrasto"] as? String, "andou", "arrasto de verdade mexe no recorte do forno")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // TOQUE-JANELA (Adauto 27/11, ETAPA 2 item 25): janela (e porta/abertura/vão da parede) no desenho de frente, com eventos de DEDO (pointerType touch):
+    // 1 toque só seleciona (contorno), não move e não grava desfazer; 2 toques abrem a configuração dela (aba Ambiente, no quadro dela); arrastar só com
+    // ela selecionada e depois do limite de toque (SEL.mov); tremida, pinça e arrasto sem selecionar não movem nem selecionam; tocar fora tira a seleção.
+    func testTOQUEJANELA_UmToqueSelecionaDoisAbremConfigArrastoSoSelecionada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var sv=function(){return document.getElementById('svg')},pid=10;
+        var ev=function(tp,x,y,id){var el=document.elementFromPoint(x,y)||sv();el.dispatchEvent(new PointerEvent(tp,{clientX:x,clientY:y,pointerId:id,bubbles:true,cancelable:true,isPrimary:id===pid,pointerType:'touch',width:16,height:16,pressure:tp==='pointerup'?0:0.5}))};
+        var tap=async function(x,y){pid++;ev('pointerdown',x,y,pid);await W(50);ev('pointerup',x,y,pid)};
+        var arr=async function(x,y,dx,dy,n){pid++;ev('pointerdown',x,y,pid);for(var i=1;i<=n;i++){await W(16);ev('pointermove',x+dx*i/n,y+dy*i/n,pid)}ev('pointerup',x+dx,y+dy,pid)};
+        var pin=async function(x,y){pid++;var a=pid;pid++;var b=pid;ev('pointerdown',x-30,y,a);ev('pointerdown',x+30,y,b);for(var i=1;i<=6;i++){await W(16);ev('pointermove',x-30-8*i,y,a);ev('pointermove',x+30+8*i,y,b)}ev('pointerup',x-78,y,a);ev('pointerup',x+78,y,b)};
+        var ini=async function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];S.ops=[{id:1,t:'janela',w:1200,h:1000,x:1400,b:1000}];S.tab=0;window.OPSEL=null;draw();panel();await W(900)};
+        var c=function(){var r=document.querySelector('#svg [data-op2="1"] rect').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}};
+        var est=function(){var o=S.ops[0],bx=document.querySelector('#bd [data-opfoco]');return 'aba '+S.tab+' · '+(o.x===1400?'parada':'movida')+' · '+(window.OPSEL==null?'sem seleção':'selecionada')+(document.querySelector('[data-opselbox]')?' (contorno)':'')+(bx?' · quadro da janela':'')+' · desfazer '+HIST.length};
+        await ini();var p=c();R.inicio=est();await tap(p.x,p.y);await W(450);R.umToque=est();
+        await ini();p=c();await arr(p.x,p.y,60,0,8);await W(300);R.arrastoSemSelecionar=est();
+        await ini();p=c();await tap(p.x,p.y);await W(450);await arr(p.x,p.y,5,3,4);await W(300);R.tremida=est();await arr(p.x,p.y,60,0,8);await W(300);R.arrastoSelecionada=est();
+        await ini();p=c();await tap(p.x,p.y);await W(90);await tap(p.x,p.y);await W(600);R.doisToques=est();
+        await ini();p=c();await pin(p.x,p.y);await W(400);R.pinca=est();
+        await ini();p=c();await tap(p.x,p.y);await W(450);var r=sv().getBoundingClientRect();await tap(r.x+15,r.y+r.height-15);await W(400);R.tocaFora=est();
+        S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["inicio"] as? String, "aba 0 · parada · sem seleção · desfazer 1")
+        XCTAssertEqual(o["umToque"] as? String, "aba 0 · parada · selecionada (contorno) · desfazer 1", "1 toque só seleciona")
+        XCTAssertEqual(o["arrastoSemSelecionar"] as? String, "aba 0 · parada · sem seleção · desfazer 1", "arrasto não é toque: não move nem seleciona")
+        XCTAssertEqual(o["tremida"] as? String, "aba 0 · parada · selecionada (contorno) · desfazer 1", "dedo que treme não move")
+        XCTAssertEqual(o["arrastoSelecionada"] as? String, "aba 0 · movida · selecionada (contorno) · desfazer 2", "selecionada arrasta e grava 1 desfazer")
+        XCTAssertEqual(o["doisToques"] as? String, "aba 9 · parada · selecionada (contorno) · quadro da janela · desfazer 1", "2 toques abrem a configuração dela")
+        XCTAssertEqual(o["pinca"] as? String, "aba 0 · parada · sem seleção · desfazer 1", "pinça não seleciona nem move")
+        XCTAssertEqual(o["tocaFora"] as? String, "aba 0 · parada · sem seleção · desfazer 1", "tocar fora tira a seleção")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FRENTE-COMP (Adauto 26/11, ETAPA 2 item 19): "Composição da frente" nos módulos de baixo (aba Estrutura): 2 gavetas + 1 gavetão (1:1:2, gavetão embaixo),
+    // 3 gavetões, 2 gavetas, 1 gaveta + basculante (gaveta em cima com 1/4 do vão, travessa fixa = prateleira na espessura da chapa, basculante embaixo) e
+    // livre montagem (módulo por vãos). Padrões editáveis nos Ajustes e em cada módulo; só muda quando a pessoa toca; ↶ desfaz.
+    // Vão misto conferido nos 14 erros de sincronização (§11.4): partsOf = 3D = lista = corte = plano = orçamento, salvar/reabrir, duplicar,
+    // desfazer, troca de composição sem peça velha, um vão não mexe no outro, módulo sozinho = no projeto.
+    func testFRENTECOMP_ComposicoesDaFrenteVaoMistoGavetaBasculanteSincronizado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var r1=function(x){return Math.round(x*10)/10},bd=function(){return document.getElementById('bd')},q=function(s){return bd().querySelector(s)};
+        var STD0=JSON.stringify({a:STD().fcGf,b:STD().fcGavB});delete STD().fcGf;delete STD().fcGavB;
+        var novo=function(n){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T(n));var m=S.mods[0];m.x=1000;S.m=m;S.sv=0;draw();S.tab=0;panel();return m};
+        var toca=function(k){var b=q('[data-fc="'+k+'"]');if(!b)return 'sem botão';b.click();return ''};
+        var nomes=function(m,vi){var o={};partsOf(m).forEach(function(p){if(vi!==undefined&&p.vi!==vi)return;o[p.name]=(o[p.name]||0)+1});return Object.keys(o).sort().map(function(k){return k+' '+o[k]}).join(', ')};
+        /* 1. seção só nos de baixo, com as 5 composições */
+        var m=novo('Balcão 2 portas');R.botoes=[].map.call(bd().querySelectorAll('[data-fc]'),function(b){return b.textContent.trim()}).join(' | ');
+        R.soEmbaixo='aéreo '+(novo('Aéreo 2 portas')&&q('[data-fcsec]')?'tem':'não tem')+' · torre '+(novo('Torre quente (forno)')&&q('[data-fcsec]')?'tem':'não tem');
+        /* 2. olhar não muda nada; 2 gavetas + gavetão; ↶ volta igual */
+        m=novo('Balcão 2 portas');var p0=JSON.stringify(partsOf(m));S.tab=0;panel();R.olharNaoMuda=JSON.stringify(partsOf(m))===p0;
+        await W(800);draw();toca('2g1G');var F=partsOf(S.mods[0]).filter(function(p){return p.name==='Frente de gaveta'}).sort(function(a,b){return a.y-b.y});R.gavetao=F.map(function(p){return r1(p.h)}).join('/')+' · '+JSON.stringify(S.mods[0].v[0].gf);
+        document.getElementById('und').click();await W(120);draw();R.desfaz=JSON.stringify(partsOf(S.mods[0]))===p0;
+        toca('3G');R.tres=S.mods[0].v[0].n+' '+(S.mods[0].v[0].gf?'com gf':'iguais');toca('2g');R.duas=S.mods[0].v[0].n+' '+(S.mods[0].v[0].gf?'com gf':'iguais');
+        /* 3. vão misto: 1 gaveta + basculante */
+        m=novo('Balcão 2 portas');await W(800);draw();var pBase=JSON.stringify(partsOf(m));toca('1gB');m=S.mods[0];draw();var P=partsOf(m),v=m.v[0];R.misto=nomes(m);
+        var fg=P.filter(function(p){return p.name==='Frente de gaveta'})[0],tv=P.filter(function(p){return p.name==='Prateleira fixa (embaixo da gaveta)'})[0],pt=P.filter(function(p){return /^Porta/.test(p.name)&&!p.noCut})[0];
+        R.ordem=!!(fg&&tv&&pt&&fg.y+fg.h<=pt.y+0.01&&tv.y>=fg.y&&tv.y+tv.h<=pt.y+pt.h)+' · frente da gaveta '+(fg?r1(fg.h):'-')+' · porta '+(pt?r1(pt.w)+'×'+r1(pt.h):'-')+' · travessa '+(tv?tv.cl+'×'+tv.cw+' esp '+r1(tv.h):'-')+' · basculante '+!!v.bas;
+        var lat=P.filter(function(p){return p.name==='Lateral de gaveta'});R.caixaEmCima=lat.length===2&&lat.every(function(p){return p.y+p.h<=tv.y+0.01});
+        /* 3D: cada peça do partsOf tem caixa no 3D na mesma altura (como no teste do catálogo) */
+        open3D();await W(300);__build();var BX=__boxes().filter(function(b){return b.nm&&/^0:/.test(b.nm)&&!b.ft}),top=(+m.b||0)+(+m.h||0),fora=[],n3=0;
+        P.forEach(function(p){if(p.noCut||!p.pk||/de gaveta|Gaveta interna/i.test(p.name))return;var bs=BX.filter(function(b){return b.pk===p.pk});if(!bs.length){fora.push('sem 3D: '+p.name);return}n3++;var y0=Math.min.apply(null,bs.map(function(b){return b.y0})),y1=Math.max.apply(null,bs.map(function(b){return b.y1}));if(Math.abs(y0-(top-p.y-p.h))>1.5||Math.abs(y1-(top-p.y))>1.5)fora.push(p.name)});
+        try{document.getElementById('v3x').click()}catch(_){}R.tresD=n3+' peças · '+(fora.join(', ')||'todas na altura');
+        /* lista e corte */var L=cutLines(m),tem=function(nm){return L.some(function(l){return String(l.n||l.name||'').indexOf(nm)===0})};R.listaCorte='travessa '+tem('Prateleira fixa (embaixo da gaveta)')+' · frente '+tem('Frente de gaveta')+' · porta '+L.some(function(l){return /^Porta/.test(String(l.n||l.name||''))});
+        var pl=sheetPlan(1),noPlano=0;pl.groups.forEach(function(g){g.sheets.forEach(function(s){s.used.forEach(function(u){if(/Prateleira fixa \(embaixo da gaveta\)/.test(u.p.lab))noPlano++})})});R.plano='travessa no plano '+noPlano;
+        await W(800);draw();var bu=budget(),tot=JSON.stringify(bu.total!==undefined?bu.total:bu);document.getElementById('und').click();await W(120);draw();var bu0=JSON.stringify(budget().total!==undefined?budget().total:budget());R.orcamento=(tot!==bu0)+' · ↶ volta: '+(JSON.stringify(partsOf(S.mods[0]))===pBase);
+        /* salvar/reabrir e duplicar */fcAplica(S.mods[0],'1gB');draw();var pm=JSON.stringify(partsOf(S.mods[0])),sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();R.reabre=JSON.stringify(partsOf(S.mods[0]))===pm;
+        S.m=S.mods[0];S.tab=0;panel();var cp=q('[data-mcopy]');if(cp)cp.click();draw();R.duplica=S.mods.length+' módulos · '+(S.mods.length===2&&nomes(S.mods[1],0)===nomes(S.mods[0],0)&&S.mods[1].v[0].fc==='1gB');
+        /* troca de composição: sem peça velha */S.mods.splice(1);S.m=S.mods[0];S.sv=0;draw();S.tab=0;panel();toca('2g');R.trocaSemSobra=nomes(S.mods[0]).indexOf('embaixo da gaveta')<0&&!S.mods[0].v[0].bas;
+        /* um vão não mexe no outro */m=novo('Balcão 2 portas + 4 gavetas');var sem=function(L){return JSON.stringify(L.filter(function(p){return p.vi===1}).map(function(p){var c=JSON.parse(JSON.stringify(p));delete c.pk;return c}))},v1=sem(partsOf(m));S.sv=0;S.tab=0;panel();toca('1gB');/* a chave (pk) é numerada por nome no módulo inteiro (já era assim ao trocar porta por gaveta em qualquer vão): confere medida, posição e nota */R.outroVao=sem(partsOf(S.mods[0]))===v1;
+        /* Ajustes: muda o padrão e só o módulo novo pega; cada módulo muda o dele */
+        m=novo('Balcão 2 portas');toca('2g1G');var gA=JSON.stringify(S.mods[0].v[0].gf);STD().fcGf='1:2:3';var g1=JSON.stringify(S.mods[0].v[0].gf);S.tab=0;panel();toca('3G');toca('2g1G');var g2=JSON.stringify(S.mods[0].v[0].gf);R.ajustes=gA+' → existente '+g1+' → nova '+g2;
+        var inp=q('[data-fcgf]');inp.value='1:1:3';inp.dispatchEvent(new Event('change',{bubbles:true}));R.noModulo=JSON.stringify(S.mods[0].v[0].gf);
+        m=novo('Balcão 2 portas');toca('1gB');var f25=r1(partsOf(S.mods[0]).filter(function(p){return p.name==='Frente de gaveta'})[0].h);S.tab=0;panel();var ib=q('[data-fcbp]');ib.value='40';ib.dispatchEvent(new Event('change',{bubbles:true}));var f40=r1(partsOf(S.mods[0]).filter(function(p){return p.name==='Frente de gaveta'})[0].h);R.pctGaveta=f25+' → '+f40;
+        /* livre montagem */m=novo('Balcão 2 portas');await W(800);draw();toca('livre');R.livre=!!(window.rgIs&&rgIs(S.mods[0]));document.getElementById('und').click();await W(120);draw();R.livreDesfaz=!(window.rgIs&&rgIs(S.mods[0]));
+        var a0=JSON.parse(STD0);if(a0.a===undefined)delete STD().fcGf;else STD().fcGf=a0.a;if(a0.b===undefined)delete STD().fcGavB;else STD().fcGavB=a0.b;
+        S.tab=0;R.errs=__errs.length-e0;R.e=__errs.slice(e0,e0+2).join(' | ');return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["botoes"] as? String, "2 gavetas + 1 gavetão | 3 gavetões | 2 gavetas | 1 gaveta + porta basculante | livreLivre montagem (sem limitação)")
+        XCTAssertEqual(o["soEmbaixo"] as? String, "aéreo não tem · torre não tem")
+        XCTAssertEqual(o["olharNaoMuda"] as? Bool, true)
+        XCTAssertEqual(o["gavetao"] as? String, "163.8/163.8/327.5 · [1,1,2]")
+        XCTAssertEqual(o["desfaz"] as? Bool, true)
+        XCTAssertEqual(o["tres"] as? String, "3 iguais")
+        XCTAssertEqual(o["duas"] as? String, "2 iguais")
+        XCTAssertEqual(o["misto"] as? String, "Base inferior 1, Divisória do pedestal (meio) 1, Frente de gaveta 1, Frente/costa de gaveta (contra-frente e traseira) 2, Fundo de gaveta (6 mm) 1, Lateral de gaveta 2, Lateral direita 1, Lateral esquerda 1, Porta 1, Prateleira fixa (embaixo da gaveta) 1, Rodapé (pedestal) 1, Rodapé lateral direito (pedestal) 1, Rodapé lateral esquerdo (pedestal) 1, Rodapé traseiro (pedestal) 1, Tamponamento direito 1, Tamponamento esquerdo 1, Travessa deitada do pedestal (fixação) 2, Travessa frontal 1")
+        XCTAssertEqual(o["ordem"] as? String, "true · frente da gaveta 155 · porta 884×547 · travessa 870×560 esp 15 · basculante true")
+        XCTAssertEqual(o["caixaEmCima"] as? Bool, true)
+        XCTAssertEqual(o["tresD"] as? String, "15 peças · todas na altura")
+        XCTAssertEqual(o["listaCorte"] as? String, "travessa true · frente true · porta true")
+        XCTAssertEqual(o["plano"] as? String, "travessa no plano 1")
+        XCTAssertEqual(o["orcamento"] as? String, "true · ↶ volta: true")
+        XCTAssertEqual(o["reabre"] as? Bool, true)
+        XCTAssertEqual(o["duplica"] as? String, "2 módulos · true")
+        XCTAssertEqual(o["trocaSemSobra"] as? Bool, true)
+        XCTAssertEqual(o["outroVao"] as? Bool, true)
+        XCTAssertEqual(o["ajustes"] as? String, "[1,1,2] → existente [1,1,2] → nova [1,2,3]")
+        XCTAssertEqual(o["noModulo"] as? String, "[1,1,3]")
+        XCTAssertEqual(o["pctGaveta"] as? String, "155 → 248")
+        XCTAssertEqual(o["livre"] as? Bool, true)
+        XCTAssertEqual(o["livreDesfaz"] as? Bool, true)
+        XCTAssertEqual(o["e"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FRENTE-COMP (Adauto 26/11, ETAPA 2 item 19 · B): no vão de gavetas, v.gf reparte a altura das frentes pela proporção (2 gavetas + gavetão
+    // embaixo = 1:1:2). O total das frentes, as folgas, as réguas do cava e a regra da caixa são os de hoje; a caixa de cada gaveta fica dentro da
+    // frente dela. Sem gf (ou gf que não bate com o número de gavetas) o módulo sai igual ao de antes, peça por peça.
+    func testFRENTECOMP_ProporcaoDasFrentesDoisGavetasEGavetaoSemGfIgualAntes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var r1=function(x){return Math.round(x*10)/10};
+        var cena=function(cava,gf){loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];newTpl(T('Gaveteiro 3 gavetas'));var m=S.mods[0];m.v[0].cava=cava;if(gf)m.v[0].gf=gf;else delete m.v[0].gf;draw();var P=partsOf(m);
+          var F=P.filter(function(p){return p.name==='Frente de gaveta'}).sort(function(a,b){return a.y-b.y}),L=P.filter(function(p){return p.name==='Lateral de gaveta'});
+          var tot=r1(F.reduce(function(a,p){return a+p.h},0)+(F[F.length-1].y+F[F.length-1].h-F[0].y-F.reduce(function(a,p){return a+p.h},0)));
+          var cxs=[0,1,2].map(function(q){return L.filter(function(p){return p.dq===q})[0]}),dentro=cxs.every(function(c,q){return c&&(q===0||cxs[q-1].y+cxs[q-1].h<=c.y+0.01)});
+          var nomes={};P.forEach(function(p){nomes[p.name]=(nomes[p.name]||0)+1});
+          var B=P.filter(function(p){return p.name==='Batente (cava)'}).sort(function(a,b){return a.y-b.y}),bat=B.map(function(b,q){var c=b.y+b.h/2,f0=F[q],f1=F[q+1];return f0&&f1&&c>=f0.y+f0.h-0.01&&c<=f1.y+0.01}).join('/');return {bat:bat,fr:F.map(function(p){return r1(p.h)}),tot:tot,dentro:dentro,cx:L.filter(function(p,k){return k%2===0}).map(function(p){return r1(p.h)}),nomes:Object.keys(nomes).sort().map(function(k){return k+' '+nomes[k]}).join(', '),js:JSON.stringify(P)}};
+        [false,true].forEach(function(cv){var a=cena(cv,null),b=cena(cv,[1,1,2]),z=cena(cv,[1,2]);var k=cv?'cava':'semCava';
+          R[k]='frentes '+a.fr.join('/')+' → '+b.fr.join('/')+' · total '+a.tot+' = '+b.tot+' · caixas '+a.cx.join('/')+' → '+b.cx.join('/')+' · caixas sem se cruzar '+b.dentro+' · mesmas peças '+(a.nomes===b.nomes);
+          if(cv)R.batentes=b.bat;R[k+'Prop']=Math.abs(b.fr[0]-b.fr[1])<=0.11&&Math.abs(b.fr[2]-2*b.fr[0])<=0.25;R[k+'GfInvalido']=z.js===a.js});
+        R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["semCava"] as? String, "frentes 232.3/232.3/232.3 → 174.3/174.3/348.5 · total 705 = 705 · caixas 148/148/148 → 97/97/250 · caixas sem se cruzar true · mesmas peças true", "1:1:2 com o gavetão embaixo; caixa pela regra de hoje (automática até 250)")
+        XCTAssertEqual(o["cava"] as? String, "frentes 218.3/218.3/218.3 → 163.8/163.8/327.5 · total 705 = 705 · caixas 114/114/114 → 71.5/71.5/199 · caixas sem se cruzar true · mesmas peças true")
+        XCTAssertEqual(o["batentes"] as? String, "true/true", "cada régua do cava fica no vão entre as frentes")
+        XCTAssertEqual(o["semCavaProp"] as? Bool, true)
+        XCTAssertEqual(o["cavaProp"] as? Bool, true)
+        XCTAssertEqual(o["semCavaGfInvalido"] as? Bool, true, "gf que não bate com o número de gavetas: igual a antes, peça por peça")
+        XCTAssertEqual(o["cavaGfInvalido"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // TAMP-ORDEM (Adauto 26/11, ETAPA 2 item 12; "pós-cava" = Tamponamento inferior, confirmado pelo Adauto): na aba Tamponamentos a ordem é
+    // esquerdo, direito, engrosso cava, inferior (pós-cava), superior e as peças. Só muda a ordem: mesmas seções, mesmos nomes, mesmos controles;
+    // nenhuma seção "Pós cava" (testTamponamentoInferiorReconheceACavaSozinhoSemSecaoPosCava continua valendo).
+    func testTAMPORDEM_EsquerdoDireitoCavaInferiorDepoisODemais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var olha=function(n){loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];draw();newTpl(T(n));S.m=S.mods[0];S.m.tl=true;S.m.tr=true;draw();S.tab=4;panel();var bd=document.getElementById('bd');
+          var secs=[].map.call(bd.querySelectorAll('.sec'),function(e){return e.textContent.replace('⌃','').trim()}).filter(function(t){return /Tamponamento|Engrosso|Peças de tamp/.test(t)});
+          var ctl=[].map.call(bd.querySelectorAll('[data-c],[data-tw],[data-r],input,button'),function(e){return e.tagName+(e.dataset.c||e.dataset.r||e.dataset.tw||'')}).sort().join(',');
+          var h=0;for(var i=0;i<ctl.length;i++)h=((h*31)+ctl.charCodeAt(i))>>>0;return secs.join(' → ')+' · controles '+bd.querySelectorAll('[data-c],input,button').length+' #'+h.toString(36)};
+        R.aereo=olha('Aéreo 2 portas');R.balcao=olha('Balcão 2 portas');R.posCava=/ós cava/i.test(document.getElementById('bd').innerHTML)?'tem':'não tem';
+        S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["aereo"] as? String, "Tamponamento esquerdo → Tamponamento direito → Engrosso cava (réguas de baixo) → Tamponamento inferior do módulo → Tamponamento superior do módulo → Peças de tamponamento · controles 18 #cc3cx8", "antes (bd2de0db): esquerdo, direito, superior, inferior, engrosso cava, peças; controles iguais")
+        XCTAssertEqual(o["balcao"] as? String, "Tamponamento esquerdo → Tamponamento direito → Tamponamento inferior do módulo → Tamponamento superior do módulo → Peças de tamponamento · controles 13 #1ob8toq", "balcão não tem engrosso cava; controles iguais")
+        XCTAssertEqual(o["posCava"] as? String, "não tem")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // PORTA-MODELOS (Adauto 26/11, ETAPA 2 item 11 · referência R7): na aba Portas, "Modelo da porta" mostra todos os modelos que existem com
+    // miniatura (Lisa, Ripada V/H, Usinada V/H, Palha e os Provençal simples/detalhada/dupla, que antes só estavam em "Estilos de porta");
+    // "Usados recentemente" guarda os últimos modelos usados nos Ajustes (prices.json: vale ao fechar e abrir); o que é da porta vem primeiro e
+    // os puxadores ficam embaixo. Nada sai: os mesmos blocos e botões; o Provençal aplica pelo quadro de estilos (prévia, porta escolhida ou todas).
+    func testPORTAMODELOS_TodosOsModelosComMiniaturaUsadosRecentementePuxadoresEmbaixo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var rec0=PR.portaRec;delete PR.portaRec;
+        loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.sv=0;draw();S.tab=3;panel();
+        var bd=function(){return document.getElementById('bd')},q=function(s){return bd().querySelector(s)},qa=function(s){return [].slice.call(bd().querySelectorAll(s))};
+        var grade=function(){var g=[].filter.call(bd().querySelectorAll('[data-vzm]'),function(b){return !b.closest('[data-prec]')})[0];return g?g.parentNode:null};
+        var nomes=function(){var g=grade();return g?[].filter.call(g.children,function(b){return b.tagName==='BUTTON'}).map(function(b){return (b.querySelector('svg')?'▣':'□')+(b.querySelector('b')||b).textContent.trim()}).join(', '):''};
+        var secs=function(){return qa('.sec').map(function(e){return e.textContent.replace('⌃','').replace(/^\d · /,'').trim()}).join(' | ')};
+        var conta=function(){return ['[data-vzm]','[data-est]','[data-estap]','[data-pxt]','[data-pxmd]','[data-pxall]','[data-mcopy]','[data-pmais]'].map(function(s){return s.replace(/\[data-|\]/g,'')+' '+qa(s).length}).join(' · ')};
+        R.modelos=nomes();R.ordem=secs();R.botoes=conta();
+        /* puxadores depois de tudo da porta */var ix=function(e){return [].indexOf.call(bd().children,e)},pxP=qa('.sec').filter(function(e){return /Puxador da porta/.test(e.textContent)})[0],est=qa('.sec').filter(function(e){return /Estilos de porta/.test(e.textContent)})[0],folha=qa('.box').filter(function(e){return /Cada folha/.test(e.textContent)})[0];
+        R.puxEmbaixo=!!(pxP&&est&&ix(pxP)>ix(est)&&(!folha||ix(pxP)>ix(folha))&&ix(q('[data-pxbox]'))>ix(pxP));
+        R.recAntes=q('[data-prec]')?'tem':'não tem';
+        /* usa: Ripada vertical (aplica na hora) e Provençal simples pela prévia na porta 1 */
+        q('[data-vzm="rip|v"]').click();await W(30);grade().querySelector('[data-est="t|simples"]').click();await W(30);q('[data-estap]').click();await W(60);var ok=document.querySelector('#estprev [data-estok]');if(ok)ok.click();await W(60);
+        S.tab=3;panel();var v=S.m.v[0],e=(v.estQ&&v.estQ[0]!==undefined)?v.estQ[0]:v.est;R.porta=(v.vz?v.vz.t+'|'+v.vz.d:'lisa')+' · estilo '+(e&&e.t||'lisa');
+        R.rec=JSON.stringify(PR.portaRec);var f=null;try{f=JSON.parse(decodeURIComponent(escape(atob(ArqueApp.getFile('prices.json'))))).portaRec}catch(_){}R.arquivo=JSON.stringify(f);
+        var pr=q('[data-prec]');R.recTela=pr?[].map.call(pr.querySelectorAll('button'),function(b){return (b.querySelector('svg')?'▣':'□')+(b.querySelector('b')||b).textContent.trim()+(b.dataset.vzm!==undefined?' vzm':b.dataset.est?' est':'')}).join(', '):'não tem';
+        /* o botão do recente faz o mesmo que o da grade */q('[data-vzm="0"]').click();await W(30);S.tab=3;panel();pr=q('[data-prec]');var rb=pr&&pr.querySelector('[data-vzm="rip|v"]');if(rb){rb.click();await W(30)}R.recToque=S.m.v[0].vz?S.m.v[0].vz.t+'|'+S.m.v[0].vz.d:'lisa';
+        if(rec0===undefined)delete PR.portaRec;else PR.portaRec=rec0;try{prSave()}catch(_){}S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["modelos"] as? String, "▣Lisa, ▣Ripada vertical, ▣Ripada horizontal, ▣Usinada vertical, ▣Usinada horizontal, ▣Palha, ▣Provençal simples, ▣Provençal detalhada, ▣Provençal dupla", "antes (3174dbd8): só os 6 primeiros; os Provençal só no quadro de estilos, sem miniatura")
+        XCTAssertEqual(o["ordem"] as? String, "Modelo da porta | Quantas portas neste vão | Furo da dobradiça (plano de corte) | Estilos de porta | Puxador da porta | 🔧 Puxadores (alça e ponto)", "antes: Puxador da porta vinha antes de Estilos de porta")
+        XCTAssertEqual(o["botoes"] as? String, "vzm 6 · est 7 · estap 5 · pxt 11 · pxmd 6 · pxall 1 · mcopy 1 · pmais 1", "antes: est 4 (os 3 Provençal da grade são os mesmos botões do quadro); o resto igual")
+        XCTAssertEqual(o["puxEmbaixo"] as? Bool, true)
+        XCTAssertEqual(o["recAntes"] as? String, "não tem", "sem uso, sem a linha")
+        XCTAssertEqual(o["porta"] as? String, "rip|v · estilo simples", "Ripada na hora; Provençal só depois de Aplicar na prévia")
+        XCTAssertEqual(o["rec"] as? String, "[\"est:simples\",\"vz:rip|v\"]", "o último usado primeiro")
+        XCTAssertEqual(o["arquivo"] as? String, "[\"est:simples\",\"vz:rip|v\"]", "gravado nos Ajustes (prices.json): vale ao fechar e abrir")
+        XCTAssertEqual(o["recTela"] as? String, "▣Provençal simples est, ▣Ripada vertical vzm", "mesmos botões da grade, com miniatura")
+        XCTAssertEqual(o["recToque"] as? String, "rip|v", "o botão do recente faz o mesmo que o da grade")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DIV-ORDEM (Adauto 26/11, ETAPA 2 item 10 · referência R6): na aba Divisões, as divisões e divisórias do módulo vêm primeiro, depois o resto
+    // (Avançado, peça por peça) e o "÷ Dividir por igual (módulos lado a lado)" mais embaixo. Nada sai: o bloco continua uma vez só, com os mesmos
+    // botões, e nas outras abas fica onde estava (logo depois da escolha do módulo).
+    func testDIVORDEM_AbaDivisoesDivisoesPrimeiroDividirPorIgualEmbaixo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));S.m=S.mods[0];draw();
+        var aba=function(t){S.tab=t;panel();var h=document.getElementById('bd').innerHTML,ix=function(k){return h.indexOf(k)},n=(h.match(/Dividir por igual \(módulos lado a lado\)/g)||[]).length;return {h:h,ix:ix,n:n}};
+        var d=aba(1),pos=function(k){var i=d.ix(k);return i<0?'falta':i};
+        var ord=[['módulo',d.ix('data-selm=')],['vão',d.ix('Vão do módulo')],['prateleiras',d.ix('Prateleiras no vão')],['divisórias',d.ix('Divisórias no vão')],['avançado',d.ix('Avançado (peça por peça)')],['dividir por igual',d.ix('Dividir por igual (módulos lado a lado)')]];
+        R.ordem=ord.filter(function(q){return q[1]>=0}).sort(function(a,b){return a[1]-b[1]}).map(function(q){return q[0]}).join(' → ')+' · blocos '+d.n+' · botões '+(d.h.match(/data-eq[a-z]*="/g)||[]).length;
+        var c=aba(0);R.estrutura='blocos '+c.n+' · antes do conteúdo '+(c.ix('Dividir por igual (módulos lado a lado)')>=0&&c.ix('Dividir por igual (módulos lado a lado)')<c.ix('Dimensões'));
+        var t4=aba(4);R.tamp='blocos '+t4.n;
+        S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["ordem"] as? String, "vão → prateleiras → divisórias → avançado → dividir por igual · blocos 1 · botões 3", "antes (3174dbd8): dividir por igual → vão → prateleiras → divisórias → avançado")
+        XCTAssertEqual(o["estrutura"] as? String, "blocos 1 · antes do conteúdo false", "aba Estrutura: igual a antes")
+        XCTAssertEqual(o["tamp"] as? String, "blocos 1", "aba Tamponamentos: igual a antes")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

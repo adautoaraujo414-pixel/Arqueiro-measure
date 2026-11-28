@@ -17138,6 +17138,31 @@ final class EditorWebKitTests: XCTestCase {
 
     /// MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11 "cálculos reais e automáticos" e "Regras do módulo · organização"; checklist D21/D24): as 24
     /// combinações (balcão e aéreo × moldura × Frontal × travessão sem/externo/interno) com cada peça igual no 3D e no corte (nenhuma espessura somada
+    /// ETAPA 2 · item 4 (Chefe 27/11: "melhore texturas e materiais de eletros, puxadores, ferragens e vidros sem perder desempenho… sem mudar nenhuma caixa"):
+    /// dobradiça, corrediça, cabideiro e o inox/painel preto do forno embutido usam o material de metal do 3D (VIS-MAT); as caixas (medidas e posições) são as mesmas.
+    func testE2ITEM4_FerragensEEletroEmbutidoComMaterialDeMetalSemMudarCaixa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.ambMsg=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var R={},e0=__errs.length;
+          var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+          loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;['Balcão 2 portas','Balcão forno embutido'].forEach(function(n){S.m=S.mods[S.mods.length-1]||null;newTpl(achar(n));draw()});S.mods.forEach(function(m){m.v.forEach(function(v){if(v.k==='door')v.open=true})});
+          newTpl(achar('2P c/ Cab+Gav Int 600mm'));S.m.x=2700;S.m.v.forEach(function(v){v.open=true});draw();open3D();await W(400);__build();
+          var B=__boxes(),cat=function(b){var n=String(b.nm||'');return b.ferr?'dobradiça':/:Corrediça/.test(n)?'corrediça':/:Cabideiro/.test(n)?'cabideiro':/:Corte do forno/.test(n)?'forno':null},C={};
+          var cx=JSON.stringify(B.map(function(b){return [b.nm,b.pk,Math.round(b.x0),Math.round(b.x1),Math.round(b.y0),Math.round(b.y1),Math.round(b.z0),Math.round(b.z1)]}));
+          B.forEach(function(b){var k=cat(b);if(!k)return;C[k]=C[k]||[0,0];C[k][1]++;var v=vizMat(b,0);if(v>=10&&v<11)C[k][0]++});
+          R.dobradica=C['dobradiça'][0]===C['dobradiça'][1];R.correo=C['corrediça'][0]===C['corrediça'][1];R.cabideiro=C['cabideiro'][0]===C['cabideiro'][1];R.forno=C['forno'][0]>=C['forno'][1]/2;
+          /* a classificação não mexe em caixa: liga/desliga e compara */window.VISMAT=false;re3();await W(30);__build();var cx2=JSON.stringify(__boxes().map(function(b){return [b.nm,b.pk,Math.round(b.x0),Math.round(b.x1),Math.round(b.y0),Math.round(b.y1),Math.round(b.z0),Math.round(b.z1)]}));window.VISMAT=true;re3();
+          R.caixas=cx===cx2;document.getElementById('v3x').click();R.errs=__errs.slice(e0);return JSON.stringify(R);
+          """#)
+        /* antes (33ffaf05): dobradiça 0/360 · forno 0/75 · cabideiro 0/5 · corrediça 0/4 no metal */
+        XCTAssertEqual(o["dobradica"] as? Bool, true, "dobradiça no metal (níquel escovado)")
+        XCTAssertEqual(o["correo"] as? Bool, true, "corrediça no metal")
+        XCTAssertEqual(o["cabideiro"] as? Bool, true, "cabideiro no metal")
+        XCTAssertEqual(o["forno"] as? Bool, true, "inox e painel preto do forno embutido no metal")
+        XCTAssertEqual(o["caixas"] as? Bool, true, "nenhuma caixa muda")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
     /// CRUZA-3D-ID (Code 1 / Chefe 27/11): peça cortada tem que ser a sua caixa no 3D, com a sua chave. Gaveta interna (laterais, contra-frente/traseira,
     /// fundo de 6) era um bloco com a chave da frente; o aparador da sapateira saía com a chave da prateleira inclinada. Catálogo inteiro.
     func testCRUZA3DID_GavetaInternaESapateiraComAChaveDeCadaPecaNo3D() async throws {

@@ -15401,6 +15401,11 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
   /* pedra da bancada: brilho de polida */if((b.g==='st'||b.g==='stc')&&tm>=1&&tm<=3&&tm===Math.floor(tm))return tm+.3;
   /* puxador (peças de metal do puxador) e concha: aspereza pelo acabamento */if(b.mt&&b.nol&&!b.shd){var r=hexR(c);if(r===undefined)r=sat<.08?.35:.3;return met(r)}
   /* perfil gola e alumínio de porta de vidro: anodizado */if(b.gola||b.alu)return met(.42);
+  /* ETAPA 2 item 4 (Chefe 27/11, texturas sem perder desempenho): ferragens e eletros embutidos no metal (só a classificação do material; caixa e medida iguais) ·
+     dobradiça (ferr) níquel escovado · corrediça, cabideiro e suportes: zincado · forno/micro/cooktop/coifa do módulo: inox escovado, painel preto brilhante */
+  if(b.ferr&&sat<.12)return met(.22);
+  var nm_=String(b.nm||'');if(sat<.12&&/:(Corrediça|Cabideiro|Suporte|Trilho|Pistão)/.test(nm_))return met(.28);
+  if(sat<.1&&!b.gl&&/:(Corte do forno|Corte do micro-ondas|Cooktop|Coifa|Forno|Micro)/.test(nm_)){if(lu<.2)return met(.12);return met(lu>.55?.32:.5)}
   if(b.fr!=null&&!b.mid){var t=frT(b.fr);if(!t)return 0;
    if(MET[t]&&sat<.1){if(t==='torneira')return met(lu>.5?.06:.4);if(lu<.2)return met(.12);/* painel/vidro preto brilhante */return met(lu>.55?.38:.55)}
    if(TEC[t]&&lu>.35&&sat<.45)return 14;

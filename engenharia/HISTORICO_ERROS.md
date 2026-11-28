@@ -2779,3 +2779,13 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - aparador: a tira sai com o nome e a chave da peça `Sapateira · aparador`;
   - o `hlResolve` fica como rede (agora a caixa própria existe).
 - **Teste:** `testCRUZA3DID_GavetaInternaESapateiraComAChaveDeCadaPecaNo3D` (catálogo inteiro, 6 modelos). No HEAD falha (aparador sem caixa própria, bloco com a chave da frente); agora passa.
+
+## TEX-METAL (ETAPA 2 item 4, Chefe 27/11): texturas e materiais de eletros e ferragens sem perder desempenho — Claude 3
+- **Antes:** o `vizMat` (VIS-MAT) mandava ao material de metal só puxador, gola, alumínio e os eletros soltos (`S.fr`). Ficavam lisos, sem brilho de metal: forno/micro/cooktop embutidos no módulo, dobradiças (`ferr`), corrediças e cabideiros. Medido no cenário da sonda: dobradiça 0/360, forno 0/75, cabideiro 0/5, corrediça 0/4.
+- **Mudança (só a classificação do material; nenhuma caixa, medida ou posição muda):**
+  - dobradiça: níquel escovado;
+  - corrediça, cabideiro e suportes: zincado;
+  - inox do forno/micro/cooktop/coifa do módulo: escovado; painel preto: brilhante.
+  - Vidros e puxadores já tinham material próprio (vidro 8,5; puxador pelo acabamento) e ficam como estão.
+- **Teste:** `testE2ITEM4_FerragensEEletroEmbutidoComMaterialDeMetalSemMudarCaixa` (também liga e desliga o VIS-MAT e compara todas as caixas). Falha no 33ffaf05; agora passa.
+- **Print:** `tools/sondas/etapa2_c3/item4_metal_forno_dobradica_antes_depois.png`.

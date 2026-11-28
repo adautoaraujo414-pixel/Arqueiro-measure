@@ -3125,3 +3125,4 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Provas:**
   - 10 rodadas isoladas com o app corrigido: Parte1b 10/10, ParteB 10/10.
   - As rodadas em família e o PesDeMetal estão abaixo.
+- **ESTAVEL (cont.):** com exploração completa, a 1366 a ParteB também achou "Isométrica" e "Lado" (vistas prontas do 3D) calados quando a câmera já estava nessa vista. Agora avisam "Já está na vista … · gire com o dedo pra mudar". ParteB e PesDeMetal juntos passam.

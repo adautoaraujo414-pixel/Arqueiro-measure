@@ -19647,6 +19647,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // DESFAZ-PUXADOR + opção já escolhida (Chefe 28/11, itens 37/34): "Desconto na altura" do puxador (aba Portas) grava nos Ajustes e não tinha desfazer;
+    // agora ↶/↷ devolvem o valor, e o projeto salvo não leva esse campo. Nos Estilos de porta, tocar na opção que já está escolhida ("Régua aplicada", "50")
+    // ficava calado (o NadaDeEnfeite Parte1b acusava SEM FUNÇÃO, instável conforme a ordem): agora confirma; tocar em outra troca como sempre.
+    func testDESFAZPUXADOR_DescontoTemDesfazerEOpcaoJaEscolhidaConfirma() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length,T0=window.toast,ult='';window.MINI3OFF=1;PR.setupDone=1;window.toast=function(t){ult=String(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        loadState(initLimpo());S.env='cozinha';S.W=3200;S.mods=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.m=S.mods[0];S.tab=3;draw();panel();await W(1000);
+        var i=document.querySelector('#bd [data-pxd]'),k=i.dataset.pxd,v0=STD()[k];i.value='7';i.dispatchEvent(new Event('input',{bubbles:true}));await W(900);R.mudou=k+' '+STD()[k];
+        $('und').click();await W(300);R.desfez=k+' '+STD()[k];$('red').click();await W(300);R.refez=k+' '+STD()[k];$('und').click();await W(300);STD()[k]=v0;
+        R.salvoSemCampo=/pxStd/.test(JSON.stringify(snapState()))?'TEM pxStd':'sem pxStd';
+        document.querySelector('#bd [data-est="t|simples"]').click();await W(300);var b=document.querySelector('#bd [data-est="rw|50"]');ult='';b.click();await W(200);R.jaEscolhido=/^✓ Já está escolhido: 50/.test(ult)?'confirma':'calado: '+ult;
+        document.querySelector('#bd [data-est="rw|20"]').click();await W(300);R.troca=[].filter.call(document.querySelectorAll('#bd [data-est^="rw|"]'),function(e){return /\bsel\b/.test(e.className)}).map(function(e){return e.dataset.est}).join(',');
+        window.toast=T0;S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["mudou"] as? String, "cvDesc 7")
+        XCTAssertEqual(o["desfez"] as? String, "cvDesc 0", "↶ devolve o desconto")
+        XCTAssertEqual(o["refez"] as? String, "cvDesc 7", "↷ refaz")
+        XCTAssertEqual(o["salvoSemCampo"] as? String, "sem pxStd", "o projeto salvo não muda de formato")
+        XCTAssertEqual(o["jaEscolhido"] as? String, "confirma")
+        XCTAssertEqual(o["troca"] as? String, "rw|20")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // CAMPO-NUM (Adauto 27/11, ETAPA 2 item 37): campos numéricos do módulo com o teclado do app (toque de dedo nas teclas). Tocar abre, digitar não fecha,
     // OK aplica o valor exato com 1 desfazer, Cancelar (tecla nova) volta o valor de antes sem aplicar, cm vira mm certo. Antes, a espessura das chapas
     // fora de 3–50 e a do fundo fora de 2–30 eram trocadas caladas pelo def() (123 virava 50 / 6 com o campo mostrando 123): agora avisa e nada muda.

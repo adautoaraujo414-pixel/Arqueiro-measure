@@ -2876,3 +2876,14 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Toques "por cima" (puxador da prateleira, eletro) seguem a regra DUPLO-TOQUE de 18/11: 2 toques abrem o acesso rápido do módulo de baixo.
 - `testDoisToquesNaPontaDoTamponamentoDeCimaDesceOLateralEInverte` (1366): mesma causa, corrigida junto.
 - Os 11 testes de toque, medida, caneta e campo passam a 430 e a 1366. A sonda com toque real foi refeita e está certa.
+
+## DESFAZ-PUXADOR e opção já escolhida (Chefe 28/11, itens 37/34) — Claude 4
+- **"Desconto na altura" / "Furação" do puxador (aba Portas):** gravam nos Ajustes gerais (`STD().cvDesc/gDesc/fcDesc/chFur`) e não tinham desfazer, porque os Ajustes não entram no histórico.
+  - Agora só a cópia do histórico leva esses 4 valores: `snapState` marca `pxStd` só durante o `histTick`, e o `loadState` do ↶/↷ devolve.
+  - O projeto salvo não muda de formato, e abrir um projeto não mexe nos Ajustes.
+  - Sonda: 0 → 7 → ↶ 0 → ↷ 7, e o salvo continua sem `pxStd`.
+- **"Régua aplicada" / "50" (Estilos de porta), acusados pelo NadaDeEnfeite Parte1b:** conferidos de verdade.
+  - Não estão mortos: são as opções **já escolhidas** por padrão. Tocar nelas não mudava nada e ficava calado; tocar em outra opção troca normalmente.
+  - O teste falhava ou passava conforme a ordem em que tocava.
+  - Agora o toque na opção já escolhida confirma ("✓ Já está escolhido: …"). O NadaDeEnfeite Parte1b passou 2 vezes seguidas.
+- **Teste novo:** `testDESFAZPUXADOR_DescontoTemDesfazerEOpcaoJaEscolhidaConfirma`. Falha na 6ae7f4af e passa depois. Os 20 testes de desfazer passam.

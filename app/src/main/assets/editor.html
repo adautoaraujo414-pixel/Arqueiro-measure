@@ -15306,6 +15306,7 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
  document.addEventListener('click',function(ev){var t=ev.target&&ev.target.closest&&ev.target.closest('[data-est],[data-estdq],[data-estap]');if(!t||window.RO||!S.m)return;var v=S.m.v&&S.m.v[S.sv];if(!v)return;ev.stopImmediatePropagation();
   if(t.dataset.estdq!==undefined){ESTDQ=+t.dataset.estdq;RASC=null;panel();return}var e=rasc(v);
   if(t.dataset.estap){previa(t.dataset.estap,e);return}var a=t.dataset.est.split('|'),k=a[0],val=a[1];
+  /* BOTAO-VAZIO (ETAPA 2 item 34, 28/11): tocar na opção que já está escolhida (ex.: "Régua aplicada", "50") não fazia nada, calado; agora confirma */if(/\bsel\b/.test(t.className||'')&&k!=='t'){try{toast('✓ Já está escolhido: '+t.textContent.trim().replace(/\s+/g,' ').slice(0,40)+' · toque em outra opção pra trocar')}catch(_){}return}
   if(k==='t'){var keep=e.cor;RASC.e=Object.assign({t:val},val==='lisa'?{}:JSON.parse(JSON.stringify(DEF[val])));if(keep&&val!=='lisa')RASC.e.cor=keep}else if(k==='c')e.c=val;else if(k==='rw')e.rw=+val;else if(k==='j')e.j=val;else if(k==='cor')delete e.cor;panel()},true);
  document.addEventListener('change',function(ev){var t=ev.target;if(!t||!t.dataset||(!t.dataset.estn&&!t.dataset.estcor)||window.RO||!S.m)return;var v=S.m.v&&S.m.v[S.sv];if(!v)return;ev.stopImmediatePropagation();var e=rasc(v);if(t.dataset.estcor){e.cor=t.value;panel();return}var n=num(t.value);if(!(n>=0)){try{toast('⚠ Medida inválida')}catch(_){}panel();return}
   var k=t.dataset.estn,old=e[k];e[k]=k==='fn'?Math.round(n):n;var P=partsOf(S.m).filter(function(p){return p.vi===S.sv&&DOOR.test(p.name)})[0];if(P&&e.t!=='lisa'){var G=estCabe(e,P,+S.m.esp||15,S.m);if(!G.ok){e[k]=old;try{toast('⚠ Não cabe nesta porta: '+G.why+'. Nada mudou.')}catch(_){}}}panel()},true);
@@ -16059,6 +16060,17 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
  document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-medopc]');if(!t||!BOX||!BOX.contains(t))return;e.stopPropagation();e.preventDefault();var o=BOX._o,m=BOX._m;BOX.hidden=true;if(t.dataset.medopc==='x'||!o){try{toast('Nada foi alterado')}catch(_){}return}var q=o.L[+t.dataset.medopc];if(!q||q.no)return;if(m&&m.lock){try{toast('🔒 Módulo travado')}catch(_){}return}q.fn();try{toast('✓ '+q.t.replace(/^\S+\s/,'')+' · '+q.s+' · ↶ desfaz')}catch(_){}},true);
  /* o campo da medida (#qebox) aplica no 'input': aqui, antes dele, vira a escolha */
  document.addEventListener('input',function(e){var t=e.target;if(!t||!t.dataset||!/^(ml|mr|mt|mp)$/.test(t.dataset.mq||'')||!t.closest||!t.closest('#qebox')||!S.m||window.RO)return;var raw=String(t.value).trim();if(raw===''||/[+\-−]\s*$/.test(raw))return;var v=+raw.replace(',','.');if(!isFinite(v))return;var o=opcoes(S.m,t.dataset.mq,v);e.stopImmediatePropagation();if(!o)return;if(S.m.lock){try{toast('🔒 Módulo travado')}catch(_){}return}setTimeout(function(){mostra(S.m,o)},0)},true);
+})();
+</script>
+<script>
+/* ===== DESFAZ-PUXADOR (Adauto 27/11, ETAPA 2 item 37; Chefe 28/11): "Desconto na altura" / "Furação" do puxador, na aba Portas, gravam nos Ajustes
+   gerais (STD) e não tinham desfazer (os Ajustes não entram no histórico). Agora só a cópia do HISTÓRICO leva esses 4 valores e o ↶/↷ devolve.
+   O projeto salvo não muda de formato (snapState fora do histórico continua igual) e abrir projeto não mexe nos Ajustes. ===== */
+(function(){var PXK=['cvDesc','gDesc','fcDesc','chFur'];
+ if(typeof histTick==='function'&&typeof snapState==='function'&&typeof loadState==='function'){
+  var ss0=snapState;snapState=window.snapState=function(){var o=ss0.apply(this,arguments);if(window.__HSNAP&&o&&typeof o==='object'){var p={};PXK.forEach(function(k){var v=STD()[k];if(v!==undefined)p[k]=v});o.pxStd=p}return o};
+  var ht0=histTick;histTick=window.histTick=function(){window.__HSNAP=1;try{return ht0.apply(this,arguments)}finally{window.__HSNAP=0}};
+  var ls0=loadState;loadState=window.loadState=function(o){var r=ls0.apply(this,arguments);try{if(UNDOING&&o&&o.pxStd){var mud=0;PXK.forEach(function(k){if(o.pxStd[k]!==undefined&&STD()[k]!==o.pxStd[k]){STD()[k]=o.pxStd[k];mud=1}});if(mud){try{prSave()}catch(_){}try{SPC={}}catch(_){}}}}catch(_){}return r}}
 })();
 </script>
 </body></html>

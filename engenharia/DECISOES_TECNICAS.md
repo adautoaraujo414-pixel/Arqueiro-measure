@@ -111,3 +111,10 @@ O usuário decide; o app executa corretamente. Nenhum botão vazio, nenhuma alte
 3. Fita na régua de engrosso de 80 mm: disponível; o usuário escolhe borda por borda; metragem e custo corretos.
 4. Divisória do canto cego: funcionamento atual (com a opção de subir até a travessa) e liberdade total de dimensão e posição, sem interferência automática.
 5. Régua na parede errada: investigar sem esperar print; reproduzir criação de réguas em todas as paredes (laterais, espelhadas, cantos); corrigir a causa; provar com prints.
+
+## Ímã do canto (Adauto 28/11/2026, decidido direto com o Claude 5) · VERSÃO B
+- O ímã funciona só durante o arrasto manual (2D e 3D), com opção de ligar/desligar nos Ajustes.
+- Encaixe preciso, sem sobreposição, respeitando tamponamentos; nenhum vizinho muda de posição ou dimensão.
+- Criar módulos ou alterar medidas, portas, tamponamentos ou paredes: o app só sugere, nunca executa sozinho.
+- Todo encaixe tem desfazer/refazer; projetos antigos ficam como foram salvos; o usuário posiciona onde quiser.
+- Regra principal: o app auxilia, quem decide é o usuário. Mesmo comportamento em iPhone, iPad, Android e Windows.

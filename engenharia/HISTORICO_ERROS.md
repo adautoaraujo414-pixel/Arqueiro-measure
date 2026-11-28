@@ -3002,6 +3002,7 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Não estão mortos: são as opções **já escolhidas** por padrão. Tocar nelas não mudava nada e ficava calado; tocar em outra opção troca normalmente.
   - O teste falhava ou passava conforme a ordem em que tocava.
   - Agora o toque na opção já escolhida confirma ("✓ Já está escolhido: …"). O NadaDeEnfeite Parte1b passou 2 vezes seguidas.
+- **Provas pedidas pelo Chefe (28/11):** o projeto salvo (`saveNow`/`pLoadAll`) não leva `pxStd`; reabrir não mexe nos Ajustes; um snapshot antigo sem o campo, no histórico, restaura o projeto como hoje e deixa o Ajuste; nenhum outro Ajuste muda por tabela.
 - **Teste novo:** `testDESFAZPUXADOR_DescontoTemDesfazerEOpcaoJaEscolhidaConfirma`. Falha na 6ae7f4af e passa depois. Os 20 testes de desfazer passam.
 
 ## ITEM 41 (achados da auditoria de toques, Chefe 28/11) — Claude 4

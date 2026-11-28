@@ -20272,6 +20272,12 @@ final class EditorWebKitTests: XCTestCase {
         var i=document.querySelector('#bd [data-pxd]'),k=i.dataset.pxd,v0=STD()[k];i.value='7';i.dispatchEvent(new Event('input',{bubbles:true}));await W(900);R.mudou=k+' '+STD()[k];
         $('und').click();await W(300);R.desfez=k+' '+STD()[k];$('red').click();await W(300);R.refez=k+' '+STD()[k];$('und').click();await W(300);STD()[k]=v0;
         R.salvoSemCampo=/pxStd/.test(JSON.stringify(snapState()))?'TEM pxStd':'sem pxStd';
+        /* Chefe 28/11: salvar/reabrir, histórico antigo sem o campo e nenhum outro Ajuste por tabela */
+        var stdSem=function(){var c=JSON.parse(JSON.stringify(STD()));delete c[k];return JSON.stringify(c)},outros0=stdSem();
+        i=document.querySelector('#bd [data-pxd]');i.value='9';i.dispatchEvent(new Event('input',{bubbles:true}));await W(900);try{ensureProj()}catch(_){}saveNow();var P=pLoadAll().filter(function(q){return q.id===CUR})[0];R.salvo=P?(/pxStd/.test(JSON.stringify(P))?'TEM pxStd':'sem pxStd'):'sem projeto';
+        STD()[k]=3;var w0=S.mods[0].w;loadState(JSON.parse(JSON.stringify(P.current)));draw();R.reabrir=(STD()[k]===3?'Ajuste igual':'AJUSTE MUDOU '+STD()[k])+' · larg '+(S.mods[0].w===w0?'igual':'MUDOU');
+        STD()[k]=9;await W(800);HIST.push({s:JSON.stringify((function(){var o=JSON.parse(JSON.stringify(snapState()));delete o.pxStd;o.mods[0].w=1111;return o})()),k:'antigo'});LASTT=0;$('und').click();await W(300);R.histAntigo='larg '+S.mods[0].w+' · '+k+' '+STD()[k];
+        R.outrosAjustes=stdSem()===outros0?'iguais':'MUDARAM';STD()[k]=v0;
         document.querySelector('#bd [data-est="t|simples"]').click();await W(300);var b=document.querySelector('#bd [data-est="rw|50"]');ult='';b.click();await W(200);R.jaEscolhido=/^✓ Já está escolhido: 50/.test(ult)?'confirma':'calado: '+ult;
         document.querySelector('#bd [data-est="rw|20"]').click();await W(300);R.troca=[].filter.call(document.querySelectorAll('#bd [data-est^="rw|"]'),function(e){return /\bsel\b/.test(e.className)}).map(function(e){return e.dataset.est}).join(',');
         window.toast=T0;S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
@@ -20280,6 +20286,10 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["desfez"] as? String, "cvDesc 0", "↶ devolve o desconto")
         XCTAssertEqual(o["refez"] as? String, "cvDesc 7", "↷ refaz")
         XCTAssertEqual(o["salvoSemCampo"] as? String, "sem pxStd", "o projeto salvo não muda de formato")
+        XCTAssertEqual(o["salvo"] as? String, "sem pxStd", "projeto salvo não muda de formato")
+        XCTAssertEqual(o["reabrir"] as? String, "Ajuste igual · larg igual", "reabrir projeto não mexe nos Ajustes")
+        XCTAssertEqual(o["histAntigo"] as? String, "larg 1111 · cvDesc 9", "snapshot antigo sem o campo restaura como hoje (projeto volta, Ajuste fica)")
+        XCTAssertEqual(o["outrosAjustes"] as? String, "iguais", "nenhum outro Ajuste muda por tabela")
         XCTAssertEqual(o["jaEscolhido"] as? String, "confirma")
         XCTAssertEqual(o["troca"] as? String, "rw|20")
         XCTAssertEqual(o["errs"] as? Int, 0)

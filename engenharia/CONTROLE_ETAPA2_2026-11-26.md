@@ -48,3 +48,15 @@ Regras do Adauto nesta etapa: só o que foi pedido; não remover nem desfazer na
 | 15 | Controle central e integração | Chefe | — | em andamento | este arquivo |
 | 16 | Regras permanentes | todos | — | sempre | |
 | 17 | Homologação independente (iPhone, iPad, Android, Windows, update por cima, projetos antigos, prints e vídeos) | Code 1 + Chefe | 1–14 | depois | |
+
+## ETAPA 3 (Adauto 28/11) · PRECISÃO INTELIGENTE DE SELEÇÃO E INTERAÇÃO NO 3D — começa quando cada agente terminar a pendência atual
+| # | Pedido | Responsável | Status |
+|---|---|---|---|
+| 3.1 | Seleção precisa no 3D: superiores/inferiores, nichos pequenos e profundos, cantos, prateleiras, divisórias, portas, gavetas, travessas, tamponamentos, réguas, peças livres, LED, espelhos, acessórios; id individual inequívoco | Claude 4 (seleção) · Claude 5 (sonda de ids no catálogo) | a fazer |
+| 3.2 | Seleção inteligente pelo zoom (nível, ponto do toque, módulo predominante na tela, distância, ângulo, peça atingida, módulo já selecionado) — ajuda a escolher, nunca bloqueia outro visível, nunca altera nada | Claude 4 | a fazer |
+| 3.3 | LED: entra no módulo e na peça realmente escolhidos (coordenadas, medidas, profundidade, orientação, rotação), superfícies sup/inf/lat/int/ext, nichos superiores; posição inicial = intenção; fora da caixa só manual, livre | Claude 3 | a fazer |
+| 3.4 | Zoom e gestos no 3D: pinça, aproximar peça pequena (zoom bem próximo), girar, mover a vista, 1/2 toques, toque longo, telas pequenas, conflito seleção × mover × abrir porta — sem tirar gesto existente | Claude 4 | a fazer |
+| 3.5 | Destaque visual do módulo e da peça selecionados; destino da operação claro antes de pôr LED/acessório/componente; ambiguidade real = escolha simples, sem confirmação a cada toque | Claude 3 | a fazer |
+| 3.6 | Auditoria em todos os tamanhos de iPhone (compacto, comum, Plus, Pro, Pro Max), iPad, Android, Windows; separar aparelho físico × simulador | Code 1 (+ Chefe no CI) | a fazer |
+| 3.7 | Desempenho: toque imediato, zoom fluido, sem travar, sem seleção ou rolagem involuntária, projetos grandes | Code 1 | a fazer |
+| 3.8 | Testes específicos (seleção, zoom, id de módulo, LED, peças pequenas), reproduzir antes, causa raiz, relatório antes/depois com prints e vídeos | todos · auditoria cruzada | a fazer |

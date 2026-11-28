@@ -19647,6 +19647,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // ITEM 41 (Chefe 28/11, achados da auditoria de toques): (1) a dica do 3D dizia "arraste pra mover", mas arrastar gira a vista (move segurando o dedo
+    // ou com 2 toques no lugar novo); (2) 2 toques num ponto sem chão/parede levavam o módulo pra "a NaN mm" (depois 0); (3) a bolinha da alça da geladeira
+    // tinha raio 7 do desenho (6 px na tela); (4) a alça de medida do escolhido fica em cima da lateral do vizinho encostado: toque parado nela escolhe o
+    // vizinho, arrastar continua mudando a medida do escolhido.
+    func testITEM41_DicaDo3DDropSemNaNAlcaDaGeladeiraEAlcaSobreOVizinho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var sv=function(){return document.getElementById('svg')},pid=230;
+        var ev=function(tp,x,y,id,el){el=el||document.elementFromPoint(x,y)||sv();el.dispatchEvent(new PointerEvent(tp,{clientX:x,clientY:y,pointerId:id,bubbles:true,cancelable:true,isPrimary:true,pointerType:'touch'}))};
+        var tap=async function(x,y){pid++;var el=document.elementFromPoint(x,y);ev('pointerdown',x,y,pid,el);await W(50);ev('pointerup',x,y,pid,el)};
+        var arr=async function(x,y,dx){pid++;var id=pid;ev('pointerdown',x,y,id);for(var i=1;i<=8;i++){await W(16);ev('pointermove',x+dx*i/8,y,id,sv())}ev('pointerup',x+dx,y,id,sv())};
+        var src=document.documentElement.innerHTML;R.dica3D=/Módulo selecionado · segure o dedo nele e arraste pra mover/.test(src)&&!/Módulo selecionado · arraste pra mover/.test(src)?'segure e arraste':'contradiz';
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.stones=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.mods[0].x=300;newTpl(T('Balcão 2 portas + 4 gavetas'));S.mods[1].x=1500;S.m=S.mods[1];S.tab=0;draw();panel();await W(800);
+        var x0=S.mods[1].x,msg=window.__mdDrop(1,[NaN,0,NaN]);R.dropNaN=(/NaN/.test(msg)?'NaN: ':'')+(S.mods[1].x===x0&&!S.mods[1].wing?'parado':'MEXEU x '+S.mods[1].x)+' · '+(/^não deu/.test(msg)?'avisa':msg);
+        var h=document.querySelector('#svg circle[data-h="l"]').getBoundingClientRect(),hx=h.x+h.width/2,hy=h.y+h.height/2,emb=document.elementsFromPoint(hx,hy).some(function(e){var g=e.closest&&e.closest('#mod');return g&&+g.dataset.mi===0});
+        R.alcaSobreVizinho=emb?'sim':'não';await W(800);await tap(hx,hy);await W(500);R.toqueNaAlca=S.m===S.mods[0]?'escolheu o vizinho':'ficou no escolhido';
+        S.m=S.mods[1];draw();panel();await W(800);h=document.querySelector('#svg circle[data-h="l"]').getBoundingClientRect();var w0=S.mods[1].w;await arr(h.x+h.width/2,h.y+h.height/2,30);await W(300);R.arrastoNaAlca=(S.m===S.mods[1]&&S.mods[1].w!==w0)?'mudou a medida do escolhido':'não mudou ('+S.mods[1].w+')';
+        S.fr=[{id:77,t:'geladeira',x:2800,y:0,w:700,h:1800,d:750,b:0}];window.SELAP=77;LAST='ap';draw();var big=[].map.call(document.querySelectorAll('#svg circle[data-aph="w"]'),function(c){return +c.getAttribute('r')});R.alcaGeladeira=Math.max.apply(null,big)>=15?'área do dedo':'pequena '+big.join(',');window.SELAP=0;S.fr=[];
+        S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["dica3D"] as? String, "segure e arraste")
+        XCTAssertEqual(o["dropNaN"] as? String, "parado · avisa", "sem lugar válido: não mexe e avisa (antes \"a NaN mm\" e x 0)")
+        XCTAssertEqual(o["toqueNaAlca"] as? String, "escolheu o vizinho")
+        XCTAssertEqual(o["arrastoNaAlca"] as? String, "mudou a medida do escolhido")
+        XCTAssertEqual(o["alcaGeladeira"] as? String, "área do dedo")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // DESFAZ-PUXADOR + opção já escolhida (Chefe 28/11, itens 37/34): "Desconto na altura" do puxador (aba Portas) grava nos Ajustes e não tinha desfazer;
     // agora ↶/↷ devolvem o valor, e o projeto salvo não leva esse campo. Nos Estilos de porta, tocar na opção que já está escolhida ("Régua aplicada", "50")
     // ficava calado (o NadaDeEnfeite Parte1b acusava SEM FUNÇÃO, instável conforme a ordem): agora confirma; tocar em outra troca como sempre.

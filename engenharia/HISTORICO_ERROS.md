@@ -2887,3 +2887,19 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - O teste falhava ou passava conforme a ordem em que tocava.
   - Agora o toque na opção já escolhida confirma ("✓ Já está escolhido: …"). O NadaDeEnfeite Parte1b passou 2 vezes seguidas.
 - **Teste novo:** `testDESFAZPUXADOR_DescontoTemDesfazerEOpcaoJaEscolhidaConfirma`. Falha na 6ae7f4af e passa depois. Os 20 testes de desfazer passam.
+
+## ITEM 41 (achados da auditoria de toques, Chefe 28/11) — Claude 4
+- **Como foi testado:** com toque real (CDP), conferi qual jeito move o módulo no 3D.
+  - Arrastar direto gira a vista e não move.
+  - Segurar o dedo e arrastar move.
+  - 2 toques no módulo e depois 2 toques no chão ou na parede movem.
+- **Erros comprovados e corrigidos:**
+  1. **Dica do 3D:** o 1 toque no módulo dizia "arraste pra mover", contradizendo as outras dicas. Agora diz "segure o dedo nele e arraste pra mover".
+  2. **2 toques num lugar sem chão/parede válidos:** o módulo ia para "a NaN mm" (depois x 0, trocando de parede).
+     - O `mdDropAt` agora usa 6000 quando o `roomD()` é inválido, e se a posição não for número nada muda: "⚠ não deu pra achar o lugar nesse ponto".
+     - Risco identificado, sem mexer: ao trocar de parede, o módulo também troca a divisão e a ordem dos vãos (0,667 → 0,333). Pode ser o espelhamento do módulo de parede lateral. Fica para o dono do 3D decidir.
+  3. **Alça da geladeira:** tinha raio 7 do desenho (6 px na tela). Agora tem a área de toque transparente do tamanho do dedo, igual à das alças do módulo. O painel ripado já tinha 17.
+  4. **Alça sobre o vizinho:** a alça na borda de fora fica em cima da lateral do vizinho encostado.
+     - Toque parado nela, sem medida embaixo, escolhe o vizinho.
+     - Arrastar continua mudando a medida do escolhido. Crescer para dentro do vizinho continua impedido, porque módulo é sólido.
+- **Teste novo:** `testITEM41_DicaDo3DDropSemNaNAlcaDaGeladeiraEAlcaSobreOVizinho`. Falha na 6ae7f4af nos 4 pontos e passa a 430, a 1366 e no iPad simulado. Os 34 testes de toque, medida e geladeira passam.

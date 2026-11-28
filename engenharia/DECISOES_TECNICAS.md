@@ -101,3 +101,4 @@ O usuário decide; o app executa corretamente. Nenhum botão vazio, nenhuma alte
 - O módulo criado a partir de 28/11 (`latMeioW=1`) tem a mesma construção em qualquer parede (lateral inteira junto das gavetas e travessa em peças).
 - O módulo de antes, numa parede lateral, segue como era. O painel avisa e oferece "Igualar ao fundo" (prévia e desfazer).
 - Abrir um projeto não grava nada.
+| 28/11/2026 | **TAMP-JUNTA · ponto 3 (decisão do Chefe 28/11):** o módulo ARRASTADO ou com POSIÇÃO DIGITADA mantém o tamponamento da junta. Tirar vira a sugestão "Tirar tamponamento da junta", com prévia ("módulo N: tamponamento direito sai · encosta (x …)"), aplicada num toque e com desfazer. O vizinho continua igual. Projeto antigo aberto: nada muda, nenhuma sugestão. Antes, na posição digitada, o automático do próprio módulo saía sozinho. |

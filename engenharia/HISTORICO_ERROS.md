@@ -3261,3 +3261,9 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Os 18 testes de digitação e teclado passam.
 - **Subconjunto do Claude 5** ('PlanoDeCorte|Corte|N11|Sobra|ArqueCut|Fita|Chapa|Valores', 1366) na e856b3e: 73/76. As 3 falhas são as já conhecidas da integração, e o PesDeMetal passou.
 - **Resumo ESTAVEL:** Parte1b, ParteB e os 2 PesDeMetal, 10/10 isolados cada; Parte1b em família 5/5 (a série foi interrompida por falta de memória). Os 7 NadaDeEnfeite com exploração completa passam.
+## TAMP-JUNTA · ponto 3 (Chefe 28/11): posição digitada tirava sozinho o tamponamento da junta do próprio módulo — Code 2
+- **Causa:** o `setv('x')` desligava o automático dos dois lados do módulo editado e só devolvia o lado que continuava exposto. O lado encostado ficava sem tamponamento, sem a pessoa decidir. O arraste já seguia a §12, porque passava pelo embrulho do `tampJunta`.
+- **Correção:** o lado da junta volta ligado no próprio módulo, e a retirada entra na sugestão "Tirar tamponamento da junta", com prévia e desfazer. O botão novo vale para o arraste e para a posição digitada.
+- **Testes:**
+  - novo: `testEtapa2MovidoMantemTamponamentoDaJuntaSugestaoTirarComPreviaEDesfazer` (digitar, arrastar, aplicar, desfazer, projeto antigo);
+  - `testB24…` v5 atualizado com comentário: antes "tr0", agora "tra".

@@ -3477,3 +3477,7 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Os 6 que sobram são a régua do engrosso do tamponamento, escolhida sozinha pela regra A50 (é a caixa da frente no ponto).
   - A s54 agrupa a régua com o tamponamento principal e conta erro. Isso é critério da sonda; avisado ao Claude 5.
 - Regressão (3D, seleção, toque, porta, gaveta a 1366) e a s54 do catálogo inteiro estão rodando.
+- **Regressão (265 testes de 3D, seleção, toque, porta e gaveta a 1366):** 263 passam. Uma falha é a `PosicaoDigitada…` (Code 2). A outra, `testToqueNo3DAchaAPecaCertaEBordaFina` (bad 5), vem da "verdade" do teste (`__rayMod` → `lbtRay`), que tinha a mesma tolerância de 0,5 mm.
+  - Nos pontos que divergem, a escolha nova bate com a verdade exata. Ex.: vista [1.1, 0.4], ponto 676,202: o `__rayMod` dizia "Porta", e a escolha e o raio exato dizem "Lateral esquerda".
+  - Correção do oráculo, não do teste: o `lbtRay` ganha o modo exato (opcional, só o `__rayMod` usa); os outros usos não mudam.
+  - Os 18 testes de toque no 3D, LED e lbt passam a 1366 e a 430.

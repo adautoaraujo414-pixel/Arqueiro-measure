@@ -9118,7 +9118,7 @@ final class EditorWebKitTests: XCTestCase {
         var digita=async function(sel,teclas,ok){if(!(await abre(sel)))return false;teclas.split('').forEach(kb);if(ok!==false){kb('ok');await W(150)}return true};
         var B=function(){return document.getElementById('vlbody')},vp=function(){var t=B().querySelector('.tot'),k=t.querySelectorAll('b.big');return k[k.length-1].textContent.trim()},margem=function(){var r=B().querySelector('tr[data-vlmo]');return r?r.firstElementChild.textContent.replace(/\s*\(.*$/,'').trim()+' = '+r.lastElementChild.textContent.trim():'sem linha'};
         /* 1. quem não preenche nada: o valor continua material × multiplicador, igualzinho */
-        var b0=budget(),mat=b0.tot,proj0=JSON.stringify(snapState());R.materialMaiorQueZero=mat>0;R.semPreencherOValorNaoMuda=b0.ext.t===0&&b0.sale===mat*PR.mult;
+        var b0=budget(),mat=b0.tot,proj0=JSON.stringify(snapState());R.materialMaiorQueZero=mat>0;/* Chefe 28/11 (financeiro ao centavo): o valor exato do material, não só > 0 · chapas + fitas + ferragens com os preços acima */R.materialValor=r2(mat).toFixed(2)+' = '+r2(b0.cB+b0.cC+b0.cF).toFixed(2)+' chapas + '+r2((b0.T.tB*PR.fitaB+b0.T.tC*PR.fitaC+(b0.T.tT||0)*(+PR.fitaT||0))*fK()).toFixed(2)+' fita + '+r2(b0.T.dob*PR.dob+b0.T.drw*PR.cor).toFixed(2)+' ferragens';R.semPreencherOValorNaoMuda=b0.ext.t===0&&b0.sale===mat*PR.mult;
         document.getElementById('vlb').click();await W(400);
         R.camposNaTelaValores=[].map.call(B().querySelectorAll('[data-vlxbox] .g'),function(g){return g.querySelector('label').textContent.trim()+(g.querySelector('input[data-vlx]')?'':' sem campo')}).join(' | ');
         R.semPreencherNaoApareceLinha=B().querySelectorAll('[data-vlxl]').length===0;R.margemSemPreencher=margem().replace(/ = .*/,'');R.valorNaTelaSemPreencher=vp()===brl(mat*PR.mult);
@@ -9181,6 +9181,7 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["materialMaiorQueZero"] as? Bool, true)
+        XCTAssertEqual(o["materialValor"] as? String, "530.85 = 437.81 chapas + 29.04 fita + 64.00 ferragens", "Chefe 28/11: material ao centavo = chapas + fita + ferragens (sem sobra, sem duplicar)")
         XCTAssertEqual(o["semPreencherOValorNaoMuda"] as? Bool, true)
         XCTAssertEqual(o["camposNaTelaValores"] as? String, "Mão de obra (R$) | Custo fixo (R$) | Despesas extras (R$)")
         XCTAssertEqual(o["semPreencherNaoApareceLinha"] as? Bool, true)
@@ -21312,7 +21313,9 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         try{document.getElementById('v3x').click()}catch(_){}R.tresD=n3+' peças · '+(fora.join(', ')||'todas na altura');
         /* lista e corte */var L=cutLines(m),tem=function(nm){return L.some(function(l){return String(l.n||l.name||'').indexOf(nm)===0})};R.listaCorte='travessa '+tem('Prateleira fixa (embaixo da gaveta)')+' · frente '+tem('Frente de gaveta')+' · porta '+L.some(function(l){return /^Porta/.test(String(l.n||l.name||''))});
         var pl=sheetPlan(1),noPlano=0;pl.groups.forEach(function(g){g.sheets.forEach(function(s){s.used.forEach(function(u){if(/Prateleira fixa \(embaixo da gaveta\)/.test(u.p.lab))noPlano++})})});R.plano='travessa no plano '+noPlano;
+        /* preços de referência (PRAVG) só neste trecho: com preço zero o valor não diz nada */var PR0=JSON.parse(JSON.stringify(PR));Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});
         await W(800);draw();var bu=budget(),tot=JSON.stringify(bu.total!==undefined?bu.total:bu);document.getElementById('und').click();await W(120);draw();var bu0=JSON.stringify(budget().total!==undefined?budget().total:budget());R.orcamento=(tot!==bu0)+' · ↶ volta: '+(JSON.stringify(partsOf(S.mods[0]))===pBase);
+        /* Chefe 28/11 (financeiro ao centavo): a diferença do orçamento, peça por peça do cálculo (chapas + fita + ferragens = total, sem sobra) */var bB=budget(),c2=function(v){return (Math.round(v*100)/100).toFixed(2)},fF=function(b){return (b.T.tB*(+PR.fitaB||0)+b.T.tC*(+PR.fitaC||0)+(b.T.tT||0)*(+PR.fitaT||0))*fK()},dC=(bu.cB+bu.cC+bu.cF)-(bB.cB+bB.cC+bB.cF),dF=fF(bu)-fF(bB),dT=bu.tot-bB.tot;R.orcDelta='Δ '+c2(dT)+' = chapas '+c2(dC)+' + fita '+c2(dF)+' + ferragens '+c2(dT-dC-dF)+' · gavetas '+(bu.T.drw-bB.T.drw)+' · portas '+(bu.T.doors-bB.T.doors)+' · dobradiças '+(bu.T.dob-bB.T.dob)+' · '+c2(dT-dC-dF)+' = '+c2((bu.T.drw-bB.T.drw)*(+PR.cor||0)+(bu.T.dob-bB.T.dob)*(+PR.dob||0)+((bu.T.pxE-bB.T.pxE)*(+PR.pux||0))+((bu.T.pxC-bB.T.pxC)*(+PR.concha||0)));Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,PR0);
         /* salvar/reabrir e duplicar */fcAplica(S.mods[0],'1gB');draw();var pm=JSON.stringify(partsOf(S.mods[0])),sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();R.reabre=JSON.stringify(partsOf(S.mods[0]))===pm;
         S.m=S.mods[0];S.tab=0;panel();var cp=q('[data-mcopy]');if(cp)cp.click();draw();R.duplica=S.mods.length+' módulos · '+(S.mods.length===2&&nomes(S.mods[1],0)===nomes(S.mods[0],0)&&S.mods[1].v[0].fc==='1gB');
         /* troca de composição: sem peça velha */S.mods.splice(1);S.m=S.mods[0];S.sv=0;draw();S.tab=0;panel();toca('2g');R.trocaSemSobra=nomes(S.mods[0]).indexOf('embaixo da gaveta')<0&&!S.mods[0].v[0].bas;
@@ -21339,6 +21342,7 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["listaCorte"] as? String, "travessa true · frente true · porta true")
         XCTAssertEqual(o["plano"] as? String, "travessa no plano 1")
         XCTAssertEqual(o["orcamento"] as? String, "true · ↶ volta: true")
+        XCTAssertEqual(o["orcDelta"] as? String, "Δ 58.11 = chapas 38.41 + fita 2.69 + ferragens 17.00 · gavetas 1 · portas -1 · dobradiças -2 · 17.00 = 17.00", "Chefe 28/11: a diferença ao centavo, por parte do cálculo")
         XCTAssertEqual(o["reabre"] as? Bool, true)
         XCTAssertEqual(o["duplica"] as? String, "2 módulos · true")
         XCTAssertEqual(o["trocaSemSobra"] as? Bool, true)

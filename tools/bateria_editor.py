@@ -262,6 +262,11 @@ def main():
     origem = re.match(r'^[a-z]+://[^/]*', url)
     c = Cdp(alvo['webSocketDebuggerUrl'])
     c.chama('Page.enable'); c.chama('Runtime.enable')
+    # ESTAVEL (28/11): página sempre "com foco" — sem isso, outra conexão no mesmo navegador tira o foco da janela, o focus() dos testes não dispara focusin e o teclado do app não abre (PesDeMetal passava ou falhava conforme a rodada)
+    try:
+        c.chama('Emulation.setFocusEmulationEnabled', {'enabled': True})
+    except Exception:
+        pass
     c.chama('Page.addScriptToEvaluateOnNewDocument', {'source': PONTE})
     if a.janela:
         # mesma área em qualquer computador de teste (a tela do GitHub é pequena: 1024×768)

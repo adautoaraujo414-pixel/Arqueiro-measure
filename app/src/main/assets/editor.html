@@ -3924,7 +3924,8 @@ function open(t){cur=t;fresh=1;dirty=0;t.dataset.kpv=V(t);kp.hidden=false;docume
 var PDN=0;document.addEventListener('pointerdown',function(){PDN=1},true);['pointerup','pointercancel'].forEach(function(n){document.addEventListener(n,function(){PDN=0},true)});
 function soltaKp(){var n=0,go=function(){if(cur||!kp.hidden)return;if(PDN&&n++<25){setTimeout(go,60);return}document.body.classList.remove('kp')};setTimeout(go,0)}
 function close(){var qb=document.getElementById('qebox');if(qb)qb.hidden=true;kp.hidden=true;cur=null;soltaKp()}
-document.addEventListener('focusin',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.calc){if(t!==cur)open(t);else{fresh=1}}else if(!kp.contains(t)){close()}});
+document.addEventListener('focusin',function(e){var t=e.target;/* ESTAVEL (Chefe 28/11, PesDeMetal intermitente): o teclado fechado por outro caminho (ex.: abrir o 3D) deixava cur apontando pro campo; em aparelho lento, tocar de novo no MESMO campo não abria o teclado (o valor digitado não chegava). Teclado fechado = abre de novo */if(t&&t.dataset&&t.dataset.calc){if(t!==cur||kp.hidden)open(t);else{fresh=1}}else if(!kp.contains(t)){close()}});
+/* ESTAVEL (Chefe 28/11): sem foco do sistema (janela sem foco, outra sessão no mesmo navegador) ou com o campo já focado, o foco não dispara focusin e o teclado não abria; tocar/clicar no campo abre do mesmo jeito */document.addEventListener('click',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.calc&&t.tagName==='INPUT'&&(kp.hidden||t!==cur))open(t)},true);
 /* DIG-SAIDA (23/11): na captura, antes dos outros "saiu do campo" (ex.: o do preço, que voltava o valor antigo formatado antes deste aplicar o digitado) */
 document.addEventListener('focusout',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.calc){if(hasOp(V(t))||(dirty&&V(t)!==t.dataset.kpv)){window.NOREB=1;try{commit(t)}finally{window.NOREB=0}}setTimeout(function(){var a=document.activeElement;if(!a||!a.dataset||!a.dataset.calc)close()},120)}},true);
 document.addEventListener('input',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.calc)return;var v=V(t);if(FIRING)return;/* teclado físico ou do sistema: segura até o Enter/sair do campo */if(hasOp(v)||e.isTrusted){e.stopImmediatePropagation();dirty=1;if(t===cur)show();return}if(v.indexOf(',')>=0)SV(t,v.replace(/,/g,'.'))},true);
@@ -16338,6 +16339,7 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
  document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('#v3x');if(t&&ON&&!window.__pvFechando){ON=false;window.PV2D=0;var v=document.getElementById('v3');if(BAR&&BAR.parentNode)BAR.parentNode.removeChild(BAR);BAR=null;if(v&&SAVE){SAVE.hid.forEach(function(q){q[0].style.display=q[1]});v.style.cssText=SAVE.css}SAVE=null}},true);
 })();
 </script>
+<script>
 /* ===== TOQUE-PECA (Adauto 27/11, ETAPA 2 item 26; decidido pelo Chefe 28/11): no 2D, 2 toques no MEIO do vão (inclusive em cima da porta/frente) abrem o
    acesso rápido de sempre; 2 toques numa peça da estrutura abrem a aba onde ela é editada, com o campo dela em destaque (sem sistema paralelo).
    Lateral: o giro do engrosso, que era nos 2 toques, fica no botão "Girar engrosso" desse painel. Só abre: nada muda sem a pessoa tocar. ===== */

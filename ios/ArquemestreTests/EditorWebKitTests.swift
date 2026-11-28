@@ -20488,6 +20488,26 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // SCRIPT-INTEIRO (integração 2, 28/11): num merge, a linha "<script>" de um bloco sumiu (o bloco vizinho terminava em "</script>" no mesmo lugar). O código
+    // virou texto da página: o bloco não rodava (2 toques na peça caíam no acesso rápido) e um botão escrito dentro da string ("↻ Girar engrosso") aparecia
+    // solto e sem função na tela principal. Guarda: todo bloco de script está aberto e fechado e nenhum código de bloco fica fora de <script>.
+    func testSCRIPTINTEIRO_NenhumBlocoDeCodigoFicaForaDeScript() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;var html=await (await fetch(location.href.split('#')[0],{cache:'no-store'})).text();
+        var ab=(html.match(/<script(?=[\s>])/g)||[]).length,fe=(html.match(/<\/script>/g)||[]).length;R.balanco=ab===fe?'igual':'abre '+ab+' fecha '+fe;
+        var body=html.slice(html.indexOf('<body'));var fora=body.split(/<script[^>]*>[\s\S]*?<\/script>/).filter(function(p){return /\/\* =====|\(function\(\)\{|\bfunction [a-zA-Z_$][\w$]*\(/.test(p)});R.foraDeScript=fora.length?fora.length+': '+fora[0].trim().slice(0,80):'0';
+        var solto=[].filter.call(document.querySelectorAll('body > button[data-pcgira], body > button[data-medopc]'),function(b){return b.getClientRects().length});R.botaoSolto=String(solto.length);
+        R.funcoes=['pcEdAlvo','pcEdOpen','egGira','palmaAtiva','medOpcAberta','latMeioPrevia'].filter(function(k){return typeof window[k]!=='function'}).join(',')||'todas';
+        R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["balanco"] as? String, "igual")
+        XCTAssertEqual(o["foraDeScript"] as? String, "0", "código de bloco fora de <script> vira texto/botão solto na página")
+        XCTAssertEqual(o["botaoSolto"] as? String, "0")
+        XCTAssertEqual(o["funcoes"] as? String, "todas", "os blocos do item 26/36/38 e da lateral do meio rodaram")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // MEDIDA-OPC (Adauto 27/11, ETAPA 2 item 38): distância digitada no 2D (até a esquerda, a direita, o teto, da pedra) dá pra entender de 2 jeitos.
     // Antes o app escolhia sozinho (sempre movia). Agora mostra "Mover o módulo" (só o espaçamento: a medida fica) e "Redimensionar" (só a peça: o outro
     // lado fica parado, ex. 1200 → 1290) com o resultado de cada um; Cancelar não muda nada; a escolha grava 1 desfazer. Peças (partsOf): mover não muda

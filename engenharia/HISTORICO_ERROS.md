@@ -3235,3 +3235,29 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - A sonda s51 (agora com salvar/desfazer/reabrir) aciona cada controle e, se ele mudou o projeto: espera o salvamento automático e confere que o arquivo é o estado da tela; toca ↶ e confere que volta ao estado de antes; reabre o arquivo e confere igual. Se mudou preços: confere que ficou gravado.
 - Resultado a 1366: Valores 23 controles que mudam o projeto, Preços 77, Plano de corte 61, ArqueCut 8 → todos salvam, desfazem e reabrem iguais; preços gravados. Clientes: nenhum controle muda o projeto aberto (cria/abre outro).
 - 1ª rodada acusou "não desfaz" por erro da sonda (reabria antes de desfazer e mexia no histórico); corrigida a ordem.
+
+## SCRIPT-INTEIRO (integração 2, 1dbf2cb4, 28/11): bloco de código fora de <script> — Claude 4
+- **Erro:** no merge, a linha `<script>` do bloco TOQUE-PECA sumiu, porque o bloco vizinho da integração terminava em `</script>` no mesmo lugar (200 aberturas, 201 fechamentos).
+  - O código virou texto da página. O bloco não rodava, então 2 toques na peça caíam no acesso rápido; e `egL` de indefinido no teste, porque o desfazer voltava até antes da criação.
+  - A string `<button data-pcgira>↻ Girar engrosso</button>` do código foi lida como HTML e virou um botão solto, sem função, na tela principal (o NadaDeEnfeite ParteA acusou).
+- **Correção:** a linha `<script>` voltou (merge 6ffd6e27 + correção). São 203/203 e nenhum código fora de script.
+- **Teste-guarda novo:** `testSCRIPTINTEIRO_NenhumBlocoDeCodigoFicaForaDeScript` confere 3 coisas:
+  - aberturas = fechamentos;
+  - nenhum bloco `/* =====`/função fora de `<script>`;
+  - nenhum botão solto, e as funções dos blocos existem.
+  - Falha na 1dbf2cb4 (200/201, TOQUE-PECA fora) e passa depois. TOQUEPECA e ParteA passam a 1366.
+
+## ESTAVEL — PesDeMetal (Chefe 28/11, falha vista pelo Claude 5) — causa achada — Claude 4
+- **Reprodução:** a falha veio idêntica (altura 150, tubo 40 e borda 60 não chegavam: "alt 100 · 50×50") quando a página do navegador estava **sem foco do sistema** (`document.hasFocus()` false).
+  - Isso acontece quando outra conexão ou sessão no mesmo navegador leva o foco (aqui, um script meu conectado na mesma porta; no ambiente do Claude 5, rodadas concorrentes).
+  - Sem foco, o `focus()` do teste deixa o campo ativo, mas o navegador não dispara `focusin`. O teclado do app só abria no `focusin`, então o `digita` do teste via o teclado fechado e o valor não chegava.
+  - Por isso passava ou falhava conforme a rodada, e passava na bateria completa (página com foco).
+- **Correção do app:**
+  - tocar ou clicar num campo numérico abre o teclado se ele estiver fechado ou em outro campo. Cobre também o campo que já estava focado (que não dispara `focusin` de novo) e janela sem foco;
+  - `focusin` no mesmo campo com o teclado fechado (fechado por outro caminho, que deixava `cur` apontando pro campo) abre de novo.
+- **Correção da bateria (`tools/bateria_editor.py`):** `Emulation.setFocusEmulationEnabled` no começo. A página se comporta sempre como focada, qualquer que seja a janela ativa.
+- **Provas (página sem foco que falhava 100%):**
+  - PesDeMetal (os 2): 10 × 2 = 20/20 isolados e 3 de 3 na família PesDeMetal|Rodape|Pedestal (17 testes).
+  - Os 18 testes de digitação e teclado passam.
+- **Subconjunto do Claude 5** ('PlanoDeCorte|Corte|N11|Sobra|ArqueCut|Fita|Chapa|Valores', 1366) na e856b3e: 73/76. As 3 falhas são as já conhecidas da integração, e o PesDeMetal passou.
+- **Resumo ESTAVEL:** Parte1b, ParteB e os 2 PesDeMetal, 10/10 isolados cada; Parte1b em família 5/5 (a série foi interrompida por falta de memória). Os 7 NadaDeEnfeite com exploração completa passam.

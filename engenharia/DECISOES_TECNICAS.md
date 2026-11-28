@@ -104,3 +104,10 @@ O usuário decide; o app executa corretamente. Nenhum botão vazio, nenhuma alte
 - Abrir um projeto não grava nada.
 | 28/11/2026 | **TAMP-JUNTA · ponto 3 (decisão do Chefe 28/11):** o módulo ARRASTADO ou com POSIÇÃO DIGITADA mantém o tamponamento da junta. Tirar vira a sugestão "Tirar tamponamento da junta", com prévia ("módulo N: tamponamento direito sai · encosta (x …)"), aplicada num toque e com desfazer. O vizinho continua igual. Projeto antigo aberto: nada muda, nenhuma sugestão. Antes, na posição digitada, o automático do próprio módulo saía sozinho. |
 | 28/11/2026 | **ETAPA 2 · item 2, canto L (dividido com o Claude 5 pelo Chefe 28/11).** **Code 2:** o "Unir" vale no canto: com o vizinho da fileira do fundo e com o 1º módulo da parede lateral (asa, que começa em `wingStart`). Botões na seção "Bases unidas" do canto e do 1º da asa: unir, separar cada junta (só ela) e desfazer. Mesma marca `m.une`/`m.uneK`; nada se une sozinho. **Claude 5:** a geometria da base atravessada no canto (qual passa inteira, o desconto da outra, 3D e corte), consumindo `unPode(canto, asa, 'base'/'rod')`. As medidas serão pedidas ao Adauto. |
+
+## Decisões do Adauto (28/11/2026) · 5 pendências da ETAPA 2
+1. Base atravessada no canto em L: o usuário escolhe qual base passa inteira (lado A ou B); a outra encurta exatamente o necessário para o encontro, sem sobreposição, respeitando a espessura. Vale para base e rodapé, inclusive no canto cego; espelhamento E/D; 2D/3D/lista/corte/orçamento.
+2. Pistão da basculante: entra nas ferragens e no orçamento; quantidade e valor unitário editáveis; sem duplicidade.
+3. Fita na régua de engrosso de 80 mm: disponível; o usuário escolhe borda por borda; metragem e custo corretos.
+4. Divisória do canto cego: funcionamento atual (com a opção de subir até a travessa) e liberdade total de dimensão e posição, sem interferência automática.
+5. Régua na parede errada: investigar sem esperar print; reproduzir criação de réguas em todas as paredes (laterais, espelhadas, cantos); corrigir a causa; provar com prints.

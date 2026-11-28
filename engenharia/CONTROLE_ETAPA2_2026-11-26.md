@@ -44,6 +44,7 @@ Regras do Adauto nesta etapa: só o que foi pedido; não remover nem desfazer na
 | 40 | Cruzamento integral de dados: projeto × 2D × 3D × planta × estrutura × medidas × coordenadas × ids paredes/módulos/peças × lista × corte × fitas × materiais × ferragens × orçamento × DXF × salvos × backups × desfazer | Code 1 (com o 24) | — | a fazer | |
 | 41 | Precisão e experiência profissional (resposta, seleção, sem movimento/rolagem/menu involuntário, projetos grandes, fluidez) | Code 1 (14) + Claude 4 | — | a fazer | |
 | 42 | 5º agente (Claude 5, autorizado 27/11): itens 13 (custos fixos), 20 (fita manual ArqueCut), 30 (N11), 31 (confineAll) | Claude 5 | — | a fazer | |
+| 43 | 5 pendências decididas pelo Adauto 28/11 (DECISOES): base atravessada L (Claude 5 geometria + Code 2 botão/opção) · pistão basculante (Claude 3) · fita régua engrosso 80 (Code 2) · divisória canto cego livre (Claude 3) · régua na parede errada = item 39 (Claude 4) | vários | — | a fazer | |
 | 15 | Controle central e integração | Chefe | — | em andamento | este arquivo |
 | 16 | Regras permanentes | todos | — | sempre | |
 | 17 | Homologação independente (iPhone, iPad, Android, Windows, update por cima, projetos antigos, prints e vídeos) | Code 1 + Chefe | 1–14 | depois | |

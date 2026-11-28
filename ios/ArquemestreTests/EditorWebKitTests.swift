@@ -19524,6 +19524,195 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* Item 13 (Adauto 26/11, ETAPA 2): custos fixos na BIBLIOTECA DE PREÇOS, junto dos materiais (o mesmo motor de 24/11: PR.cfxLib + cópia S.cfx).
+       Vários custos (nome, descrição, R$ ou %), editar, ativar/desativar, excluir; aplicar por serviço com a % daquele serviço e a base à vista;
+       biblioteca mudada só entra no orçamento antigo com o OK (↻); "uma vez por serviço" conta uma vez só no orçamento consolidado; fora do PDF, CSV e link. */
+    func testCustosFixosNaBibliotecaDePrecosPorServicoUmaVezNoConsolidadoForaDoPdfCsvLink() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.mult=2.5;PR.moR=0;PR.cfR=0;PR.dxR=0;delete PR.cfxLib;
+        var APP={q:{}},A0=window.ArqueApp;A0.makeQuote=function(j){var o=JSON.parse(j);if(o.kind!=='ambientes')return;APP.q[o.quoteId]={id:o.quoteId,clientKey:o.clientKey,discount:o.discountPct,sections:o.sections.map(function(s){return {id:s.id,pid:s.pid,title:s.title,desc:s.desc,finish:s.finish,mat:s.mat,labor:s.labor,sug:s.sug,manual:s.manual,discount:s.discount,at:s.at}})}};A0.quoteOf=function(k){var L=Object.keys(APP.q).map(function(i){return APP.q[i]}).filter(function(q){return q.clientKey===k});return L.length?JSON.stringify(L[L.length-1]):''};
+        var mk=function(tit,mods){newProjFor({nome:'Cliente Custos',end:'Rua 1',cidade:'Frutal',tel:'1'});var a=pLoadAll(),p=a.filter(function(q){return q.id===CUR})[0];p.titulo=tit;pSaveAll(a);S.W=4000;S.mods=[];draw();mods.forEach(function(n){newTpl(T(n))});draw();saveNow();return CUR};
+        var p1=mk('Cozinha',['Balcão 2 portas','Aéreo 2 portas']),p2=mk('Quarto',['Guarda-roupa 2 vãos']);
+        /* 1) tela de preços: a caixa dos custos fica junto dos materiais */
+        arqueOpenClient(p1);prRender();document.getElementById('prm').hidden=false;await W(50);
+        var P=function(s){return document.querySelector('#prbody #cfxlibbox '+s)},inp=function(k,v){var e=P('[data-cfxi="'+k+'"]');e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))},clk=function(s){var e=P(s);if(!e)throw new Error('sem '+s);e.click()};
+        R.caixa=!!document.querySelector('#prbody #cfxlibbox')&&!!document.querySelector('#prbody #prcat');
+        clk('[data-cfx="adlp|"]');inp('n','Transporte');inp('d','Caminhão até a obra');inp('v','300');clk('[data-cfxf="esc|srv"]');clk('[data-cfx="sav|"]');
+        clk('[data-cfx="adlp|"]');inp('n','Comissão');clk('[data-cfxf="t|P"]');inp('v','6');clk('[data-cfxf="base|mrg"]');clk('[data-cfx="sav|"]');
+        clk('[data-cfx="adlp|"]');inp('n','Montagem');inp('v','100');clk('[data-cfx="sav|"]');
+        clk('[data-cfx="adlp|"]');inp('n','Brinde');inp('v','50');clk('[data-cfx="sav|"]');
+        var id=function(n){return PR.cfxLib.filter(function(c){return c.n===n})[0].id};
+        clk('[data-cfx="tgl|'+id('Brinde')+'"]');R.desativa=PR.cfxLib.filter(function(c){return c.n==='Brinde'})[0].on;
+        clk('[data-cfx="edl|'+id('Brinde')+'"]');inp('v','60');clk('[data-cfx="sav|"]');R.editaMantemDesativado=PR.cfxLib.filter(function(c){return c.n==='Brinde'})[0].on+' '+PR.cfxLib.filter(function(c){return c.n==='Brinde'})[0].v;
+        clk('[data-cfx="dll|'+id('Brinde')+'"]');
+        R.lib=PR.cfxLib.map(function(c){return c.n+'|'+c.d+'|'+c.t+'|'+c.v+'|'+c.base+'|'+(c.esc||'')+'|'+c.on}).join(' ; ');
+        R.salvoNosPrecos=/Transporte/.test(localStorage.getItem('arque.prices.v1')||JSON.stringify(PR));
+        document.getElementById('prm').hidden=true;
+        /* 2) aplicar por serviço (cozinha), com a % deste serviço (8%, a biblioteca fica 6%) */
+        vlOpen();await W(80);var V=function(s){var e=document.querySelector('#cfxbox '+s);if(!e)throw new Error('sem '+s);return e},vin=function(k,v){var e=V('[data-cfxi="'+k+'"]');e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))};
+        var b0=budget();['Transporte','Comissão','Montagem'].forEach(function(n){V('[data-cfx="apl|'+id(n)+'"]').click()});
+        var cm=S.cfx.filter(function(c){return c.n==='Comissão'})[0];V('[data-cfx="edp|'+cm.id+'"]').click();vin('v','8');V('[data-cfx="sav|"]').click();
+        var b1=budget();R.conta=r2(b1.sale)===r2(b0.sale0+300+100+r2(b0.sale0*0.08));R.libIntacta=PR.cfxLib.filter(function(c){return c.n==='Comissão'})[0].v;
+        var row=document.querySelector('#cfxbox [data-cfxrow="proj|'+cm.id+'"]').textContent;R.base=row.indexOf('8% do preço com margem ('+brl(r2(b0.sale0))+') = '+brl(r2(b0.sale0*0.08)))>=0;
+        R.copia=S.cfx.map(function(c){return c.n+'|'+c.v+'|'+(c.esc||'')+'|'+(c.src?'lib':'')}).join(' ; ');
+        /* 3) a biblioteca muda: o orçamento salvo fica igual até o OK */
+        var sale1=b1.sale;PR.cfxLib=PR.cfxLib.map(function(c){return c.n==='Transporte'?Object.assign({},c,{v:350}):c});vlRender();R.libNaoMuda=r2(budget().sale)===r2(sale1);
+        await W(800);/* o histórico junta mudanças de menos de 0,7 s */var tr=S.cfx.filter(function(c){return c.n==='Transporte'})[0];V('[data-cfx="upd|'+tr.id+'"]').click();R.comOk=r2(budget().sale-sale1);document.getElementById('und').click();await W(30);R.desfaz=r2(budget().sale)===r2(sale1);
+        saveNow();var st=JSON.stringify(snapState());loadState(JSON.parse(st));R.reabre=r2(budget().sale)===r2(sale1);document.getElementById('vlx').click();
+        /* 4) fora do PDF, do CSV e do link */
+        var q=JSON.stringify(quoteData()),cs=csvTexto(),lk=JSON.stringify(clientPayload());R.fora=[/Transporte|Comissão|Montagem/.test(q),/Transporte|Comissão|Montagem/.test(cs),/Transporte|Comissão|Montagem|R\$/.test(lk)].join(' ');
+        var qtot=quoteData().total;R.pdfTotal=r2(qtot)===r2(vlFin(budget()));
+        /* 5) quarto com os mesmos custos (Transporte uma vez por serviço) */PR.cfxLib=PR.cfxLib.map(function(c){return c.n==='Transporte'?Object.assign({},c,{v:300}):c});
+        arqueOpenClient(p2);vlOpen();await W(80);['Transporte','Comissão','Montagem'].forEach(function(n){V('[data-cfx="apl|'+id(n)+'"]').click()});var q2=quoteData(),t2=r2(q2.discountPct>0?q2.base:q2.total),tr2=S.cfx.filter(function(c){return c.n==='Transporte'})[0].v;saveNow();document.getElementById('vlx').click();
+        arqueOpenClient(p1);var q1=quoteData(),t1=r2(q1.discountPct>0?q1.base:q1.total);
+        orcReabre();R.add=orcAdd([p1,p2]);var O=orcAtual();R.secs=O.secs.map(function(s){return s.title}).join(',');
+        R.cozinhaInteira=r2(O.secs[0].sug)===t1;R.quartoSemTransporte=r2(t2-O.secs[1].sug);
+        var T2=orcTotais({secs:O.secs.map(function(s){return {sug:s.sug,manual:s.manual,desc:s.dpc}}),disc:O.disc});R.totalCentavo=T2.tot===r2(t1+t2-tr2)&&T2.tot===r2(O.secs.reduce(function(a,s){return a+orcSecVal({sug:s.sug,manual:s.manual,desc:s.dpc}).fin},0));
+        vlOpen();await W(80);R.nota=!!document.querySelector('#orcamb [data-oafora]');
+        var pv=orcPrevia(p2);R.previaIgual=r2(pv.sugAgora)===r2(O.secs[1].sug);
+        var pay=JSON.stringify(orcPayload(false));R.payloadSemCusto=!/Transporte|Comissão|Montagem/.test(pay);
+        orcRem(p1);R.avisoRemove=/Atualizar valores/.test(TS[TS.length-1]||'');document.getElementById('vlx').click();
+        /* 6) custo de antes (sem escopo) continua sem campo novo */R.antigo=JSON.stringify(cfxLimpa({id:'x',n:'Frete',t:'R',v:10}));
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["caixa"] as? Bool, true, "os custos fixos ficam na tela de preços, junto dos materiais")
+        XCTAssertEqual(o["desativa"] as? Int, 0)
+        XCTAssertEqual(o["editaMantemDesativado"] as? String, "0 60", "editar não reativa sozinho")
+        XCTAssertEqual(o["lib"] as? String, "Transporte|Caminhão até a obra|R|300||srv|1 ; Comissão||P|6|mrg||1 ; Montagem||R|100|||1")
+        XCTAssertEqual(o["salvoNosPrecos"] as? Bool, true)
+        XCTAssertEqual(o["conta"] as? Bool, true, "R$ + % do preço com margem, depois da margem, ao centavo")
+        XCTAssertEqual(o["libIntacta"] as? Double, 6, "a % deste serviço não muda a biblioteca")
+        XCTAssertEqual(o["base"] as? Bool, true, "a base de cada % fica à vista (nome e valor da base)")
+        XCTAssertEqual(o["copia"] as? String, "Transporte|300|srv|lib ; Comissão|8||lib ; Montagem|100||lib")
+        XCTAssertEqual(o["libNaoMuda"] as? Bool, true, "mudar a biblioteca não muda o orçamento salvo")
+        XCTAssertEqual(o["comOk"] as? Double, 50, "↻ com o OK da pessoa pega o valor novo")
+        XCTAssertEqual(o["desfaz"] as? Bool, true)
+        XCTAssertEqual(o["reabre"] as? Bool, true)
+        XCTAssertEqual(o["fora"] as? String, "false false false", "custo interno fora do PDF, do CSV e do link")
+        XCTAssertEqual(o["pdfTotal"] as? Bool, true)
+        XCTAssertEqual(o["add"] as? Int, 2)
+        XCTAssertEqual(o["secs"] as? String, "Cozinha,Quarto")
+        XCTAssertEqual(o["cozinhaInteira"] as? Bool, true)
+        XCTAssertEqual(o["quartoSemTransporte"] as? Double, 300, "uma vez por serviço: o 2º ambiente não soma o transporte de novo")
+        XCTAssertEqual(o["totalCentavo"] as? Bool, true, "total = soma dos ambientes − transporte repetido, ao centavo")
+        XCTAssertEqual(o["nota"] as? Bool, true)
+        XCTAssertEqual(o["previaIgual"] as? Bool, true, "a prévia usa a mesma regra (não volta a duplicar)")
+        XCTAssertEqual(o["payloadSemCusto"] as? Bool, true)
+        XCTAssertEqual(o["avisoRemove"] as? Bool, true, "remover o ambiente que tinha o custo avisa; não muda outro sozinho")
+        XCTAssertEqual(o["antigo"] as? String, "{\"id\":\"x\",\"src\":\"\",\"n\":\"Frete\",\"d\":\"\",\"t\":\"R\",\"v\":10,\"base\":\"\",\"cli\":0,\"on\":1}", "custo de antes: mesmo formato")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* Item 20 (Adauto 26/11, ETAPA 2): no ArqueCut a pessoa escolhe em quais lados de cada peça vai fita. Sem escolha = o automático de sempre.
+       A escolha vai pra lista, linhas verdes do plano, metros de fita (orçamento) e quadro do 3D; desfazer; salvar e reabrir; projeto antigo igual; ArqueCut avulso também. */
+    func testFitaManualPorLadoNoArqueCutListaPlanoMetrosOrcamentoDesfazerEAvulso() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length,r3=function(v){return Math.round(v*1000)/1000};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});
+        var m=S.mods[0],mi=0,P=partsOf(m).filter(function(p){return p.pk&&edgeSides(p.name)==='B'&&+p.cl>0})[0],pk=P.pk;R.peca=!!P;
+        var mt=function(){var c=mCost(m);return r3(c.tB+c.tC+c.tT)},st0=JSON.stringify(snapState()),m0=mt(),b0=JSON.stringify(budget().L||budget());
+        var verdes=function(root){var n=0;[].forEach.call(root.querySelectorAll('g[data-cp]'),function(g){if(String(g.dataset.src||'').split(';').indexOf(mi+'|'+pk)>=0)n+=(g.innerHTML.match(/stroke="#1f9d55" stroke-width="9"/g)||[]).length});return n};
+        openCut();await W(300);var cb=document.getElementById('cutbody');R.antes=verdes(cb)+' · '+!!cb.querySelector('[data-ftman]');R.mesmoProjeto=JSON.stringify(snapState())===st0;
+        var bt=[].filter.call(cb.querySelectorAll('[data-fted]'),function(b){return String(b.dataset.ftsrc).split(';').indexOf(mi+'|'+pk)>=0})[0];R.botao=!!bt;bt.click();await W(50);
+        var M=document.getElementById('ftedm');R.janela=!!M&&!M.hidden&&/Frente/.test(M.textContent);
+        M.querySelector('[data-ftk="T"]').click();M.querySelector('[data-ftk="L"]').click();
+        [].forEach.call(M.querySelectorAll('[data-ftp]'),function(c,i){var s=bt.dataset.ftsrc.split(';').filter(Boolean)[i];if(s!==mi+'|'+pk&&c.checked)c.click()});
+        M.querySelector('[data-fta="ok"]').click();await W(300);cb=document.getElementById('cutbody');
+        R.guardado=JSON.stringify(m.fitaMan);R.depois=verdes(cb)+' · '+!!cb.querySelector('[data-ftman="LTB"]');
+        R.metros=r3(mt()-m0)===r3((+P.cl+ +P.cl+ +P.cw)/1000-(+P.cl)/1000)?'certo':(mt()-m0)+'';
+        R.orcamento=JSON.stringify(budget().L||budget())!==b0;R.quadro3D=fitaAcab(P,m).s+' · '+fitaAcab(P).s;
+        var outros=partsOf(m).filter(function(p){return p.pk&&p.pk!==pk}).every(function(p){return edgeSidesOf(m,p)===edgeSides(p.name)});R.soEssa=outros;
+        var st1=JSON.stringify(snapState());loadState(JSON.parse(st1));draw();var mR=mt();R.reabre=JSON.stringify(S.mods[0].fitaMan)===R.guardado&&r3(mCost(S.mods[0]).tB+mCost(S.mods[0]).tC+mCost(S.mods[0]).tT)===mR;
+        m=S.mods[0];await W(800);openCut();await W(300);bt=[].filter.call(document.querySelectorAll('#cutbody [data-fted]'),function(b){return String(b.dataset.ftsrc).split(';').indexOf(mi+'|'+pk)>=0})[0];bt.click();await W(50);M=document.getElementById('ftedm');[].forEach.call(M.querySelectorAll('[data-ftp]'),function(c,i){var s=bt.dataset.ftsrc.split(';').filter(Boolean)[i];if(s!==mi+'|'+pk&&c.checked)c.click()});M.querySelector('[data-fta="auto"]').click();await W(300);
+        R.automatico=(S.mods[0].fitaMan===undefined)+' · '+(r3(mt())===m0);
+        await W(800);document.getElementById('und').click();await W(200);R.desfaz=JSON.stringify(S.mods[0].fitaMan)===R.guardado;R.guardado=/"LTB"/.test(R.guardado);
+        document.getElementById('cutx')&&document.getElementById('cutx').click();
+        /* ArqueCut avulso */
+        MC=null;localStorage.removeItem('arque.corteAvulso.v1');mcLoad();MC.list=[{n:'Lateral',w:700,h:500,q:2}];mcSave();mcOpen();mcCalc();await W(300);var res=document.getElementById('mcres'),gv=function(){return (res.innerHTML.match(/stroke="#1f9d55" stroke-width="9"/g)||[]).length},av0=gv();
+        res.querySelector('[data-fted]').click();await W(50);M=document.getElementById('ftedm');M.querySelector('[data-ftk="L"]').click();M.querySelector('[data-ftk="R"]').click();M.querySelector('[data-fta="ok"]').click();await W(300);res=document.getElementById('mcres');
+        R.avulso=MC.list[0].f+' · '+av0+'→'+gv()+' · '+JSON.parse(localStorage.getItem('arque.corteAvulso.v1')).list[0].f;
+        res.querySelector('[data-fted]').click();await W(50);document.querySelector('#ftedm [data-fta="auto"]').click();await W(300);R.avulsoAuto=(MC.list[0].f===undefined)+' · '+gv();
+        document.getElementById('mcm').hidden=true;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["peca"] as? Bool, true)
+        XCTAssertEqual(o["antes"] as? String, "1 · false", "sem escolha: a fita automática de sempre (1 lado, frente)")
+        XCTAssertEqual(o["mesmoProjeto"] as? Bool, true, "abrir o plano não muda o projeto")
+        XCTAssertEqual(o["botao"] as? Bool, true)
+        XCTAssertEqual(o["janela"] as? Bool, true)
+        XCTAssertEqual(o["depois"] as? String, "3 · true", "linhas verdes e lista com os lados escolhidos (frente + trás + ponta esquerda)")
+        XCTAssertEqual(o["guardado"] as? Bool, true, "a escolha fica no módulo (m.fitaMan)")
+        XCTAssertEqual(o["reabre"] as? Bool, true, "salvar e reabrir: a mesma fita")
+        XCTAssertEqual(o["desfaz"] as? Bool, true, "↶ desfaz volta a escolha")
+        XCTAssertEqual(o["metros"] as? String, "certo", "metros de fita: + 1 comprimento + 1 largura")
+        XCTAssertEqual(o["orcamento"] as? Bool, true, "o orçamento muda junto (fita)")
+        XCTAssertEqual(o["quadro3D"] as? String, "LTB · B", "o quadro da peça no 3D mostra a mesma fita")
+        XCTAssertEqual(o["soEssa"] as? Bool, true, "só a peça escolhida muda")
+        XCTAssertEqual(o["automatico"] as? String, "true · true", "Automático volta à regra de sempre")
+        XCTAssertEqual(o["avulso"] as? String, "LRB · 2→6 · LRB", "ArqueCut avulso: as 2 laterais com frente e as 2 pontas, guardado")
+        XCTAssertEqual(o["avulsoAuto"] as? String, "true · 2")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* Item 30 / risco N11 (27/11): o plano de corte não depende do relógio. "Estante torre aberta com gavetas embaixo" dava outro HTML com a máquina
+       carregada (o otimizador parava por tempo). Agora para por trabalho (peças arrumadas): relógio normal, parado e "carregado" (cada leitura anda 40 ms)
+       dão o mesmo plano, no plano direto, no rápido (ao abrir) e no "melhor aproveitamento" (segundo plano). Sonda dos 142 modelos: tools/sondas/s49. */
+    func testPlanoDeCorteNaoDependeDoRelogioMaquinaCarregadaMesmoPlanoN11() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var DN=Date.now,PN=performance.now.bind(performance),modo='n',falso=0;
+        Date.now=function(){if(modo==='p')return 1e12;if(modo==='c'){falso+=40;return DN()+falso}return DN()};
+        performance.now=function(){if(modo==='p')return 1e6;if(modo==='c'){falso+=40;return PN()+falso}return PN()};
+        var LAY=function(pl){return JSON.stringify(pl.groups.map(function(g){return g.sheets.map(function(s){return s.used.map(function(u){return [u.p.lab,u.x,u.y,u.w,u.h,u.r?1:0]})})}))};
+        var plano=function(m_){modo=m_;falso=0;try{SPC={};var pl=sheetPlan();var a=LAY(pl);SPC={};window.CUTFAST=1;window.CUTJOBS=[];var pf=sheetPlan();window.CUTFAST=0;var J=window.CUTJOBS.slice();window.CUTJOBS=[];
+          var D=J.map(function(j){var st=deepInit(j);while(!deepStep(st,j,1e12)){}var r=packTight(deepRes(st),j.SW,j.SH,j.kf,j.rot,st.mt);return r.sheets.map(function(s){return s.used.map(function(u){return [u.x,u.y,u.w,u.h,u.r?1:0]})})});
+          return {d:a,r:LAY(pf),f:JSON.stringify(D),h:planHtml(pl).length}}finally{modo='n';window.CUTFAST=0;window.CUTJOBS=[];SPC={}}};
+        try{['Estante torre aberta com gavetas embaixo','Guarda-roupa casal 3 vãos com gaveteiro (caixote)','Balcão 2 portas'].forEach(function(n){loadState(initLimpo());S.W=6000;S.mods=[];draw();newTpl(T(n));draw();
+          var a=plano('n'),b=plano('p'),c=plano('c');R[n]=['direto','rapido','fundo'].map(function(k,i){var x=['d','r','f'][i];return k+':'+(a[x]===b[x]?'=':'≠')+(a[x]===c[x]?'=':'≠')}).join(' ')+' html:'+(a.h===c.h?'=':'≠')})}
+        finally{Date.now=DN;performance.now=PN}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        /* "=" "=": normal = relógio parado (só o limite de tentativas, o resultado de sempre) e normal = máquina carregada */
+        XCTAssertEqual(o["Estante torre aberta com gavetas embaixo"] as? String, "direto:== rapido:== fundo:== html:=", "N11: o mesmo plano com a máquina carregada")
+        XCTAssertEqual(o["Guarda-roupa casal 3 vãos com gaveteiro (caixote)"] as? String, "direto:== rapido:== fundo:== html:=")
+        XCTAssertEqual(o["Balcão 2 portas"] as? String, "direto:== rapido:== fundo:== html:=")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* Item 31 (risco confineAll/roomClamp, 27/11): as passadas de restrição não escrevem mais e desfazem nos módulos. Um espião nos campos x e b de
+       móveis postos fora do lugar (passando da parede e do teto) conta as escritas: antes 2 por passada (encaixa e devolve), agora nenhuma.
+       O resultado é o mesmo bit a bit: posição, avisos e projeto (sonda tools/sondas/s50: 120 modelos + cozinha, antigo × novo). */
+    func testConfineAllRoomClampNaoEscrevemNosModulosMesmoResultado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.env='cozinha';S.W=3600;S.H=2600;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));draw();
+        var st=JSON.stringify(snapState());loadState(JSON.parse(st));var a=S.mods[0],b=S.mods[1];a.x=S.W-a.w/2;b.b=S.H-200;st=JSON.stringify(snapState());loadState(JSON.parse(st));a=S.mods[0];b=S.mods[1];S.m=null;
+        /* conta só escrita que troca o valor (o sanM do partsOf regrava o mesmo número: não muda nada e não é destas passadas) */var esp=function(q,f){var v=q[f],L=[];Object.defineProperty(q,f,{get:function(){return v},set:function(n){if(n!==v)L.push(n);v=n},enumerable:true,configurable:true});return L};
+        var ax=a.x,bb=b.b,Wx=esp(a,'x'),Wb=esp(b,'b');
+        draw();__build();draw();
+        R.escritasX=Wx.length;R.escritasB=Wb.length;R.mesmoLugar=(a.x===ax)+' · '+(b.b===bb);
+        var av=(window.fgConflitos?fgConflitos():[]).map(function(c){return c.texto}).join(' | ');R.avisoParede=/não cabe onde está/.test(av);R.avisoTeto=/passa do teto/.test(av);
+        R.espiaoFica=typeof Object.getOwnPropertyDescriptor(a,'x').get;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["escritasX"] as? Int, 0, "confineAll não escreve (antes: encaixava e devolvia)")
+        XCTAssertEqual(o["escritasB"] as? Int, 0, "roomClamp não escreve (antes: encaixava e devolvia)")
+        XCTAssertEqual(o["mesmoLugar"] as? String, "true · true")
+        XCTAssertEqual(o["avisoParede"] as? Bool, true, "o aviso continua (módulo, medida, diferença)")
+        XCTAssertEqual(o["avisoTeto"] as? Bool, true)
+        XCTAssertEqual(o["espiaoFica"] as? String, "function", "quem já observava o campo continua observando")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto, via Chefe 24/11): cada módulo (m.uid) e peça (m.uid|pk) com a mesma chave no editor (partsOf), no 3D,
     // na lista, no corte e no DXF; cópia ganha id novo (módulo e peças); salvar/reabrir e desfazer/refazer mantêm; Meus modelos ganha id novo; id que existe
     // nunca é trocado; id repetido ao abrir: avisa e só muda se a pessoa mandar

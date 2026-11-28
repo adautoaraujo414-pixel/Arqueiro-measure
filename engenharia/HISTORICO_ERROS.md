@@ -3462,3 +3462,15 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - A dobradiça da própria peça conta como obstáculo no lvlFit.
   - Projetos antigos: o dado do LED não muda; o desenho passa a ficar na chapa da porta (onde ele está vinculado).
 - **Teste:** testLEDHOST. Porta (frente e dentro) e frente de gaveta criam na chapa sem bater em nada; borda de 6 mm recusa com o aviso certo. Falha antes e passa depois.
+
+## DESTAQUE-FIM (parte 2) · os 76 casos de destaque que sobraram na s54 (99,3%) — Claude 3 (28/11)
+- **Levantados** com uma s54 que lista só as falhas de destaque. Três padrões:
+  - **A (46):** "Tamponamento direito (régua)#1" (nichos abertos, módulo superior livre, cristaleira) acendia também a base inferior, as laterais e a base superior. Causa: o build_eng3 (réguas e engrossos do tamponamento) ainda pintava o laranja no meio do build (mk: c.c=laranja), e o caixote do nicho copiava a cor da 1ª régua.
+  - **B (27):** Porta#2 do canto em L (aéreo, guarda-roupa, P4) acendia a base e a travessa. Causa: o pós-processo do canto (po das peças do canto) também pintava no meio do build.
+  - **C (3):** "Frente com recorte" do forno e do micro (Torre por vãos) não acendia nada. Causa: as caixas dela são nol (moldura sem contorno) e a passada final pulava nol.
+- **Correção:**
+  - Tiradas as 5 pinturas de laranja do meio do build (réguas, canto em L, módulo livre, os 2 fundos); só a passada final acende.
+  - A passada final só pula o brilho do LED (ledl), não as caixas nol.
+- **Teste:** testDESTAQUE com a régua da s54 (só caixas com o pk ou ppk escolhido) e os modelos dos achados.
+  - Antes: canto em L 6/7 (Porta#2 → base); torre 21/23 (frentes com recorte → nada).
+  - Depois: 100% nos 8 modelos.

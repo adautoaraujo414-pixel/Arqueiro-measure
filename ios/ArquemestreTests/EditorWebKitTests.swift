@@ -17588,13 +17588,15 @@ return JSON.stringify({out:out.join(' | '),dica:dica,errs:__errs.length-e0});
 window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length;
 var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
 open3D();await W(200);var OR='255,159,26',semPk=0;
-for(const n of ['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas','Balcão canto cego · cego na direita (porta na esquerda)','Estante aberta']){loadState(initLimpo());S.env='cozinha';S.mods=[];newTpl(achar(n));var m=S.mods[0];m.tl=1;m.tr=1;m.tt=1;draw();re3();window.SEL3=null;__build();
+for(const n of ['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas','Balcão canto cego · cego na direita (porta na esquerda)','Estante aberta','Nicho aéreo','Canto em L (aéreo) · esquerdo','Torre por vãos · forno + micro com porta de recorte']){loadState(initLimpo());S.env='cozinha';S.mods=[];newTpl(achar(n));var m=S.mods[0];m.tl=1;m.tr=1;m.tt=1;draw();re3();window.SEL3=null;__build();
  semPk+=__boxes().filter(function(b){return /^0:/.test(String(b.nm))&&!b.pk&&!b.nol&&!b.ferr}).length;
- var P=partsOf(m).filter(function(p){return p.pk&&!p.noDraw}),ok=0,ruim=[];P.forEach(function(p){window.SEL3={mi:0,pk:p.pk};__build();var L=__boxes().filter(function(b){return String(b.c)===OR}),nm={};L.forEach(function(b){nm[String(b.nm).split(':')[1]]=1});var k=Object.keys(nm);if(L.length&&k.length===1&&k[0]===p.name)ok++;else ruim.push(p.pk+'→'+(k.join('+')||'nada'))});window.SEL3=null;
- out.push(n+' '+ok+'/'+P.length+(ruim.length?' '+ruim.slice(0,3).join(','):''))}
+ /* régua igual à s54: acende só caixas com o pk escolhido (ou ppk = peça-mãe); conta as peças que têm caixa no 3D */var B0=__boxes(),P=partsOf(m).filter(function(p){return p.pk&&!p.noDraw&&B0.some(function(b){return b.pk===p.pk&&/^0:/.test(String(b.nm))})}),ok=0,ruim=[],K=P.map(function(p){return p.pk});['Tamponamento direito (régua)#1','Porta#2'].forEach(function(x){if(K.indexOf(x)<0&&B0.some(function(b){return b.pk===x&&/^0:/.test(String(b.nm))}))K.push(x)});
+ K.forEach(function(pk){window.SEL3={mi:0,pk:pk};__build();var L=__boxes().filter(function(b){return String(b.c)===OR}),fora=L.filter(function(b){return !(parseInt(String(b.nm),10)===0&&(b.pk===pk||b.ppk===pk))}).map(function(b){return b.pk});if(L.length&&!fora.length)ok++;else ruim.push(pk+'→'+(L.length?fora.slice(0,3).join('+'):'nada'))});window.SEL3=null;
+ out.push(n+' '+ok+'/'+K.length+(ruim.length?' '+ruim.slice(0,3).join(','):''))}
 return JSON.stringify({out:out.join(' | '),semPk:semPk,errs:__errs.length-e0});
           """#)
-        XCTAssertEqual(o["out"] as? String, "Balcão 2 portas 16/16 | Gaveteiro 3 gavetas 19/19 | Aéreo 2 portas 9/9 | Balcão canto cego · cego na direita (porta na esquerda) 18/18 | Estante aberta 19/19")
+        /* s54 28/11 (76 casos restantes): régua igual à da s54 (pk/ppk) e os modelos dos achados — canto em L (Porta#2 acendia base), torre com frente de recorte (caixas nol não acendiam) */
+        XCTAssertEqual(o["out"] as? String, "Balcão 2 portas 16/16 | Gaveteiro 3 gavetas 19/19 | Aéreo 2 portas 8/8 | Balcão canto cego · cego na direita (porta na esquerda) 18/18 | Estante aberta 19/19 | Nicho aéreo 7/7 | Canto em L (aéreo) · esquerdo 7/7 | Torre por vãos · forno + micro com porta de recorte 23/23")
         XCTAssertEqual(o["semPk"] as? Int, 0, "toda caixa desenhada do módulo tem pk ou é ferragem marcada")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }

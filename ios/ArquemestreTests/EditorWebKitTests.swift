@@ -9843,7 +9843,7 @@ final class EditorWebKitTests: XCTestCase {
         var n=0,ct=0,ne=0,fd=[],ds=[],so=[],se=[],er=[];
         for(var k=0;k<todos.length;k++){for(var lf=0;lf<2;lf++){try{S.mods=[];S.m=null;newTpl(JSON.parse(JSON.stringify(todos[k])));var q=S.mods[S.mods.length-1];if(!q||q.corner||q.wing)continue;q.x=600;q.latFora=!!lf;if(!lf)q.latPiso=false;S.m=q;draw();n++;if(!q.trav)continue;ct++;
           var LL=cx(q,/^Lateral (esquerda|direita)$/),zm=Math.max.apply(null,LL.map(function(b){return b.z1})),dt=LL.filter(function(b){return b.z1<zm-1}).length;
-          if(lf&&dt)fd.push(todos[k].n);if(!lf&&!dt&&LL.length)ds.push(todos[k].n);if(dentro(q))so.push((lf?'fora:':'dentro:')+todos[k].n);q.egL=1;q.egR=1;draw();ne++;if(dentro(q))se.push((lf?'fora:':'dentro:')+todos[k].n)}catch(e){er.push(todos[k].n+': '+e.message)}}}
+          if(lf&&dt)fd.push(todos[k].n);/* CEGO-ESTRUTURA (pedido do Adauto/Chefe 27/11, ETAPA 2 item 7): canto cego com travessas deitadas (cgTrav) não tem travessa em pé, então a lateral não tem rebaixo */if(!lf&&!dt&&LL.length&&!q.cgTrav)ds.push(todos[k].n);if(dentro(q))so.push((lf?'fora:':'dentro:')+todos[k].n);q.egL=1;q.egR=1;draw();ne++;if(dentro(q))se.push((lf?'fora:':'dentro:')+todos[k].n)}catch(e){er.push(todos[k].n+': '+e.message)}}}
         R.catalogo=todos.length+' modelos · '+n+' montagens · '+ct+' com travessa';
         R.catalogoPorForaComDente=fd.length+(fd.length?': '+fd.slice(0,5).join(' | '):'');
         R.catalogoPorDentroSemRebaixo=ds.length+(ds.length?': '+ds.slice(0,5).join(' | '):'');

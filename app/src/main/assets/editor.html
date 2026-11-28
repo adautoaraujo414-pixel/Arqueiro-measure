@@ -16181,8 +16181,9 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
   var R=P.filter(function(p){return tv.indexOf(p)<0}),W_=+m.w,iw=W_-2*e,lw=c==='emb'?iw:W_,ly=c==='emb'?top:top+e,lh=bot-ly;
   R.forEach(function(p){if(L.indexOf(p)<0)return;p.y=ly;p.h=lh;p.cl=typeof RNDC==='function'?RNDC(lh):Math.floor(lh);p.note=c==='emb'?'inteira · as travessas deitadas embutem entre as laterais (canto cego)':'1 espessura mais baixa · as travessas deitadas apoiam em cima dela (canto cego)'});
   var MT=(tv[0]&&tv[0].mat!==undefined)?tv[0].mat:lat0.mat,x0=c==='emb'?e:0,nt=c==='emb'?'deitada, embutida entre as laterais':'deitada, apoiada em cima das laterais',cl=Math.floor(lw);
-  R.push({name:'Travessa deitada · frente',x:x0,y:top,w:lw,h:e,col:m.cor||'#e6d9be',cl:cl,cw:T,qty:1,mat:MT,cxz:[0,T],cgT:1,pk:'Travessa deitada · frente#1',note:'canto cego · frente · '+nt+' · '+T+' mm'});
-  R.push({name:'Travessa deitada · trás',x:x0,y:top,w:lw,h:e,col:m.cor||'#e6d9be',cl:cl,cw:T,qty:1,mat:MT,cxz:[dep-T,dep],cgT:1,pk:'Travessa deitada · trás#1',noDraw:true,note:'canto cego · trás (junto do fundo) · '+nt+' · '+T+' mm'});
+  /* peça tirada pela 🗑 (m.xp) não volta */var XP_={};(Array.isArray(m.xp)?m.xp:[]).forEach(function(q){if(q&&q.pk)XP_[q.pk]=1});
+  if(!XP_['Travessa deitada · frente#1'])R.push({name:'Travessa deitada · frente',x:x0,y:top,w:lw,h:e,col:m.cor||'#e6d9be',cl:cl,cw:T,qty:1,mat:MT,cxz:[0,T],cgT:1,pk:'Travessa deitada · frente#1',note:'canto cego · frente · '+nt+' · '+T+' mm'});
+  if(!XP_['Travessa deitada · trás#1'])R.push({name:'Travessa deitada · trás',x:x0,y:top,w:lw,h:e,col:m.cor||'#e6d9be',cl:cl,cw:T,qty:1,mat:MT,cxz:[dep-T,dep],cgT:1,pk:'Travessa deitada · trás#1',noDraw:true,note:'canto cego · trás (junto do fundo) · '+nt+' · '+T+' mm'});
   /* divisória interna do cego (parametrizada, decisão do Adauto pendente): por padrão fica como era; com m.cgDivTopo sobe até encostar embaixo da travessa deitada */
   if(m.cgDivTopo){R.forEach(function(p){if(!/^Divisória \d+$/.test(p.name))return;var y1=p.y+p.h,ny=top+e;if(ny<p.y){p.h=y1-ny;p.y=ny;p.cl=typeof RNDC==='function'?RNDC(p.h):Math.floor(p.h);p.note=(p.note?p.note+' · ':'')+'sobe até a travessa deitada (canto cego)'}})}
   return R}catch(_){return P}};

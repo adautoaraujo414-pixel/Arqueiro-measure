@@ -2980,3 +2980,11 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - "＋ Ao lado" abre o catálogo, e o módulo novo encosta do lado do escolhido que tem espaço (`modHit`). Os vizinhos nunca andam; sem espaço, avisa e fica onde o catálogo pôs. Se o próprio catálogo recusar por falta de espaço, nada muda.
   - Teste `testE2ITEM9_PerspectivaCotaAlcasEModuloAoLadoSemMexerNoVizinho` (falha antes, passa agora). Print: `tools/sondas/etapa2_c3/item9_perspectiva_tamanho_cota.png`.
 - **Teste:** `testE2ITEM9_PerspectivaLivreNo2DGestosSemACameraMoverPeca` (falha antes, passa agora). Print: `tools/sondas/etapa2_c3/item9_perspectiva_no_2d.png`.
+
+## BAS-DOB (achado do Claude 5, Chefe 28/11): porta basculante cobra as dobradiças e o 3D não desenhava — Claude 3
+- **Erro:** o aéreo basculante e os racks basculantes cobram, no orçamento (`hwOf`), 2 ou 4 "Dobradiça 35 mm (caneco)", mas com a porta fechada o 3D não desenhava nenhuma. Aberta, desenhava também compasso/pistão, que não estão nas ferragens nem no orçamento.
+- **Causa raiz:** no `build` do 3D, a porta basculante pulava o `hinges3` (`!vD_.bas`), e o `basHw3` só era chamado com a porta aberta (`th_ > 0.05`). O `basHw3_` desenhava o compasso/pistão sempre que abria.
+- **Correção (só o 3D):**
+  - porta basculante fechada: `basHw3(…, 0, …)` desenha as dobradiças (calço, caneco e braço) no lugar, metálicas (`ferr`, item 3); aberta, continua como antes, abrindo com a porta;
+  - o compasso/pistão só aparece se estiver no `hwOf` do módulo (`__BASPIS`). Hoje nenhum basculante tem, então nada inventado aparece.
+- **Teste:** `testBASDOB_BasculanteDesenhaAsDobradicasQueOOrcamentoCobra` (3 modelos: aéreo basculante e os 2 racks). No HEAD anterior a porta fechada tinha 0 dobradiças; agora 2, 4 e 4, igual ao orçamento. A família de basculante, dobradiça, ferragem, aéreo e rack: 38/38.

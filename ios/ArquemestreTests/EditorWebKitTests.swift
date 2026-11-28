@@ -17262,6 +17262,24 @@ document.getElementById('pv2db').click();out.push('errs '+(__errs.length-e0));re
         XCTAssertEqual(o["errs"] as? String, "errs 0")
     }
 
+    /// BAS-DOB (Claude 5 / Chefe 28/11): o orçamento cobra as dobradiças da porta basculante e o 3D não desenhava nenhuma com a porta fechada.
+    /// Agora o 3D desenha as que as ferragens dizem (hwOf), fechada e aberta, metálicas (ferr); compasso/pistão só se estiver nas ferragens.
+    func testBASDOB_BasculanteDesenhaAsDobradicasQueOOrcamentoCobra() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length;
+          var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+          for(const n of ['Aéreo basculante','Rack com portas basculantes','Rack suspenso basculante']){loadState(initLimpo());S.mods=[];newTpl(achar(n));var m=S.mods[0];draw();open3D();await W(200);
+            var conta=function(){var A=__ang();Object.keys(A.t).forEach(function(k){A.g[k]=A.t[k]});__build();var B=__boxes().filter(function(b){return /^0:Ferragem da basculante$/.test(String(b.nm))});
+              var calco=B.filter(function(b){return Math.round(b.x1-b.x0)===48&&b.ferr}).length,pis=B.filter(function(b){return !b.pf&&Math.round(b.x1-b.x0)===9}).length;return calco+' dobradiça(s)'+(pis?' + pistão':'')+(B.every(function(b){return b.ferr})?' metálicas':' COR DA PORTA')};
+            var hw=(hwOf(m)['Dobradiça 35 mm (caneco)']||{}).n||0,fe=conta();m.v.forEach(function(v){v.open=true});draw();re3();await W(50);var ab=conta();
+            out.push(n+': orçamento '+hw+' · fechada '+fe+' · aberta '+ab);document.getElementById('v3x').click()}
+          return JSON.stringify({out:out.join(' | '),errs:__errs.length-e0});
+          """#)
+        XCTAssertEqual(o["out"] as? String, "Aéreo basculante: orçamento 2 · fechada 2 dobradiça(s) metálicas · aberta 2 dobradiça(s) metálicas | Rack com portas basculantes: orçamento 4 · fechada 4 dobradiça(s) metálicas · aberta 4 dobradiça(s) metálicas | Rack suspenso basculante: orçamento 4 · fechada 4 dobradiça(s) metálicas · aberta 4 dobradiça(s) metálicas", "o 3D desenha as dobradiças que o orçamento cobra, sem pistão que não está nas ferragens")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /// ETAPA 2 · item 9 (Chefe 28/11, mesma regra do TOQUE-ALCA do Claude 4): na perspectiva do 2D a tremida (5 px) não move o móvel, e a pinça que começa
     /// em cima dele (1º dedo anda antes do 2º cair) devolve o móvel pro lugar, sem passo extra no desfazer.
     func testE2ITEM9_TremidaEPincaNaoMovemOMovelNaPerspectiva() async throws {

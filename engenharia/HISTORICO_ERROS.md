@@ -2695,3 +2695,21 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - **3.** `testCORTEPRIORIDADE…`, cenário "normal": no iPad deu 23 etiquetas de sobra, quando o esperado eram 25.
     - **Causa:** o cenário apagava a métrica forçada, e no iPad a medida real já é a do iPad, então ele não era o "normal".
     - **Correção:** a normal passa a ser forçada em 0,95/0,26, com comentário no teste. Entrou um cenário próprio para a métrica do iPad medida (1,13/0,26 com `ip`), que dá os mesmos 23 do iPad real, com identificação 0 e callout em cima de etiqueta 0.
+
+## ETAPA 2 · item 21 (Adauto 26/11): bases unidas sozinhas ao encostar módulos — Code 2
+- **Erro:** dois ou mais módulos criados separados e encostados ficavam com a base inferior, o rodapé (frente e trás), a travessa da frente ("régua corrida") e a moldura UNIDOS sozinhos numa peça só (corte, lista, orçamento e 3D).
+- **Causa:** três mecanismos juntavam por geometria (folga ≤ 1 mm, sem tamponamento entre os módulos, mesma profundidade e altura):
+  - `moldRuns` (mold/base) e o embrulho do rodapé (~5465);
+  - `lrRows` (travessa e rodapé em fileira e no L);
+  - o corte, a lista e o 3D, que seguiam esses grupos (`baseRunOf`/`rodRunOf`/`rodSkip`/`cutGroups`).
+- **Auditoria:** o catálogo inteiro, dois de cada modelo encostados contra afastados. Antes, 74 de 99 modelos uniam peças sozinhos; depois, 0 de 99.
+- **Correção (na causa):** `unPode(p,m,key)` em todos os mecanismos.
+  - Só une se os dois módulos tiverem a mesma marca manual `une` (item 2, "Unir": base inferior e rodapé, até 2700 mm, divide acima). Separar e desfazer funcionam.
+  - Ou se os dois forem de projeto antigo (sem `unV`, vindos do arquivo): esses ficam como estavam.
+  - Módulo novo ganha `unV=1` e nunca une sozinho.
+  - Projeto antigo com peça unida: aviso "Separar as peças" na barra e na Estrutura, com desfazer.
+- **Testes:**
+  - novo: `testEtapa2BasesNaoSeUnemSozinhasUnirESepararManualEProjetoAntigo`, que falha antes e passa depois;
+  - 6 testes antigos que esperavam a união automática agora unem pela opção manual e conferem os MESMOS valores;
+  - 67/67 testes relacionados passam a 1366 e a 430.
+- **Evidência:** `engenharia/diagnosticos/etapa2/code2/i21_corte_{antes,depois}.png`.

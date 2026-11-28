@@ -4474,7 +4474,7 @@ final class EditorWebKitTests: XCTestCase {
     func testVisorComNumerosNoFornoMicroEGeladeira() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.stones=[];S.rp=[];S.W=2600;S.H=2700;S.mods=[];S.fr=[];var R={};
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};/* RELOGIO-APARELHO (ETAPA 2 item 4, Adauto 26/11): o visor mostra a hora do aparelho; o teste fixa 12:00 (a contagem de segmentos acesos depende dos dígitos: 12:00 = 42) */window.__RELOGIO_FIXO='2026-11-28T12:00:00';S.stones=[];S.rp=[];S.W=2600;S.H=2700;S.mods=[];S.fr=[];var R={};
           var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n)r=q})});return JSON.parse(JSON.stringify(r))};
           var cnt=function(){__build();return __boxes().filter(function(b){return b.em&&b.nol&&(b.z1-b.z0<1||b.pf||b.gp)}).length};
           open3D();await new Promise(function(r){setTimeout(r,400)});R.vazio=cnt();

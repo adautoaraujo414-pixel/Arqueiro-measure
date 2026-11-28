@@ -19640,6 +19640,39 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // CAMPO-NUM (Adauto 27/11, ETAPA 2 item 37 · medidas do 2D): com o ambiente inteiro na tela, a bolinha da alça de medida (data-h, raio grande pro dedo)
+    // fica em cima das medidas pequenas (largura do módulo, altura e distância até a parede/vizinho) e o toque não abria nada (pré-existente). Agora o toque
+    // parado na alça abre a medida que está embaixo; arrastar a alça continua mudando a medida. Tocar no vão único avisa de onde vem a largura (antes: nada).
+    func testCAMPONUM_MedidaEmbaixoDaAlcaAbreComToqueEArrastoContinua() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length,T0=window.toast,ult='';window.MINI3OFF=1;PR.setupDone=1;window.toast=function(t){ult=String(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var sv=function(){return document.getElementById('svg')},pid=170,kp=function(){return document.getElementById('calcbar')};
+        var ev=function(tp,x,y,id,el){el=el||document.elementFromPoint(x,y)||sv();el.dispatchEvent(new PointerEvent(tp,{clientX:x,clientY:y,pointerId:id,bubbles:true,cancelable:true,isPrimary:true,pointerType:'touch'}))};
+        var tap=async function(x,y){pid++;var el=document.elementFromPoint(x,y);ev('pointerdown',x,y,pid,el);await W(50);ev('pointerup',x,y,pid,el);el.dispatchEvent(new MouseEvent('click',{clientX:x,clientY:y,bubbles:true,cancelable:true}))};
+        var arr=async function(x,y,dx){pid++;var id=pid;ev('pointerdown',x,y,id);for(var i=1;i<=8;i++){await W(16);ev('pointermove',x+dx*i/8,y,id,sv())}ev('pointerup',x+dx,y,id,sv())};
+        var tecla=async function(c){var b=kp().querySelector('button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',pointerId:++pid}));await W(50)};
+        var ini=async function(mod){try{kp().hidden=true}catch(_){}loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;S.Wm=1;S.Hm=1;S.mods=[];S.fr=[];S.rp=[];S.stones=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.mods[0].x=300;newTpl(T(mod||'Balcão 2 portas + 4 gavetas'));var a=S.mods[S.mods.length-1];a.x=a.sup?600:1900;S.m=a;S.tab=0;draw();panel();window.scrollTo(0,0);await W(800);ult=''};
+        var abre=async function(q){var e=document.querySelector('#svg text[data-q="'+q+'"]');if(!e)return 'sem medida '+q;var r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,emb=document.elementFromPoint(x,y);var alca=!!(emb&&emb.dataset&&emb.dataset.h!==undefined);await tap(x,y);await W(300);return (!kp().hidden?'abriu '+document.getElementById('kplab').textContent:'não abriu')+(alca?' (pela alça)':'')};
+        await ini();R.largura=(await abre('mw')).replace(' (pela alça)','');await tecla('1');await tecla('1');await tecla('0');await tecla('0');await tecla('ok');await W(400);R.larguraAplicada='larg '+S.m.w;
+        await ini();R.altura=(await abre('mh')).replace(' (pela alça)','');await tecla('x');await W(200);
+        await ini();R.esquerda=(await abre('ml')).replace(' (pela alça)','');await tecla('2');await tecla('5');await tecla('0');await tecla('ok');await W(400);R.esquerdaAplicada='até o vizinho '+Math.round(modGaps(S.m).esq);
+        await ini();var h=document.querySelector('#svg circle[data-h="r"]').getBoundingClientRect();var w0=S.m.w;await arr(h.x+h.width/2,h.y+h.height/2,40);await W(300);R.arrastoAlca=S.m.w!==w0?'mudou a largura':'parada';R.arrastoNaoAbriu=kp().hidden?'sem teclado':'TECLADO ABRIU';
+        await ini('Aéreo 2 portas');var v=document.querySelector('#svg text[data-q="vao|0"]');if(v){var rv=v.getBoundingClientRect();await tap(rv.x+rv.width/2,rv.y+rv.height/2);await W(300)}R.vaoUnico=/^Vão único/.test(ult)?'avisa':'calado: '+ult;
+        window.toast=T0;try{kp().hidden=true}catch(_){}S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["largura"] as? String, "abriu Largura do módulo", "tocar na largura do módulo abre, mesmo com a alça em cima")
+        XCTAssertEqual(o["larguraAplicada"] as? String, "larg 1100")
+        XCTAssertEqual(o["altura"] as? String, "abriu Altura do módulo")
+        XCTAssertEqual(o["esquerda"] as? String, "abriu Distância da esquerda (vizinho ou parede)")
+        XCTAssertEqual(o["esquerdaAplicada"] as? String, "até o vizinho 250", "a distância digitada fica exata")
+        XCTAssertEqual(o["arrastoAlca"] as? String, "mudou a largura", "arrastar a alça continua")
+        XCTAssertEqual(o["arrastoNaoAbriu"] as? String, "sem teclado", "arrasto não abre a medida")
+        XCTAssertEqual(o["vaoUnico"] as? String, "avisa", "tocar no vão único não fica calado")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // PALMA-CANETA (Adauto 27/11, ETAPA 2 item 36): rejeição de palma com caneta (Apple Pencil, S Pen, caneta do Windows). Enquanto a caneta está em uso
     // (encostada ou mexida há menos de PALMA.ms), toque de dedo/palma não seleciona, não abre menu, não move, não dá zoom e não chega na câmera 3D.
     // A palma que já arrastava antes da caneta encostar volta pro lugar. A caneta funciona como sempre, o mouse nunca é bloqueado e, depois, o dedo volta.

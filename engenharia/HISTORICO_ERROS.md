@@ -2832,3 +2832,9 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Teste novo:** `testCAMPONUM_TecladoOkCancelarValorExatoEForaDaFaixaAvisa`, com toque nas teclas. Falha na 53344a39 e passa a 430, a 1366 e no iPad simulado. Os outros 13 testes de digitação continuam passando.
 - **Achado sem correção (decidir):** "Desconto na altura (mm)" da aba Portas grava nos Ajustes gerais (`STD().cvDesc`), vale para o projeto todo e **não tem desfazer**, porque os Ajustes não entram no `snapState`. Colocar os Ajustes no desfazer mexe no formato do histórico.
 - **Botões "⬚ Fechar Vão"** (espaço até a parede, o teto e o chão, e atrás quando afastado): todos testados no balcão e no aéreo. Fazem a peça do tamanho do vão, e o desfazer volta. Comportamento correto.
+- **Medidas do 2D (mesma família, auditoria com toque real):** tocar em cada medida (`text[data-q]`), digitar 250 no teclado do app, OK, conferir a distância e o desfazer.
+  - **Erro comprovado (pré-existente, já na f51cc698):** com o ambiente inteiro na tela, a bolinha da alça (`data-h`, raio 45) cobre a largura do módulo (mw), a altura (mh) e a distância à esquerda (ml). O toque caía na alça e nada abria.
+  - **Correção:** toque parado (até `SEL.mov`, sem pinça) na alça abre a medida que está embaixo. Abre depois do `click` que cai na bolinha, senão ele tira o foco e fecha o teclado. Arrastar a alça segue igual.
+  - **Erro comprovado:** tocar no vão único não fazia nada (`if(!S.m.div.length)return`). Agora avisa de onde vem a largura.
+  - **Comportamento correto:** até o teto, do chão, distância à esquerda (exata: 250), largura, altura e vão 1/2 aplicam com desfazer. Valor fora do possível avisa e não aplica. Parede menor que 500 avisa "ficou 500".
+  - **Teste novo:** `testCAMPONUM_MedidaEmbaixoDaAlcaAbreComToqueEArrastoContinua`. Passa a 430, a 1366 e no iPad simulado. Os 46 testes de medida, toque e alça passam.

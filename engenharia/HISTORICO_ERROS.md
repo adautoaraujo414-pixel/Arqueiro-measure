@@ -3102,3 +3102,12 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Na parede lateral, o painel mostra "⚠ Construção diferente do fundo" com a prévia (sai Divisória…, entra Lateral do meio…) e o botão "Igualar ao fundo", com desfazer. O botão grava o campo.
 - **Teste novo:** `testLATMEIOPAREDE_ModuloNovoIgualEmQualquerParedeAntigoNaoMuda`. Confere: novo na lateral = fundo (corte e 3D); antigo abre e salva igual e não muda; aviso com prévia; botão iguala; desfazer volta. Passa a 430 e a 1366.
 - **Teste ajustado:** `testPlanoDeCorteParedeEsquerda…` monta o "móvel antigo" apagando também o `latMeioW` (o de antes não tem o campo), com comentário. A expectativa (38) não mudou.
+
+## Bateria 1366 da 6de21157 (com a integração 48b46033): 607/620 — Claude 4
+- **13 falhas.** 12 falham também na integração pura (48b46033), sem nenhum commit meu depois. São **pré-existentes da integração** (outros ramos). Na maioria são contagens de peças que subiram, ligadas ao "Bases unidas" e ao CRUZA-3D-ID:
+  - testEdicaoAmbiente3DParedeNo2DEAbasLimpas, testVisorComNumerosNoFornoMicroEGeladeira, testMedidaDePecaSemDecimoEPartesSomamAPecaInteira, testPlanoDeCorteTodaPecaEntraUmaVez…, testValoresCobraAChapaPeloQueFoiUsado…, testCenarioCompletoDoClienteAoBackup…;
+  - testMoverNo3DEncaixaNaParede…, testPlanoDeCortePecaBrancaDeQualquerBranco…, testTamponamentoAutomaticoSaiDaJunta…, testEstruturaAfastamentoDaParedeEmCm…, testFASE5_EtiquetaDoDxf…, testNOMEIPAD_ComAMetricaDoIPad….
+  - Ficam para os donos.
+- **1 era minha:** `testTocarEmQualquerMedidaDoVaoEDigitar`. Com a alça na borda de fora (item 26), a bolinha tapava a medida do vão no armário por vãos.
+  - Correção: as medidas pequenas (`[data-q]`, filhas diretas do svg) passam a ser desenhadas por cima das alças. Só muda a ordem do desenho: a medida abre com toque e o resto da bolinha arrasta.
+  - Os 11 testes de toque e medida passam a 430 e a 1366.

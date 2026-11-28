@@ -16294,5 +16294,11 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
 /* LATMEIO-PAREDE (Chefe 28/11): módulo criado pelo botão Inferior/Superior também nasce com latMeioW=1 (igual em qualquer parede); abrir projeto não grava nada */
 (function(){var nm0=window.newMod;if(typeof nm0!=='function')return;window.newMod=newMod=function(){var n0=S.mods.length,r=nm0.apply(this,arguments);try{S.mods.slice(n0).forEach(function(m){if(window.latMeioFam0&&latMeioFam0(m)&&m.latMeioW===undefined)m.latMeioW=1})}catch(_){}return r}})();
 </script>
+<script>
+/* MEDIDA-EM-CIMA (ETAPA 2 itens 26/37, 28/11): as medidas pequenas (largura, altura, vão, até a parede: [data-q]) ficam por cima das alças de medida
+   (bolinhas grandes, raio do dedo): com a alça na borda de fora a bolinha tapava a medida do vão (testTocarEmQualquerMedidaDoVaoEDigitar). Só a ordem do
+   desenho: o toque na medida abre a medida; o resto da bolinha continua arrastando. */
+(function(){var d0=window.draw;if(typeof d0!=='function')return;window.draw=draw=function(){var r=d0.apply(this,arguments);try{var sv=document.getElementById('svg');if(sv&&sv.querySelector(':scope > [data-h]')){[].filter.call(sv.children,function(e){return e.hasAttribute&&e.hasAttribute('data-q')}).forEach(function(e){sv.appendChild(e)})}}catch(_){}return r}})();
+</script>
 </body></html>
 

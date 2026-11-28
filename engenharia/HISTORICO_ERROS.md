@@ -2713,6 +2713,38 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - 6 testes antigos que esperavam a união automática agora unem pela opção manual e conferem os MESMOS valores;
   - 67/67 testes relacionados passam a 1366 e a 430.
 - **Evidência:** `engenharia/diagnosticos/etapa2/code2/i21_corte_{antes,depois}.png`.
+
+## ETAPA 2 · itens 22, 32, 33 e 34 (Adauto 27/11): "adicionar a travessa" sobe a tela e não põe nada; travessa trocava o teto — Code 2
+- **Sintomas:**
+  - Tocar em "Travessa frontal" no aéreo ou no armário alto não punha peça nenhuma e a caixa voltava vazia.
+  - No balcão, ligar a travessa tirava o teto, subia as laterais 15 mm e crescia as portas (650 → 705).
+  - O painel pulava (1039 → 190) e o controle tocado saía da tela.
+- **Causa:**
+  - A caixinha antiga era "travessa NO LUGAR do teto" (`m.trav`). No aéreo e no alto, `sanBase` desfazia na hora, pela regra "sempre tem base em cima".
+  - O redesenho do painel não guardava a rolagem. Depois, o scroll anchoring do navegador e os blocos que outros embrulhos põem acima do controle mexiam na posição.
+- **Correção (na causa):**
+  - Marcas independentes `travT`, `travOff`, `tetoAdd` e `tetoOff`, aplicadas num embrulho do `partsOf`. A lista, o 3D, o corte, o DXF e o orçamento usam a mesma peça.
+  - Caixinhas novas `data-tt`, com tratador próprio antes do tratador antigo do `data-rc`.
+  - `sanBase` e a geometria antiga não mudaram.
+  - Painel: `overflow-anchor:none` e ajuste ao controle tocado, depois de todos os embrulhos.
+- **Conferência:**
+  - Catálogo inteiro: 266 trocas, todas mexem só na própria peça e voltam iguais, sem sobreposição nova no 3D.
+  - 6 modelos com gaveta no lugar recusam, com o motivo.
+  - Todos os controles da Estrutura de 5 tipos de módulo, a 1366 e a 430.
+- **Teste:** `testEtapa2TravessaETetoIndependentesSoAPropriaPecaTelaNaoPula`, que falha antes (não existe a caixinha nova; no aéreo, nenhuma peça) e passa depois.
+- **Escapou da entrega do item 21 (a74b6387), achado agora pela bateria completa e pelo Claude 3:**
+  - **Bug real: encaixar no 3D mudava o vizinho.**
+    - Causa: `__mv3.encaixa` chama `draw()`, e o tamponamento automático tirava o tamponamento DO VIZINHO na junta (fere a REG12).
+    - Antes, a base unida fazia a colisão aparecer e o encaixe era recusado antes disso. Sem a união, a peça do vizinho sumia e a colisão também.
+    - Correção: no encaixe, os outros módulos voltam exatamente como estavam antes da conferência de colisão. Só o móvel encaixado muda.
+    - Teste: `testMoverNo3DEncaixaNaParedeAte20mmSoDeCostasSemMexerEmNinguem` (sem mudança).
+  - **10 testes montavam projeto com módulos encostados e contavam peças unidas pela regra antiga.** Passam em 02c69024 e falham em a74b6387. Na época rodei só os 67 relacionados; o certo era a bateria completa. Ajustes, sem afrouxar nenhuma conferência:
+    - unem pela opção manual "Unir" e conferem os MESMOS valores: `testEstruturaAfastamento…`, `testTamponamentoAutomatico…` e `testCenarioCompleto…`;
+    - volta como projeto antigo (a travessa corrida só existe no projeto antigo) e confere o mesmo: `testValoresCobra…`;
+    - `testPlanoDeCortePecaBranca…`: a travessa corrida em cor virou 2 travessas, porque o "Unir" junta só base e rodapé. Valores novos, com comentário;
+    - contagens novas, com o valor antigo no comentário: `testMedidaDePeca…`, `testPlanoDeCorteTodaPeca…`, `testFASE5_EtiquetaDoDxf…` e `testNOMEIPAD_ComAMetrica…`. As conferências de qualidade (0 problemas, 0 sobreposições, nenhum nome perdido) continuam iguais;
+    - seção nova "Bases unidas" (item 2): `testEdicaoAmbiente3D…` e `testSetinhaDoTitulo…`.
+  - Desta vez, bateria completa nas duas larguras antes de entregar.
 ## DOB-METAL (ETAPA 2 item 3, R3, 26/11): dobradiça na cor da porta — Claude 3
 - **Módulo:** 3D, todas as portas com dobradiça de caneco (balcão, aéreo, torre, guarda-roupa) e o basculante.
 - **Reproduzir:** pintar a porta com a ferramenta Pintar (madeira com textura) e abrir a porta no 3D. Calço, braço, caneco e parafusos saem na madeira da porta.
@@ -2883,6 +2915,144 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - a alça da geladeira tem 6 px na tela com o ambiente inteiro à vista, menor que um dedo (risco identificado);
   - a bolinha da alça (raio 15 no desenho) fica em cima da lateral e do tamponamento: 1 ou 2 toques na lateral não chegam na peça;
   - 2 toques na lateral também giram o engrosso (EGT), e isso mexe no projeto.
+
+## TOQUE-PECA (ETAPA 2 item 26, Adauto 27/11, decidido pelo Chefe 28/11): 2 toques em qualquer peça do módulo abriam só o acesso rápido — Claude 4
+- **Antes (toque real pelo CDP, 430, "Balcão 2 portas + 4 gavetas"):**
+  - 2 toques na porta, na base ou no rodapé abriam o acesso rápido do vão. Não existia edição da peça no 2D.
+  - A bolinha da alça de medida (raio 15) cobria a lateral e o tamponamento: 1 ou 2 toques ali não chegavam na peça.
+  - 2 toques na lateral giravam o engrosso, mexendo no projeto.
+  - 2 toques na alça da divisória não abriam nada.
+- **Pedido:** "2 toques no MEIO do módulo abrem o acesso rápido que JÁ EXISTE…; 2 toques numa peça específica abrem a edição dela".
+- **Decisão do Chefe (28/11):**
+  - 2 toques no meio do vão, inclusive em cima da porta ou frente, abrem o acesso rápido.
+  - 2 toques em peça da estrutura abrem a aba onde ela é editada, com o campo destacado.
+  - O giro do engrosso vira o botão "Girar engrosso" no painel.
+  - A alça fica na borda de fora.
+- **Correção (`editor.html`):**
+  - No contador de 2 toques do `#svg` (o mesmo `tapCount`), `pcEdAlvo` decide pela peça tocada:
+    - lateral e base → Estrutura, campo "Espessura das chapas";
+    - tamponamento e engrosso cava → Tamponamentos, na seção da peça;
+    - divisória e prateleira → Divisões;
+    - rodapé → Estrutura, seção Rodapé (abre se estiver fechada);
+    - travessa → Altura da travessa;
+    - fundo → Fundos.
+  - A porta cobre a lateral (sobra de 1 a 2 px). Por isso, a faixa da borda de fora (no mínimo `SEL.div`, no máximo 1/6 da largura) conta como lateral. O tamponamento tem prioridade.
+  - `pcEdOpen` escolhe a peça (o mesmo `pcSel`), vai pra aba, destaca o campo (`data-pcfoco`) e põe o cabeçalho "✏️ Editando: …".
+  - `window.egGira` é o mesmo código do engrosso de antes (snap, conta e aviso), agora no botão `data-pcgira`.
+  - Alças `data-h` na borda de fora, depois do tamponamento (`lt`/`rt`), com o mesmo raio.
+  - Abrir não muda nada no projeto.
+- **Teste novo:** `testTOQUEPECA_DoisToquesNoMeioAcessoRapidoNaPecaEdicaoDela`, com eventos de dedo.
+  - Falha na f51cc698 e passa a 430, a 1366 e no iPad simulado.
+  - Os testes de toque TOQUEALCA (2) e TOQUEJANELA continuam passando.
+- **Risco identificado:** agora a alça da borda de fora fica em cima da lateral do vizinho encostado. Tocar ali pega a alça do módulo escolhido, não o vizinho.
+- **Bateria:** a 3ca951db teve 2 falhas, ambas tratadas na mesma entrega:
+  - `testSetinhaDoTituloDaSecao…` contava 51 seções e há 52, por causa da "Composição da frente" do item 19. A expectativa foi atualizada com comentário do pedido;
+  - `testNadaDeEnfeiteAbasDoModuloParte1b` também falha na referência antiga (8811, antes das entregas) e com outros botões a cada rodada. É **pré-existente e instável** (Estilos de porta: est=c|regua, j|45, rw|50).
+
+## PALMA-CANETA (ETAPA 2 item 36, Adauto 27/11): com a caneta em uso, a palma mexia no projeto — Claude 4
+- **Antes (caneta real `pointerType:'pen'` pelo CDP + toque real, 430, 53344a39):**
+  - com a caneta encostada, 2 toques da palma na porta abriam o acesso rápido;
+  - a palma que arrastava antes da caneta encostar continuava e deixava o módulo em x 840 (era 600).
+  - Não havia nenhum tratamento de caneta (`pointerType 'pen'`, `touchType 'stylus'`).
+- **Correção (`editor.html`, primeiro script da página, antes de todos os ouvintes):** `window.PALMA`.
+  - A caneta está "em uso" quando está encostada ou mexeu/pairou há menos de `PALMA.ms` (800 ms).
+  - Enquanto isso, os eventos de dedo/palma são cortados na fase de captura da janela (`stopImmediatePropagation` + `preventDefault`): pointer `touch`, `touchstart/move/end` sem `touchType 'stylus'`, `click`/`dblclick`/`contextmenu` de toque e `gesture*` do iOS.
+  - Por isso não selecionam, não abrem, não movem, não medem, não adicionam, não apagam, não dão zoom e não chegam no 3D.
+  - Quando a caneta encosta, o gesto que a palma já fazia para e o que ela mexeu volta (mesmo `drag.m` da pinça; a vista volta).
+  - A caneta funciona como sempre. O toque longo da caneta continua abrindo o menu, porque é gesto intencional.
+  - O mouse nunca é bloqueado.
+- **Teste novo:** `testPALMACANETA_PalmaNaoMexeEnquantoACanetaEstaEmUso`, com eventos `pen` e `touch`, no 2D e no 3D.
+  - Falha na 53344a39 e passa a 430, a 1366 e no iPad simulado.
+  - TOQUEPECA, TOQUEALCA e TOQUEJANELA continuam passando.
+- **Não verificado:** aparelho real com Apple Pencil, S Pen e caneta do Windows. O WebKit do iPad entrega `pointerType 'pen'` para o Pencil; vale conferir no aparelho.
+
+## CAMPO-NUM (ETAPA 2 item 37, Adauto 27/11): campo numérico sem Cancelar; espessuras trocadas caladas — Claude 4
+- **Auditoria com toque real (CDP, 430):** em cada campo `data-calc` das abas Estrutura, Portas, Tamponamentos, Fundos e Ripado: tocar, digitar 123 nas teclas do app, OK, conferir o projeto e o desfazer.
+  - 12 de 15 certos: abre, não fecha digitando, valor exato, 1 desfazer, desfaz volta. Em cm, 123 virou 1230 mm e 12,5 virou 125 mm.
+- **Erros comprovados:**
+  1. Não havia **Cancelar**: sair do campo aplicava o digitado.
+  2. **Espessura das chapas** 123 virava 50 calado, e o campo mostrava 123. Causa: `def()` faz `c('esp',3,50,15)` em toda passada.
+  3. **Espessura do fundo** 123 virava 6 calado, e o campo mostrava 123. Causa: `def()` volta `fundoMm` fora de 2–30 para 6.
+- **Correção:**
+  - Tecla "✕ Cancelar" no teclado do app: volta o valor de antes (`data-kpv`), fecha e não aplica nada.
+  - Na entrada dos campos `data-r`, usa o mesmo `medLim`/`medRecusa` que a largura e a altura já usavam (simula no `sanM`), sem tabela própria (§4). O que o `sanM` mudaria gera o aviso "⚠ … não pode: o mínimo/máximo é … mm. Nada foi alterado.", nada muda e o campo volta.
+  - Quando o `sanM` volta para o padrão em vez de segurar no limite (fundo fora de 2–30 vira 6), o limite do aviso é achado por busca no próprio `medLim` (30, e não 6). Os campos `data-k` (largura, profundidade) já passavam por `medLim`.
+  - O `def()` não mudou: ele também abre projetos antigos (§3).
+- **Teste novo:** `testCAMPONUM_TecladoOkCancelarValorExatoEForaDaFaixaAvisa`, com toque nas teclas. Falha na 53344a39 e passa a 430, a 1366 e no iPad simulado. Os outros 13 testes de digitação continuam passando.
+- **Achado sem correção (decidir):** "Desconto na altura (mm)" da aba Portas grava nos Ajustes gerais (`STD().cvDesc`), vale para o projeto todo e **não tem desfazer**, porque os Ajustes não entram no `snapState`. Colocar os Ajustes no desfazer mexe no formato do histórico.
+- **Botões "⬚ Fechar Vão"** (espaço até a parede, o teto e o chão, e atrás quando afastado): todos testados no balcão e no aéreo. Fazem a peça do tamanho do vão, e o desfazer volta. Comportamento correto.
+- **Medidas do 2D (mesma família, auditoria com toque real):** tocar em cada medida (`text[data-q]`), digitar 250 no teclado do app, OK, conferir a distância e o desfazer.
+  - **Erro comprovado (pré-existente, já na f51cc698):** com o ambiente inteiro na tela, a bolinha da alça (`data-h`, raio 45) cobre a largura do módulo (mw), a altura (mh) e a distância à esquerda (ml). O toque caía na alça e nada abria.
+  - **Correção:** toque parado (até `SEL.mov`, sem pinça) na alça abre a medida que está embaixo. Abre depois do `click` que cai na bolinha, senão ele tira o foco e fecha o teclado. Arrastar a alça segue igual.
+  - **Erro comprovado:** tocar no vão único não fazia nada (`if(!S.m.div.length)return`). Agora avisa de onde vem a largura.
+  - **Comportamento correto:** até o teto, do chão, distância à esquerda (exata: 250), largura, altura e vão 1/2 aplicam com desfazer. Valor fora do possível avisa e não aplica. Parede menor que 500 avisa "ficou 500".
+  - **Teste novo:** `testCAMPONUM_MedidaEmbaixoDaAlcaAbreComToqueEArrastoContinua`. Passa a 430, a 1366 e no iPad simulado. Os 46 testes de medida, toque e alça passam.
+
+## MEDIDA-OPC (ETAPA 2 item 38, Adauto 27/11): distância digitada no 2D — o app escolhia sozinho mover o módulo — Claude 4
+- **Antes:** ao digitar a distância até a esquerda, a direita, o teto ou da pedra (`#qebox`, `data-mq`), o `modGapSet` sempre **movia** o módulo. O pedido: "separe redimensionar, reposicionar, só o espaçamento e só a peça; quando der pra entender de mais de um jeito, mostre as opções e não escolha sozinho".
+- **Correção (`editor.html`, bloco MEDIDA-OPC):** no campo da tela, antes de aplicar, abre o quadro `#medopc` com o resultado de cada opção:
+  - "Mover o módulo (só o espaçamento)": a medida fica, mostra quanto anda e pra onde. É o `modGapSet` de sempre.
+  - "Redimensionar (só a peça)": o outro lado fica parado (ex.: 1200 → 1290). Passa pelo `medLim`; se não dá, aparece desligado com o motivo.
+  - "Cancelar": nada muda.
+  - A escolha grava 1 desfazer. O `modGapSet` direto (testes, outras telas) continua aplicando na hora.
+- **Peças:** mover não muda nenhuma peça (`partsOf` igual). Redimensionar dá as mesmas peças de um módulo com a largura digitada (base, travessas, portas e gavetas).
+- **Teste novo:** `testMEDIDAOPC_DistanciaDigitadaMostraMoverOuRedimensionar`. Falha na 53344a39 e passa a 430, a 1366 e no iPad simulado.
+- **Teste atualizado:** `testCAMPONUM_MedidaEmbaixoDaAlca…` escolhe "mover" no quadro, com comentário do pedido (38, 28/11).
+- **Evidência:** `engenharia/evidencias/etapa2/item38_opcoes_da_medida.png`.
+- **Não feito (perguntar):** largura e altura digitadas (mw/mh e o campo do painel) seguem a convenção de sempre (esquerda e chão parados). Também dá para perguntar de que lado cresce.
+
+## BOTAO-VAZIO (ETAPA 2 item 34, parte do Claude 4, Adauto 27/11): botões de interface acionados um a um — Claude 4
+- **Como:** com toque real (CDP, 430), cada botão foi acionado e medi se mudou alguma coisa: Ajustes, projeto, tela, janela ou aviso.
+  - Barras (24 botões), acesso rápido do vão (11) e Ajustes (594, sendo 480 amostras de cor). Nos Ajustes, o painel foi reaberto do zero antes de cada botão.
+- **Erros comprovados e corrigidos:**
+  1. "−" (afastar) com a parede inteira na tela e "⌂" com a vista já no começo não faziam nada, calados. Agora avisam.
+  2. Ajustes › Paredes da obra › "A diferença fica: na esquerda / na direita": o valor mudava, mas o destaque ficava em "metade em cada lado" (o `panel()` não redesenha os Ajustes) e o toque parecia morto.
+     - Agora o destaque acompanha.
+     - A troca grava desfazer, porque `S.amb` faz parte do projeto.
+- **Comportamento correto:**
+  - As 480 amostras de cor dos Ajustes: 478 mudam o ajuste e 2 já eram a escolhida.
+  - Os outros 104 botões dos Ajustes, as barras e o acesso rápido funcionam.
+  - "Laterais por dentro" e "▙▟ U" já eram a opção escolhida.
+- **Não foi possível verificar (precisa do aparelho):** Cliente 3D, Nota, Pronto e Fechar chamam o app nativo (`ArqueApp.shareStart`, `A.openNoteOf`, `A.close`).
+- **Pré-existente e instável (não mexi):** `testNadaDeEnfeiteAbasDoModuloParte1b` (Estilos de porta, botões diferentes a cada rodada; falha também na referência antiga).
+
+## Regressões da 53344a39 achadas na bateria completa (corrigidas) — Claude 4
+- `testNenhumBotaoFicaNaFrenteDeOutro` (6 casos a 430, 20 a 1366): com a alça na borda de fora, a bolinha cobria os números de largura e altura, que ficam no meio da borda. Agora a alça continua na borda de fora, mas a 72% da altura (laterais) e da largura (em cima).
+- `testDoisToquesFuncionamNaGeladeiraENasTorresComPrateleira`: o `pointerdown` no puxador da prateleira interna (`data-ish`) para antes do ouvinte do desenho. O `DN0` ficava com o ponto de um toque antigo e o toque era descartado como arrasto.
+  - Agora `DN0` e `PZG` são marcados na captura da janela, que roda antes de tudo.
+  - Toque primário zera o mapa de dedos, e entradas com mais de 5 s não contam.
+  - Toques "por cima" (puxador da prateleira, eletro) seguem a regra DUPLO-TOQUE de 18/11: 2 toques abrem o acesso rápido do módulo de baixo.
+- `testDoisToquesNaPontaDoTamponamentoDeCimaDesceOLateralEInverte` (1366): mesma causa, corrigida junto.
+- Os 11 testes de toque, medida, caneta e campo passam a 430 e a 1366. A sonda com toque real foi refeita e está certa.
+
+## DESFAZ-PUXADOR e opção já escolhida (Chefe 28/11, itens 37/34) — Claude 4
+- **"Desconto na altura" / "Furação" do puxador (aba Portas):** gravam nos Ajustes gerais (`STD().cvDesc/gDesc/fcDesc/chFur`) e não tinham desfazer, porque os Ajustes não entram no histórico.
+  - Agora só a cópia do histórico leva esses 4 valores: `snapState` marca `pxStd` só durante o `histTick`, e o `loadState` do ↶/↷ devolve.
+  - O projeto salvo não muda de formato, e abrir um projeto não mexe nos Ajustes.
+  - Sonda: 0 → 7 → ↶ 0 → ↷ 7, e o salvo continua sem `pxStd`.
+- **"Régua aplicada" / "50" (Estilos de porta), acusados pelo NadaDeEnfeite Parte1b:** conferidos de verdade.
+  - Não estão mortos: são as opções **já escolhidas** por padrão. Tocar nelas não mudava nada e ficava calado; tocar em outra opção troca normalmente.
+  - O teste falhava ou passava conforme a ordem em que tocava.
+  - Agora o toque na opção já escolhida confirma ("✓ Já está escolhido: …"). O NadaDeEnfeite Parte1b passou 2 vezes seguidas.
+- **Provas pedidas pelo Chefe (28/11):** o projeto salvo (`saveNow`/`pLoadAll`) não leva `pxStd`; reabrir não mexe nos Ajustes; um snapshot antigo sem o campo, no histórico, restaura o projeto como hoje e deixa o Ajuste; nenhum outro Ajuste muda por tabela.
+- **Teste novo:** `testDESFAZPUXADOR_DescontoTemDesfazerEOpcaoJaEscolhidaConfirma`. Falha na 6ae7f4af e passa depois. Os 20 testes de desfazer passam.
+
+## ITEM 41 (achados da auditoria de toques, Chefe 28/11) — Claude 4
+- **Como foi testado:** com toque real (CDP), conferi qual jeito move o módulo no 3D.
+  - Arrastar direto gira a vista e não move.
+  - Segurar o dedo e arrastar move.
+  - 2 toques no módulo e depois 2 toques no chão ou na parede movem.
+- **Erros comprovados e corrigidos:**
+  1. **Dica do 3D:** o 1 toque no módulo dizia "arraste pra mover", contradizendo as outras dicas. Agora diz "segure o dedo nele e arraste pra mover".
+  2. **2 toques num lugar sem chão/parede válidos:** o módulo ia para "a NaN mm" (depois x 0, trocando de parede).
+     - O `mdDropAt` agora usa 6000 quando o `roomD()` é inválido, e se a posição não for número nada muda: "⚠ não deu pra achar o lugar nesse ponto".
+     - Risco identificado, sem mexer: ao trocar de parede, o módulo também troca a divisão e a ordem dos vãos (0,667 → 0,333). Pode ser o espelhamento do módulo de parede lateral. Fica para o dono do 3D decidir.
+  3. **Alça da geladeira:** tinha raio 7 do desenho (6 px na tela). Agora tem a área de toque transparente do tamanho do dedo, igual à das alças do módulo. O painel ripado já tinha 17.
+  4. **Alça sobre o vizinho:** a alça na borda de fora fica em cima da lateral do vizinho encostado.
+     - Toque parado nela, sem medida embaixo, escolhe o vizinho.
+     - Arrastar continua mudando a medida do escolhido. Crescer para dentro do vizinho continua impedido, porque módulo é sólido.
+- **Teste novo:** `testITEM41_DicaDo3DDropSemNaNAlcaDaGeladeiraEAlcaSobreOVizinho`. Falha na 6ae7f4af nos 4 pontos e passa a 430, a 1366 e no iPad simulado. Os 34 testes de toque, medida e geladeira passam.
+
 ## CRUZA-3D-ID: peça cortada e desenhada no 3D com a identidade de outra peça (Code 1, 27/11, auditoria ETAPA 2 itens 24/40)
 - **Achado:** cruzamento automático dos 138 modelos do catálogo (em mm e em cm, Chromium a 1366). Por modelo, compara:
   - campos do painel × dado do módulo;
@@ -2937,6 +3107,10 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Validação:** sonda `tools/sondas/s50_guarda_sem_escrita.js` (120 modelos postos fora do lugar + cozinha sobreposta; desenhar, 3D, campo, parede menor): projeto e avisos iguais ao código antigo, bit a bit. Desempenho do `draw`/`partsOf` igual.
 - **Teste:** `testConfineAllRoomClampNaoEscrevemNosModulosMesmoResultado` (espião nos campos). No c38c9ba: 8 escritas em x e 10 em b; agora 0, mesmo lugar e mesmos avisos.
 - **Fora (classificação):** o `sanM` (dentro do `partsOf`) regrava o mesmo valor (não muda nada) — comportamento correto. Pedra e móveis soltos no `roomClamp` ainda usam escrever-e-desfazer (mesmo mecanismo) — risco identificado, não pedido.
+- **Correção (Chefe 28/11): "Unir" sem travessa e sem moldura fazia função sumir (§0).** O "Unir" manual agora une também a travessa/régua corrida e a moldura corrida, com escolha por peça.
+  - `testPlanoDeCortePecaBranca…` e `testValoresCobra…` montam a união pelo "Unir", com base, rodapé, travessa e moldura marcadas, e voltaram aos valores ORIGINAIS.
+  - Prova das contagens que subiram: com o "unir sozinho" antigo forçado numa cópia do editor, `testMedidaDePeca…`, `testPlanoDeCorteTodaPeca…`, `testFASE5…` e `testNOMEIPAD…` voltam exatamente a 6308, 12836, 284/142 e 281/257/271. A diferença é só a união.
+  - Testes novos: `testEtapa2UnirManualTravessaEMolduraCorridaPeloBotaoComCorte` e `testEtapa2VizinhoIgualBitABitEmTodoCaminhoDeMoverCriarCopiarEncaixar`.
 
 ## CEGO-ESTRUTURA (ETAPA 2 item 7, Adauto/Chefe 27/11, R12/R13/R15 descritas pelo Chefe): canto cego E e D — Claude 3
 - **Pedido:** balcão canto cego com:
@@ -2988,3 +3162,63 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - porta basculante fechada: `basHw3(…, 0, …)` desenha as dobradiças (calço, caneco e braço) no lugar, metálicas (`ferr`, item 3); aberta, continua como antes, abrindo com a porta;
   - o compasso/pistão só aparece se estiver no `hwOf` do módulo (`__BASPIS`). Hoje nenhum basculante tem, então nada inventado aparece.
 - **Teste:** `testBASDOB_BasculanteDesenhaAsDobradicasQueOOrcamentoCobra` (3 modelos: aéreo basculante e os 2 racks). No HEAD anterior a porta fechada tinha 0 dobradiças; agora 2, 4 e 4, igual ao orçamento. A família de basculante, dobradiça, ferragem, aéreo e rack: 38/38.
+## PLANTA-TAMP (achado do Code 1, CRUZA-PROJETO, Chefe 28/11): a planta desenhava o módulo sem o tamponamento — Claude 4
+- **Antes:** na planta o módulo terminava em 2705, e no 3D, na lista, no corte e na pedra em 2735 (tamponamento de 30). Medi pelas caixas do 3D (`__boxes`): o tamponamento esquerdo ocupa x 1475..1505 e vai do fundo até 25 mm à frente do corpo (z 6..591).
+- **Correção (`plantaSvg` e o desenho do móvel livre):** a planta desenha, vista de cima, a união das caixas do 3D de cada "Tamponamento esquerdo/direito" (o engrosso entra no mesmo nome).
+  - Mesma posição e espessura do 3D, sem conta nova.
+  - Nas paredes, o mapa da planta P(x,z) é o mesmo do 3D. No móvel livre as caixas já vêm no lugar e giradas.
+  - Só desenho (`pointer-events:none`): nenhum dado muda.
+- **Teste novo:** `testPLANTATAMP_PlantaDesenhaOTamponamentoIgualAo3D`, comparando planta e 3D:
+  - nas paredes do fundo, esquerda e direita;
+  - sem marcar tamponamento (a ponta exposta ganha o tamponamento automático, igual ao 3D);
+  - com engrosso;
+  - com o móvel livre deslocado e girado 90°.
+  - Falha na 6ae7f4af e passa a 430 e a 1366. Os 11 testes da planta passam.
+
+## LATMEIO-PAREDE (risco achado pelo Claude 4 na troca de parede; decisão do Chefe 28/11) — Claude 4
+- **Investigação:** a inversão da divisão ao trocar de parede (0,667 → 0,333) **não é erro**. É o PAREDE-ESQ-NOVO (Adauto 22/11): na parede esquerda o móvel novo é guardado virado para ficar igual para quem olha. Medido na vista da parede esquerda: gavetas a 83% da esquerda de quem olha, igual ao fundo.
+- **Erro de verdade achado na mesma sonda:** o mesmo balcão (dado igual, só o `wing` muda) saía com outra construção nas paredes laterais, esquerda e direita.
+  - Fundo: "Lateral do meio" 690 com rebaixo, travessas 795 + 405 (LAT-MEIO, Adauto 23/11).
+  - Laterais: "Divisória 1" 620 e travessa única de 1200.
+  - Causa: `latMeioFam` tinha `!m.wing`, que a proposta aprovada (PROPOSTA_LATERAL_INTEIRA) não pede. Fere §4.
+- **Correção (decisão do Chefe, opção b, sem gravar nada ao abrir):**
+  - `latMeioFam` vale para módulo fora de parede lateral ou com `latMeioW===1`.
+  - O módulo novo ganha `latMeioW=1` na criação (`newTpl` e `newMod`) e é igual em qualquer parede.
+  - O módulo de antes (sem o campo) abre e salva igual bit a bit e segue a construção de antes.
+  - Na parede lateral, o painel mostra "⚠ Construção diferente do fundo" com a prévia (sai Divisória…, entra Lateral do meio…) e o botão "Igualar ao fundo", com desfazer. O botão grava o campo.
+- **Teste novo:** `testLATMEIOPAREDE_ModuloNovoIgualEmQualquerParedeAntigoNaoMuda`. Confere: novo na lateral = fundo (corte e 3D); antigo abre e salva igual e não muda; aviso com prévia; botão iguala; desfazer volta. Passa a 430 e a 1366.
+- **Teste ajustado:** `testPlanoDeCorteParedeEsquerda…` monta o "móvel antigo" apagando também o `latMeioW` (o de antes não tem o campo), com comentário. A expectativa (38) não mudou.
+
+### CRUZA-PROJETO (Code 1, 27–28/11, item 40, parte projeto × 2D × 3D × planta)
+- **Cenário:** cozinha de exemplo (`demoScene`). 9 módulos: fundo, parede esquerda (`wing:'e'`), parede direita (`wing:'d'`), aéreos.
+- **Comportamento correto:**
+  - **3D × dado:** posição de cada módulo, nas 3 paredes. Na parede esquerda, `x` ao longo da parede = `z` do 3D (x 900 → z 900..1760).
+  - **Planta × 3D:** o corpo de cada módulo bate ao milímetro (escala 0,1507 px/mm).
+  - **Mover e desfazer:** +100 mm no módulo da parede esquerda move o 3D (z 900 → 1000) e a planta (196 → 211 px). O ↶ volta os três.
+  - **Lados na parede esquerda:** a peça interna `Lateral esquerda#1` do módulo 3 fica junto da parede do fundo (z 908). A lista do corte chama essa peça de "Lateral direita", que é o lado de quem olha a parede de dentro. Bate com a decisão de 25/11 e com `testParedeEsquerdaNomesDosLadosSeguemQuemOlha`.
+  - **Base corrida:** a `Base inferior` do módulo 1 vai de 905 a 2705, por baixo do módulo 2. É a base unida. Esse assunto é do item 2/21 (Code 2).
+- **Risco identificado (diferença não identificada como intencional):**
+  - Na planta (`plantaSvg`), o polígono do módulo é só o corpo, sem os tamponamentos. Exemplo: o módulo 2 termina em 2705 na planta, e no 3D, na lista e no corte o tamponamento direito de 30 mm vai até 2735. A pedra, na mesma planta, vai até 2735.
+  - Quem mede pela planta vê o móvel 30 mm menor do que ele ocupa.
+  - **Não mexido:** precisa da decisão do Adauto (planta com ou sem tamponamento).
+- **Coberto por testes existentes (passaram 587/587 em 28/11):** sentido do arrasto e do toque no 2D da parede esquerda, nomes dos lados, projeto antigo na parede esquerda, trena e plano de corte da parede esquerda (12 testes `testParedeEsquerda*`/`testParedeDaEsquerda*`). Identidade de módulo e peça: D23 (`testIdentidadeUnica`).
+
+## INTEGRAÇÃO 28/11 · testValoresCobraAChapaPeloQueFoiUsadoNaoAChapaInteira "linhasDeChapaComOMesmoPreco: 0 · esperado 1" — Claude 5
+- **Reproduzido** na integração 48b46033 (a 1366); no ramo do Claude 5 (itens 13/20/30/31) passava.
+- **Causa (não é o item 13):** o teste precisa de 2 linhas de chapa com o mesmo preço; vinham da "Travessa frontal (régua corrida)" de 2700 (sem nome de cor, 2º grupo de chapa de cor). O item 21 (a74b638, aprovado) não une mais travessa sozinho e o "Unir" manual une só base e rodapé; a régua corrida continua só no projeto antigo (módulos sem `unV`).
+- **Correção (só o cenário do teste, a conferência é a mesma):** os balcões vêm de um arquivo antigo (salvo sem `unV`, reaberto), como o item 21 manda deixar. Comentário no teste com o pedido e a data. Passa 13/13; os 9 testes de custos, fita, N11, confineAll, item 34 e ambientes também passam no integrado.
+
+## ITEM 40 (A) · corrediça do caixote de gavetas fora do orçamento — Claude 5 (aprovado pelo Chefe 28/11)
+- **Erro (achado da sonda s52):** a gaveta do CAIXOTE (guarda-roupas, torres, closet) tem o par de corrediça telescópica nas peças ("Corrediça telescópica (caixote)") e no 3D, mas o orçamento contava 0. É o erro 3 do §11 (no 3D e fora da lista/orçamento).
+- **Causa:** o `mCost` conta a corrediça pelo nome exato da frente ("Frente de gaveta", "Frente (porta tempero)", "Gaveta interna · frente"); a frente do caixote se chama "Frente de gaveta (caixote)".
+- **Família:** catálogo inteiro (s52 + teste): 12 modelos com caixote (50 gavetas) ficavam sem corrediça; nos outros, frentes = pares no orçamento.
+- **Conta (Estante torre aberta com gavetas embaixo, preço médio da corrediça R$ 35, × 2,5):**
+  - antes: corrediças 0 · material R$ 556,35 · valor R$ 1.390,87;
+  - depois: corrediças 3 pares × R$ 35 = R$ 105 · material R$ 661,35 · valor R$ 1.653,37.
+- **Correção:** "Frente de gaveta (caixote)" conta 1 par de corrediça telescópica (`r.drw`). Orçamentos já salvos (cópias) não mudam.
+- **Teste:** `testItem40CorredicaDoCaixoteDeGavetasEntraNoOrcamento` (no código de antes: 0 pares e 12 modelos com diferença; depois: 3 pares e o catálogo inteiro bate).
+
+### Item 34 · salvar/reabrir e desfazer controle por controle (Chefe 28/11) — Claude 5
+- A sonda s51 (agora com salvar/desfazer/reabrir) aciona cada controle e, se ele mudou o projeto: espera o salvamento automático e confere que o arquivo é o estado da tela; toca ↶ e confere que volta ao estado de antes; reabre o arquivo e confere igual. Se mudou preços: confere que ficou gravado.
+- Resultado a 1366: Valores 23 controles que mudam o projeto, Preços 77, Plano de corte 61, ArqueCut 8 → todos salvam, desfazem e reabrem iguais; preços gravados. Clientes: nenhum controle muda o projeto aberto (cria/abre outro).
+- 1ª rodada acusou "não desfaz" por erro da sonda (reabria antes de desfazer e mexia no histórico); corrigida a ordem.

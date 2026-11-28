@@ -2969,3 +2969,7 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Validação:** sonda `tools/sondas/s50_guarda_sem_escrita.js` (120 modelos postos fora do lugar + cozinha sobreposta; desenhar, 3D, campo, parede menor): projeto e avisos iguais ao código antigo, bit a bit. Desempenho do `draw`/`partsOf` igual.
 - **Teste:** `testConfineAllRoomClampNaoEscrevemNosModulosMesmoResultado` (espião nos campos). No c38c9ba: 8 escritas em x e 10 em b; agora 0, mesmo lugar e mesmos avisos.
 - **Fora (classificação):** o `sanM` (dentro do `partsOf`) regrava o mesmo valor (não muda nada) — comportamento correto. Pedra e móveis soltos no `roomClamp` ainda usam escrever-e-desfazer (mesmo mecanismo) — risco identificado, não pedido.
+- **Correção (Chefe 28/11): "Unir" sem travessa e sem moldura fazia função sumir (§0).** O "Unir" manual agora une também a travessa/régua corrida e a moldura corrida, com escolha por peça.
+  - `testPlanoDeCortePecaBranca…` e `testValoresCobra…` montam a união pelo "Unir", com base, rodapé, travessa e moldura marcadas, e voltaram aos valores ORIGINAIS.
+  - Prova das contagens que subiram: com o "unir sozinho" antigo forçado numa cópia do editor, `testMedidaDePeca…`, `testPlanoDeCorteTodaPeca…`, `testFASE5…` e `testNOMEIPAD…` voltam exatamente a 6308, 12836, 284/142 e 281/257/271. A diferença é só a união.
+  - Testes novos: `testEtapa2UnirManualTravessaEMolduraCorridaPeloBotaoComCorte` e `testEtapa2VizinhoIgualBitABitEmTodoCaminhoDeMoverCriarCopiarEncaixar`.

@@ -8443,9 +8443,9 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["abas"] as? Int, 11)
         // PAREDES C (23/11, ab9d030): + seção "Paredes do ambiente" (remover/restaurar) na aba Ambiente · JUNÇÃO 5 (23/11, a849a43): + seção "Travessão" na aba Estrutura
-        XCTAssertEqual(o["secoesComSetinha"] as? Int, 52, "ESTILOS DE PORTA (23/11): +1 na aba Portas · PAREDES C + JUNÇÃO 5 (23/11): +2 · ESTRUTURA-AFASTA 22/11: +1 (Estrutura do Módulo) · Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)") // ETAPA 2 itens 21 e 2 (Adauto 26/11, aprovado pelo Chefe): seção nova "Bases unidas" na Estrutura (antes 51)
+        XCTAssertEqual(o["secoesComSetinha"] as? Int, 53, "ESTILOS DE PORTA (23/11): +1 na aba Portas · PAREDES C + JUNÇÃO 5 (23/11): +2 · ESTRUTURA-AFASTA 22/11: +1 (Estrutura do Módulo) · Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)") // ETAPA 2 itens 21 e 2 (Adauto 26/11, aprovado pelo Chefe): seção nova "Bases unidas" na Estrutura (antes 51) · e "Composição da frente" (ETAPA 2 item 19, Claude 4, 26/11): 51 → 53
         // ESTRUTURA-AFASTA (pedido do Adauto 22/11): + a seção "Estrutura do Módulo" (com setinha) na aba Estrutura
-        XCTAssertEqual(o["porAba"] as? String, "Ambiente 5 | 🎨 Cores 1 | Estrutura 10 | Divisões 4 | Portas 7 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2") // ETAPA 2 itens 21 e 2 (Adauto 26/11, aprovado pelo Chefe): seção nova "Bases unidas" na Estrutura (antes Estrutura 9)
+        XCTAssertEqual(o["porAba"] as? String, "Ambiente 5 | 🎨 Cores 1 | Estrutura 11 | Divisões 4 | Portas 7 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2") // ETAPA 2 itens 21 e 2 (Adauto 26/11, aprovado pelo Chefe): seção nova "Bases unidas" na Estrutura (antes Estrutura 9) · e "Composição da frente" (Claude 4): Estrutura 9 → 11
         XCTAssertEqual(o["ruins"] as? String, "0")
         XCTAssertEqual(o["tituloSemSetinha"] as? String, "0")
         XCTAssertEqual(o["nascemFechadas"] as? String, "Estrutura › Rodapé")
@@ -9078,10 +9078,10 @@ final class EditorWebKitTests: XCTestCase {
         /* valor do projeto continua material × multiplicador, e a soma "por módulo" fecha com o material */
         R.valorDoProjeto=Math.abs(b.sale-b.tot*PR.mult)<0.005;R.porModuloFecha=Math.abs(b.rows.reduce(function(s,x){return s+x.c},0)+b.cat.t+(b.rpC||0)-b.tot)<0.01;
         /* chapa cheia (aproveitamento perto de 100%) cobra quase a chapa inteira; mais módulos = mais uso, nunca mais que a chapa */
-        for(var i=0;i<5;i++){newTpl(T('Balcão 2 portas'));S.mods[S.mods.length-1].une='t21';/* ETAPA 2 item 21 (Adauto 26/11): módulo novo encostado não une peça sozinho; aqui a pessoa une as bases ("Unir", item 2) e as conferências são AS MESMAS de antes */draw();await W(20);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(30)}}
+        for(var i=0;i<5;i++){newTpl(T('Balcão 2 portas'));S.mods[S.mods.length-1].une='t21';S.mods[S.mods.length-1].uneK={base:1,rod:1,trav:1,mold:1};/* ETAPA 2 item 21 (Adauto 26/11; Chefe 28/11: o "Unir" manual une tudo o que antes se unia sozinho): aqui a pessoa une pelo "Unir" com base, rodapé, travessa corrida e moldura marcadas, e as conferências são AS MESMAS de antes */draw();await W(20);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}if(window.SOLO2){soloOff();await W(30)}}
         var b2=budget(),e2=0,i2=0;b2.plan.groups.forEach(function(g){e2+=g.n*g.use*g.price;i2+=g.n*g.price});R.seisBalcoes='bate com o aproveitamento '+(Math.abs((b2.cB+b2.cC+b2.cF)-e2)<0.005)+' · nunca passa da chapa inteira '+(e2<=i2+0.001)+' · subiu com mais módulos '+(e2>esperado);
         /* Ajustes › Preços: cada linha mostra a quantidade e o total dela (duas linhas de chapa com o mesmo preço não trocam a conta uma da outra) */
-        /* ETAPA 2 item 21 (Adauto 26/11): módulo novo não une a travessa (nem pelo "Unir", que junta só base e rodapé); as duas linhas de chapa com o mesmo preço vinham da travessa corrida, que continua existindo no PROJETO ANTIGO — aqui os seis balcões voltam como projeto antigo salvo e a conferência é A MESMA de antes */var st21=JSON.parse(JSON.stringify(snapState()));st21.mods.forEach(function(q){delete q.unV;delete q.une});UNDOING=true;try{loadState(st21)}finally{UNDOING=false}draw();prRender();document.getElementById('prm').hidden=false;await W(300);var La=prAuto(budget()),okA=true,nA=0,vistos={},rep=0;La.forEach(function(r){if(vistos[r[0]])rep++;vistos[r[0]]=1});
+        prRender();document.getElementById('prm').hidden=false;await W(300);var La=prAuto(budget()),okA=true,nA=0,vistos={},rep=0;La.forEach(function(r){if(vistos[r[0]])rep++;vistos[r[0]]=1});
         [].forEach.call(document.querySelectorAll('#prbody .mt tr'),function(r){var q=r.querySelector('[data-prq]'),t=r.querySelector('[data-prt]');if(!q)return;var x=La[nA++];if(!x||q.textContent.trim()!==qtyU(x)||t.textContent.trim()!==brl(x[3]*(+PR[x[0]]||0)))okA=false});
         R.linhasDeChapaComOMesmoPreco=rep;R.ajustesCadaLinhaComAContaDela=okA&&nA===La.length;document.getElementById('prm').hidden=true;
         R.errs=__errs.length-e0;return JSON.stringify(R);
@@ -14477,6 +14477,59 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
     }
 
+    // ETAPA 2 · item 21/2 (Chefe 28/11, §0 nenhuma função some): o "Unir" manual une tudo o que antes se unia sozinho — base, rodapé, travessa
+    // (régua corrida) e moldura corrida — com escolha por peça, até 2700 (passou, divide na junta), separar e desfazer. Montado pelos botões da Estrutura.
+    func testEtapa2UnirManualTravessaEMolduraCorridaPeloBotaoComCorte() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.mods=[];draw();for(var i=0;i<4;i++)newTpl(T('Balcão 2 portas'));S.mods.forEach(function(m,i){m.x=100+i*900;m.tl=m.tr=false;m.tlM=m.trM=1;m.mold=true;m.moldOn=true;m.moldMm=30});draw();await W(900);
+        var cut=function(){var r=[];var G=cutGroups();G.ord.forEach(function(k){var g=G.map[k];var nm=(g.names||[]).join('+');if(/^(Travessa frontal|Moldura|Base inferior|Rodapé \(pedestal\))/.test(nm))r.push(nm.replace(/ \(.*\)$/,function(x){return x})+' '+g.L+'×'+g.qty)});return r.sort().join(' | ')};
+        var cl=async function(mi,sel){await W(900);S.m=S.mods[mi];S.tab=0;draw();panel();await W(80);var b=document.querySelector('#bd '+sel);if(!b)return false;b.click();await W(120);return true};
+        R.antes=cut();
+        R.botoes=[await cl(0,'[data-une="1"]'),await cl(1,'[data-une="1"]'),await cl(2,'[data-une="1"]')].join(',');R.unir=cut();
+        var cb=document.querySelector('#bd [data-unek="trav"]'),cm=document.querySelector('#bd [data-unek="mold"]');R.escolha=(!!cb)+' '+(!!cm)+' · base '+document.querySelector('#bd [data-unek="base"]').checked+' rodapé '+document.querySelector('#bd [data-unek="rod"]').checked+' travessa '+cb.checked+' moldura '+cm.checked;
+        await cl(1,'[data-unek="trav"]');await cl(1,'[data-unek="mold"]');R.travessaEMoldura=cut();
+        await W(900);document.getElementById('und').click();await W(200);R.desfaz=cut();
+        await cl(1,'[data-unsep="1"]');R.separa=cut();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+        XCTAssertEqual(o["botoes"] as? String, "true,true,true")
+        XCTAssertEqual(o["escolha"] as? String, "true true · base true rodapé true travessa false moldura false", "ao unir: base e rodapé ligados; travessa e moldura por escolha")
+        XCTAssertEqual(o["antes"] as? String, "Base inferior 900×4 | Moldura de acabamento 900×4 | Rodapé (pedestal) 900×4 | Travessa frontal 900×4", "módulos novos: cada um com as suas peças")
+        XCTAssertEqual(o["unir"] as? String, "Base inferior (contínua, sob as laterais) 2700×1 | Base inferior 900×1 | Moldura de acabamento 900×4 | Rodapé (pedestal) 900×1 | Rodapé (pedestal) contínuo · frente e trás 2700×2 | Travessa frontal 900×4", "unir: base e rodapé numa peça até 2700, o 4º fica com a dele")
+        XCTAssertEqual(o["travessaEMoldura"] as? String, "Base inferior (contínua, sob as laterais) 2700×1 | Base inferior 900×1 | Moldura de acabamento (contínua, fita no local) 2700×1 | Moldura de acabamento 900×1 | Rodapé (pedestal) 900×1 | Rodapé (pedestal) contínuo · frente e trás 2700×2 | Travessa frontal (régua corrida) 2700×1 | Travessa frontal 900×1", "travessa corrida e moldura corrida pelo botão, até 2700")
+        XCTAssertEqual(o["desfaz"] as? String, "Base inferior (contínua, sob as laterais) 2700×1 | Base inferior 900×1 | Moldura de acabamento 900×4 | Rodapé (pedestal) 900×1 | Rodapé (pedestal) contínuo · frente e trás 2700×2 | Travessa frontal (régua corrida) 2700×1 | Travessa frontal 900×1", "desfazer volta só a última escolha (moldura)")
+        XCTAssertEqual(o["separa"] as? String, "Base inferior (contínua, sob as laterais) 1800×1 | Base inferior (contínua, sob as laterais) 1800×1 | Moldura de acabamento 900×4 | Rodapé (pedestal) contínuo · frente e trás 1800×2 | Rodapé (pedestal) contínuo · frente e trás 1800×2 | Travessa frontal (régua corrida) 1800×1 | Travessa frontal (régua corrida) 1800×1", "separar só a junta do meio: dois grupos de 1800")
+    }
+
+    // §12 / TAMP-JUNTA (Chefe 28/11): módulo que já existe nunca perde nem ganha tamponamento sozinho, em nenhum caminho: criar ao lado, copiar,
+    // digitar a posição, arrastar no 2D, encaixar no 3D, digitar a posição no 3D e afastar da parede. O vizinho fica igual bit a bit.
+    func testEtapa2VizinhoIgualBitABitEmTodoCaminhoDeMoverCriarCopiarEncaixar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.FITENCOLHE=1;var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var can=function(m){return JSON.stringify(m,function(k,v){return v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce(function(a,x){a[x]=v[x];return a},{}):v})};
+        var pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var so=function(m){var mi=S.mods.indexOf(m),o=null;__build();__boxes().forEach(function(b){if(parseInt(String(b.nm||''),10)!==mi||!(b.a>=.95))return;if(!o)o={z0:1e9};o.z0=Math.min(o.z0,b.z0)});return o};
+        var cena=async function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2700;S.wl={L:'p',R:'p'};S.stones=[];draw();atArm();newTpl(T('Balcão 1 porta'));draw();await W(60);var b=S.mods[0];b.x=1000;draw();await W(60);atArm();newTpl(T('Balcão 2 portas'));draw();await W(60);var a=S.mods[1];a.x=2500;S.m=a;draw();panel();await W(300);return {a:a,b:b}};
+        var r=[],ok=function(n,b,j0,x){r.push(n+' '+(can(b)===j0?'igual':'MUDOU')+(x?' ('+x+')':''))};
+        var c=await cena(),j0=can(c.b);atArm();newTpl(T('Balcão 1 porta'));S.m.x=c.b.x+c.b.w;draw();await W(300);ok('criar',c.b,j0,'novo em x '+S.mods[2].x+', fora do tamponamento do vizinho');
+        c=await cena();j0=can(c.b);S.m=c.b;S.tab=0;draw();panel();await W(60);document.querySelector('#bd [data-mcopy]').click();await W(300);ok('copiar',c.b,j0,S.mods.length+' módulos');
+        c=await cena();j0=can(c.b);S.m=c.a;draw();panel();setv('x',c.b.x+c.b.w);await W(300);ok('digitar',c.b,j0,'encostou '+(c.a.x===c.b.x+c.b.w));
+        c=await cena();j0=can(c.b);S.m=c.a;draw();panel();await W(60);var svg=document.getElementById('svg'),rc=document.querySelector('#mod[data-mi="1"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/c.a.h,x=rc.left+rc.width*.5,y=rc.top+rc.height*.5,el=document.elementFromPoint(x,y)||svg,tx=-(c.a.x-(c.b.x+c.b.w))*cpm-12;pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=6;i++){pe('pointermove',svg,x+tx*i/6,y);await W(20)}pe('pointerup',svg,x+tx,y);await W(400);ok('arrastar',c.b,j0,'encostou '+(Math.abs(c.a.x-(c.b.x+c.b.w))<=31));
+        c=await cena();open3D();await W(200);lvSolta(c.a);c.a.rot=0;c.a.lx=c.b.x+c.b.w+1;c.a.lz=200;draw();await W(300);c.a.lz=+c.a.lz+(10-so(c.a).z0);draw();await W(300);j0=can(c.b);var r5=__mv3.encaixa(c.a,__mv3.alvo(c.a));await W(300);ok('encaixar3D',c.b,j0,/entraria em/.test(r5)?'recusou e diz em quem':String(r5).slice(0,40));
+        c=await cena();lvSolta(c.a);c.a.rot=0;c.a.lx=2500;c.a.lz=600;draw();await W(300);j0=can(c.b);mv3On(1);await W(300);var ix=document.querySelector('#mv3bar [data-mv3="x"]');ix.value=String(c.b.x+c.b.w);ix.dispatchEvent(new Event('change',{bubbles:true}));await W(300);ok('digitar3D',c.b,j0,'x '+Math.round(+c.a.lx));try{mv3Off()}catch(_){}
+        c=await cena();c.a.x=c.b.x+c.b.w;draw();await W(300);j0=can(c.b);EM.afastar(c.a,100);draw();await W(300);ok('afastar',c.b,j0);
+        R.caminhos=r.join(' | ');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+        XCTAssertEqual(o["caminhos"] as? String, "criar igual (novo em x 1480, fora do tamponamento do vizinho) | copiar igual (3 módulos) | digitar igual (encostou true) | arrastar igual (encostou true) | encaixar3D igual (recusou e diz em quem) | digitar3D igual (x 1450) | afastar igual")
+    }
+
     // ETAPA 2 · itens 22, 32, 33 e 34 (Adauto/Chefe 27/11): travessa frontal e base de cima (teto) são opções INDEPENDENTES e combináveis.
     // Com as duas ligadas a travessa fica em pé, atrás da porta, embaixo do teto, 70 mm; ligar ou desligar mexe só na própria peça
     // (catálogo inteiro: lista, 3D sem sobreposição, corte, DXF); aéreo e armário alto aceitam a travessa (antes a caixa sumia); gaveta no
@@ -15297,16 +15350,16 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={};
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
 
-        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));S.mods.forEach(function(q){q.une='t21'});/* ETAPA 2 item 21 (Adauto 26/11): módulo novo encostado não une peça sozinho; aqui a pessoa une as bases ("Unir", item 2) e as conferências são AS MESMAS de antes */draw();
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));S.mods.forEach(function(q){q.une='t21';q.uneK={base:1,rod:1,trav:1,mold:1}});/* ETAPA 2 item 21 (Adauto 26/11; Chefe 28/11: o "Unir" manual une tudo o que antes se unia sozinho): módulo novo encostado não une peça sozinho; aqui a pessoa une pelo "Unir" com base, rodapé, travessa corrida e moldura marcadas, e as conferências são AS MESMAS de antes */draw();
         var res=function(){return sheetPlan().groups.map(function(g){return g.label+' ['+g.t+'] '+g.pieces+'p '+g.n+'ch'}).join(' | ')};
         R.padrao=res();
         var w=MAT.filter(function(q){return /branco/i.test(q.n)})[0];S.acab=S.acab||{};S.acab.ext=w.id;S.acab.extNome='';draw();R.extBranco=res();var nP=0;sheetPlan().groups.forEach(function(g){nP+=g.pieces});R.totalPecas=nP;S.acab.ext='cor';draw();var nP0=0;sheetPlan().groups.forEach(function(g){nP0+=g.pieces});R.mesmasPecas=nP===nP0?'sim':'não';
         R.errs=__errs.length;return JSON.stringify(R);
 
         """#)
-        XCTAssertEqual(o["padrao"] as? String, "MDF 15 mm · chapa branca (interno) [b] 19p 1ch | MDF 15 mm · Cor [c] 15p 1ch | Fundo 6 mm [f] 3p 1ch") // ETAPA 2 item 21 (Adauto 26/11, aprovado pelo Chefe): cada módulo novo tem a sua travessa (o "Unir" junta só base e rodapé) — a travessa corrida em cor (1 peça) virou 2 travessas, uma por balcão
-        XCTAssertEqual(o["extBranco"] as? String, "MDF 15 mm · chapa branca (interno) [b] 34p 2ch | Fundo 6 mm [f] 3p 1ch") // ETAPA 2 item 21 (Adauto 26/11, aprovado pelo Chefe): cada módulo novo tem a sua travessa (o "Unir" junta só base e rodapé) — a travessa corrida em cor (1 peça) virou 2 travessas, uma por balcão
-        XCTAssertEqual(o["totalPecas"] as? Int, 37) // ETAPA 2 item 21 (Adauto 26/11, aprovado pelo Chefe): cada módulo novo tem a sua travessa (o "Unir" junta só base e rodapé) — a travessa corrida em cor (1 peça) virou 2 travessas, uma por balcão
+        XCTAssertEqual(o["padrao"] as? String, "MDF 15 mm · chapa branca (interno) [b] 19p 1ch | MDF 15 mm · chapa cor [c] 1p 1ch | MDF 15 mm · Cor [c] 13p 1ch | Fundo 6 mm [f] 3p 1ch")
+        XCTAssertEqual(o["extBranco"] as? String, "MDF 15 mm · chapa branca (interno) [b] 32p 2ch | MDF 15 mm · chapa cor [c] 1p 1ch | Fundo 6 mm [f] 3p 1ch")
+        XCTAssertEqual(o["totalPecas"] as? Int, 36)
         XCTAssertEqual(o["mesmasPecas"] as? String, "sim")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }

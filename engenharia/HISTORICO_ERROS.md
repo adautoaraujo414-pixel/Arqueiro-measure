@@ -2767,3 +2767,15 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Desempenho:** render 2,2 ms → 2,4–2,8 ms no mesmo cenário (variação da medição; só 2 discos a mais por espelho com LED).
 - **Teste:** `testE2ITEM1_EspelhoVidroBisoteEAroDoBotaoMelhores`. No 37ad1152 falha (contraste 0,26/0,14, 2 discos, sem shader); agora passa.
 - **Print:** `tools/sondas/etapa2_c3/item1_vidro_bisote_aro_antes_depois.png`.
+
+## CRUZA-3D-ID (achado do Code 1, 27/11; correção Claude 3, 28/11): peça desenhada no 3D com a chave de outra peça
+- **Erro:** a peça é cortada certa, mas no 3D aparece com a identidade de outra peça. Tocar nela na lista não acendia a própria peça no 3D.
+  - Gaveta interna (2 modelos do catálogo, todas as gavetas): lateral, contra-frente/traseira e fundo de 6 eram um bloco só, 520 × 188,5 × 445, com a chave da `Gaveta interna · frente#n`.
+  - Sapateira (4 modelos): a tira de 40 do aparador saía com a chave da `Sapateira · prateleira inclinada#n`.
+- **Causa raiz:** no `build` do 3D a frente da gaveta interna desenhava a caixa inteira (`B(...,'#f4f2ee')`) com `CURN/CURK` da frente. As peças da caixa são `noDraw` no `partsOf`. O ramo `p.sap` desenhava a tira do aparador (que é `noDraw`) com a chave da prateleira. O `hlResolve` só mandava o toque na lista para a peça vizinha, uma 2ª lógica tapando o problema.
+- **Correção (só o 3D; peças, corte e medidas iguais):**
+  - gaveta interna: cada peça do `partsOf` daquela gaveta (2 laterais, contra-frente, traseira e fundo) vira a sua caixa, com o seu nome e a sua chave, na medida de corte e no mesmo espaço do bloco. O fundo entra 6 mm no rebaixo das laterais;
+  - a marca `gfk` faz tocar na caixa abrir a gaveta como antes;
+  - aparador: a tira sai com o nome e a chave da peça `Sapateira · aparador`;
+  - o `hlResolve` fica como rede (agora a caixa própria existe).
+- **Teste:** `testCRUZA3DID_GavetaInternaESapateiraComAChaveDeCadaPecaNo3D` (catálogo inteiro, 6 modelos). No HEAD falha (aparador sem caixa própria, bloco com a chave da frente); agora passa.

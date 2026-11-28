@@ -17138,6 +17138,30 @@ final class EditorWebKitTests: XCTestCase {
 
     /// MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11 "cálculos reais e automáticos" e "Regras do módulo · organização"; checklist D21/D24): as 24
     /// combinações (balcão e aéreo × moldura × Frontal × travessão sem/externo/interno) com cada peça igual no 3D e no corte (nenhuma espessura somada
+    /// CRUZA-3D-ID (Code 1 / Chefe 27/11): peça cortada tem que ser a sua caixa no 3D, com a sua chave. Gaveta interna (laterais, contra-frente/traseira,
+    /// fundo de 6) era um bloco com a chave da frente; o aparador da sapateira saía com a chave da prateleira inclinada. Catálogo inteiro.
+    func testCRUZA3DID_GavetaInternaESapateiraComAChaveDeCadaPecaNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var R={},e0=__errs.length;
+          var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+          open3D();await W(300);var mod=0,pec=0,falta=[],errado=[],medida=[];
+          for(var i=0;i<its.length;i++){loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=3000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(its[i])));if(!S.mods.length)continue;var m=S.mods[0];
+            var P=partsOf(m).filter(function(p){return /^(Gaveta interna · (lateral|frente\/costa)|Fundo de gaveta interna|Sapateira · aparador)/.test(p.name)});if(!P.length)continue;mod++;re3();await W(5);__build();
+            var B=__boxes().filter(function(b){return /^0:/.test(String(b.nm))});
+            P.forEach(function(p){pec++;var bx=B.filter(function(b){return b.pk===p.pk});if(!bx.length){if(falta.length<6)falta.push(its[i].n+' · '+p.pk);return}
+              var nm=bx.every(function(b){return String(b.nm)==='0:'+p.name});if(!nm&&errado.length<6)errado.push(its[i].n+' · '+p.pk+' no 3D como '+bx[0].nm);
+              /* medida de corte: o comprimento e a largura da peça aparecem nas medidas da caixa */var d=[bx[0].x1-bx[0].x0,bx[0].y1-bx[0].y0,bx[0].z1-bx[0].z0].map(Math.round);var tem=function(v){return d.some(function(x){return Math.abs(x-v)<=1})};/* a peça de corte não tem décimo (o décimo vira folga, §5): 1 mm de tolerância */if(!(tem(+p.cl)&&tem(+p.cw))&&medida.length<6)medida.push(its[i].n+' · '+p.pk+' '+p.cl+'×'+p.cw+' no 3D '+d.join('×'))});
+            /* nenhuma caixa com a chave da frente maior que a frente (o bloco de antes) */var fr=partsOf(m).filter(function(p){return p.name==='Gaveta interna · frente'});fr.forEach(function(f){B.filter(function(b){return b.pk===f.pk&&String(b.nm)==='0:Gaveta interna · frente'}).forEach(function(b){if(b.z1-b.z0>40&&errado.length<6)errado.push(its[i].n+' · bloco com a chave '+f.pk)})})}
+          R.modelos=mod;R.pecas=pec;R.falta=falta;R.errado=errado;R.medida=medida;document.getElementById('v3x').click();R.errs=__errs.slice(e0);return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["modelos"] as? Int, 6, "modelos do catálogo com gaveta interna (2) ou sapateira (4)")
+        XCTAssertEqual(o["falta"] as? [String], [], "toda peça da gaveta interna e todo aparador têm a sua caixa no 3D")
+        XCTAssertEqual(o["errado"] as? [String], [], "cada caixa com o nome e a chave da sua peça (sem bloco com a chave da frente)")
+        XCTAssertEqual(o["medida"] as? [String], [], "caixa na medida de corte da peça")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
     /// ETAPA 2 · item 1 (Chefe 26/11: "melhore o vidro, a borda (lapidação/bisotê visível), o reflexo e o aro do botão sem perder desempenho"):
     /// faces do bisotê e da lapidação em degradê com contraste (a borda aparece), aro do botão cromado (borda escura, anel claro, lábio e centro),
     /// vidro com tom de vidro e brilho no mesmo shader (sem passada nova); o projeto não muda.

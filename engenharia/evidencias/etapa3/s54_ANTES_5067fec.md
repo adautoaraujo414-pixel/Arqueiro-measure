@@ -250,3 +250,12 @@ Tempo da sonda: 2667 s.
 4. **Erro comprovado:** selecionar o tamponamento e tocar de novo nele move o módulo 750 mm sozinho (x 5 → 755, Balcão 2 portas, livre, iso). Fere o §12.
 5. **LED no módulo:** recusado nos balcões pela regra atual ("só módulos de cima e cristaleira"). Nos aéreos acertou módulo e peça (5/5).
 6. **Ids:** nenhuma peça sem pk. As 486 caixas sem pk são ferragem (corrediça etc.) sem a marca `b.ferr`, que entrou depois do 5067fec. As 16 peças desenháveis sem caixa própria no 3D são rodapé/base de corridas, desenhados pelo 1º módulo da corrida, e a frente com recorte do forno/micro-ondas.
+
+### Correção da conta "peça desenhável sem caixa no 3D" (28/11, nota do Claude 3)
+
+A conta passou de 16 para 14 no 5067fec.
+
+- **Antes:** a conta ignorava caixas marcadas `nol` (moldura sem contorno). Por isso as 2 Frentes com recorte (Torre por vãos) apareciam como sem caixa, mas elas têm caixa.
+- **Agora:** caixa `nol` conta como caixa desenhada.
+- **Rodada:** `window.__S54={so:'ids'}`, catálogo inteiro e P1–P5. Arquivo: `s54_ANTES_5067fec_ids.json`.
+- **As 14 que sobram** são Base inferior e Rodapé dos módulos de baixo. O 3D desenha essas peças como corrida contínua da base e do rodapé, e não com caixa própria.

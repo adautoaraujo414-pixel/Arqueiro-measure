@@ -1,0 +1,83 @@
+{
+ "codigo": "",
+ "seg": 130,
+ "1_acerto": "-",
+ "1b_acerto_inequivoco": "-",
+ "1c_inequivoco_porZoom": {},
+ "2_vizinho": 0,
+ "2b_nada": 0,
+ "3_porZoom": {},
+ "3b_porAngulo": {},
+ "4_pequenas": "-",
+ "4b_pequenas_inequivocas": "-",
+ "5_ms": {
+  "p50": 0,
+  "p95": 0,
+  "max": 0
+ },
+ "6_led": {
+  "tot": 0,
+  "selecionou": 0,
+  "erro": "",
+  "recusadoPelaRegra": "0 (app: \"LED vai só nos módulos de cima e na cristaleira\")",
+  "aceitos": 0,
+  "previaConfirmada": 0,
+  "destino": {},
+  "modulo": "-",
+  "superficie": "-",
+  "noRodape": "0 (Chefe 28/11: o LED de módulo vai no rodapé do módulo de baixo, fora da conta de encostar na peça tocada)",
+  "ex": []
+ },
+ "6p_led_peca": {
+  "caminho": "lvlPickFace (antigo)",
+  "erro": "",
+  "toques": 0,
+  "criaramOuDeviamCriar": 0,
+  "recusadoComAviso": 0,
+  "recusas": {},
+  "recusaEx": [],
+  "pediuEscolha": "0 (com a peça tocada entre as opções: 0)",
+  "nenhumLEDsemAviso": 0,
+  "modulo": "-",
+  "peca": "-",
+  "superficie": "-",
+  "porVista": {},
+  "ms": {
+   "p50": 0,
+   "p95": 0,
+   "max": 0
+  },
+  "ex": []
+ },
+ "destaque": "-",
+ "toqueMudouProjeto": {
+  "n": 0,
+  "ex": []
+ },
+ "ids": {
+  "semPk": 0,
+  "ferr": 0,
+  "ferrNome": 486,
+  "pkRep": 0,
+  "pkAmb": 0,
+  "semCaixa": 14,
+  "ex": [
+   "P1 fila encostada + aéreos · mód 1 · peça sem caixa no 3D: Base inferior#1",
+   "P1 fila encostada + aéreos · mód 1 · peça sem caixa no 3D: Rodapé (pedestal)#1",
+   "P1 fila encostada + aéreos · mód 1 · peça sem caixa no 3D: Rodapé traseiro (pedestal)#1",
+   "P1 fila encostada + aéreos · mód 2 · peça sem caixa no 3D: Rodapé (pedestal)#1",
+   "P1 fila encostada + aéreos · mód 2 · peça sem caixa no 3D: Rodapé traseiro (pedestal)#1",
+   "P3 nichos · mód 2 · peça sem caixa no 3D: Base inferior#1",
+   "P3 nichos · mód 2 · peça sem caixa no 3D: Rodapé (pedestal)#1",
+   "P3 nichos · mód 2 · peça sem caixa no 3D: Rodapé traseiro (pedestal)#1",
+   "P3 nichos · mód 3 · peça sem caixa no 3D: Base inferior#1",
+   "P3 nichos · mód 3 · peça sem caixa no 3D: Rodapé (pedestal)#1",
+   "P3 nichos · mód 3 · peça sem caixa no 3D: Rodapé traseiro (pedestal)#1",
+   "P5 canto cego + parede lateral · mód 2 · peça sem caixa no 3D: Base inferior#1",
+   "P5 canto cego + parede lateral · mód 2 · peça sem caixa no 3D: Rodapé (pedestal)#1",
+   "P5 canto cego + parede lateral · mód 2 · peça sem caixa no 3D: Rodapé traseiro (pedestal)#1"
+  ]
+ },
+ "porCenario": {},
+ "falhas": []
+}

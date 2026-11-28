@@ -17239,6 +17239,29 @@ final class EditorWebKitTests: XCTestCase {
 
     /// MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11 "cálculos reais e automáticos" e "Regras do módulo · organização"; checklist D21/D24): as 24
     /// combinações (balcão e aéreo × moldura × Frontal × travessão sem/externo/interno) com cada peça igual no 3D e no corte (nenhuma espessura somada
+    /// ETAPA 2 · item 9, 2ª parte (Adauto/Chefe 27/11): na perspectiva do 2D, cota até a parede/vizinho do módulo escolhido, "↔ Tamanho" abre as alças
+    /// do módulo tocado e "＋ Ao lado" encosta o módulo novo do catálogo do lado livre do escolhido sem mexer em ninguém (sem espaço: os outros ficam iguais).
+    func testE2ITEM9_PerspectivaCotaAlcasEModuloAoLadoSemMexerNoVizinho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var AM=[];window.ambMsg=function(t){AM.push(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length;
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;newTpl(achar('Balcão 2 portas'));var A=S.m;A.x=1200;newTpl(achar('Balcão 2 portas'));var Bm=S.m;Bm.x=2400;draw();out.push('larguras '+A.w+' '+Bm.w);
+document.getElementById('pv2db').click();await W(1500);var cv=document.getElementById('cv3'),cen=function(mi){var B=__boxes().filter(function(b){return String(b.nm).indexOf(mi+':')===0&&!b.nol});return __p3((Math.min.apply(null,B.map(function(b){return b.x0}))+Math.max.apply(null,B.map(function(b){return b.x1})))/2,(Math.min.apply(null,B.map(function(b){return b.y0}))+Math.max.apply(null,B.map(function(b){return b.y1})))/2,(Math.min.apply(null,B.map(function(b){return b.z0}))+Math.max.apply(null,B.map(function(b){return b.z1})))/2)};
+var ia=S.mods.indexOf(A),sp=cen(ia);org3api.one(sp[0],sp[1]);await W(100);out.push('cota: '+document.querySelector('#pv2dbar [data-pvcota]').textContent);
+document.querySelector('#pv2dbar [data-pvt]').click();sp=cen(ia);var rc=cv.getBoundingClientRect(),tx=rc.left+sp[0],ty=rc.top+sp[1],pe=function(n){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:tx,clientY:ty,pointerId:5,pointerType:'touch',isPrimary:true,button:0,buttons:n==='pointerup'?0:1}))};pe('pointerdown');await W(40);pe('pointerup');await W(250);out.push('tamanho: modo '+window.T3MODE+' · alças no módulo '+window.MZ3I);document.querySelector('#pv2dbar [data-pvt]').click();if(window.mz3Close)try{mz3Close()}catch(_){}
+/* ao lado: à direita de A tem 300 até B (não cabe 900); à esquerda cabe */S.m=A;var xs0=JSON.stringify(S.mods.map(function(m){return m.x}));document.querySelector('#pv2dbar [data-pvl]').click();newTpl(achar('Gaveteiro 3 gavetas'));var N=S.mods[S.mods.length-1];await W(50);out.push('ao lado: novo x '+N.x+' w '+N.w+' (A em '+A.x+') · vizinhos '+(JSON.stringify(S.mods.slice(0,2).map(function(m){return m.x}))===JSON.stringify(JSON.parse(xs0))?'iguais':'MUDARAM')+' · '+AM.slice(-1)[0]);
+/* não cabe dos dois lados */S.m=Bm;var C=S.mods.length;document.querySelector('#pv2dbar [data-pvl]').click();var x0s=JSON.stringify(S.mods.map(function(m){return m.x}));newTpl(achar('Balcão 2 portas'));out.push('sem espaço: '+AM.slice(-1)[0]+' · os de antes '+(JSON.stringify(S.mods.slice(0,C).map(function(m){return m.x}))===x0s?'iguais':'MUDARAM'));
+document.getElementById('pv2db').click();out.push('errs '+(__errs.length-e0));return JSON.stringify({cota:out[1],tam:out[2],lado:out[3],sem:out[4].replace(/^sem espaço: .* · os de antes /,'os de antes '),errs:out[5]});
+
+          """#)
+        XCTAssertEqual(o["cota"] as? String, "cota: ◀ 1200 mm até a parede · 300 mm até o vizinho ▶")
+        XCTAssertEqual(o["tam"] as? String, "tamanho: modo tam · alças no módulo 0")
+        XCTAssertEqual(o["lado"] as? String, "ao lado: novo x 570 w 600 (A em 1200) · vizinhos iguais · ＋ Módulo encostado ao lado · ninguém mais andou", "encosta do lado que cabe (à direita só 300)")
+        XCTAssertEqual(o["sem"] as? String, "os de antes iguais", "sem espaço: ninguém anda")
+        XCTAssertEqual(o["errs"] as? String, "errs 0")
+    }
+
     /// ETAPA 2 · item 9 (Chefe 28/11, mesma regra do TOQUE-ALCA do Claude 4): na perspectiva do 2D a tremida (5 px) não move o móvel, e a pinça que começa
     /// em cima dele (1º dedo anda antes do 2º cair) devolve o móvel pro lugar, sem passo extra no desfazer.
     func testE2ITEM9_TremidaEPincaNaoMovemOMovelNaPerspectiva() async throws {

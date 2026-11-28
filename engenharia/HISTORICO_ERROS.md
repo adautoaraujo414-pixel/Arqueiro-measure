@@ -2974,5 +2974,9 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
     - a caneta usa o `window.PALMA` do Claude 4, que já cobre o 3D.
   - Fechar volta ao 2D. O projeto não muda por abrir, girar ou fechar.
 - **Ajuste (Chefe 28/11, mesma regra do TOQUE-ALCA do Claude 4):** o arrasto do móvel só começa depois de `SEL.mov` px, então a tremida de 5 px não move. Caindo um 2º dedo com o arrasto já começado (pinça em cima do móvel), o móvel volta para onde estava e o desfazer não ganha passo. Teste `testE2ITEM9_TremidaEPincaNaoMovemOMovelNaPerspectiva`: no a8e75134 a pinça deixava o móvel fora do lugar.
-- **2ª parte (a fazer):** alças de tamanho, cota até a parede e "pôr do catálogo ao lado" dentro da perspectiva.
+- **2ª parte (feita):** na barra da perspectiva:
+  - cota do módulo escolhido até a parede/vizinho de cada lado, na mesma parede e na mesma faixa de altura;
+  - "↔ Tamanho" liga o modo Tamanho do 3D: o toque abre as alças e o quadro de medidas de sempre;
+  - "＋ Ao lado" abre o catálogo, e o módulo novo encosta do lado do escolhido que tem espaço (`modHit`). Os vizinhos nunca andam; sem espaço, avisa e fica onde o catálogo pôs. Se o próprio catálogo recusar por falta de espaço, nada muda.
+  - Teste `testE2ITEM9_PerspectivaCotaAlcasEModuloAoLadoSemMexerNoVizinho` (falha antes, passa agora). Print: `tools/sondas/etapa2_c3/item9_perspectiva_tamanho_cota.png`.
 - **Teste:** `testE2ITEM9_PerspectivaLivreNo2DGestosSemACameraMoverPeca` (falha antes, passa agora). Print: `tools/sondas/etapa2_c3/item9_perspectiva_no_2d.png`.

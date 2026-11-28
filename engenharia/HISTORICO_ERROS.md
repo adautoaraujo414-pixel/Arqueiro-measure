@@ -3284,34 +3284,61 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 
 ## REGUA-PAREDE (item 39, Adauto 28/11: "a régua aparece na parede errada") — Claude 4
 - **Pedido:** reproduzir a criação de réguas em todas as paredes e por todos os caminhos, corrigir a causa e provar com prints.
-- **Varredura feita (sondas no navegador, todas as paredes):**
-  - todo o catálogo criado com o 2D em cada parede, sozinho e com canto em L;
-  - réguas, tamponamentos e engrossos ligados em todos os modelos, inclusive no ambiente livre; no 3D, cada peça fica no corpo do próprio módulo;
+- **Varredura feita** (sondas no navegador, todas as paredes):
+  - todo o catálogo, 1182 casos, criado com o 2D na esquerda e na direita: em que parede cada coisa nova fica;
+  - todos os modelos com réguas, tamponamentos, engrossos, travessa e régua do aéreo ligados, no fundo, na esquerda, na direita e no ambiente livre (530 casos): no 3D, cada peça fica no corpo do próprio módulo;
   - régua livre ("+ Criar Régua"): mesmo lado no 2D e no 3D no fundo, na direita e na esquerda guardada virada (espE);
-  - módulo de outra parede com x encostado não muda as peças do vizinho;
+  - módulo de outra parede com x encostado não muda as peças do vizinho (todas as combinações de 5 modelos);
+  - 2D de cada parede (só os módulos dela);
+  - canto em L com módulos nas duas paredes; canto cego;
   - desfazer, salvar e reabrir com a vista do lado aberta;
   - catálogo e botões de parede com o 2D na parede do lado.
-  - Não reproduzi régua de uma parede desenhada em outra. Achei dois defeitos do mesmo mecanismo:
-- **Erro 1 (comprovado): tamponamento automático com as réguas mudava sozinho conforme a parede aberta no 2D.**
-  - Reproduzir: abra o 2D na parede direita (ou esquerda) e crie um "Balcão 2 portas". No começo da asa, junto do canto, ele ganha o tamponamento esquerdo (5 peças no 3D: o tamponamento e as réguas de 80). Na conta do projeto inteiro essa ponta não é exposta.
-  - Volte pro fundo: dependendo do caso, o tamponamento some sozinho (o 2D da lateral mostrava uma peça que o 3D e o corte não tinham) ou fica fora da regra do projeto.
-  - Sonda: catálogo inteiro, 490 casos. Antes: 256 com peças diferentes entre o 2D da lateral e o projeto (sempre o "Tamponamento esquerdo").
-  - Causa raiz: a vista da parede do lado (`toView`) apaga o campo `wing` dos módulos dela enquanto está aberta. O `autoTamp`, que roda a cada desenho, chama `tampExposed`, e ele usa `m.wing||'F'`: o módulo virava "do fundo", a ponta do canto parecia exposta e o app ligava o tamponamento sozinho.
-  - Correção (`tampExposed`): na vista do lado usa a parede real (`wvCur()`) e o começo da asa do projeto inteiro (`__wvSt().ws`), igual ao 3D.
-- **Erro 2 (comprovado): o que era mandado pra outra parede com a vista do lado aberta não ia.**
-  - Casos: catálogo "Módulo na lateral direita/esquerda" e os botões Fundo/Esquerda/Direita/Livre do módulo.
-  - Causa raiz: ao voltar, `toCanon` carimbava a parede da vista em tudo que estava na lista dela.
+- **Erro comprovado: o que era mandado pra outra parede com o 2D na parede do lado aberto não ia.**
+  - Casos: catálogo "Módulo na lateral direita/esquerda" e os botões Fundo/Esquerda/Direita/Livre do módulo. O módulo ficava na parede da vista e o botão não fazia nada (item 34).
+  - Reproduzir: 2D na parede esquerda → "Módulo na lateral direita" → volte pro fundo: o módulo está na esquerda.
+  - Causa raiz: ao voltar pro projeto, `toCanon` carimbava a parede da vista em tudo que estava na lista dela, inclusive no que foi mandado de propósito pra outra parede.
   - Correção:
     - `toCanon` mantém a parede escolhida de propósito durante a vista. Cópia ou peça nova sem parede continua na parede da vista, como antes.
     - `wvMandados()`, depois de cada toque, tira na hora do desenho da vista o que foi pra outra parede.
-- **Arquivos:** `app/src/main/assets/editor.html` (`tampExposed`, `toCanon`, `wvMandados`).
-- **Teste:** `testREGUAPAREDE_PecasIguaisEmToda2DE3DEParedeEscolhidaNaVistaDoLado`. Confere:
-  - catálogo inteiro na esquerda e na direita, sozinho e com canto L: 2D da vista = projeto;
-  - olhar as paredes não muda o projeto;
-  - botões de parede e catálogo da outra lateral;
-  - salvar e reabrir.
-  - Falha no 154591e0 (67/61 diferentes, botões e catálogo ficam na parede da vista) e passa depois, a 1366 e a 430.
-- **Evidência:** `engenharia/evidencias/etapa2/item39_regua_parede/` (ANTES 154591e0 × DEPOIS, parede direita a 1366 e 430, parede esquerda a 1366).
+  - Arquivos: `app/src/main/assets/editor.html` (`toCanon`, `wvMandados`).
+- **Não reproduzido pela interface:** tamponamento automático (com as réguas de 80) mudando ao trocar a parede do 2D.
+  - Numa chamada direta (`wvGo` logo depois do `newTpl`, sem o desenho da criação) o tamponamento da ponta do canto ligava na vista da lateral e desligava no fundo.
+  - Pelo caminho real (catálogo, espera e botões do cabeçalho; com e sem módulo no fundo) fica igual nas vistas, no 3D e depois de ida e volta.
+  - Uma correção no `tampExposed` (d3862cee) foi desfeita: ela contrariava testes aprovados (`testPedraEmQualquerParede…`, `testDoisToquesNoVaoDeCimaAteOTeto…`, `testParedeEsquerdaNomesDosLados…`), que esperam o tamponamento na ponta do canto do módulo criado no 2D da lateral.
+- **Comportamento correto:** réguas, tamponamentos e engrossos de cada módulo ficam no módulo e na parede dele em todas as sondas. Não achei régua de uma parede desenhada em outra.
+- **Teste:** `testREGUAPAREDE_ParedeEscolhidaNaVistaDoLadoEOlharAsParedesNaoMuda`. Confere botões de parede e catálogo da outra lateral (falham no 154591e0), olhar as paredes não muda o projeto, e salvar e reabrir. Passa a 1366 e a 430.
+- **Evidência:** `engenharia/evidencias/etapa2/item39_regua_parede/` (ANTES 154591e0 × DEPOIS; direita a 1366 e 430, esquerda a 1366).
 - **Não verificado:**
-  - paredes criadas no 3D: módulo não encosta nelas; painéis em outra parede já saem da vista antes de mudar;
-  - "Unir" (régua corrida) entre módulos de paredes diferentes: a união só existe no fundo (`unViz` ignora asa e canto).
+  - paredes criadas no 3D: módulo não encosta nelas; painéis em outra parede já saem da vista antes de mudar (`rwAsk` → `wvExit`);
+  - "Unir" (régua corrida) entre paredes diferentes: a união só existe no fundo (`unViz` ignora asa e canto).
+
+## VISTA-3D (Chefe 28/11): «Isométrica», «Cima» e «Lado» do ⋯ Mais do 3D "sem função" na ParteB — Claude 4
+- **Reproduzir:** `testNadaDeEnfeite3DEValoresParteB` a 1366 (integração 3 e 154591e0) dá "1 a 3 botões de vista sem função".
+- **Causa raiz:** os botões giram a câmera (yaw/pitch), e os screenshots mudam. Mas `org3api.cam()` devolvia só zoom e deslocamento, então quem acompanha a câmera não via a troca de vista:
+  - o laço que redesenha as medidas por cima do 3D (`tick`) só acertava na volta seguinte;
+  - a sonda da bateria via "nada mudou".
+  - Quando a vista já estava na tela, o aviso "Já está na vista…" aparecia e o teste passava. Por isso a falha oscilava conforme a ordem.
+- **Correção (no app, não no teste):** `org3api.cam()` devolve a câmera inteira (`yaw`, `pitch`). Quem usa: o `tick` do 3D e as sondas NadaDeEnfeite.
+- **Resultado:** ParteB passa a 1366 (168 s, antes da divisão).
+
+## NADA-DIVIDIDO (Chefe 28/11): ParteB e Ajustes passavam de 120 s a 430 com a exploração completa — Claude 4
+- **Pedido:** dividir em partes abaixo de ~90 s a 430, sem aumentar limite, cobrindo juntas os mesmos controles, e provar a soma.
+- **Como:** cada parte recebe `window.PARTE[tela] = {setas, r:[[raiz_de, raiz_ate, sub_de, sub_ate]]}`.
+  - raiz = controle da lista inicial da tela;
+  - sub = controles do 1º nível que aparecem a partir daquela raiz; os de baixo vão junto do pai.
+  - Uma raiz pesada é tocada em todas as partes que a dividem (é ela que faz os filhos aparecerem).
+  - As setas de cada tela ficam numa parte só.
+- **Partes e tempos a 430:**
+  - ParteB1 3D sem o Pintar: 44 s, 54 controles;
+  - ParteB2 Pintar, 1º nível 0–3: 29 s, 45;
+  - ParteB3 Pintar, 4 em diante: 31 s, 5;
+  - ParteB4 Valores: 42 s, 62;
+  - AjustesParte1: 57 s, 36;
+  - AjustesParte2 "Começar", 1º nível 2 em diante: 59 s, 70;
+  - AjustesParte3: 26 s, 37.
+  - A 1366: tempos iguais (44 / 29 / 30 / 41 / 58 / 58 / 25 s).
+- **Prova da soma (430, chave = tela › controle):**
+  - ParteB inteira: 125 controles. Soma das partes: 165 (as partes acham 40 cores do Pintar que o inteiro não alcança depois do modo Ambiente). Do inteiro, falta 1: o «▁» (`minb`) de Ambiente › Teto.
+  - Esse «▁» oscila também na mesma sequência: a ParteB1 rodada 2 vezes a 430 alcançou numa e não na outra; a 1366 alcança. É da descoberta por exploração, não da divisão.
+  - Ajustes inteiro: 121. Soma das partes: 122, faltando 0.
+- **testouBastante:** mínimo de cada parte (40, 4, 4, 45 · 25, 40, 28). A soma passa dos 30/40 dos testes inteiros. Comentário NADA-DIVIDIDO nos testes.

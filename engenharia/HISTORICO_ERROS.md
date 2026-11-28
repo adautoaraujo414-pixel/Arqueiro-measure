@@ -3281,3 +3281,4 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Falha antes ("⌂ CALADO" só com a página rolada).
   - Passa depois a 1366 e a 430.
 - **Evidência:** `engenharia/evidencias/etapa2/pacote_claude4/i34_1366.jpg` (quadros 3 e 4).
+- **Regressão achada na bateria e corrigida antes da entrega:** na primeira versão do ponto 3, a posição digitada encostada na PAREDE também mantinha o tamponamento (`testPosicaoDigitadaPertoDaParede…`: x=35 em vez de 25). O ponto 3 vale só para a junta com OUTRO módulo (`tampNbOf`); encostado na parede, o automático sai como sempre.

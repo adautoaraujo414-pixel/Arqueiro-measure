@@ -3386,7 +3386,9 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Sugestão velha (o módulo já saiu da posição) some.
   - Ao abrir um projeto a assinatura (`SIG`) é zerada: um projeto com o mesmo desenho do anterior não era conferido, e por isso a sugestão aparecia só às vezes.
 - **Teste:** `testCantoNasceModuloNovoNaParedeLateralNaoAndaSozinhoViraSugestaoComDesfazer` (E e D, 2 vezes seguidas, aplicar, desfazer, reabrir, mexido). Falha antes e passa depois. O `testCantoCegoRodape…` passou a encostar pelo botão.
-- **Risco (não mexido, de outro agente):** a prévia pode sair diferente do resultado quando o tamponamento automático da asa aparece ou some com a folga (ex.: prévia 651, depois 621). E quem a pessoa mexe (até trocar o tamponamento) ainda anda até encostar, como sempre foi. Fica para o Chefe decidir se também vira sugestão.
+- **Ampliado (Chefe 28/11, o risco virou erro):** NENHUM módulo anda sozinho até encostar. Mexer nele não faz andar, seja posição de arrasto ou digitada, troca de tamponamento ou mudança de largura. Ele fica onde a pessoa deixou e aparece "Encostar no canto". A prévia é refeita quando a folga muda (ex.: tamponamento 621 ↔ 651), sem mover nada. O botão leva ao x da prévia, e o ↶ desfaz.
+  - O teste confere x = 610 bit a bit (`Object.is`) nas três mudanças, nos dois lados.
+  - O `testCantoCegoRodape…` mexido +10 agora fica em 631 (antes voltava a 621). Expectativa mudada por esse pedido do Chefe, de 28/11.
 
 ## ITEM2-ATRAVESSADA · base do canto cego (Chefe 28/11, opção b) — Claude 5
 - A base da asa vai até a face do 1º obstáculo real do cego que cruza com ela: porta, painel cego ou régua espaçadora (descem 5 mm na frente da base). Ela não entra nesse obstáculo.

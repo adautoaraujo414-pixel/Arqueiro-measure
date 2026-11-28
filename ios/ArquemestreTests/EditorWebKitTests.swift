@@ -20235,7 +20235,12 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
           R[sd+vez]=w.x+' · '+sug}
           if(bar&&!bar.hidden){await W(800);bar.querySelector('[data-libsug="ok"]').click();await W(80)}R[sd+'aplica']=w.x;await W(800);document.getElementById('und').click();await W(200);var w2=S.mods[S.mods.length-1];R[sd+'desfaz']=w2.x;
           var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();await W(1500);draw();await W(400);R[sd+'reabre']=S.mods[S.mods.length-1].x;
-          var w3=S.mods[S.mods.length-1];w3.x=+w3.x+10;draw();await W(1500);draw();await W(400);R[sd+'mexido']=w3.x}
+          /* Chefe 28/11: quem a pessoa mexe também NÃO anda sozinho: posição de arrasto/digitada perto do canto, trocar o tamponamento e mudar a largura → x igual bit a bit até tocar no botão; a prévia é refeita */
+          var w3=S.mods[S.mods.length-1],pv=function(){var b=document.getElementById('libsug');return b&&!b.hidden&&/Encostar no canto/.test(b.textContent)?(b.textContent.match(/x [0-9.]+ → [0-9.]+/)||[''])[0]:'sem sugestão'},ok3=true;
+          w3.x=610;draw();await W(1500);draw();await W(400);ok3=ok3&&Object.is(w3.x,610);R[sd+'mexido']=w3.x+' · '+pv();
+          w3.tl=!w3.tl;draw();await W(1500);draw();await W(400);ok3=ok3&&Object.is(w3.x,610);R[sd+'tamp']=w3.x+' · '+pv();
+          w3.w=800;draw();await W(1500);draw();await W(400);ok3=ok3&&Object.is(w3.x,610);R[sd+'largura']=w3.x+' · '+pv();R[sd+'bitAbit']=ok3;
+          var b3=document.getElementById('libsug');if(b3&&!b3.hidden){var alvo=+(pv().split('→ ')[1]||NaN);await W(800);b3.querySelector('[data-libsug="ok"]').click();await W(80);R[sd+'botao']=Object.is(w3.x,alvo)?'foi pro x da prévia':'x '+w3.x+' ≠ prévia '+alvo}}
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["e1"] as? String, "600 · x 600 → 621", "E: fica onde nasceu (antes andava sozinho pra 621) e sugere encostar com a prévia")
@@ -20243,13 +20248,21 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["eaplica"] as? Double, 621, "o botão encosta")
         XCTAssertEqual(o["edesfaz"] as? Double, 600, "↶ volta pra onde nasceu")
         XCTAssertEqual(o["ereabre"] as? Double, 600, "projeto aberto: nada se mexe")
-        XCTAssertEqual(o["emexido"] as? Double, 621, "quem a pessoa mexe encosta como sempre (610 → 621)")
         XCTAssertEqual(o["d1"] as? String, "600 · x 600 → 651", "D: fica onde nasceu (antes andava sozinho pra 651)")
         XCTAssertEqual(o["d2"] as? String, "600 · x 600 → 651", "D: igual na 2ª vez")
         XCTAssertEqual(o["daplica"] as? Double, 651, "o botão encosta")
         XCTAssertEqual(o["ddesfaz"] as? Double, 600, "↶ volta")
         XCTAssertEqual(o["dreabre"] as? Double, 600, "projeto aberto: nada se mexe")
-        XCTAssertEqual(o["dmexido"] as? Double, 651, "quem a pessoa mexe encosta como sempre")
+        XCTAssertEqual(o["emexido"] as? String, "610 · x 610 → 621", "posição perto do canto (arrasto/digitada): fica em 610 e sugere")
+        XCTAssertEqual(o["etamp"] as? String, "610 · x 610 → 651", "trocar o tamponamento: não anda; a prévia é refeita")
+        XCTAssertEqual(o["elargura"] as? String, "610 · x 610 → 651", "mudar a largura: não anda")
+        XCTAssertEqual(o["ebitAbit"] as? Bool, true, "x igual bit a bit até tocar no botão")
+        XCTAssertEqual(o["ebotao"] as? String, "foi pro x da prévia", "o botão leva pro x que a prévia mostrou")
+        XCTAssertEqual(o["dmexido"] as? String, "610 · x 610 → 651")
+        XCTAssertEqual(o["dtamp"] as? String, "610 · x 610 → 621")
+        XCTAssertEqual(o["dlargura"] as? String, "610 · x 610 → 621")
+        XCTAssertEqual(o["dbitAbit"] as? Bool, true, "x igual bit a bit até tocar no botão (D)")
+        XCTAssertEqual(o["dbotao"] as? String, "foi pro x da prévia")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
@@ -20302,8 +20315,8 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["eAinfo"] as? String, "", "A: nada a avisar")
         XCTAssertEqual(o["eBinfo"] as? String, "Base: no canto cego a base da parede lateral não passa por baixo do painel/porta do cego (eles descem na frente da base); no B ela para na face deles, igual ao A", "B: diz por que a base não passa inteira")
         XCTAssertEqual(o["dBinfo"] as? String, "Base: no canto cego a base da parede lateral não passa por baixo do painel/porta do cego (eles descem na frente da base); no B ela para na face deles, igual ao A")
-        XCTAssertEqual(o["anda0"] as? Double, 621, "sem escolha: mexido 10 mm, volta a encostar no cego (quem a pessoa mexe encosta como sempre)")
-        XCTAssertEqual(o["andaB"] as? Double, 621, "com o B: igual (sem a correção pulava sozinho pra 1216 por causa do rodapé que passa por trás)")
+        XCTAssertEqual(o["anda0"] as? Double, 631, "sem escolha: mexido 10 mm, fica onde a pessoa deixou (Chefe 28/11: nada anda sozinho; antes voltava pra 621)")
+        XCTAssertEqual(o["andaB"] as? Double, 631, "com o B: igual (antes da correção do rodapé atravessado pulava sozinho pra 1216)")
         XCTAssertEqual(o["reabre"] as? String, "1000/469/469 ; 900/1485/1485", "salvar e reabrir mantém")
         XCTAssertEqual(o["tamp"] as? String, "1000/1000/1000 ; 900/900/900 · avisa", "tamponamento da asa entre os dois: não mexe e diz o porquê")
         XCTAssertEqual(o["semUnir"] as? String, "1000/1000/1000 ; 900/900/900", "sem a junta unida pelo Unir, a escolha não mexe em nada")

@@ -2956,5 +2956,5 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - sem a marca nada muda; a aba Estrutura mostra "Atualizar estrutura" e, com a marca, "Embutidas/Apoiadas", a largura e "Voltar à estrutura antiga". Tudo com snap/desfazer;
   - o `ttParts` do Code 2 (item 22) já exclui `m.cgTrav`.
 - **Não muda:** aéreo canto cego (regra: base em cima e embaixo), painel cego, régua espaçadora, porta (2 dobradiças), 165° e E/D.
-- **Pendente de decisão do Chefe:** a altura da "Divisória 1" interna com a travessa deitada (hoje 620, com vão de 55 até a travessa).
+- **Divisória interna, parametrizada** (decisão do Adauto pendente, Chefe 28/11): por padrão fica como era (620). A opção "Divisória interna sobe até a travessa" (`m.cgDivTopo`) leva a 675, encostada embaixo da travessa deitada. Com desfazer.
 - **Teste:** `testE2ITEM7_CantoCegoComTravessasDaFrenteEDeTrasEmbutidasOuApoiadas`. No HEAD anterior falha (sem a estrutura nem o botão); agora passa.

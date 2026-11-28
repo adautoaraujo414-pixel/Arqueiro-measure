@@ -17255,6 +17255,8 @@ final class EditorWebKitTests: XCTestCase {
             var w0=[m.w,m.h,m.d].join('×');R['nasce'+k]=m.cgTrav;R['emb'+k]=resumo(m)+' · '+await cubo(m);
             m.cgTrav='apo';draw();R['apo'+k]=resumo(m)+' · '+await cubo(m)+' · de fora '+([m.w,m.h,m.d].join('×')===w0?'igual':'MUDOU');
             var pt=partsOf(m).filter(function(p){return p.name==='Porta'&&!p.cego})[0];R['porta'+k]=/2 furos/.test(pt.note)+' '+partsOf(m).some(function(p){return p.cego})+' '+partsOf(m).some(function(p){return /^Régua espaçadora do canto/.test(p.name)})}
+          /* divisória interna (parametrizada; decisão do Adauto pendente): padrão como era; ligada sobe até a travessa */
+          loadState(initLimpo());S.mods=[];newTpl(achar('Balcão canto cego · cego na direita (porta na esquerda)'));var md=S.mods[0];var dv=function(){return partsOf(md).filter(function(p){return /^Divisória \d+$/.test(p.name)}).map(function(p){return p.cl}).join(',')};R.div=dv();S.m=md;S.tab=0;panel();var cb=document.querySelector('#bd [data-cgdiv]');cb.checked=true;cb.dispatchEvent(new Event('change',{bubbles:true}));R.div+=' → '+dv();cb=document.querySelector('#bd [data-cgdiv]');cb.checked=false;cb.dispatchEvent(new Event('change',{bubbles:true}));R.div+=' → '+dv();
           /* projeto antigo: sem a marca fica igual; o painel oferece Atualizar estrutura (com desfazer) */
           loadState(initLimpo());S.mods=[];newTpl(achar('Balcão canto cego · cego na direita (porta na esquerda)'));var m=S.mods[0];delete m.cgTrav;var sv=JSON.parse(JSON.stringify(snapState()));loadState(sv);m=S.mods[0];draw();R.antigo=resumo(m);
           S.m=m;S.tab=0;panel();var b=document.querySelector('#bd [data-cgtrav="emb"]');R.botao=b?b.textContent:'';b.click();R.atualizado=m.cgTrav+' · '+resumo(m);document.getElementById('und').click();await W_(50);m=S.mods[0];R.desfez=(m.cgTrav===undefined||!m.cgTrav)+' · '+resumo(m);
@@ -17271,6 +17273,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["portaD"] as? String, "true true true", "porta com 2 dobradiças, painel cego e régua entre o cego e a porta")
         XCTAssertEqual(o["portaE"] as? String, "true true true")
         XCTAssertEqual(o["antigo"] as? String, "Lateral esquerda 690×560 | Lateral direita 690×560 | Travessa frontal 1000×70", "projeto antigo fica igual")
+        XCTAssertEqual(o["div"] as? String, "620 → 675 → 620", "divisória: como era por padrão; opção sobe até a travessa e volta")
         XCTAssertEqual(o["botao"] as? String, "Atualizar estrutura")
         XCTAssertEqual(o["atualizado"] as? String, "emb · Lateral esquerda 690×560 | Lateral direita 690×560 | TD frente 970×80 | TD trás 970×80")
         XCTAssertEqual(o["desfez"] as? String, "true · Lateral esquerda 690×560 | Lateral direita 690×560 | Travessa frontal 1000×70", "↶ volta")

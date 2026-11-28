@@ -3398,3 +3398,30 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Causa: com densidade 2, o plano sai pequeno na tela e a fonte desce mais (≈0,35 da letra) do que a métrica medida a 100 px (0,26). Era o mesmo efeito do iPad (CPMET-IPAD), que só ligava no iPad.
   - Correção: a mesma medida em escala pequena vale para densidade ≥ 2. O computador (densidade 1) fica idêntico.
   - Conferido: plano legível (3 terços, cm/mm), CORTEPRIORIDADE, NOMEIPAD e zoom passam 10/10 a 375×667×2, 430×900×3 e 1366.
+## CANTO-NASCE (28/11): o 1º módulo da parede lateral criado junto do canto cego andava SOZINHO até encostar — Claude 5
+- **Erro** (era risco no ITEM2-ATRAVESSADA; o Chefe classificou como erro em 28/11 pela regra "o app não mexe uma vírgula"): ao criar o 1º módulo da parede lateral junto de um canto cego, ele nasce em 600 e, ~1 s depois, anda sozinho para 621 (E) ou 651 (D), encostando na régua espaçadora do cego.
+- **Reproduzir:** Balcão canto cego + "módulo na lateral" (addWing). Espere 1,5 s: x passa de 600 para 621/651 sem nenhum toque. Sonda p8c no código de antes: 600 → 651.
+- **Causa:** CANTO-SOZINHO (`rodar`, no IIFE de `cantoEncosta`) faz andar até encostar quem "foi mexido ou acabou de entrar" (POS sem anotação). O módulo recém-criado contava como mexido.
+- **Correção:**
+  - O módulo que ACABOU DE NASCER (`!POS.has`) não anda. Fica onde nasceu e vira a sugestão `libSugere(...,'encosta')`: "Canto: dá pra encostar o módulo no módulo do canto (x 600 → 621 mm)", botão "Encostar no canto", desfazer.
+  - Quem a pessoa arrastou ou digitou continua encostando como sempre.
+  - Sugestão velha (o módulo já saiu da posição) some.
+  - Ao abrir um projeto a assinatura (`SIG`) é zerada: um projeto com o mesmo desenho do anterior não era conferido, e por isso a sugestão aparecia só às vezes.
+- **Teste:** `testCantoNasceModuloNovoNaParedeLateralNaoAndaSozinhoViraSugestaoComDesfazer` (E e D, 2 vezes seguidas, aplicar, desfazer, reabrir, mexido). Falha antes e passa depois. O `testCantoCegoRodape…` passou a encostar pelo botão.
+- **Ampliado (Chefe 28/11, o risco virou erro):** NENHUM módulo anda sozinho até encostar. Mexer nele não faz andar, seja posição de arrasto ou digitada, troca de tamponamento ou mudança de largura. Ele fica onde a pessoa deixou e aparece "Encostar no canto". A prévia é refeita quando a folga muda (ex.: tamponamento 621 ↔ 651), sem mover nada. O botão leva ao x da prévia, e o ↶ desfaz.
+  - O teste confere x = 610 bit a bit (`Object.is`) nas três mudanças, nos dois lados.
+  - O `testCantoCegoRodape…` mexido +10 agora fica em 631 (antes voltava a 621). Expectativa mudada por esse pedido do Chefe, de 28/11.
+
+## ITEM2-ATRAVESSADA · base do canto cego (Chefe 28/11, opção b) — Claude 5
+- A base da asa vai até a face do 1º obstáculo real do cego que cruza com ela: porta, painel cego ou régua espaçadora (descem 5 mm na frente da base). Ela não entra nesse obstáculo.
+  - E: a régua cruza a asa, face em 621. A base fica 900 com a asa encostada (antes da escolha ela entrava 21 na régua quando a asa estava em 600).
+  - D: a régua não cruza a asa e a face da porta está em 581, então a base estica +40.
+- No B a base da asa também não passa por baixo da porta (entraria 5 mm): fica igual ao A, e `cnPassaInfo` diz o porquê. A base do cego não muda.
+- A base atravessada também sai do contorno da CANTO-SOZINHO (senão o módulo andaria ao ser mexido).
+
+## CANTO-NASCE · as duas versões (Chefe 28/11, aguardando o Adauto · conflito com o PEDIDO 52) — Claude 5
+- **Conflito:** o PEDIDO 52 diz "chegando perto, encostam certinho" (ímã automático). A regra de 27/11 diz "o app não altera uma vírgula sozinho". O Chefe levou ao Adauto e pediu que o cdfe7a8 não seja integrado até a resposta.
+- **Chave `window.CANTO_IMA_ARRASTO`:**
+  - **A (false, padrão hoje):** nada encosta sozinho, nem no arrasto; tudo vira "Encostar no canto".
+  - **B (true, leitura do Chefe):** o ímã vale só no ARRASTO da própria pessoa. O gesto é detectado assim: o x ou a parede do módulo escolhido mudou entre encostar e soltar o dedo (`pointerdown`/`pointerup` em captura). Ele encosta e o ↶ desfaz o gesto inteiro. Criar, trocar tamponamento, mudar largura e digitar continuam só sugerindo, com o x igual bit a bit.
+- **Teste:** `testCantoImaDuasVersoesArrastoDaPessoaEncostaSoNaVersaoBORestoSoSugere` cobre as duas versões. Se o Adauto escolher B: basta pôr a chave em `true` e acrescentar ao teste do PEDIDO 52 os casos com gesto ("encostados", como era).

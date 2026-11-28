@@ -9118,7 +9118,7 @@ final class EditorWebKitTests: XCTestCase {
         var digita=async function(sel,teclas,ok){if(!(await abre(sel)))return false;teclas.split('').forEach(kb);if(ok!==false){kb('ok');await W(150)}return true};
         var B=function(){return document.getElementById('vlbody')},vp=function(){var t=B().querySelector('.tot'),k=t.querySelectorAll('b.big');return k[k.length-1].textContent.trim()},margem=function(){var r=B().querySelector('tr[data-vlmo]');return r?r.firstElementChild.textContent.replace(/\s*\(.*$/,'').trim()+' = '+r.lastElementChild.textContent.trim():'sem linha'};
         /* 1. quem não preenche nada: o valor continua material × multiplicador, igualzinho */
-        var b0=budget(),mat=b0.tot,proj0=JSON.stringify(snapState());R.materialMaiorQueZero=mat>0;R.semPreencherOValorNaoMuda=b0.ext.t===0&&b0.sale===mat*PR.mult;
+        var b0=budget(),mat=b0.tot,proj0=JSON.stringify(snapState());R.materialMaiorQueZero=mat>0;/* Chefe 28/11 (financeiro ao centavo): o valor exato do material, não só > 0 · chapas + fitas + ferragens com os preços acima */R.materialValor=r2(mat).toFixed(2)+' = '+r2(b0.cB+b0.cC+b0.cF).toFixed(2)+' chapas + '+r2((b0.T.tB*PR.fitaB+b0.T.tC*PR.fitaC+(b0.T.tT||0)*(+PR.fitaT||0))*fK()).toFixed(2)+' fita + '+r2(b0.T.dob*PR.dob+b0.T.drw*PR.cor).toFixed(2)+' ferragens';R.semPreencherOValorNaoMuda=b0.ext.t===0&&b0.sale===mat*PR.mult;
         document.getElementById('vlb').click();await W(400);
         R.camposNaTelaValores=[].map.call(B().querySelectorAll('[data-vlxbox] .g'),function(g){return g.querySelector('label').textContent.trim()+(g.querySelector('input[data-vlx]')?'':' sem campo')}).join(' | ');
         R.semPreencherNaoApareceLinha=B().querySelectorAll('[data-vlxl]').length===0;R.margemSemPreencher=margem().replace(/ = .*/,'');R.valorNaTelaSemPreencher=vp()===brl(mat*PR.mult);
@@ -9181,6 +9181,7 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["materialMaiorQueZero"] as? Bool, true)
+        XCTAssertEqual(o["materialValor"] as? String, "530.85 = 437.81 chapas + 29.04 fita + 64.00 ferragens", "Chefe 28/11: material ao centavo = chapas + fita + ferragens (sem sobra, sem duplicar)")
         XCTAssertEqual(o["semPreencherOValorNaoMuda"] as? Bool, true)
         XCTAssertEqual(o["camposNaTelaValores"] as? String, "Mão de obra (R$) | Custo fixo (R$) | Despesas extras (R$)")
         XCTAssertEqual(o["semPreencherNaoApareceLinha"] as? Bool, true)
@@ -10617,7 +10618,10 @@ final class EditorWebKitTests: XCTestCase {
         var caso=async function(nome,canto,item,ladoX,fundoX,quemMexe){novo();newTpl(T(item));draw();if(window.SOLO2)soloOff();var F=S.mods[0];F.x=canto==='e'?fundoX:S.W-F.w-fundoX;draw();
          wvGo(canto);draw();newTpl(T(item));draw();if(window.SOLO2)soloOff();var Wm=S.mods[S.mods.length-1];Wm.x=ladoX;S.m=Wm;draw();await W(600);wvGo('f');draw();await W(400);
          if(quemMexe==='fundo'){S.m=S.mods[0];S.mods[0].x=canto==='e'?0:S.W-S.mods[0].w;draw();await W(600)}
-         R[nome]=await rel()};
+         /* ERRO CANTO-NASCE (Chefe 28/11, regra do Adauto 27/11 "o app não altera uma vírgula sozinho", que vem depois do PEDIDO 52): ninguém anda sozinho até encostar;
+            fica onde a pessoa deixou (entrando ou afastado) e aparece "Encostar no canto"; tocando no botão, encostam certinho como no PEDIDO 52 */
+         var bar=document.getElementById('libsug'),sg=bar&&!bar.hidden&&/Encostar no canto/.test(bar.textContent);R[nome]=(await rel())+(sg?' · sugere encostar':'');
+         if(sg){bar=document.getElementById('libsug');if(bar&&!bar.hidden){bar.querySelector('[data-libsug="ok"]').click();await W(600)}R[nome+'Botao']=await rel()}};
         await caso('esquerdaLadoNoCanto','e','Aéreo 2 portas',0,0,'lado');
         await caso('esquerdaLadoPerto','e','Aéreo 2 portas',420,0,'lado');
         await caso('esquerdaLonge','e','Aéreo 2 portas',900,0,'lado');
@@ -10627,13 +10631,20 @@ final class EditorWebKitTests: XCTestCase {
         await caso('balcoesNoCantoDireito','d','Balcão 2 portas',100,0,'lado');
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["esquerdaLadoNoCanto"] as? String, "encostados")
-        XCTAssertEqual(o["esquerdaLadoPerto"] as? String, "encostados")
+        // Expectativa mudada pelo pedido do Chefe de 28/11 (CANTO-NASCE): antes do botão fica onde a pessoa deixou e sugere; com o botão, encostados (PEDIDO 52)
+        XCTAssertEqual(o["esquerdaLadoNoCanto"] as? String, "ENTROU um no outro (376 mm) · sugere encostar")
+        XCTAssertEqual(o["esquerdaLadoNoCantoBotao"] as? String, "encostados", "o botão encosta certinho")
+        XCTAssertEqual(o["esquerdaLadoPerto"] as? String, "afastados 9 mm · sugere encostar")
+        XCTAssertEqual(o["esquerdaLadoPertoBotao"] as? String, "encostados", "o botão encosta certinho")
         XCTAssertEqual(o["esquerdaLonge"] as? String, "afastados 489 mm")
-        XCTAssertEqual(o["esquerdaFundoEntraNoCanto"] as? String, "encostados")
-        XCTAssertEqual(o["direitaLadoNoCanto"] as? String, "encostados")
-        XCTAssertEqual(o["balcoesNoCantoEsquerdo"] as? String, "afastados 9 mm")
-        XCTAssertEqual(o["balcoesNoCantoDireito"] as? String, "afastados 9 mm")
+        XCTAssertEqual(o["esquerdaFundoEntraNoCanto"] as? String, "ENTROU um no outro (376 mm) · sugere encostar")
+        XCTAssertEqual(o["esquerdaFundoEntraNoCantoBotao"] as? String, "encostados", "o botão encosta certinho")
+        XCTAssertEqual(o["direitaLadoNoCanto"] as? String, "ENTROU um no outro (346 mm) · sugere encostar")
+        XCTAssertEqual(o["direitaLadoNoCantoBotao"] as? String, "encostados", "o botão encosta certinho")
+        XCTAssertEqual(o["balcoesNoCantoEsquerdo"] as? String, "afastados 9 mm · sugere encostar")
+        XCTAssertEqual(o["balcoesNoCantoEsquerdoBotao"] as? String, "encostados", "o botão encosta certinho")
+        XCTAssertEqual(o["balcoesNoCantoDireito"] as? String, "afastados 9 mm · sugere encostar")
+        XCTAssertEqual(o["balcoesNoCantoDireitoBotao"] as? String, "encostados", "o botão encosta certinho")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 
@@ -11601,10 +11612,10 @@ final class EditorWebKitTests: XCTestCase {
         S.geo.push({id:1,tp:'tamp',desce:'tl',x:370,b:0,z:6,w:30,h:850,d:585,c:'#e6d9be'});S.geo.push({id:2,tp:'placa',x:3200,b:0,z:300,w:600,h:1200,d:15,c:'#e6d9be'});draw();
         var foto=function(){SPC={};var G=cutGroups(),q=0,lin=[];G.ord.forEach(function(k){var g=G.map[k];q+=+g.qty||0;lin.push(g.qty+'x'+g.L+'x'+g.W)});var P=sheetPlan(1),nch=0;P.groups.forEach(function(g){nch+=g.n});var b=budget();
           return JSON.stringify({pecas:q,linhas:lin.sort(),chapas:nch,tB:Math.round(b.T.tB*1000),tC:Math.round(b.T.tC*1000),tT:Math.round(b.T.tT*1000),tot:Math.round(b.tot*100)})};
-        var f1=foto(),f2=foto(),f3=foto();R.repetir=f1===f2&&f2===f3?'igual nas 3 vezes':'mudou: '+f1+' ≠ '+f3;
-        /* pôr e tirar: porta a mais no aéreo, tamponamento livre, placa solta */var v0=JSON.stringify(ae.v);ae.v[0].n=1;draw();var fp=foto();ae.v=JSON.parse(v0);draw();R.porta=(fp!==f1?'mudou ao editar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
-        var tl=S.geo.splice(0,1)[0];draw();var ft=foto();S.geo.unshift(tl);draw();R.livre=(ft!==f1?'mudou ao tirar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
-        var pl=S.geo.splice(1,1)[0];draw();var fpl=foto();S.geo.push(pl);draw();R.placa=(fpl!==f1?'mudou ao tirar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
+        var f1=foto(),f2=foto(),f3=foto(),B0=budget();/* Chefe 28/11 (financeiro ao centavo): além de "mudou", a diferença exata de cada parte do cálculo e a soma fechando com o total */var c2=function(v){return (Math.round(v*100)/100).toFixed(2)},fF=function(b){return (b.T.tB*(+PR.fitaB||0)+b.T.tC*(+PR.fitaC||0)+(b.T.tT||0)*(+PR.fitaT||0))*fK()},Dl=function(b){var dC=(b.cB+b.cC+b.cF)-(B0.cB+B0.cC+B0.cF),dF=fF(b)-fF(B0),dT=b.tot-B0.tot;return 'Δ '+c2(dT)+' = chapas '+c2(dC)+' + fita '+c2(dF)+' + ferragens '+c2(dT-dC-dF)+' · fita '+Math.round(((b.T.tB+b.T.tC+(b.T.tT||0))-(B0.T.tB+B0.T.tC+(B0.T.tT||0)))*1000)+' mm · dobradiças '+(b.T.dob-B0.T.dob)+' (×'+(+PR.dob||0)+' = '+c2((b.T.dob-B0.T.dob)*(+PR.dob||0))+')'};R.repetir=f1===f2&&f2===f3?'igual nas 3 vezes':'mudou: '+f1+' ≠ '+f3;
+        /* pôr e tirar: porta a mais no aéreo, tamponamento livre, placa solta */var v0=JSON.stringify(ae.v);ae.v[0].n=1;draw();var fp=foto();R.portaD=Dl(budget());ae.v=JSON.parse(v0);draw();R.porta=(fp!==f1?'mudou ao editar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
+        var tl=S.geo.splice(0,1)[0];draw();var ft=foto();R.livreD=Dl(budget());S.geo.unshift(tl);draw();R.livre=(ft!==f1?'mudou ao tirar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
+        var pl=S.geo.splice(1,1)[0];draw();var fpl=foto();R.placaD=Dl(budget());S.geo.push(pl);draw();R.placa=(fpl!==f1?'mudou ao tirar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
         /* placa solta: regra própria (sem fita, como antes) · tamponamento livre: fita */var bA=budget().T;S.geo=S.geo.filter(function(g){return g.tp!=='placa'});var bS=budget().T;S.geo.push(pl);R.placaFita=Math.round(((bA.tB+bA.tC+bA.tT)-(bS.tB+bS.tC+bS.tT))*1000)+' mm de fita da placa';
         /* salvar e reabrir: mesma foto */var js=JSON.stringify(snapState());loadState(JSON.parse(js));draw();R.reaberto=foto()===f1?'igual':'mudou';
         R.errs=__errs.length-e0;return JSON.stringify(R);
@@ -11613,6 +11624,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["porta"] as? String, "mudou ao editar · voltou igual")
         XCTAssertEqual(o["livre"] as? String, "mudou ao tirar · voltou igual")
         XCTAssertEqual(o["placa"] as? String, "mudou ao tirar · voltou igual")
+        XCTAssertEqual(o["portaD"] as? String, "Δ -19.70 = chapas 0.11 + fita -1.81 + ferragens -18.00 · fita -1496 mm · dobradiças -2 (×9 = -18.00)", "porta a menos no aéreo: diferença ao centavo")
+        XCTAssertEqual(o["livreD"] as? String, "Δ -78.05 = chapas -72.06 + fita -6.00 + ferragens 0.00 · fita -2870 mm · dobradiças 0 (×9 = 0.00)", "tamponamento livre tirado: diferença ao centavo · fita = perímetro 2 × (850 + 585) = 2870 mm, × R$ 1,90 × 1,10 = R$ 6,00")
+        XCTAssertEqual(o["placaD"] as? String, "Δ -52.17 = chapas -52.17 + fita 0.00 + ferragens 0.00 · fita 0 mm · dobradiças 0 (×9 = 0.00)", "placa solta tirada: diferença ao centavo (sem fita)")
         XCTAssertEqual(o["placaFita"] as? String, "0 mm de fita da placa", "placa solta mantém a regra dela (sem fita no orçamento)")
         XCTAssertEqual(o["reaberto"] as? String, "igual")
         XCTAssertEqual(o["errs"] as? Int, 0)
@@ -20036,7 +20050,7 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
         loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});
         var m=S.mods[0],mi=0,P=partsOf(m).filter(function(p){return p.pk&&edgeSides(p.name)==='B'&&+p.cl>0})[0],pk=P.pk;R.peca=!!P;
-        var mt=function(){var c=mCost(m);return r3(c.tB+c.tC+c.tT)},st0=JSON.stringify(snapState()),m0=mt(),b0=JSON.stringify(budget().L||budget());
+        var mt=function(){var c=mCost(m);return r3(c.tB+c.tC+c.tT)},st0=JSON.stringify(snapState()),m0=mt(),b0=JSON.stringify(budget().L||budget()),B0=budget(),cent=function(v){return Math.round(v*100)},tm=function(B){return B.T.tB+B.T.tC+(B.T.tT||0)};
         var verdes=function(root){var n=0;[].forEach.call(root.querySelectorAll('g[data-cp]'),function(g){if(String(g.dataset.src||'').split(';').indexOf(mi+'|'+pk)>=0)n+=(g.innerHTML.match(/stroke="#1f9d55" stroke-width="9"/g)||[]).length});return n};
         openCut();await W(300);var cb=document.getElementById('cutbody');R.antes=verdes(cb)+' · '+!!cb.querySelector('[data-ftman]');R.mesmoProjeto=JSON.stringify(snapState())===st0;
         var bt=[].filter.call(cb.querySelectorAll('[data-fted]'),function(b){return String(b.dataset.ftsrc).split(';').indexOf(mi+'|'+pk)>=0})[0];R.botao=!!bt;bt.click();await W(50);
@@ -20046,11 +20060,11 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         M.querySelector('[data-fta="ok"]').click();await W(300);cb=document.getElementById('cutbody');
         R.guardado=JSON.stringify(m.fitaMan);R.depois=verdes(cb)+' · '+!!cb.querySelector('[data-ftman="LTB"]');
         R.metros=r3(mt()-m0)===r3((+P.cl+ +P.cl+ +P.cw)/1000-(+P.cl)/1000)?'certo':(mt()-m0)+'';
-        R.orcamento=JSON.stringify(budget().L||budget())!==b0;R.quadro3D=fitaAcab(P,m).s+' · '+fitaAcab(P).s;
+        R.orcamento=JSON.stringify(budget().L||budget())!==b0;/* Code 1 (auditoria do item 20, via Chefe 28/11): o orçamento confere o VALOR, ao centavo: metros a mais de cada fita × preço dela × perda da fita (a base inferior deste balcão leva fita da cor: regra capot do mCost) */var B1=budget(),dM=(+P.cl+ +P.cw)/1000,dB=B1.T.tB-B0.T.tB,dC=B1.T.tC-B0.T.tC,dT=(B1.T.tT||0)-(B0.T.tT||0),dE=(dB*(+PR.fitaB)+dC*(+PR.fitaC)+dT*(+PR.fitaT))*fK();R.orcTipo=r3(dC)===r3(dM)&&r3(dB)===0&&r3(dT)===0?'fita da cor':'B '+r3(dB)+' C '+r3(dC)+' T '+r3(dT);R.orcCentavo=cent(B1.tot-B0.tot)===cent(dE)?'certo':'Δ '+(B1.tot-B0.tot)+' ≠ '+dE;R.orcValor=(cent(B1.tot-B0.tot)/100).toFixed(2);R.orcMetrosLista=r3(tm(B1)-tm(B0))===r3(mt()-m0)&&r3(mt()-m0)===r3(dM);R.orcVenda=cent(B1.sale-B0.sale)===cent((B1.tot-B0.tot)*PR.mult);R.orcSoFita=cent(B1.cB+B1.cC+B1.cF)===cent(B0.cB+B0.cC+B0.cF);R.quadro3D=fitaAcab(P,m).s+' · '+fitaAcab(P).s;
         var outros=partsOf(m).filter(function(p){return p.pk&&p.pk!==pk}).every(function(p){return edgeSidesOf(m,p)===edgeSides(p.name)});R.soEssa=outros;
         var st1=JSON.stringify(snapState());loadState(JSON.parse(st1));draw();var mR=mt();R.reabre=JSON.stringify(S.mods[0].fitaMan)===R.guardado&&r3(mCost(S.mods[0]).tB+mCost(S.mods[0]).tC+mCost(S.mods[0]).tT)===mR;
         m=S.mods[0];await W(800);openCut();await W(300);bt=[].filter.call(document.querySelectorAll('#cutbody [data-fted]'),function(b){return String(b.dataset.ftsrc).split(';').indexOf(mi+'|'+pk)>=0})[0];bt.click();await W(50);M=document.getElementById('ftedm');[].forEach.call(M.querySelectorAll('[data-ftp]'),function(c,i){var s=bt.dataset.ftsrc.split(';').filter(Boolean)[i];if(s!==mi+'|'+pk&&c.checked)c.click()});M.querySelector('[data-fta="auto"]').click();await W(300);
-        R.automatico=(S.mods[0].fitaMan===undefined)+' · '+(r3(mt())===m0);
+        R.automatico=(S.mods[0].fitaMan===undefined)+' · '+(r3(mt())===m0);R.autoCentavo=cent(budget().tot)===cent(B0.tot)&&cent(budget().sale)===cent(B0.sale);
         await W(800);document.getElementById('und').click();await W(200);R.desfaz=JSON.stringify(S.mods[0].fitaMan)===R.guardado;R.guardado=/"LTB"/.test(R.guardado);
         document.getElementById('cutx')&&document.getElementById('cutx').click();
         /* ArqueCut avulso */
@@ -20072,6 +20086,14 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["desfaz"] as? Bool, true, "↶ desfaz volta a escolha")
         XCTAssertEqual(o["metros"] as? String, "certo", "metros de fita: + 1 comprimento + 1 largura")
         XCTAssertEqual(o["orcamento"] as? Bool, true, "o orçamento muda junto (fita)")
+        // Code 1 / Chefe 28/11 (fortalecido, não afrouxado): o valor ao centavo
+        XCTAssertEqual(o["orcCentavo"] as? String, "certo", "orçamento: diferença = metros a mais × preço da fita × perda da fita, ao centavo")
+        XCTAssertEqual(o["orcTipo"] as? String, "fita da cor", "os metros a mais entram na fita certa (da cor), sem ir pra outra")
+        XCTAssertEqual(o["orcValor"] as? String, "1.77", "diferença em R$ com os preços de referência (PRAVG): 1,46 m × R$ 1,10 × 1,10 de perda = R$ 1,77")
+        XCTAssertEqual(o["orcMetrosLista"] as? Bool, true, "metros de fita: orçamento = lista do módulo = lados escolhidos (sem duplicar)")
+        XCTAssertEqual(o["orcVenda"] as? Bool, true, "preço de venda acompanha (custo × multiplicador), ao centavo")
+        XCTAssertEqual(o["orcSoFita"] as? Bool, true, "chapas não mudam: só a fita entra na diferença")
+        XCTAssertEqual(o["autoCentavo"] as? Bool, true, "automático: o orçamento volta exatamente ao valor de antes")
         XCTAssertEqual(o["quadro3D"] as? String, "LTB · B", "o quadro da peça no 3D mostra a mesma fita")
         XCTAssertEqual(o["soEssa"] as? Bool, true, "só a peça escolhida muda")
         XCTAssertEqual(o["automatico"] as? String, "true · true", "Automático volta à regra de sempre")
@@ -20294,18 +20316,92 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // ERRO CANTO-NASCE (Chefe 28/11, regra "o app não mexe uma vírgula"): o 1º módulo da parede lateral criado junto do canto cego andava SOZINHO de 600 pra 621
+    // (E) / 651 (D) ~1 s depois (CANTO-SOZINHO encostando na régua espaçadora). Agora fica onde nasceu e aparece "Encostar no canto" com a prévia (x antes → depois),
+    // aplica num toque, ↶ desfaz. Quem a pessoa mexe continua encostando como sempre. Projeto aberto: nada se mexe. Também: projeto aberto com o mesmo desenho do anterior
+    // (assinatura igual) passou a ser conferido
+    func testCantoNasceModuloNovoNaParedeLateralNaoAndaSozinhoViraSugestaoComDesfazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;draw();
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        for(const sd of ['e','d']){for(const vez of [1,2]){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();await W(400);newTpl(T(sd==='e'?'Balcão canto cego · cego na esquerda (porta na direita)':'Balcão canto cego · cego na direita (porta na esquerda)'));var m=S.mods[0];m.x=sd==='e'?0:S.W-m.w;draw();await W(600);
+          addWing(sd);var w=S.mods[S.mods.length-1];draw();await W(1500);draw();await W(400);var bar=document.getElementById('libsug'),sug=!!bar&&!bar.hidden&&/Encostar no canto/.test(bar.textContent)?(bar.textContent.match(/x [0-9.]+ → [0-9.]+/)||[''])[0]:'sem sugestão';
+          R[sd+vez]=w.x+' · '+sug}
+          if(bar&&!bar.hidden){await W(800);bar.querySelector('[data-libsug="ok"]').click();await W(80)}R[sd+'aplica']=w.x;await W(800);document.getElementById('und').click();await W(200);var w2=S.mods[S.mods.length-1];R[sd+'desfaz']=w2.x;
+          var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();await W(1500);draw();await W(400);R[sd+'reabre']=S.mods[S.mods.length-1].x;
+          /* Chefe 28/11: quem a pessoa mexe também NÃO anda sozinho: posição de arrasto/digitada perto do canto, trocar o tamponamento e mudar a largura → x igual bit a bit até tocar no botão; a prévia é refeita */
+          var w3=S.mods[S.mods.length-1],pv=function(){var b=document.getElementById('libsug');return b&&!b.hidden&&/Encostar no canto/.test(b.textContent)?(b.textContent.match(/x [0-9.]+ → [0-9.]+/)||[''])[0]:'sem sugestão'},ok3=true;
+          w3.x=610;draw();await W(1500);draw();await W(400);ok3=ok3&&Object.is(w3.x,610);R[sd+'mexido']=w3.x+' · '+pv();
+          w3.tl=!w3.tl;draw();await W(1500);draw();await W(400);ok3=ok3&&Object.is(w3.x,610);R[sd+'tamp']=w3.x+' · '+pv();
+          w3.w=800;draw();await W(1500);draw();await W(400);ok3=ok3&&Object.is(w3.x,610);R[sd+'largura']=w3.x+' · '+pv();R[sd+'bitAbit']=ok3;
+          var b3=document.getElementById('libsug');if(b3&&!b3.hidden){var alvo=+(pv().split('→ ')[1]||NaN);await W(800);b3.querySelector('[data-libsug="ok"]').click();await W(80);R[sd+'botao']=Object.is(w3.x,alvo)?'foi pro x da prévia':'x '+w3.x+' ≠ prévia '+alvo}}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["e1"] as? String, "600 · x 600 → 621", "E: fica onde nasceu (antes andava sozinho pra 621) e sugere encostar com a prévia")
+        XCTAssertEqual(o["e2"] as? String, "600 · x 600 → 621", "E: igual na 2ª vez (projeto com o mesmo desenho do anterior também é conferido)")
+        XCTAssertEqual(o["eaplica"] as? Double, 621, "o botão encosta")
+        XCTAssertEqual(o["edesfaz"] as? Double, 600, "↶ volta pra onde nasceu")
+        XCTAssertEqual(o["ereabre"] as? Double, 600, "projeto aberto: nada se mexe")
+        XCTAssertEqual(o["d1"] as? String, "600 · x 600 → 651", "D: fica onde nasceu (antes andava sozinho pra 651)")
+        XCTAssertEqual(o["d2"] as? String, "600 · x 600 → 651", "D: igual na 2ª vez")
+        XCTAssertEqual(o["daplica"] as? Double, 651, "o botão encosta")
+        XCTAssertEqual(o["ddesfaz"] as? Double, 600, "↶ volta")
+        XCTAssertEqual(o["dreabre"] as? Double, 600, "projeto aberto: nada se mexe")
+        XCTAssertEqual(o["emexido"] as? String, "610 · x 610 → 621", "posição perto do canto (arrasto/digitada): fica em 610 e sugere")
+        XCTAssertEqual(o["etamp"] as? String, "610 · x 610 → 651", "trocar o tamponamento: não anda; a prévia é refeita")
+        XCTAssertEqual(o["elargura"] as? String, "610 · x 610 → 651", "mudar a largura: não anda")
+        XCTAssertEqual(o["ebitAbit"] as? Bool, true, "x igual bit a bit até tocar no botão")
+        XCTAssertEqual(o["ebotao"] as? String, "foi pro x da prévia", "o botão leva pro x que a prévia mostrou")
+        XCTAssertEqual(o["dmexido"] as? String, "610 · x 610 → 651")
+        XCTAssertEqual(o["dtamp"] as? String, "610 · x 610 → 621")
+        XCTAssertEqual(o["dlargura"] as? String, "610 · x 610 → 621")
+        XCTAssertEqual(o["dbitAbit"] as? Bool, true, "x igual bit a bit até tocar no botão (D)")
+        XCTAssertEqual(o["dbotao"] as? String, "foi pro x da prévia")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // CANTO-NASCE · AS DUAS VERSÕES (Chefe 28/11, aguardando o Adauto): A (padrão, CANTO_IMA_ARRASTO=false) nada encosta sozinho, nem no arrasto · B (=true) o ímã do PEDIDO 52
+    // vale só no ARRASTO da própria pessoa (soltou perto do canto → encosta, ↶ volta); criar, tamponamento e largura continuam só sugerindo, x igual bit a bit
+    func testCantoImaDuasVersoesArrastoDaPessoaEncostaSoNaVersaoBORestoSoSugere() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;draw();
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var pe=function(tp){window.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,pointerId:7,isPrimary:true,clientX:5,clientY:5}))};
+        var mk=async function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();await W(400);newTpl(T('Balcão canto cego · cego na esquerda (porta na direita)'));S.mods[0].x=0;draw();await W(500);addWing('e');var w=S.mods[S.mods.length-1];draw();await W(1500);draw();await W(300);try{libSugLimpa()}catch(_){}return w};
+        var sug=function(){var b=document.getElementById('libsug');return b&&!b.hidden&&/Encostar no canto/.test(b.textContent)?(b.textContent.match(/x [0-9.]+ → [0-9.]+/)||[''])[0]:'sem sugestão'};
+        for(const ver of ['A','B']){window.CANTO_IMA_ARRASTO=ver==='B';var w=await mk();await W(800);
+          /* arrasto da pessoa: encosta o dedo com o módulo escolhido, ele anda até 610 e solta */S.m=w;pe('pointerdown');w.x=610;draw();pe('pointerup');await W(1500);draw();await W(400);R[ver+'arrasto']=w.x+' · '+sug();
+          if(ver==='B'){await W(800);document.getElementById('und').click();await W(200);R.Bdesfaz=S.mods[S.mods.length-1].x;w=S.mods[S.mods.length-1];w.x=610;draw();await W(1500);draw();await W(400)}
+          /* outras ações, sem arrasto: o x não muda nem um bit */var x0=w.x;w.tl=!w.tl;draw();await W(1500);draw();await W(400);R[ver+'tamp']=Object.is(w.x,x0)+' · '+sug();w.w=800;draw();await W(1500);draw();await W(400);R[ver+'largura']=Object.is(w.x,x0)+' · '+sug()}
+        window.CANTO_IMA_ARRASTO=false;R.padrao=window.CANTO_IMA_ARRASTO;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["Aarrasto"] as? String, "610 · x 610 → 621", "versão A: o arrasto também só sugere")
+        XCTAssertEqual(o["Barrasto"] as? String, "621 · sem sugestão", "versão B: soltou perto do canto, o ímã encosta (PEDIDO 52)")
+        XCTAssertEqual(o["Bdesfaz"] as? Double, 600, "versão B: ↶ desfaz o gesto inteiro (arrasto + ímã, 1 passo do histórico), como era no PEDIDO 52")
+        XCTAssertEqual(o["Atamp"] as? String, "true · x 610 → 651", "A: tamponamento não mexe no x")
+        XCTAssertEqual(o["Alargura"] as? String, "true · x 610 → 651", "A: largura não mexe no x")
+        XCTAssertEqual(o["Btamp"] as? String, "true · x 610 → 651", "B: tamponamento não mexe no x (não é arrasto)")
+        XCTAssertEqual(o["Blargura"] as? String, "true · x 610 → 651", "B: largura não mexe no x")
+        XCTAssertEqual(o["padrao"] as? Bool, false, "padrão = versão A até o Adauto responder")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // ITEM 2 · BASE ATRAVESSADA NO CANTO CEGO (Adauto 28/11; leitura do Chefe 28/11, opção c): o cego e o 1º módulo da parede lateral (2 módulos retos) hoje não se
     // encostam. Com a junta unida e a escolha no cego, o RODAPÉ: A = o do cego passa inteiro e o da asa vai até ENCOSTAR · B = o da asa passa inteiro até o rodapé
     // traseiro do cego e o do cego encurta onde a asa cruza. E e D, 0 sobreposição entre TODAS as peças dos dois (portas, régua espaçadora, laterais, fundo),
-    // partsOf = 3D = corte, sem escolha = como hoje. BASE: o painel cego/porta desce na frente dela → fica como está e o app diz o porquê (decisão pendente com o Adauto).
+    // partsOf = 3D = corte, sem escolha = como hoje. BASE (Chefe 28/11, opção b): a da asa vai até a face da porta/régua do cego, sem entrar; no B igual (não passa por baixo da porta) e avisa.
     // O módulo não anda sozinho por causa do rodapé atravessado (CANTO-SOZINHO). Tamponamento da asa entre os dois = não mexe e avisa. Salvar/reabrir, desfazer
     func testCantoCegoRodapeAtravessadoLadoAouBEncostaOuPassaInteiroSemSobreposicao() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
         var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;draw();open3D();await W(300);
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
-        /* o 1º da parede lateral encosta sozinho na régua espaçadora do cego logo depois de entrar (CANTO-SOZINHO, como sempre foi): espera assentar antes de escolher */
-        var mk=async function(sd,v,tl){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(sd==='e'?'Balcão canto cego · cego na esquerda (porta na direita)':'Balcão canto cego · cego na direita (porta na esquerda)'));var m=S.mods[0];m.x=sd==='e'?0:S.W-m.w;m.rod=true;m.base=true;draw();addWing(sd);var w=S.mods[S.mods.length-1];w.rod=true;w.base=true;w.tl=!!tl;draw();await W(1200);draw();await W(300);m.une=w.une='u1';m.unV=w.unV=1;if(v)m.cnPassa={base:v,rod:v};draw();return [m,w]};
+        /* ERRO CANTO-NASCE (Chefe 28/11): o 1º da parede lateral NÃO encosta mais sozinho na régua espaçadora do cego; fica onde nasceu (600) e aparece "Encostar no canto".
+           Aqui a pessoa toca no botão (é o que ela faria) antes de escolher A/B · R.nasce guarda onde ele ficou sem o toque */
+        var mk=async function(sd,v,tl){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(sd==='e'?'Balcão canto cego · cego na esquerda (porta na direita)':'Balcão canto cego · cego na direita (porta na esquerda)'));var m=S.mods[0];m.x=sd==='e'?0:S.W-m.w;m.rod=true;m.base=true;draw();addWing(sd);var w=S.mods[S.mods.length-1];w.rod=true;w.base=true;w.tl=!!tl;draw();await W(1200);draw();await W(300);
+          R['nasce'+sd]=w.x;var bar=document.getElementById('libsug');if(bar&&!bar.hidden&&/encostar/i.test(bar.textContent)){bar.querySelector('[data-libsug="ok"]').click();await W(60)}m.une=w.une='u1';m.unV=w.unV=1;if(v)m.cnPassa={base:v,rod:v};draw();return [m,w]};
         var NM=/^(Base inferior|Rodapé \(pedestal\)|Rodapé traseiro \(pedestal\))$/;
         var cl=function(o){return partsOf(o).filter(function(p){return NM.test(p.name)}).map(function(p){return p.cl}).join('/')};
         var med=function(mw){__build();var bx=__boxes().filter(function(q){return /^[01]:/.test(String(q.nm))&&!/puxador|Puxador|Pedra/i.test(String(q.nm))&&(q.x1-q.x0)>=2&&(q.z1-q.z0)>=2&&(q.y1-q.y0)>=2});var ov=0;
@@ -20313,7 +20409,7 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
           var L=function(k,re,ax){return bx.filter(function(q){return String(q.nm)[0]===k&&re.test(String(q.nm).slice(2))}).map(function(q){return Math.round(q[ax+'1']-q[ax+'0'])}).join('/')};
           var C=cutLines(mw[0]).concat(cutLines(mw[1])).filter(function(l){return (l.names||[]).some(function(n){return NM.test(n)})}).map(function(l){return l.L}).join('/');
           return cl(mw[0])+' ; '+cl(mw[1])+' · 3d '+L('0',NM,'x')+' ; '+L('1',NM,'z')+' · corte '+C+' · ov '+ov};
-        for(const sd of ['e','d'])for(const v of ['','A','B']){var mw=await mk(sd,v);R[sd+(v||'0')]=med(mw);R[sd+(v||'0')+'x']=mw[1].x;R[sd+(v||'0')+'par']=window.cnPassaCego(mw[0])===mw[1]&&window.cnPassaCego(mw[1])===mw[0];if(v)R[sd+v+'info']=/painel cego/.test(cnPassaInfo(mw[0]))}
+        for(const sd of ['e','d'])for(const v of ['','A','B']){var mw=await mk(sd,v);R[sd+(v||'0')]=med(mw);R[sd+(v||'0')+'x']=mw[1].x;R[sd+(v||'0')+'par']=window.cnPassaCego(mw[0])===mw[1]&&window.cnPassaCego(mw[1])===mw[0];if(v)R[sd+v+'info']=cnPassaInfo(mw[0])}
         /* mexer no da parede lateral depois de escolher B: anda como sempre (encosta no cego), não pula por causa do rodapé que passa por trás */
         for(const v of ['','B']){var mw=await mk('e',v);await W(800);mw[1].x=mw[1].x+10;draw();await W(1500);draw();await W(300);R['anda'+(v||'0')]=mw[1].x}
         var mw=await mk('e','B');var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();R.reabre=cl(S.mods[0])+' ; '+cl(S.mods[1]);
@@ -20323,29 +20419,30 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["e0"] as? String, "1000/1000/1000 ; 900/900/900 · 3d 1000/1000/1000 ; 900/900/900 · corte 1000/1000/1000/900/900/900 · ov 0", "cego E sem escolha: como hoje")
-        XCTAssertEqual(o["eA"] as? String, "1000/1000/1000 ; 900/1005/1005 · 3d 1000/1000/1000 ; 900/1005/1005 · corte 1000/1000/1000/900/1005/1005 · ov 0", "cego E · A: o rodapé do cego inteiro; o da asa vai +105 até encostar nele (a base fica)")
-        XCTAssertEqual(o["eB"] as? String, "1000/469/469 ; 900/1485/1485 · 3d 1000/469/469 ; 900/1485/1485 · corte 1000/469/469/900/1485/1485 · ov 0", "cego E · B: o rodapé da asa passa inteiro até o traseiro do cego; o do cego encurta onde ela cruza")
+        XCTAssertEqual(o["eA"] as? String, "1000/1000/1000 ; 900/1005/1005 · 3d 1000/1000/1000 ; 900/1005/1005 · corte 1000/1000/1000/900/1005/1005 · ov 0", "cego E · A: rodapé da asa +105 até encostar no do cego · base da asa já está na face da régua espaçadora (621): fica 900")
+        XCTAssertEqual(o["eB"] as? String, "1000/469/469 ; 900/1485/1485 · 3d 1000/469/469 ; 900/1485/1485 · corte 1000/469/469/900/1485/1485 · ov 0", "cego E · B: rodapé da asa inteiro até o traseiro do cego, o do cego encurta · base igual ao A")
         XCTAssertEqual(o["d0"] as? String, "1000/1000/1000 ; 900/900/900 · 3d 1000/1000/1000 ; 900/900/900 · corte 1000/1000/1000/900/900/900 · ov 0", "cego D sem escolha: como hoje")
-        XCTAssertEqual(o["dA"] as? String, "1000/1000/1000 ; 900/1005/1005 · 3d 1000/1000/1000 ; 900/1005/1005 · corte 1000/1000/1000/900/1005/1005 · ov 0", "cego D · A (espelho do E)")
-        XCTAssertEqual(o["dB"] as? String, "1000/499/499 ; 900/1485/1485 · 3d 1000/499/499 ; 900/1485/1485 · corte 1000/499/499/900/1485/1485 · ov 0", "cego D · B (o cego fica em 2965–3965 na parede: encurta 501)")
+        XCTAssertEqual(o["dA"] as? String, "1000/1000/1000 ; 940/1005/1005 · 3d 1000/1000/1000 ; 940/1005/1005 · corte 1000/1000/1000/940/1005/1005 · ov 0", "cego D · A: base da asa +40 até a face da porta do cego (581), sem entrar (a régua do D não cruza a asa)")
+        XCTAssertEqual(o["dB"] as? String, "1000/499/499 ; 940/1485/1485 · 3d 1000/499/499 ; 940/1485/1485 · corte 1000/499/499/940/1485/1485 · ov 0", "cego D · B (o cego fica em 2965–3965: encurta 501)")
+        XCTAssertEqual(o["nascee"] as? Double, 600, "ERRO CANTO-NASCE (Chefe 28/11): o 1º da parede lateral fica onde nasceu (E) · antes andava sozinho pra 621")
+        XCTAssertEqual(o["nasced"] as? Double, 600, "ERRO CANTO-NASCE (Chefe 28/11): fica onde nasceu (D)")
         XCTAssertEqual(o["eApar"] as? Bool, true, "cnPassaCego acha o par nos dois sentidos")
-        XCTAssertEqual(o["eAinfo"] as? Bool, true, "a base fica como está e o app diz o porquê (painel cego desce na frente dela)")
-        XCTAssertEqual(o["eAx"] as? Double, 621, "o módulo da parede lateral fica onde estava")
+        XCTAssertEqual(o["eAx"] as? Double, 621, "encostado pelo botão \"Encostar no canto\" e não sai do lugar com a escolha")
         XCTAssertEqual(o["eBpar"] as? Bool, true, "cnPassaCego acha o par nos dois sentidos")
-        XCTAssertEqual(o["eBinfo"] as? Bool, true, "a base fica como está e o app diz o porquê (painel cego desce na frente dela)")
-        XCTAssertEqual(o["eBx"] as? Double, 621, "o módulo da parede lateral fica onde estava")
+        XCTAssertEqual(o["eBx"] as? Double, 621, "encostado pelo botão \"Encostar no canto\" e não sai do lugar com a escolha")
         XCTAssertEqual(o["dApar"] as? Bool, true, "cnPassaCego acha o par nos dois sentidos")
-        XCTAssertEqual(o["dAinfo"] as? Bool, true, "a base fica como está e o app diz o porquê (painel cego desce na frente dela)")
-        XCTAssertEqual(o["dAx"] as? Double, 621, "o módulo da parede lateral fica onde estava")
+        XCTAssertEqual(o["dAx"] as? Double, 621, "encostado pelo botão \"Encostar no canto\" e não sai do lugar com a escolha")
         XCTAssertEqual(o["dBpar"] as? Bool, true, "cnPassaCego acha o par nos dois sentidos")
-        XCTAssertEqual(o["dBinfo"] as? Bool, true, "a base fica como está e o app diz o porquê (painel cego desce na frente dela)")
-        XCTAssertEqual(o["dBx"] as? Double, 621, "o módulo da parede lateral fica onde estava")
-        XCTAssertEqual(o["anda0"] as? Double, 621, "sem escolha: mexido 10 mm, volta a encostar no cego (como sempre)")
-        XCTAssertEqual(o["andaB"] as? Double, 621, "com o B: igual (sem a correção pulava sozinho pra 1216 por causa do rodapé que passa por trás)")
+        XCTAssertEqual(o["dBx"] as? Double, 621, "encostado pelo botão \"Encostar no canto\" e não sai do lugar com a escolha")
+        XCTAssertEqual(o["eAinfo"] as? String, "", "A: nada a avisar")
+        XCTAssertEqual(o["eBinfo"] as? String, "Base: no canto cego a base da parede lateral não passa por baixo do painel/porta do cego (eles descem na frente da base); no B ela para na face deles, igual ao A", "B: diz por que a base não passa inteira")
+        XCTAssertEqual(o["dBinfo"] as? String, "Base: no canto cego a base da parede lateral não passa por baixo do painel/porta do cego (eles descem na frente da base); no B ela para na face deles, igual ao A")
+        XCTAssertEqual(o["anda0"] as? Double, 631, "sem escolha: mexido 10 mm, fica onde a pessoa deixou (Chefe 28/11: nada anda sozinho; antes voltava pra 621)")
+        XCTAssertEqual(o["andaB"] as? Double, 631, "com o B: igual (antes da correção do rodapé atravessado pulava sozinho pra 1216)")
         XCTAssertEqual(o["reabre"] as? String, "1000/469/469 ; 900/1485/1485", "salvar e reabrir mantém")
         XCTAssertEqual(o["tamp"] as? String, "1000/1000/1000 ; 900/900/900 · avisa", "tamponamento da asa entre os dois: não mexe e diz o porquê")
         XCTAssertEqual(o["semUnir"] as? String, "1000/1000/1000 ; 900/900/900", "sem a junta unida pelo Unir, a escolha não mexe em nada")
-        XCTAssertEqual(o["antesDesfaz"] as? String, "900/1005/1005")
+        XCTAssertEqual(o["antesDesfaz"] as? String, "940/1005/1005")
         XCTAssertEqual(o["desfaz"] as? String, "900/900/900 · -", "↶ desfaz a escolha")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
@@ -21389,7 +21486,9 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         try{document.getElementById('v3x').click()}catch(_){}R.tresD=n3+' peças · '+(fora.join(', ')||'todas na altura');
         /* lista e corte */var L=cutLines(m),tem=function(nm){return L.some(function(l){return String(l.n||l.name||'').indexOf(nm)===0})};R.listaCorte='travessa '+tem('Prateleira fixa (embaixo da gaveta)')+' · frente '+tem('Frente de gaveta')+' · porta '+L.some(function(l){return /^Porta/.test(String(l.n||l.name||''))});
         var pl=sheetPlan(1),noPlano=0;pl.groups.forEach(function(g){g.sheets.forEach(function(s){s.used.forEach(function(u){if(/Prateleira fixa \(embaixo da gaveta\)/.test(u.p.lab))noPlano++})})});R.plano='travessa no plano '+noPlano;
+        /* preços de referência (PRAVG) só neste trecho: com preço zero o valor não diz nada */var PR0=JSON.parse(JSON.stringify(PR));Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});
         await W(800);draw();var bu=budget(),tot=JSON.stringify(bu.total!==undefined?bu.total:bu);document.getElementById('und').click();await W(120);draw();var bu0=JSON.stringify(budget().total!==undefined?budget().total:budget());R.orcamento=(tot!==bu0)+' · ↶ volta: '+(JSON.stringify(partsOf(S.mods[0]))===pBase);
+        /* Chefe 28/11 (financeiro ao centavo): a diferença do orçamento, peça por peça do cálculo (chapas + fita + ferragens = total, sem sobra) */var bB=budget(),c2=function(v){return (Math.round(v*100)/100).toFixed(2)},fF=function(b){return (b.T.tB*(+PR.fitaB||0)+b.T.tC*(+PR.fitaC||0)+(b.T.tT||0)*(+PR.fitaT||0))*fK()},dC=(bu.cB+bu.cC+bu.cF)-(bB.cB+bB.cC+bB.cF),dF=fF(bu)-fF(bB),dT=bu.tot-bB.tot;R.orcDelta='Δ '+c2(dT)+' = chapas '+c2(dC)+' + fita '+c2(dF)+' + ferragens '+c2(dT-dC-dF)+' · gavetas '+(bu.T.drw-bB.T.drw)+' · portas '+(bu.T.doors-bB.T.doors)+' · dobradiças '+(bu.T.dob-bB.T.dob)+' · '+c2(dT-dC-dF)+' = '+c2((bu.T.drw-bB.T.drw)*(+PR.cor||0)+(bu.T.dob-bB.T.dob)*(+PR.dob||0)+((bu.T.pxE-bB.T.pxE)*(+PR.pux||0))+((bu.T.pxC-bB.T.pxC)*(+PR.concha||0)));Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,PR0);
         /* salvar/reabrir e duplicar */fcAplica(S.mods[0],'1gB');draw();var pm=JSON.stringify(partsOf(S.mods[0])),sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();R.reabre=JSON.stringify(partsOf(S.mods[0]))===pm;
         S.m=S.mods[0];S.tab=0;panel();var cp=q('[data-mcopy]');if(cp)cp.click();draw();R.duplica=S.mods.length+' módulos · '+(S.mods.length===2&&nomes(S.mods[1],0)===nomes(S.mods[0],0)&&S.mods[1].v[0].fc==='1gB');
         /* troca de composição: sem peça velha */S.mods.splice(1);S.m=S.mods[0];S.sv=0;draw();S.tab=0;panel();toca('2g');R.trocaSemSobra=nomes(S.mods[0]).indexOf('embaixo da gaveta')<0&&!S.mods[0].v[0].bas;
@@ -21416,6 +21515,7 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["listaCorte"] as? String, "travessa true · frente true · porta true")
         XCTAssertEqual(o["plano"] as? String, "travessa no plano 1")
         XCTAssertEqual(o["orcamento"] as? String, "true · ↶ volta: true")
+        XCTAssertEqual(o["orcDelta"] as? String, "Δ 58.11 = chapas 38.41 + fita 2.69 + ferragens 17.00 · gavetas 1 · portas -1 · dobradiças -2 · 17.00 = 17.00", "Chefe 28/11: a diferença ao centavo, por parte do cálculo")
         XCTAssertEqual(o["reabre"] as? Bool, true)
         XCTAssertEqual(o["duplica"] as? String, "2 módulos · true")
         XCTAssertEqual(o["trocaSemSobra"] as? Bool, true)

@@ -1,0 +1,5409 @@
+{
+ "codigo": "5067fec (publicado)",
+ "seg": 2667,
+ "1_acerto": "59.3% (6238/10513)",
+ "1b_acerto_inequivoco": "79.1% (1867/2359)",
+ "1c_inequivoco_porZoom": {
+  "z1": "85.2% (496/582)",
+  "z2": "82% (952/1161)",
+  "z3": "68% (419/616)"
+ },
+ "2_vizinho": 45,
+ "2b_nada": 56,
+ "3_porZoom": {
+  "z1": "55.4% (2761/4988)",
+  "z2": "63.6% (2804/4409)",
+  "z3": "60.3% (673/1116)"
+ },
+ "3b_porAngulo": {
+  "iso": "64.1% (2150/3355)",
+  "front": "73.9% (2233/3022)",
+  "left": "44.9% (1855/4136)"
+ },
+ "4_pequenas": "45.7% (2527/5530)",
+ "4b_pequenas_inequivocas": "42.9% (6/14)",
+ "5_ms": {
+  "p50": 4.2,
+  "p95": 10.5,
+  "max": 50.8
+ },
+ "6_led": {
+  "tot": 18,
+  "selecionou": 18,
+  "erro": "",
+  "recusadoPelaRegra": "13 (app: \"LED vai só nos módulos de cima e na cristaleira\")",
+  "aceitos": 5,
+  "modulo": "100% (5/5)",
+  "superficie": "100% (5/5)",
+  "ex": []
+ },
+ "destaque": "46.9% (4905/10457)",
+ "toqueMudouProjeto": {
+  "n": 0,
+  "ex": []
+ },
+ "ids": {
+  "semPk": 0,
+  "ferr": 0,
+  "ferrNome": 486,
+  "pkRep": 0,
+  "pkAmb": 0,
+  "semCaixa": 16,
+  "ex": [
+   "CAT Torre por vãos · forno + micro com porta de recorte · mód 0 · peça sem caixa no 3D: Frente com recorte do micro-ondas#1",
+   "CAT Torre por vãos · forno + micro com porta de recorte · mód 0 · peça sem caixa no 3D: Frente com recorte do forno#1",
+   "P1 fila encostada + aéreos · mód 1 · peça sem caixa no 3D: Base inferior#1",
+   "P1 fila encostada + aéreos · mód 1 · peça sem caixa no 3D: Rodapé (pedestal)#1",
+   "P1 fila encostada + aéreos · mód 1 · peça sem caixa no 3D: Rodapé traseiro (pedestal)#1",
+   "P1 fila encostada + aéreos · mód 2 · peça sem caixa no 3D: Rodapé (pedestal)#1",
+   "P1 fila encostada + aéreos · mód 2 · peça sem caixa no 3D: Rodapé traseiro (pedestal)#1",
+   "P3 nichos · mód 2 · peça sem caixa no 3D: Base inferior#1",
+   "P3 nichos · mód 2 · peça sem caixa no 3D: Rodapé (pedestal)#1",
+   "P3 nichos · mód 2 · peça sem caixa no 3D: Rodapé traseiro (pedestal)#1",
+   "P3 nichos · mód 3 · peça sem caixa no 3D: Base inferior#1",
+   "P3 nichos · mód 3 · peça sem caixa no 3D: Rodapé (pedestal)#1",
+   "P3 nichos · mód 3 · peça sem caixa no 3D: Rodapé traseiro (pedestal)#1",
+   "P5 canto cego + parede lateral · mód 2 · peça sem caixa no 3D: Base inferior#1",
+   "P5 canto cego + parede lateral · mód 2 · peça sem caixa no 3D: Rodapé (pedestal)#1",
+   "P5 canto cego + parede lateral · mód 2 · peça sem caixa no 3D: Rodapé traseiro (pedestal)#1"
+  ]
+ },
+ "porCenario": {
+  "CAT Balcão 2 portas": "63.8% (37/58)",
+  "CAT Balcão 1 porta": "42.3% (22/52)",
+  "CAT Balcão da pia (cuba)": "72% (36/50)",
+  "CAT Gaveteiro 3 gavetas": "59% (49/83)",
+  "CAT Gaveteiro 4 gavetas": "69% (69/100)",
+  "CAT Balcão porta + gavetas": "63.6% (63/99)",
+  "CAT Porta-tempero": "25% (11/44)",
+  "CAT Balcão forno embutido": "60.9% (39/64)",
+  "CAT Balcão aberto (prateleira)": "59.4% (38/64)",
+  "CAT Balcão 2 gavetas": "65.7% (46/70)",
+  "CAT Balcão 2 portas + 4 gavetas": "62.8% (76/121)",
+  "CAT Balcão 2 portas + 8 gavetas (gaveteiro nas duas pontas)": "73% (130/178)",
+  "CAT Balcão 3 portas + 4 gavetas": "64% (80/125)",
+  "CAT Balcão com laterais até o piso": "66% (31/47)",
+  "CAT Balcão sem lateral direita (usa a do vizinho)": "66% (35/53)",
+  "CAT Balcão sem laterais (entre dois módulos)": "66.7% (32/48)",
+  "CAT Aéreo 2 portas": "78.3% (36/46)",
+  "CAT Aéreo 1 porta": "74.4% (29/39)",
+  "CAT Aéreo basculante": "78% (32/41)",
+  "CAT Aéreo nicho aberto": "75% (33/44)",
+  "CAT Cristaleira (porta de vidro)": "77.1% (37/48)",
+  "CAT Aéreo sobre geladeira": "82.6% (38/46)",
+  "CAT Aéreo com divisória": "78.3% (36/46)",
+  "CAT Aéreo sem lateral direita (usa a do vizinho)": "79.5% (35/44)",
+  "CAT Canto em L (aéreo)": "97.2% (103/106)",
+  "CAT Balcão canto cego": "70.1% (94/134)",
+  "CAT Aéreo canto cego": "80% (88/110)",
+  "CAT Armário alto 2 portas": "50% (29/58)",
+  "CAT Despenseiro": "43.9% (25/57)",
+  "CAT Torre quente (forno)": "40.5% (30/74)",
+  "CAT Torre forno + micro-ondas (embutir)": "42.5% (37/87)",
+  "CAT Torre forno + nicho aberto do micro-ondas": "44.7% (38/85)",
+  "CAT Torre micro-ondas de embutir (sem forno)": "43.2% (32/74)",
+  "CAT Torre nicho aberto do micro-ondas": "45% (36/80)",
+  "CAT Torre só os nichos (forno e micro-ondas)": "46.1% (35/76)",
+  "CAT Caixa da geladeira side by side (laterais + aéreo)": "38.6% (17/44)",
+  "CAT Caixa da geladeira duplex / inverse (laterais + aéreo)": "28.6% (12/42)",
+  "CAT Torre por vãos": "35.1% (65/185)",
+  "CAT Nicho com prateleiras": "48.9% (44/90)",
+  "CAT Torre para eletros com laterais até o piso": "44.7% (34/76)",
+  "CAT Armário alto livre": "46.3% (25/54)",
+  "CAT Guarda-roupa 2 vãos": "53.4% (39/73)",
+  "CAT Guarda-roupa 3 vãos": "60.4% (58/96)",
+  "CAT Guarda-roupa porta de correr": "50% (54/108)",
+  "CAT Torre do guarda-roupa": "50% (29/58)",
+  "CAT Torre de prateleiras do guarda-roupa": "48.1% (25/52)",
+  "CAT Maleiro (sobre o armário)": "82.9% (34/41)",
+  "CAT Cômoda 4 gavetas": "76.2% (80/105)",
+  "CAT Criado-mudo 2 gavetas": "51.5% (35/68)",
+  "CAT Sapateira": "75.3% (70/93)",
+  "CAT Guarda-roupa 4 vãos (2 cabideiros + torre de gavetas)": "65.3% (94/144)",
+  "CAT Guarda-roupa casal 3 vãos com gaveteiro (caixote)": "55.4% (51/92)",
+  "CAT Guarda-roupa de correr com torre por dentro": "52.7% (29/55)",
+  "CAT Closet aberto": "49.5% (104/210)",
+  "CAT Sapateira torre 1 porta": "37.7% (20/53)",
+  "CAT Escrivaninha do quarto com gavetas": "71.7% (71/99)",
+  "CAT Armário livre": "48.8% (80/164)",
+  "CAT Gabinete 2 portas": "73.3% (33/45)",
+  "CAT Gabinete com gavetas": "68.6% (35/51)",
+  "CAT Espelheira": "72.7% (32/44)",
+  "CAT Gabinete suspenso 2 gavetas": "78.8% (41/52)",
+  "CAT Gabinete 1 porta + gavetas": "63.6% (49/77)",
+  "CAT Torre do banheiro (armário alto)": "44.4% (24/54)",
+  "CAT Nicho de banheiro (aberto)": "65% (26/40)",
+  "CAT Armário livre do banheiro": "37.5% (21/56)",
+  "CAT Rack de TV": "66% (62/94)",
+  "CAT Rack do zero (você monta)": "67.1% (49/73)",
+  "CAT Rack com portas basculantes": "64% (48/75)",
+  "CAT Rack suspenso": "68.3% (82/120)",
+  "CAT Aparador / buffet": "68.2% (45/66)",
+  "CAT Estante com porta de correr": "68.2% (45/66)",
+  "CAT Estante aberta": "48.9% (44/90)",
+  "CAT Módulo superior livre (nicho aberto)": "76.9% (60/78)",
+  "CAT Buffet 3 portas": "74% (54/73)",
+  "CAT Aparador suspenso 2 gavetas": "74.4% (29/39)",
+  "CAT Rack 2 portas + 2 gavetas": "66.4% (81/122)",
+  "CAT Módulo livre baixo": "82.5% (47/57)",
+  "CAT Gaveteiro de escrivaninha": "52.9% (45/85)",
+  "CAT Armário baixo 2 portas": "62.1% (36/58)",
+  "CAT Armário de correr (arquivo)": "68.2% (45/66)",
+  "CAT Nicho aéreo": "76.6% (36/47)",
+  "CAT Caixa livre vazia": "63.2% (36/57)",
+  "CAT Estante de livros alta": "53.3% (48/90)",
+  "CAT Armário alto 2 portas (arquivo)": "44.1% (26/59)",
+  "CAT Gaveteiro volante 3 gavetas": "50.6% (40/79)",
+  "CAT Escrivaninha com gaveteiro": "68.8% (66/96)",
+  "CAT Rack suspenso basculante": "71.4% (60/84)",
+  "CAT Nicho (caixa aberta)": "76.6% (36/47)",
+  "CAT Guarda-roupa correr 3 folhas": "47.7% (31/65)",
+  "CAT 1P+Gav Ext 300mm": "15.4% (12/78)",
+  "CAT 2P 600mm": "44.8% (26/58)",
+  "CAT 2P c/ Cab 600mm": "44.8% (26/58)",
+  "CAT 2P c/ Cab+Gav Int 600mm": "44.8% (26/58)",
+  "CAT 2P+Gav Ext 600mm": "37.9% (36/95)",
+  "CAT Bifold 2F 700mm": "40.4% (23/57)",
+  "CAT Bifold 3F 1000mm": "43.1% (28/65)",
+  "CAT 1 Vão 600mm": "48.4% (30/62)",
+  "CAT 2 Vãos 1600mm": "57.3% (55/96)",
+  "CAT 3 Vãos 2400mm": "58.6% (68/116)",
+  "CAT Armário sem lateral direita (usa a do vizinho)": "51.8% (29/56)",
+  "CAT Armário sem laterais (entre dois armários)": "50.9% (29/57)",
+  "CAT Canto L guarda-roupa": "55.6% (70/126)",
+  "CAT Canto reto (CR)": "51.7% (140/271)",
+  "CAT Fechamento até o teto (maleiro) 600mm": "78.9% (30/38)",
+  "CAT Fechamento até o teto (maleiro) 900mm": "85.4% (35/41)",
+  "CAT Fechamento livre": "87.9% (29/33)",
+  "CAT Sapateira 2P 600mm": "44.8% (26/58)",
+  "CAT Gaveteiro interno 2P 800mm": "42.1% (24/57)",
+  "CAT Porta de correr 2F 1800mm": "50% (27/54)",
+  "CAT Penteadeira com gavetas 1000mm": "75% (72/96)",
+  "CAT Nicho aberto 600 × 350": "76.6% (36/47)",
+  "CAT Gaveteiro com caixote (4 gavetas dentro)": "45.8% (27/59)",
+  "CAT Armário especial livre": "46.3% (25/54)",
+  "CAT Cantoneira reta 300mm (prateleiras abertas)": "15% (12/80)",
+  "CAT Cantoneira reta 400mm (prateleiras abertas)": "22.5% (20/89)",
+  "CAT Cantoneira livre": "23.5% (12/51)",
+  "CAT Passagem (ponte sobre a porta) 800mm": "79.5% (31/39)",
+  "CAT Passagem (ponte sobre a porta) 1000mm": "82.5% (33/40)",
+  "CAT Passagem aberta (nicho) 900mm": "82.5% (33/40)",
+  "CAT Passagem livre": "82.4% (28/34)",
+  "CAT Torre da sala": "40.9% (45/110)",
+  "CAT Armário de casacos da sala": "50% (29/58)",
+  "CAT Guarda-roupa de sala 2 vãos (cabideiro + prateleiras)": "50% (36/72)",
+  "CAT Armário alto de correr da sala (2 folhas)": "45.3% (24/53)",
+  "CAT Cristaleira torre (porta de vidro)": "46.3% (25/54)",
+  "CAT Bar da sala": "48.3% (28/58)",
+  "CAT Estante torre aberta com gavetas embaixo": "38% (62/163)",
+  "CAT Armário livre da sala": "49.1% (27/55)",
+  "P1 fila encostada + aéreos": "91.3% (253/277)",
+  "P2 aéreo sobre balcão": "64.2% (70/109)",
+  "P3 nichos": "63% (136/216)",
+  "P4 canto L + parede lateral": "84% (179/213)",
+  "P5 canto cego + parede lateral": "82.5% (127/154)"
+ },
+ "falhas": [
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 288,
+   "xy": [
+    489,
+    453
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 144,
+   "xy": [
+    477,
+    429
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 portas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Porta (Porta#2)",
+   "px": 1512,
+   "xy": [
+    471,
+    459
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 portas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 1872,
+   "xy": [
+    441,
+    465
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Base inferior (Base inferior#1)",
+   "px": 29,
+   "xy": [
+    425,
+    498
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 10,
+   "xy": [
+    419,
+    449
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 portas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 1224,
+   "xy": [
+    147,
+    567
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 portas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Porta (Porta#2)",
+   "px": 7308,
+   "xy": [
+    147,
+    627
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 64,
+   "xy": [
+    12,
+    628
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 portas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 5616,
+   "xy": [
+    63,
+    639
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 portas · front z1",
+   "v": "front zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 1944,
+   "xy": [
+    399,
+    399
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · front z1",
+   "v": "front zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 648,
+   "xy": [
+    453,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · front z1",
+   "v": "front zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 37,
+   "xy": [
+    455,
+    430
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · front z1",
+   "v": "front zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 45,
+   "xy": [
+    450,
+    403
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · front z1",
+   "v": "front zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 8,
+   "xy": [
+    450,
+    378
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · front z2",
+   "v": "front zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 828,
+   "xy": [
+    3,
+    501
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · front z2",
+   "v": "front zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 3240,
+   "xy": [
+    99,
+    501
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · front z2",
+   "v": "front zz2",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 216,
+   "xy": [
+    99,
+    573
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · front z2",
+   "v": "front zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 117,
+   "xy": [
+    91,
+    508
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z1",
+   "v": "left zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 252,
+   "xy": [
+    591,
+    369
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z1",
+   "v": "left zz1",
+   "peca": "0:Porta (Porta#2)",
+   "px": 252,
+   "xy": [
+    597,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 portas · left z1",
+   "v": "left zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 1728,
+   "xy": [
+    615,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 62,
+   "xy": [
+    597,
+    395
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z1",
+   "v": "left zz1",
+   "peca": "0:Base inferior (Base inferior#1)",
+   "px": 1,
+   "xy": [
+    596,
+    393
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 144,
+   "xy": [
+    615,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z1",
+   "v": "left zz1",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 52,
+   "xy": [
+    625,
+    349
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z1",
+   "v": "left zz1",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 125,
+   "xy": [
+    606,
+    348
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 6,
+   "xy": [
+    631,
+    396
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z2",
+   "v": "left zz2",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 432,
+   "xy": [
+    543,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z2",
+   "v": "left zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 1980,
+   "xy": [
+    453,
+    417
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z2",
+   "v": "left zz2",
+   "peca": "0:Porta (Porta#2)",
+   "px": 1476,
+   "xy": [
+    471,
+    429
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 portas · left z2",
+   "v": "left zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 10800,
+   "xy": [
+    525,
+    429
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 504,
+   "xy": [
+    471,
+    489
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 portas · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 31,
+   "xy": [
+    561,
+    491
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 portas · left z3",
+   "v": "left zz3",
+   "peca": "0:Porta (Porta#1)",
+   "px": 12960,
+   "xy": [
+    93,
+    537
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 portas · left z3",
+   "v": "left zz3",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 57384,
+   "xy": [
+    279,
+    549
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 216,
+   "xy": [
+    441,
+    435
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 1 porta · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 1836,
+   "xy": [
+    441,
+    465
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 180,
+   "xy": [
+    435,
+    495
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 6,
+   "xy": [
+    419,
+    448
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 1 porta · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 1332,
+   "xy": [
+    63,
+    591
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 1 porta · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 5508,
+   "xy": [
+    57,
+    639
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 49,
+   "xy": [
+    13,
+    628
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 1 porta · front z1",
+   "v": "front zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 1944,
+   "xy": [
+    399,
+    399
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · front z1",
+   "v": "front zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 324,
+   "xy": [
+    423,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · front z1",
+   "v": "front zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 44,
+   "xy": [
+    422,
+    430
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · front z1",
+   "v": "front zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 45,
+   "xy": [
+    417,
+    403
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · front z2",
+   "v": "front zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 828,
+   "xy": [
+    3,
+    501
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 1 porta · front z2",
+   "v": "front zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 4032,
+   "xy": [
+    21,
+    501
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · front z2",
+   "v": "front zz2",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 324,
+   "xy": [
+    21,
+    573
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · front z2",
+   "v": "front zz2",
+   "peca": "0:Base inferior (Base inferior#1)",
+   "px": 15,
+   "xy": [
+    4,
+    568
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · front z2",
+   "v": "front zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 117,
+   "xy": [
+    6,
+    508
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · front z2",
+   "v": "front zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 13,
+   "xy": [
+    7,
+    443
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · front z2",
+   "v": "front zz2",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 16,
+   "xy": [
+    28,
+    573
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · front z2",
+   "v": "front zz2",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 79,
+   "xy": [
+    7,
+    436
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z1",
+   "v": "left zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 252,
+   "xy": [
+    591,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 1 porta · left z1",
+   "v": "left zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 1260,
+   "xy": [
+    609,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 35,
+   "xy": [
+    594,
+    393
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 144,
+   "xy": [
+    609,
+    393
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z1",
+   "v": "left zz1",
+   "peca": "0:Base inferior (Base inferior#1)",
+   "px": 1,
+   "xy": [
+    587,
+    388
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z1",
+   "v": "left zz1",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 58,
+   "xy": [
+    604,
+    347
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 5,
+   "xy": [
+    623,
+    393
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z1",
+   "v": "left zz1",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 20,
+   "xy": [
+    625,
+    391
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z2",
+   "v": "left zz2",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 180,
+   "xy": [
+    537,
+    363
+   ],
+   "sel": "0:Tamponamento direito · engrosso 80#2",
+   "hl": "ok"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z2",
+   "v": "left zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 1368,
+   "xy": [
+    453,
+    417
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z2",
+   "v": "left zz2",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 432,
+   "xy": [
+    489,
+    363
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 1 porta · left z2",
+   "v": "left zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 9828,
+   "xy": [
+    501,
+    423
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 252,
+   "xy": [
+    465,
+    483
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 1152,
+   "xy": [
+    507,
+    483
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z2",
+   "v": "left zz2",
+   "peca": "0:Base inferior (Base inferior#1)",
+   "px": 5,
+   "xy": [
+    454,
+    472
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 29,
+   "xy": [
+    541,
+    482
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z3",
+   "v": "left zz3",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 396,
+   "xy": [
+    309,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 1 porta · left z3",
+   "v": "left zz3",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 2736,
+   "xy": [
+    201,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 1 porta · left z3",
+   "v": "left zz3",
+   "peca": "0:Porta (Porta#1)",
+   "px": 11412,
+   "xy": [
+    93,
+    537
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 1 porta · left z3",
+   "v": "left zz3",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 61164,
+   "xy": [
+    231,
+    543
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 144,
+   "xy": [
+    501,
+    417
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 180,
+   "xy": [
+    495,
+    423
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão da pia (cuba) · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Porta (Porta#2)",
+   "px": 2196,
+   "xy": [
+    489,
+    453
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão da pia (cuba) · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 2376,
+   "xy": [
+    441,
+    465
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 13,
+   "xy": [
+    419,
+    448
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão da pia (cuba) · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 1260,
+   "xy": [
+    201,
+    555
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão da pia (cuba) · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Porta (Porta#2)",
+   "px": 10692,
+   "xy": [
+    189,
+    621
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão da pia (cuba) · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 7920,
+   "xy": [
+    75,
+    639
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 84,
+   "xy": [
+    12,
+    627
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão da pia (cuba) · front z1",
+   "v": "front zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 2268,
+   "xy": [
+    405,
+    399
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · front z1",
+   "v": "front zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 324,
+   "xy": [
+    477,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · front z1",
+   "v": "front zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 30,
+   "xy": [
+    475,
+    430
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · front z1",
+   "v": "front zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 45,
+   "xy": [
+    472,
+    403
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão da pia (cuba) · front z2",
+   "v": "front zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 4968,
+   "xy": [
+    15,
+    501
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · front z2",
+   "v": "front zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 3240,
+   "xy": [
+    159,
+    501
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · front z2",
+   "v": "front zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 117,
+   "xy": [
+    148,
+    508
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · front z2",
+   "v": "front zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 49,
+   "xy": [
+    148,
+    443
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · left z1",
+   "v": "left zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 252,
+   "xy": [
+    591,
+    369
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · left z1",
+   "v": "left zz1",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 159,
+   "xy": [
+    607,
+    349
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão da pia (cuba) · left z1",
+   "v": "left zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 1260,
+   "xy": [
+    621,
+    375
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 88,
+   "xy": [
+    600,
+    397
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · left z1",
+   "v": "left zz1",
+   "peca": "0:Base inferior (Base inferior#1)",
+   "px": 1,
+   "xy": [
+    600,
+    395
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 180,
+   "xy": [
+    621,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 6,
+   "xy": [
+    636,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · left z2",
+   "v": "left zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 2664,
+   "xy": [
+    459,
+    417
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão da pia (cuba) · left z2",
+   "v": "left zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 10332,
+   "xy": [
+    537,
+    435
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão da pia (cuba) · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 42,
+   "xy": [
+    575,
+    498
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão da pia (cuba) · left z3",
+   "v": "left zz3",
+   "peca": "0:Porta (Porta#1)",
+   "px": 16056,
+   "xy": [
+    99,
+    537
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão da pia (cuba) · left z3",
+   "v": "left zz3",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 55656,
+   "xy": [
+    315,
+    555
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 144,
+   "xy": [
+    453,
+    429
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 180,
+   "xy": [
+    465,
+    441
+   ],
+   "sel": "0:Tamponamento direito · engrosso 80#1",
+   "hl": "ok"
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral de gaveta (Lateral de gaveta#2)",
+   "px": 46,
+   "xy": [
+    450,
+    435
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 720,
+   "xy": [
+    441,
+    447
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 54,
+   "xy": [
+    443,
+    458
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 792,
+   "xy": [
+    441,
+    465
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 52,
+   "xy": [
+    444,
+    475
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#3)",
+   "px": 756,
+   "xy": [
+    447,
+    483
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 14,
+   "xy": [
+    430,
+    443
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 864,
+   "xy": [
+    99,
+    579
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral de gaveta (Lateral de gaveta#2)",
+   "px": 288,
+   "xy": [
+    93,
+    591
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 360,
+   "xy": [
+    69,
+    651
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 2412,
+   "xy": [
+    87,
+    657
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 92,
+   "xy": [
+    37,
+    613
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 756,
+   "xy": [
+    405,
+    399
+   ],
+   "sel": "0:Frente de gaveta#2",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Batente (cava)|Batente (cava)#2"
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 38,
+   "xy": [
+    433,
+    430
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 3,
+   "xy": [
+    428,
+    392
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 83,
+   "xy": [
+    406,
+    392
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 83,
+   "xy": [
+    406,
+    410
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 3240,
+   "xy": [
+    45,
+    501
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 216,
+   "xy": [
+    15,
+    477
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "ok"
+  },
+  {
+   "inq": true,
+   "c": "CAT Gaveteiro 3 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 1512,
+   "xy": [
+    15,
+    501
+   ],
+   "sel": "0:Frente de gaveta#2",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Batente (cava)|Batente (cava)#2"
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 216,
+   "xy": [
+    15,
+    525
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 288,
+   "xy": [
+    45,
+    573
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 123,
+   "xy": [
+    35,
+    508
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 106,
+   "xy": [
+    590,
+    353
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 1512,
+   "xy": [
+    609,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 105,
+   "xy": [
+    589,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#3)",
+   "px": 108,
+   "xy": [
+    590,
+    383
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 44,
+   "xy": [
+    595,
+    394
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 144,
+   "xy": [
+    609,
+    393
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 31,
+   "xy": [
+    624,
+    347
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 84,
+   "xy": [
+    605,
+    347
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 1,
+   "xy": [
+    591,
+    348
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 6,
+   "xy": [
+    626,
+    394
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 7,
+   "xy": [
+    590,
+    361
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 7,
+   "xy": [
+    590,
+    376
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 216,
+   "xy": [
+    537,
+    363
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 468,
+   "xy": [
+    489,
+    363
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Gaveteiro 3 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 10224,
+   "xy": [
+    507,
+    423
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 648,
+   "xy": [
+    453,
+    417
+   ],
+   "sel": "0:Frente de gaveta#2",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Batente (cava)|Batente (cava)#2"
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 52,
+   "xy": [
+    455,
+    401
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 360,
+   "xy": [
+    465,
+    483
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 3,
+   "xy": [
+    455,
+    364
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 45,
+   "xy": [
+    548,
+    485
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 47,
+   "xy": [
+    455,
+    438
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 864,
+   "xy": [
+    315,
+    405
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 3960,
+   "xy": [
+    201,
+    405
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 27,
+   "xy": [
+    107,
+    409
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "ok"
+  },
+  {
+   "inq": true,
+   "c": "CAT Gaveteiro 3 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 59364,
+   "xy": [
+    243,
+    543
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 396,
+   "xy": [
+    105,
+    501
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Gaveteiro 3 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 5400,
+   "xy": [
+    99,
+    549
+   ],
+   "sel": "0:Frente de gaveta#2",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Batente (cava)|Batente (cava)#2"
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 3 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 324,
+   "xy": [
+    105,
+    597
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 144,
+   "xy": [
+    465,
+    423
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 180,
+   "xy": [
+    483,
+    465
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Frente/costa de gaveta (contra-frente e traseira) (Frente/costa de gaveta (contra-frente e traseira)#2)",
+   "px": 144,
+   "xy": [
+    453,
+    429
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral de gaveta (Lateral de gaveta#2)",
+   "px": 36,
+   "xy": [
+    464,
+    430
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 720,
+   "xy": [
+    447,
+    441
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Batente (cava)|Batente (cava)#2"
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 73,
+   "xy": [
+    450,
+    452
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 70,
+   "xy": [
+    449,
+    465
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#3)",
+   "px": 70,
+   "xy": [
+    452,
+    478
+   ],
+   "sel": "0:Batente (cava)#3",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 18,
+   "xy": [
+    437,
+    442
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Corrediça telescópica (null)",
+   "px": 3,
+   "xy": [
+    462,
+    426
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 756,
+   "xy": [
+    135,
+    567
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral de gaveta (Lateral de gaveta#2)",
+   "px": 288,
+   "xy": [
+    129,
+    579
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Corrediça telescópica (null)",
+   "px": 22,
+   "xy": [
+    128,
+    573
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Gaveteiro 4 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 4896,
+   "xy": [
+    87,
+    615
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Batente (cava)|Batente (cava)#2"
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 468,
+   "xy": [
+    87,
+    633
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 324,
+   "xy": [
+    117,
+    663
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#3)",
+   "px": 936,
+   "xy": [
+    141,
+    663
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 131,
+   "xy": [
+    50,
+    610
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 324,
+   "xy": [
+    447,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 360,
+   "xy": [
+    411,
+    381
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Batente (cava)|Batente (cava)#2"
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 360,
+   "xy": [
+    411,
+    387
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 37,
+   "xy": [
+    447,
+    430
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 5,
+   "xy": [
+    443,
+    401
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 7,
+   "xy": [
+    443,
+    378
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 112,
+   "xy": [
+    414,
+    400
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#3)",
+   "px": 112,
+   "xy": [
+    414,
+    413
+   ],
+   "sel": "0:Batente (cava)#3",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 3240,
+   "xy": [
+    81,
+    501
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Gaveteiro 4 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 2160,
+   "xy": [
+    33,
+    453
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Batente (cava)|Batente (cava)#2"
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 432,
+   "xy": [
+    33,
+    501
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#3)",
+   "px": 432,
+   "xy": [
+    33,
+    537
+   ],
+   "sel": "0:Batente (cava)#3",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 216,
+   "xy": [
+    81,
+    573
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 130,
+   "xy": [
+    72,
+    508
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 357,
+   "xy": [
+    37,
+    468
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 107,
+   "xy": [
+    591,
+    352
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 1548,
+   "xy": [
+    615,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 107,
+   "xy": [
+    591,
+    363
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 10,
+   "xy": [
+    592,
+    370
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#3)",
+   "px": 104,
+   "xy": [
+    591,
+    375
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#4)",
+   "px": 144,
+   "xy": [
+    591,
+    387
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 55,
+   "xy": [
+    596,
+    395
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 144,
+   "xy": [
+    615,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 118,
+   "xy": [
+    606,
+    348
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 1,
+   "xy": [
+    591,
+    348
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 5,
+   "xy": [
+    629,
+    396
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 11,
+   "xy": [
+    592,
+    359
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#3)",
+   "px": 10,
+   "xy": [
+    591,
+    380
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 53,
+   "xy": [
+    625,
+    349
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 324,
+   "xy": [
+    537,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 756,
+   "xy": [
+    459,
+    381
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Batente (cava)|Batente (cava)#2"
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 828,
+   "xy": [
+    495,
+    363
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Gaveteiro 4 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 10188,
+   "xy": [
+    519,
+    429
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 73,
+   "xy": [
+    459,
+    392
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 72,
+   "xy": [
+    459,
+    421
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#3)",
+   "px": 69,
+   "xy": [
+    459,
+    449
+   ],
+   "sel": "0:Batente (cava)#3",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 396,
+   "xy": [
+    471,
+    489
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 1044,
+   "xy": [
+    525,
+    489
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 7,
+   "xy": [
+    465,
+    368
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 30,
+   "xy": [
+    556,
+    489
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Gaveteiro 4 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 5148,
+   "xy": [
+    111,
+    441
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Batente (cava)|Batente (cava)#2"
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 38,
+   "xy": [
+    123,
+    415
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Gaveteiro 4 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 58392,
+   "xy": [
+    267,
+    549
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 504,
+   "xy": [
+    111,
+    483
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 540,
+   "xy": [
+    117,
+    555
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Gaveteiro 4 gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Batente (cava) (Batente (cava)#3)",
+   "px": 432,
+   "xy": [
+    111,
+    627
+   ],
+   "sel": "0:Batente (cava)#3",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 288,
+   "xy": [
+    489,
+    453
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 131,
+   "xy": [
+    473,
+    425
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral de gaveta (Lateral de gaveta#2)",
+   "px": 46,
+   "xy": [
+    470,
+    429
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 468,
+   "xy": [
+    471,
+    441
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão porta + gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 1872,
+   "xy": [
+    441,
+    465
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 39,
+   "xy": [
+    470,
+    450
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 468,
+   "xy": [
+    471,
+    459
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 38,
+   "xy": [
+    471,
+    468
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#3)",
+   "px": 468,
+   "xy": [
+    471,
+    477
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 17,
+   "xy": [
+    456,
+    437
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "ok"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 828,
+   "xy": [
+    153,
+    567
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral de gaveta (Lateral de gaveta#2)",
+   "px": 324,
+   "xy": [
+    147,
+    579
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 102,
+   "xy": [
+    12,
+    621
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão porta + gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 3636,
+   "xy": [
+    141,
+    609
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão porta + gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 5616,
+   "xy": [
+    63,
+    639
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 252,
+   "xy": [
+    141,
+    633
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão porta + gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 3168,
+   "xy": [
+    147,
+    651
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 86,
+   "xy": [
+    172,
+    669
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#3)",
+   "px": 75,
+   "xy": [
+    181,
+    671
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão porta + gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 1944,
+   "xy": [
+    399,
+    399
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 648,
+   "xy": [
+    453,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 37,
+   "xy": [
+    455,
+    430
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 3,
+   "xy": [
+    450,
+    392
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 62,
+   "xy": [
+    434,
+    392
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 62,
+   "xy": [
+    434,
+    410
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 828,
+   "xy": [
+    3,
+    501
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 3240,
+   "xy": [
+    99,
+    501
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 468,
+   "xy": [
+    51,
+    477
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "ok"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 468,
+   "xy": [
+    51,
+    525
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 216,
+   "xy": [
+    99,
+    573
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 123,
+   "xy": [
+    91,
+    508
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Porta (Porta#1)",
+   "px": 252,
+   "xy": [
+    591,
+    369
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 82,
+   "xy": [
+    596,
+    356
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 1728,
+   "xy": [
+    615,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 81,
+   "xy": [
+    596,
+    371
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#3)",
+   "px": 81,
+   "xy": [
+    596,
+    385
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 62,
+   "xy": [
+    597,
+    395
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 144,
+   "xy": [
+    615,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 52,
+   "xy": [
+    625,
+    349
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 127,
+   "xy": [
+    606,
+    348
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 6,
+   "xy": [
+    631,
+    396
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 6,
+   "xy": [
+    596,
+    363
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z1",
+   "v": "left zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 5,
+   "xy": [
+    596,
+    379
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 432,
+   "xy": [
+    543,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Porta (Porta#1)",
+   "px": 1980,
+   "xy": [
+    453,
+    417
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão porta + gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 10800,
+   "xy": [
+    525,
+    429
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 37,
+   "xy": [
+    470,
+    407
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#3)",
+   "px": 576,
+   "xy": [
+    471,
+    465
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 504,
+   "xy": [
+    471,
+    489
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 31,
+   "xy": [
+    561,
+    491
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Base inferior (Base inferior#1)",
+   "px": 6,
+   "xy": [
+    447,
+    468
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 4,
+   "xy": [
+    467,
+    369
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "ok"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z2",
+   "v": "left zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 36,
+   "xy": [
+    469,
+    445
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão porta + gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Porta (Porta#1)",
+   "px": 13032,
+   "xy": [
+    93,
+    537
+   ],
+   "sel": "0:Porta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Porta|Porta#1, 0:Porta|Porta#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão porta + gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 57384,
+   "xy": [
+    279,
+    549
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 216,
+   "xy": [
+    141,
+    519
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Batente (cava) (Batente (cava)#2)",
+   "px": 216,
+   "xy": [
+    141,
+    615
+   ],
+   "sel": "0:Batente (cava)#2",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão porta + gavetas · left z3",
+   "v": "left zz3",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 25,
+   "xy": [
+    138,
+    421
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 144,
+   "xy": [
+    411,
+    435
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 180,
+   "xy": [
+    423,
+    435
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 900,
+   "xy": [
+    411,
+    465
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Costa (porta tempero) (Costa (porta tempero)#1)",
+   "px": 27,
+   "xy": [
+    415,
+    439
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 224,
+   "xy": [
+    436,
+    458
+   ],
+   "sel": "0:Tamponamento direito · engrosso 80#1",
+   "hl": "ok"
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Frente (porta tempero) (Frente (porta tempero)#1)",
+   "px": 828,
+   "xy": [
+    429,
+    471
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Rodapé lateral esquerdo (pedestal) (Rodapé lateral esquerdo (pedestal)#1)",
+   "px": 97,
+   "xy": [
+    414,
+    493
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 83,
+   "xy": [
+    428,
+    500
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Base inferior (Base inferior#1)",
+   "px": 19,
+   "xy": [
+    414,
+    490
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 10,
+   "xy": [
+    424,
+    445
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Porta-tempero · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 1152,
+   "xy": [
+    21,
+    603
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Costa (porta tempero) (Costa (porta tempero)#1)",
+   "px": 100,
+   "xy": [
+    4,
+    603
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 792,
+   "xy": [
+    9,
+    645
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Porta-tempero · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Frente (porta tempero) (Frente (porta tempero)#1)",
+   "px": 2196,
+   "xy": [
+    33,
+    645
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 64,
+   "xy": [
+    17,
+    619
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 13,
+   "xy": [
+    1,
+    588
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · front z1",
+   "v": "front zz1",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 13,
+   "xy": [
+    399,
+    374
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · front z1",
+   "v": "front zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 324,
+   "xy": [
+    405,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · front z1",
+   "v": "front zz1",
+   "peca": "0:Frente (porta tempero) (Frente (porta tempero)#1)",
+   "px": 576,
+   "xy": [
+    387,
+    399
+   ],
+   "sel": "0:Frente (porta tempero)#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Frente (porta tempero)|Frente (porta tempero)#1, 0:Régua (porta tempero)|Régua (porta tempero)#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · front z1",
+   "v": "front zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 288,
+   "xy": [
+    399,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · front z1",
+   "v": "front zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 44,
+   "xy": [
+    404,
+    430
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Porta-tempero · left z1",
+   "v": "left zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 1512,
+   "xy": [
+    603,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 19,
+   "xy": [
+    592,
+    392
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 144,
+   "xy": [
+    603,
+    393
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z1",
+   "v": "left zz1",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 15,
+   "xy": [
+    621,
+    388
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z1",
+   "v": "left zz1",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 12,
+   "xy": [
+    609,
+    346
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 5,
+   "xy": [
+    619,
+    391
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z1",
+   "v": "left zz1",
+   "peca": "0:Frente (porta tempero) (Frente (porta tempero)#1)",
+   "px": 90,
+   "xy": [
+    587,
+    368
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z2",
+   "v": "left zz2",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 144,
+   "xy": [
+    537,
+    471
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z2",
+   "v": "left zz2",
+   "peca": "0:Frente (porta tempero) (Frente (porta tempero)#1)",
+   "px": 648,
+   "xy": [
+    447,
+    411
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Porta-tempero · left z2",
+   "v": "left zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 9792,
+   "xy": [
+    495,
+    417
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 1044,
+   "xy": [
+    495,
+    477
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 38,
+   "xy": [
+    531,
+    477
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z2",
+   "v": "left zz2",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 85,
+   "xy": [
+    504,
+    359
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z3",
+   "v": "left zz3",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 144,
+   "xy": [
+    303,
+    393
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z3",
+   "v": "left zz3",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 720,
+   "xy": [
+    153,
+    399
+   ],
+   "sel": "0:Tamponamento direito · engrosso 80#3",
+   "hl": "ok"
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z3",
+   "v": "left zz3",
+   "peca": "0:Frente (porta tempero) (Frente (porta tempero)#1)",
+   "px": 4932,
+   "xy": [
+    81,
+    537
+   ],
+   "sel": "0:Frente (porta tempero)#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Frente (porta tempero)|Frente (porta tempero)#1, 0:Régua (porta tempero)|Régua (porta tempero)#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Porta-tempero · left z3",
+   "v": "left zz3",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 62532,
+   "xy": [
+    207,
+    537
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Porta-tempero · left z3",
+   "v": "left zz3",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 4,
+   "xy": [
+    86,
+    400
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 105,
+   "xy": [
+    452,
+    429
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão forno embutido · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Corte do forno (Corte do forno#1)",
+   "px": 2556,
+   "xy": [
+    441,
+    465
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 144,
+   "xy": [
+    465,
+    435
+   ],
+   "sel": "0:Tamponamento direito · engrosso 80#1",
+   "hl": "ok"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Moldura de acabamento (Moldura de acabamento#1)",
+   "px": 128,
+   "xy": [
+    441,
+    442
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 144,
+   "xy": [
+    453,
+    441
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 684,
+   "xy": [
+    99,
+    579
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · front z1",
+   "v": "front zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 38,
+   "xy": [
+    433,
+    430
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · front z1",
+   "v": "front zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 1,
+   "xy": [
+    428,
+    425
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · front z2",
+   "v": "front zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 3240,
+   "xy": [
+    45,
+    501
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · front z2",
+   "v": "front zz2",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 288,
+   "xy": [
+    45,
+    573
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · front z2",
+   "v": "front zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 7,
+   "xy": [
+    34,
+    565
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z1",
+   "v": "left zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 23,
+   "xy": [
+    590,
+    351
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão forno embutido · left z1",
+   "v": "left zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 1512,
+   "xy": [
+    609,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z1",
+   "v": "left zz1",
+   "peca": "0:Corte do forno (Corte do forno#1)",
+   "px": 216,
+   "xy": [
+    591,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 44,
+   "xy": [
+    595,
+    394
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 144,
+   "xy": [
+    609,
+    393
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z1",
+   "v": "left zz1",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 31,
+   "xy": [
+    624,
+    347
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z1",
+   "v": "left zz1",
+   "peca": "0:Base inferior (Base inferior#1)",
+   "px": 10,
+   "xy": [
+    590,
+    389
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z1",
+   "v": "left zz1",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 82,
+   "xy": [
+    605,
+    348
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 6,
+   "xy": [
+    626,
+    394
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z1",
+   "v": "left zz1",
+   "peca": "0:Moldura de acabamento (Moldura de acabamento#1)",
+   "px": 18,
+   "xy": [
+    590,
+    348
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z2",
+   "v": "left zz2",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 216,
+   "xy": [
+    537,
+    363
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z2",
+   "v": "left zz2",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 468,
+   "xy": [
+    489,
+    363
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão forno embutido · left z2",
+   "v": "left zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 10224,
+   "xy": [
+    507,
+    423
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 360,
+   "xy": [
+    465,
+    483
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 45,
+   "xy": [
+    548,
+    485
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z3",
+   "v": "left zz3",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 864,
+   "xy": [
+    315,
+    405
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão forno embutido · left z3",
+   "v": "left zz3",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 3816,
+   "xy": [
+    201,
+    405
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão forno embutido · left z3",
+   "v": "left zz3",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 59364,
+   "xy": [
+    243,
+    543
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral esquerda|Lateral esquerda#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 720,
+   "xy": [
+    459,
+    453
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 180,
+   "xy": [
+    465,
+    441
+   ],
+   "sel": "0:Tamponamento direito · engrosso 80#1",
+   "hl": "ok"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Moldura de acabamento (Moldura de acabamento#1)",
+   "px": 128,
+   "xy": [
+    441,
+    442
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 144,
+   "xy": [
+    453,
+    441
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Base inferior (Base inferior#1)",
+   "px": 756,
+   "xy": [
+    441,
+    483
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 2988,
+   "xy": [
+    105,
+    615
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · front z1",
+   "v": "front zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 38,
+   "xy": [
+    433,
+    430
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · front z1",
+   "v": "front zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 45,
+   "xy": [
+    428,
+    403
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · front z2",
+   "v": "front zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 3240,
+   "xy": [
+    45,
+    501
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · front z2",
+   "v": "front zz2",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 288,
+   "xy": [
+    45,
+    573
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · front z2",
+   "v": "front zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 233,
+   "xy": [
+    34,
+    508
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z1",
+   "v": "left zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 23,
+   "xy": [
+    590,
+    351
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão aberto (prateleira) · left z1",
+   "v": "left zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 1512,
+   "xy": [
+    609,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z1",
+   "v": "left zz1",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 144,
+   "xy": [
+    591,
+    363
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z1",
+   "v": "left zz1",
+   "peca": "0:Prateleira (Prateleira#1)",
+   "px": 15,
+   "xy": [
+    592,
+    369
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z1",
+   "v": "left zz1",
+   "peca": "0:Base inferior (Base inferior#1)",
+   "px": 23,
+   "xy": [
+    591,
+    388
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 44,
+   "xy": [
+    595,
+    394
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 144,
+   "xy": [
+    609,
+    393
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z1",
+   "v": "left zz1",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 31,
+   "xy": [
+    624,
+    347
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z1",
+   "v": "left zz1",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 6,
+   "xy": [
+    626,
+    394
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z1",
+   "v": "left zz1",
+   "peca": "0:Moldura de acabamento (Moldura de acabamento#1)",
+   "px": 18,
+   "xy": [
+    590,
+    348
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z2",
+   "v": "left zz2",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 216,
+   "xy": [
+    537,
+    363
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z2",
+   "v": "left zz2",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 2088,
+   "xy": [
+    459,
+    411
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão aberto (prateleira) · left z2",
+   "v": "left zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 10224,
+   "xy": [
+    507,
+    423
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z2",
+   "v": "left zz2",
+   "peca": "0:Prateleira (Prateleira#1)",
+   "px": 92,
+   "xy": [
+    459,
+    421
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé (pedestal) (Rodapé (pedestal)#1)",
+   "px": 360,
+   "xy": [
+    465,
+    483
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z2",
+   "v": "left zz2",
+   "peca": "0:Rodapé traseiro (pedestal) (Rodapé traseiro (pedestal)#1)",
+   "px": 45,
+   "xy": [
+    548,
+    485
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z3",
+   "v": "left zz3",
+   "peca": "0:Fundo (Fundo#1)",
+   "px": 864,
+   "xy": [
+    315,
+    405
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão aberto (prateleira) · left z3",
+   "v": "left zz3",
+   "peca": "0:Lateral esquerda (Lateral esquerda#1)",
+   "px": 15480,
+   "xy": [
+    129,
+    519
+   ],
+   "sel": "0:Tamponamento direito · engrosso 80#1",
+   "hl": "ok"
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão aberto (prateleira) · left z3",
+   "v": "left zz3",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 59364,
+   "xy": [
+    243,
+    543
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: 0:Base inferior|Base inferior#1, 0:Lateral esquerda|Lateral esquerda#1, 0:Lateral direita|Lateral direita#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 180,
+   "xy": [
+    465,
+    423
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 180,
+   "xy": [
+    483,
+    465
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 1548,
+   "xy": [
+    447,
+    453
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Frente de gaveta|Frente de gaveta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 70,
+   "xy": [
+    449,
+    465
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 18,
+   "xy": [
+    437,
+    442
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · iso z1",
+   "v": "iso zz1",
+   "peca": "0:Lateral de gaveta (Lateral de gaveta#2)",
+   "px": 41,
+   "xy": [
+    463,
+    432
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 864,
+   "xy": [
+    135,
+    567
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Lateral de gaveta (Lateral de gaveta#2)",
+   "px": 252,
+   "xy": [
+    129,
+    585
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 9828,
+   "xy": [
+    93,
+    633
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Frente de gaveta|Frente de gaveta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 324,
+   "xy": [
+    117,
+    663
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#2)",
+   "px": 936,
+   "xy": [
+    141,
+    663
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · iso z2",
+   "v": "iso zz2",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 131,
+   "xy": [
+    50,
+    610
+   ],
+   "sel": "0:Travessa frontal#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 324,
+   "xy": [
+    447,
+    399
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 1440,
+   "xy": [
+    411,
+    387
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Frente de gaveta|Frente de gaveta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 37,
+   "xy": [
+    447,
+    430
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 1,
+   "xy": [
+    443,
+    401
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Travessa frontal (Travessa frontal#1)",
+   "px": 7,
+   "xy": [
+    443,
+    378
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · front z1",
+   "v": "front zz1",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 112,
+   "xy": [
+    414,
+    400
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Tamponamento direito (Tamponamento direito#1)",
+   "px": 3240,
+   "xy": [
+    81,
+    501
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": true,
+   "c": "CAT Balcão 2 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Frente de gaveta (Frente de gaveta#1)",
+   "px": 4320,
+   "xy": [
+    33,
+    465
+   ],
+   "sel": "0:Frente de gaveta#1",
+   "hl": "acende outra: 0:Travessa frontal|Travessa frontal#1, 0:Batente (cava)|Batente (cava)#1, 0:Frente de gaveta|Frente de gaveta#1"
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Batente (cava) (Batente (cava)#1)",
+   "px": 432,
+   "xy": [
+    33,
+    501
+   ],
+   "sel": "0:Batente (cava)#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Rodapé lateral direito (pedestal) (Rodapé lateral direito (pedestal)#1)",
+   "px": 216,
+   "xy": [
+    81,
+    573
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  },
+  {
+   "inq": false,
+   "c": "CAT Balcão 2 gavetas · front z2",
+   "v": "front zz2",
+   "peca": "0:Lateral direita (Lateral direita#1)",
+   "px": 120,
+   "xy": [
+    72,
+    508
+   ],
+   "sel": "0:Tamponamento direito#1",
+   "hl": "acende outra: "
+  }
+ ],
+ "ids_nota": "ids refeitos com a s54 de 2e15e7d (ferragem separada); o resto com a s54 de 74ead60, mesma métrica"
+}

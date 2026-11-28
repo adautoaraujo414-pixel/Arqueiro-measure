@@ -21106,6 +21106,26 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // TIPO-SEGUE (item 24, Chefe 28/11, matriz do Code 1 a 375 e 430): com o balcão escolhido no 3D, o título "Tipo:" e o painel continuavam no aéreo
+    // (informação contraditória). Ao fechar o 3D os dois seguem o módulo escolhido; nos caminhos de sempre (catálogo, toque no 2D) nada muda.
+    func testTIPOSEGUE_TituloEPainelSeguemOModuloEscolhidoNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var PROJ=function(c){var P=window.PM3,d=function(r){return r[0]*c[0]+r[1]*c[1]+r[2]*c[2]+r[3]},w=d(P.W);return [(d(P.X)/w+1)/2*P.w,(1-d(P.Y)/w)/2*P.h]};
+        var st=function(){var e=(document.getElementById('bd')||{}).textContent||'';var m=/Editando:\s*(Base|Superior)/.exec(e);return 'título '+document.getElementById('tipo').textContent+' · escolhido '+(S.m?(S.m.sup?'aéreo':'balcão'):'nada')+' · painel '+(m?m[1]:'?')};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.mods=[];draw();newTpl(T('Balcão 2 portas'));S.mods[0].x=1000;newTpl(T('Aéreo 2 portas'));S.mods[1].x=1000;draw();panel();R.catalogo=st();
+        open3D();await W(600);var b=__boxes().filter(function(q){return /^0:Porta/.test(q.nm)})[0],c=PROJ([(b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1]);__sel3(c[0],c[1]);await W(150);document.getElementById('v3x').click();await W(150);R.depoisDo3D=st();
+        open3D();await W(400);b=__boxes().filter(function(q){return /^1:Porta/.test(q.nm)})[0];c=PROJ([(b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1]);__sel3(c[0],c[1]);await W(150);document.getElementById('v3x').click();await W(150);R.volta=st();
+        window.SEL3=null;R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["catalogo"] as? String, "título Superior · escolhido aéreo · painel Superior")
+        XCTAssertEqual(o["depoisDo3D"] as? String, "título Base · escolhido balcão · painel Base", "balcão escolhido no 3D: título e painel do balcão")
+        XCTAssertEqual(o["volta"] as? String, "título Superior · escolhido aéreo · painel Superior")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // ETAPA 3.1 (Chefe 28/11, sonda s54 do Claude 5): (1) MOVE-750: no 3D, escolher o tamponamento e tocar de novo nele levava o módulo pra outro
     // lugar (x 5 → 800): o "mudar de lugar" pendente lançava o raio ignorando o próprio módulo e batia no chão/parede de trás. (2) TAMP-NEAR: tocando a
     // lateral, a porta, o rodapé ou a frente perto do tamponamento, o tamponamento "roubava" o toque (seleciona peça que não é a da frente).

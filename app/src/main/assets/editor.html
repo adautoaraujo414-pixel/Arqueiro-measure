@@ -16346,6 +16346,10 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
 })();
 </script>
 <script>
+/* ===== TIPO-SEGUE (item 24, Chefe 28/11): o título "Tipo: Base/Superior" segue o módulo escolhido. Antes ele era escrito em cada caminho de escolha e o 3D (sel3) trocava o módulo sem escrever: com o balcão escolhido no 3D, o título e o painel continuavam no aéreo. Agora: depois de todo panel() o título vem do S.m; ao fechar o 3D, se o módulo escolhido mudou lá dentro, o painel é refeito ===== */
+(function(){var p0=window.panel;if(typeof p0!=='function')return;var w=function(){var r=p0.apply(this,arguments);try{if(S.m){var t=document.getElementById('tipo'),v=S.m.sup?'Superior':'Base';if(t&&t.textContent!==v)t.textContent=v}}catch(_){}return r};window.panel=w;try{panel=w}catch(_){}
+ var noPainel=null;try{var o3=window.open3D;if(typeof o3==='function')window.open3D=function(){noPainel=S.m;return o3.apply(this,arguments)}}catch(_){}
+ document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('#v3x');if(!b)return;setTimeout(function(){try{if(S.m!==noPainel){noPainel=S.m;panel()}}catch(_){}},0)},true)})();
 /* ===== TOQUE-PECA (Adauto 27/11, ETAPA 2 item 26; decidido pelo Chefe 28/11): no 2D, 2 toques no MEIO do vão (inclusive em cima da porta/frente) abrem o
    acesso rápido de sempre; 2 toques numa peça da estrutura abrem a aba onde ela é editada, com o campo dela em destaque (sem sistema paralelo).
    Lateral: o giro do engrosso, que era nos 2 toques, fica no botão "Girar engrosso" desse painel. Só abre: nada muda sem a pessoa tocar. ===== */

@@ -3416,3 +3416,12 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - `testDoisToquesNoVaoDeCimaAteOTeto…` (aéreo encostado na direita): a 375 o meio do vão de cima (7 px de altura) fica embaixo do 🔓 `#lockAll`. O resto da faixa continua alcançável.
   - Opção A: diminuir a escala do 2D a 375 pra parede sair de baixo dos botões. Testada e desfeita: quebra `testRebaixoDoTetoEPainelAcompanha`, porque o rótulo do rebaixo encurta.
   - Opção B: o teste tocar na parte livre da faixa.
+
+## TIPO-SEGUE (item 24, Chefe 28/11, matriz do Code 1) — Claude 4
+- **Erro comprovado:** com o balcão escolhido no 3D (`sel3`), o título "Editor de Móveis · Tipo: Superior" e o painel continuavam no aéreo, mesmo depois de fechar o 3D. É informação contraditória.
+- **Causa raiz:** o título é escrito à mão em cada caminho de escolha (mais de 15 lugares). O `sel3` do 3D troca o `S.m` sem escrever o título e sem refazer o painel.
+- **Correção (uma fonte só):**
+  - depois de todo `panel()`, o título vem do `S.m`;
+  - ao fechar o 3D, se o módulo escolhido mudou lá dentro, o painel é refeito.
+  - Os caminhos de sempre não mudam.
+- **Teste:** `testTIPOSEGUE_TituloEPainelSeguemOModuloEscolhidoNo3D`. Falha no `b780ebf0` ("título Superior · escolhido balcão") e passa a 375, 430 e 1366. NadaDeEnfeiteTelaPrincipal passa nas três.

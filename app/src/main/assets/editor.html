@@ -55,6 +55,28 @@ body.ro #bd input,body.ro #bd select,body.ro #bd textarea{pointer-events:none;ba
  <div class="pn"><div class="tabs" id="tabs"></div><div class="bd" id="bd"></div></div>
 </div>
 <script>
+/* ===== PALMA-CANETA (Adauto 27/11, ETAPA 2 item 36): rejeição de palma com caneta (Apple Pencil, S Pen, caneta do Windows).
+   Enquanto a caneta está em uso (encostada, ou mexida/pairando há menos de PALMA.ms), toque de dedo/palma não chega no app: não seleciona, não abre, não move,
+   não mede, não adiciona, não apaga, não dá zoom e não mexe a câmera 3D. A caneta funciona como sempre e o mouse nunca é bloqueado.
+   Usa o que a plataforma dá: pointerType 'pen'/'touch' e, nos eventos de toque do WebKit, touchType 'stylus'. Primeiro script da página: roda antes de todos. ===== */
+(function(){
+ var P=window.PALMA={ms:800,penDown:0,penT:-1e9,bloq:0,TA:{}};
+ function ativa(){return P.penDown>0||(Date.now()-P.penT)<P.ms}
+ window.palmaAtiva=ativa;
+ function corta(e){P.bloq++;e.stopImmediatePropagation();if(e.cancelable)try{e.preventDefault()}catch(_){}}
+ /* caneta encostou com dedo/palma já no vidro: o gesto do dedo para e o que ele mexeu volta (o mesmo jeito da pinça) */
+ function paraDedos(){if(!Object.keys(P.TA).length)return;P.TA={};try{if(typeof drag!=='undefined'&&drag){if(drag.m&&S&&S.m&&/^(m|h|tp)$/.test(drag.t))Object.assign(S.m,drag.m);if(drag.t==='pan'&&drag.vb&&typeof VB!=='undefined'){VB=Object.assign({},drag.vb);setVB()}drag=null}}catch(_){}try{if(typeof ptrs!=='undefined')ptrs={};if(typeof pinch0!=='undefined')pinch0=null}catch(_){}try{if(typeof TQK!=='undefined'){TQK.k=null;clearTimeout(TQK.tm)}}catch(_){}try{draw()}catch(_){}}
+ ['pointerdown','pointermove','pointerup','pointercancel','pointerover','pointerenter','pointerout','pointerleave','gotpointercapture','lostpointercapture'].forEach(function(t){window.addEventListener(t,function(e){
+  if(e.pointerType==='pen'){P.penT=Date.now();if(t==='pointerdown'){P.penDown++;paraDedos()}else if(t==='pointerup'||t==='pointercancel'){P.penDown=Math.max(0,P.penDown-1)}return}
+  if(e.pointerType!=='touch')return;
+  if(t==='pointerdown'&&!ativa()){P.TA[e.pointerId]=1;return}
+  if((t==='pointerup'||t==='pointercancel')&&P.TA[e.pointerId]&&!ativa()){delete P.TA[e.pointerId];return}
+  if(ativa()){delete P.TA[e.pointerId];corta(e)}},{capture:true,passive:false})});
+ ['touchstart','touchmove','touchend','touchcancel'].forEach(function(t){window.addEventListener(t,function(e){var L=e.changedTouches||[],cane=false;for(var i=0;i<L.length;i++)if(L[i].touchType==='stylus')cane=true;if(cane){P.penT=Date.now();return}if(ativa())corta(e)},{capture:true,passive:false})});
+ ['click','dblclick','contextmenu','gesturestart','gesturechange','gestureend'].forEach(function(t){window.addEventListener(t,function(e){if(!ativa())return;if(t==='click'||t==='dblclick'||t==='contextmenu'){var pt=e.pointerType||(e.sourceCapabilities&&e.sourceCapabilities.firesTouchEvents?'touch':'');if(pt!=='touch')return}corta(e)},{capture:true,passive:false})});
+})();
+</script>
+<script>
 /* iPhone: toque no desenho 2D que não virou "click" (o iOS não manda quando o desenho muda no meio do toque) → manda o click no mesmo ponto, igual ao Android. Primeiro script da página: vê todo click antes dos outros. */
 (function(){var CK=0,TP=null,O={capture:true,passive:true};window.addEventListener('click',function(){CK=Date.now()},true);
  /* pointer de toque: chega no window ANTES do 2D ser redesenhado (o touchend fica preso na peça que saiu do desenho) */

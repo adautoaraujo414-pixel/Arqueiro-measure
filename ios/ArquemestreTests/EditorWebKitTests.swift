@@ -19607,6 +19607,59 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // PALMA-CANETA (Adauto 27/11, ETAPA 2 item 36): rejeição de palma com caneta (Apple Pencil, S Pen, caneta do Windows). Enquanto a caneta está em uso
+    // (encostada ou mexida há menos de PALMA.ms), toque de dedo/palma não seleciona, não abre menu, não move, não dá zoom e não chega na câmera 3D.
+    // A palma que já arrastava antes da caneta encostar volta pro lugar. A caneta funciona como sempre, o mouse nunca é bloqueado e, depois, o dedo volta.
+    func testPALMACANETA_PalmaNaoMexeEnquantoACanetaEstaEmUso() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var sv=function(){return document.getElementById('svg')},pid=120;
+        var ev=function(tp,x,y,id,ty,el){el=el||document.elementFromPoint(x,y)||sv();el.dispatchEvent(new PointerEvent(tp,{clientX:x,clientY:y,pointerId:id,bubbles:true,cancelable:true,isPrimary:true,pointerType:ty,width:ty==='touch'?40:1,height:ty==='touch'?40:1,pressure:tp==='pointerup'?0:0.5,buttons:tp==='pointerup'?0:1}))};
+        var tap=async function(x,y,ty){pid++;ev('pointerdown',x,y,pid,ty);await W(50);ev('pointerup',x,y,pid,ty)};
+        var arr=async function(x,y,dx,ty){pid++;var id=pid,el=document.elementFromPoint(x,y);ev('pointerdown',x,y,id,ty);if(el&&sv().contains(el))el=sv();for(var i=1;i<=8;i++){await W(16);ev('pointermove',x+dx*i/8,y,id,ty,el)}ev('pointerup',x+dx,y,id,ty,el)};
+        var pin=async function(x,y){pid++;var a=pid;pid++;var b=pid;ev('pointerdown',x-30,y,a,'touch');ev('pointerdown',x+30,y,b,'touch');for(var i=1;i<=6;i++){await W(16);ev('pointermove',x-30-8*i,y,a,'touch',sv());ev('pointermove',x+30+8*i,y,b,'touch',sv())}ev('pointerup',x-78,y,a,'touch',sv());ev('pointerup',x+78,y,b,'touch',sv())};
+        var ini=async function(){try{vmenuClose()}catch(_){}loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2400;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.mods[0].x=600;S.m=S.mods[0];S.tab=0;draw();panel();window.PSEL=null;await W(500);
+          for(var it=0;it<4;it++){var L=[].slice.call(document.querySelectorAll('#svg [data-p]')),X0=1e9,Y0=1e9,X1=-1e9,Y1=-1e9;L.forEach(function(e){var r=e.getBoundingClientRect();X0=Math.min(X0,r.x);Y0=Math.min(Y0,r.y);X1=Math.max(X1,r.right);Y1=Math.max(Y1,r.bottom)});var Q=sv().getBoundingClientRect(),f=Math.min(Q.width*0.7/(X1-X0),Q.height*0.7/(Y1-Y0)),a=sv().getScreenCTM().a;if(Math.abs(f-1)>0.02)zoom(f);else{VB.x+=((X0+X1)/2-(Q.x+Q.width/2))/a;VB.y+=((Y0+Y1)/2-(Q.y+Q.height/2))/a;setVB()}draw()}await W(300);window.__m0=JSON.stringify(S.mods);window.__vb0=JSON.stringify(VB);PALMA.penT=-1e9;PALMA.penDown=0};
+        var porta=function(){var P=partsOf(S.mods[0]),e=[].filter.call(document.querySelectorAll('#svg #mod [data-p]'),function(q){return /^Porta/.test((P[+q.dataset.p]||{}).name||'')})[0],r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}};
+        var vazio=function(){var r=sv().getBoundingClientRect();return {x:r.right-12,y:r.top+60}};
+        var vm=function(){var e=document.getElementById('vmenu');return !!(e&&e.getClientRects().length&&getComputedStyle(e).display!=='none')};
+        var est=function(){return (JSON.stringify(S.mods)===window.__m0?'parado':'MUDOU x '+S.mods[0].x)+' · '+(JSON.stringify(VB)===window.__vb0?'zoom igual':'ZOOM MUDOU')+(window.PSEL?' · peça '+PSEL.nm:'')+(vm()?' · menu':'')+' · aba '+S.tab};
+        /* caneta encostada num ponto vazio: a palma toca 2 vezes, arrasta e pinça na porta */
+        await ini();var p=porta(),z=vazio();ev('pointerdown',z.x,z.y,7,'pen');R.canetaAtiva=palmaAtiva()?'sim':'não';
+        await tap(p.x,p.y,'touch');await W(90);await tap(p.x,p.y,'touch');await W(700);R.palmaDoisToques=est();
+        await arr(p.x,p.y,80,'touch');await W(300);R.palmaArrasto=est();await pin(p.x,p.y);await W(300);R.palmaPinca=est();
+        /* mouse nunca é bloqueado */
+        await tap(p.x,p.y,'mouse');await W(800);R.mouseComCaneta=est();window.PSEL=null;
+        ev('pointerup',z.x,z.y,7,'pen');await W(PALMA.ms+300);R.canetaSolta=palmaAtiva()?'ainda ativa':'livre';
+        await tap(p.x,p.y,'touch');await W(800);R.dedoDepois=est();
+        /* a caneta funciona como sempre */
+        await ini();p=porta();await tap(p.x,p.y,'pen');await W(800);R.canetaToque=est();
+        /* a palma já arrastava antes da caneta encostar: volta pro lugar */
+        await ini();p=porta();z=vazio();pid++;var id=pid;ev('pointerdown',p.x,p.y,id,'touch');for(var i=1;i<=8;i++){await W(16);ev('pointermove',p.x+10*i,p.y,id,'touch',sv())}R.palmaAntes=S.mods[0].x!==600?'andou':'parada';
+        ev('pointerdown',z.x,z.y,8,'pen');await W(50);for(i=9;i<=12;i++){await W(16);ev('pointermove',p.x+10*i,p.y,id,'touch',sv())}ev('pointerup',p.x+120,p.y,id,'touch',sv());ev('pointerup',z.x,z.y,8,'pen');await W(300);R.palmaAntesDepoisCaneta=est();
+        /* 3D: com a caneta pairando, o toque da palma não chega no 3D */
+        await ini();open3D();await W(600);var cv=document.getElementById('cv3'),n3=0;var cnt=function(e){if(e.pointerType==='touch')n3++};cv.addEventListener('pointerdown',cnt);cv.addEventListener('pointermove',cnt);var rc=cv.getBoundingClientRect(),cx=rc.left+rc.width/2,cy=rc.top+rc.height/2;
+        ev('pointermove',cx,cy,9,'pen',cv);pid++;var a=pid;pid++;var b=pid;ev('pointerdown',cx-30,cy,a,'touch',cv);ev('pointerdown',cx+30,cy,b,'touch',cv);for(i=1;i<=6;i++){await W(16);ev('pointermove',cx-30-8*i,cy,a,'touch',cv);ev('pointermove',cx+30+8*i,cy,b,'touch',cv)}ev('pointerup',cx-78,cy,a,'touch',cv);ev('pointerup',cx+78,cy,b,'touch',cv);R.palma3D=n3+' toques chegaram no 3D';
+        await W(PALMA.ms+300);n3=0;pid++;ev('pointerdown',cx,cy,pid,'touch',cv);ev('pointerup',cx,cy,pid,'touch',cv);R.dedo3DDepois=n3>0?'chega':'não chega';cv.removeEventListener('pointerdown',cnt);cv.removeEventListener('pointermove',cnt);try{close3D()}catch(_){try{$('v3x').click()}catch(__){}}
+        S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["canetaAtiva"] as? String, "sim")
+        XCTAssertEqual(o["palmaDoisToques"] as? String, "parado · zoom igual · aba 0", "palma com a caneta encostada não escolhe peça nem abre menu")
+        XCTAssertEqual(o["palmaArrasto"] as? String, "parado · zoom igual · aba 0", "palma não arrasta o módulo")
+        XCTAssertEqual(o["palmaPinca"] as? String, "parado · zoom igual · aba 0", "palma não dá zoom")
+        XCTAssertEqual(o["mouseComCaneta"] as? String, "parado · zoom igual · peça Porta · aba 0", "mouse nunca é bloqueado")
+        XCTAssertEqual(o["canetaSolta"] as? String, "livre")
+        XCTAssertEqual(o["dedoDepois"] as? String, "parado · zoom igual · peça Porta · aba 0", "depois da caneta o dedo volta a funcionar")
+        XCTAssertEqual(o["canetaToque"] as? String, "parado · zoom igual · peça Porta · aba 0", "a caneta funciona como sempre")
+        XCTAssertEqual(o["palmaAntes"] as? String, "andou")
+        XCTAssertEqual(o["palmaAntesDepoisCaneta"] as? String, "parado · zoom igual · aba 0", "a palma que arrastava antes da caneta volta pro lugar")
+        XCTAssertEqual(o["palma3D"] as? String, "0 toques chegaram no 3D", "palma não mexe na câmera 3D")
+        XCTAssertEqual(o["dedo3DDepois"] as? String, "chega")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // TOQUE-PECA (Adauto 27/11, ETAPA 2 item 26; decidido pelo Chefe 28/11): no 2D, com eventos de DEDO: 1 toque segue escolhendo a peça; 2 toques no MEIO
     // do vão (porta/frente) abrem o acesso rápido que já existe; 2 toques numa peça da estrutura (lateral, tamponamento, divisória, base, rodapé) abrem a aba
     // onde ela é editada com o campo em destaque. Os 2 toques na lateral giravam o engrosso: agora abrem a edição e o giro fica no botão "Girar engrosso"

@@ -2800,3 +2800,20 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Bateria:** a 3ca951db teve 2 falhas, ambas tratadas na mesma entrega:
   - `testSetinhaDoTituloDaSecao…` contava 51 seções e há 52, por causa da "Composição da frente" do item 19. A expectativa foi atualizada com comentário do pedido;
   - `testNadaDeEnfeiteAbasDoModuloParte1b` também falha na referência antiga (8811, antes das entregas) e com outros botões a cada rodada. É **pré-existente e instável** (Estilos de porta: est=c|regua, j|45, rw|50).
+
+## PALMA-CANETA (ETAPA 2 item 36, Adauto 27/11): com a caneta em uso, a palma mexia no projeto — Claude 4
+- **Antes (caneta real `pointerType:'pen'` pelo CDP + toque real, 430, 53344a39):**
+  - com a caneta encostada, 2 toques da palma na porta abriam o acesso rápido;
+  - a palma que arrastava antes da caneta encostar continuava e deixava o módulo em x 840 (era 600).
+  - Não havia nenhum tratamento de caneta (`pointerType 'pen'`, `touchType 'stylus'`).
+- **Correção (`editor.html`, primeiro script da página, antes de todos os ouvintes):** `window.PALMA`.
+  - A caneta está "em uso" quando está encostada ou mexeu/pairou há menos de `PALMA.ms` (800 ms).
+  - Enquanto isso, os eventos de dedo/palma são cortados na fase de captura da janela (`stopImmediatePropagation` + `preventDefault`): pointer `touch`, `touchstart/move/end` sem `touchType 'stylus'`, `click`/`dblclick`/`contextmenu` de toque e `gesture*` do iOS.
+  - Por isso não selecionam, não abrem, não movem, não medem, não adicionam, não apagam, não dão zoom e não chegam no 3D.
+  - Quando a caneta encosta, o gesto que a palma já fazia para e o que ela mexeu volta (mesmo `drag.m` da pinça; a vista volta).
+  - A caneta funciona como sempre. O toque longo da caneta continua abrindo o menu, porque é gesto intencional.
+  - O mouse nunca é bloqueado.
+- **Teste novo:** `testPALMACANETA_PalmaNaoMexeEnquantoACanetaEstaEmUso`, com eventos `pen` e `touch`, no 2D e no 3D.
+  - Falha na 53344a39 e passa a 430, a 1366 e no iPad simulado.
+  - TOQUEPECA, TOQUEALCA e TOQUEJANELA continuam passando.
+- **Não verificado:** aparelho real com Apple Pencil, S Pen e caneta do Windows. O WebKit do iPad entrega `pointerType 'pen'` para o Pencil; vale conferir no aparelho.

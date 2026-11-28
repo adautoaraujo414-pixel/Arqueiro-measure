@@ -12549,6 +12549,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // PERF-CORTE (ETAPA 2 · item 14, Adauto 26/11: desempenho; conta o trabalho, não o relógio). Ao desenhar o plano de corte, o furSvg
+    // pedia o partsOf do módulo de novo a cada peça desenhada (cozinha de 15 módulos: 582 chamadas ao abrir o plano). Agora, durante o
+    // desenho, cada módulo sai do partsOf uma vez só, e a cópia é jogada fora no fim. O desenho dos furos é o mesmo.
+    // Antes (3174dbd8): "chamadas 9,32,11,24".
+    func testPERFCORTE_PlanoDeCorteNaoRecalculaAsPecasDoModuloACadaPeca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.mods=[];draw();var x=0;['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas','Armário alto 2 portas'].forEach(function(n){newTpl(T(n));var m=S.mods[S.mods.length-1];m.x=x;x+=m.w});draw();
+        var pl=sheetPlan(),c=new Map(),f=window.partsOf;window.partsOf=function(m){c.set(m,(c.get(m)||0)+1);return f.apply(this,arguments)};var h;try{h=planHtml(pl)}finally{window.partsOf=f}
+        var fur=S.mods.map(function(m){return partsOf(m).filter(function(q){return q.fur}).length});
+        R.plano='chamadas '+S.mods.map(function(m){return c.get(m)||0}).join(',')+' · peças com furo '+fur.join(',')+' · furos no desenho '+(h.match(/data-fur|furo/g)||[]).length+' · cópia jogada fora '+(window.__furPO==null);
+        /* mudar a peça depois do desenho: o próximo desenho lê a medida nova (a cópia não fica) */var m0=S.mods[0];m0.w=m0.w+100;draw();var h2=planHtml(sheetPlan());R.depoisDeMudar=(h2.indexOf(String(m0.w-36))>=0||h2.indexOf(String(m0.w))>=0)+'';
+        R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["plano"] as? String, "chamadas 1,1,1,1 · peças com furo 2,0,2,2 · furos no desenho 6 · cópia jogada fora true", "antes (3174dbd8): chamadas 9,32,11,24")
+        XCTAssertEqual(o["depoisDeMudar"] as? String, "true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testDesempenhoArrastarNo2DNaoMedeAVistaDeCimaERefazer3DReaproveitaAMemoria() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

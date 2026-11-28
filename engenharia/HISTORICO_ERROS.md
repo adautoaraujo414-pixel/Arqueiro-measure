@@ -3318,3 +3318,40 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Correção:** cada desenho passa a usar a medida cadastrada. Detalhes reais marcados na caixa 3D (b.det) e listados em window.apDetNota(f), que o quadro do objeto mostra ("A medida não inclui: …"). Nenhuma medida cadastrada mudou; nenhum projeto muda (só o desenho).
 - **Teste:** testMEDOBJ_ObjetoDoCatalogoNaMedidaCadastradaNo3D, no catálogo inteiro. Confere três coisas: corpo = medida cadastrada; todo detalhe marcado está na nota; a nota aparece no quadro. Falha antes (HEAD fb78ca4d: "fora da medida 41") e passa depois.
 - **Evidência:** tools/sondas/etapa2_c3/medobj_objetos_antes_depois.png. Render 4–6 ms.
+### Item 30 · tempo depois da correção (Chefe 28/11: "o Adauto não aceita atraso") — Claude 5
+- **Problema:** o 44475b2 trocou o relógio por um limite de trabalho que deixava obra grande e o "melhor aproveitamento" (segundo plano) mais lentos. Medido: obra grande direto ~315–360 ms e segundo plano ~2,5 s, contra ~320 ms e ~1,3 s sem o item 30.
+- **Causa:** o trabalho contava 1 por peça, mas o custo de cada tentativa cresce com o quadrado das peças. Além disso, a busca "já no mínimo de chapas" (que antes parava em 60–200 ms sem mudar o plano) ia até o limite de tentativas.
+- **Correção (sem relógio, determinística):**
+  - cada tentativa conta peças²/50 (`cutU`), com `CUTK=1000` (packOnce) e `CUTK2=400` (packMax) por "ms" dos limites antigos;
+  - o aperto da chapa conta peças com `CUTKT=500`;
+  - acima de 70 peças na chapa, o nº máximo de tentativas cai na proporção do quadrado (`cutCap`).
+- **Mesmo plano:** sonda s49 nos 142 modelos: igual ao código sem o item 30 com o relógio parado (o resultado "sem carga"), e igual com relógio normal, parado e carregado (0 diferenças nos 3 caminhos).
+- **Tempo (Chromium desta máquina, mediana de 3 rodadas, ms):**
+
+| Tela | Obra | Direto: sem item 30 / 44475b2 / agora | Rápido (abrir): idem | Segundo plano: idem |
+|---|---|---|---|---|
+| 1366 | pequena (1 módulo) | 43 / 40 / 46 | 8 / 7 / 8 | 244 / 343 / 304 |
+| 1366 | cozinha (9 módulos) | 155 / 158 / 120 | 42 / 40 / 35 | 573 / 1126 / 565 |
+| 1366 | grande (40 módulos) | 324 / 315 / 168 | 68 / 56 / 67 | 1302 / 2508 / 850 |
+| 430 | pequena | 50 / 44 / 47 | 8 / 8 / 8 | 240 / 352 / 250 |
+| 430 | cozinha | 161 / 161 / 133 | 41 / 40 / 46 | 581 / 1019 / 586 |
+| 430 | grande | 322 / 361 / 163 | 74 / 59 / 63 | 1262 / 2642 / 812 |
+
+- **Leitura:** direto e rápido iguais ou mais rápidos; segundo plano igual ou mais rápido, menos a obra pequena a 1366 (+60 ms em segundo plano, a tela não espera). Em aparelho real: não medido.
+
+## AUDITORIA DO CODE 2 · E2, E3 e R1 (Chefe 28/11) — Claude 5
+- **E2 · erro comprovado, já existia (corrigido):** a profundidade digitada num módulo de baixo mudava a de TODOS os módulos de baixo (`propagate('d')` copiava pra `baixoComum`), sem aviso.
+  - Reproduzido: 3 balcões de 560, digitar 600 no do meio → 600/600/600, igual no c38c9ba.
+  - **Correção:** só o módulo digitado muda. Os outros de baixo com outra profundidade viram sugestão na barra que já existia (`libSugere`, tipo `prof`): "Profundidade: N módulos de baixo têm outra medida (560 → 600). Aplicar aos vizinhos", com prévia de cada um. O botão aplica; ↶ desfaz.
+  - A pedra (stD) continua como era: regra aprovada antes (stAdapta).
+  - **Teste:** `testVizinhoIgualProfundidadeDigitadaSoNoModuloEPosicaoDigitadaPerguntaSemMoverCalado`. No código de antes: 600/600/600 e sem sugestão; depois: 560/600/560, sugestão, aplicar e desfazer (1366 e 430).
+- **E3 · NÃO era erro (falso positivo da sonda s53):** a sonda chamava `setv('x','100')` com TEXTO; `"100"+900` vira texto e o `confine` levava o móvel para o fim da parede. A tela passa número (`+t.value`) e, com número, o app já pergunta "Assim o módulo entra dentro do vizinho · Aplicar mesmo assim / Cancelar" sem mover nada. O mesmo teste ficou de proteção desse comportamento (passa antes e depois).
+- **R1 · risco (sem correção):** o desenho grava `m.wing=0` na memória (campo padrão); medido: o arquivo NÃO é regravado, a data não muda, o projeto não fica "alterado" e o histórico não ganha passo. Só o estado do desfazer guarda `wing:0` (dado igual). Igual no c38c9ba.
+
+## TECLADO-ABAS (28/11): 2 testes de teclado falham quando o Chromium da bateria tem mais de uma aba — AMBIENTE, não código — Claude 5
+- **Testes:** `testDepoisDeDigitarOPrimeiroToqueNoBotaoPegaAPaginaNaoDesceNoMeioDoToque` e `testDigitacaoTecladoFisicoTabEnterEPrecoAoSairDoCampoNaoPerdeValor`.
+- **Prova:** isolados, 5× no c38c9ba e 5× no HEAD c123537:
+  - Chromium com 2 abas abertas (a do editor + outra): 20/20 FALHAM, iguais nos dois códigos ("teclado do app: FECHOU…", "tecladoAbreComAFolga: false"…);
+  - Chromium novo com 1 aba só (a do editor): 20/20 PASSAM nos dois códigos.
+- **Causa provável:** com outra aba aberta, a aba do teste não é a que tem o foco; foco, teclado e eventos de campo não chegam como no app (só nesses testes, que dependem do foco real do campo).
+- **Como rodar:** a bateria precisa de um Chromium com UMA aba, a do editor (`curl -X PUT ".../json/new?<editor>"` e fechar o `about:blank`). Nada no código muda.

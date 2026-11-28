@@ -3403,3 +3403,35 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - **A (false, padrão hoje):** nada encosta sozinho, nem no arrasto; tudo vira "Encostar no canto".
   - **B (true, leitura do Chefe):** o ímã vale só no ARRASTO da própria pessoa. O gesto é detectado assim: o x ou a parede do módulo escolhido mudou entre encostar e soltar o dedo (`pointerdown`/`pointerup` em captura). Ele encosta e o ↶ desfaz o gesto inteiro. Criar, trocar tamponamento, mudar largura e digitar continuam só sugerindo, com o x igual bit a bit.
 - **Teste:** `testCantoImaDuasVersoesArrastoDaPessoaEncostaSoNaVersaoBORestoSoSugere` cobre as duas versões. Se o Adauto escolher B: basta pôr a chave em `true` e acrescentar ao teste do PEDIDO 52 os casos com gesto ("encostados", como era).
+
+## CANTO-NASCE · VERSÃO B autorizada pelo Adauto (28/11) — Claude 5
+- **Decisão do Adauto (28/11), com condições:**
+  - o ímã vale só no arrasto manual, no 2D e no 3D;
+  - a pessoa pode ligar e desligar o ímã;
+  - o encaixe é preciso, sem sobreposição e respeitando os tamponamentos;
+  - nenhum vizinho muda;
+  - criar módulo ou mudar medida, porta, tamponamento ou parede só sugere;
+  - todo encaixe desfaz e refaz;
+  - projeto antigo fica como foi salvo;
+  - a pessoa põe o módulo onde quiser.
+- **Implementação** (`editor.html`, bloco "canto entre paredes"):
+  - **Chave:** `CANTO_IMA_ARRASTO` passa a ser `true` por padrão. A versão A continua alcançável com `false`.
+  - **O que conta como arrasto:** o dedo encosta em `#svg`, `#plan`, `#ambplan` ou `#cv3`, anda pelo menos 4 px, e o x ou a parede de **um** módulo muda entre encostar e soltar. Botão, campo e toque parado não contam.
+  - **Liga/desliga:** usa a opção que já existia, "🧲 Ímã" dos Ajustes (`PR.ima`, guardada). A nota da opção agora explica o canto.
+  - **Desfazer/refazer:** o encaixe é um passo próprio do histórico (`histTick` + `LASTT=0` antes de mover). O 1º ↶ volta onde a pessoa soltou, o 2º desfaz o arrasto, e o ↷ refaz os dois passos.
+  - **Só o arrastado anda:** a condição `__arrasto.m===anda` garante isso.
+- **Erro achado nos testes novos, dependência B (comprovado):**
+  - **O que acontecia:** na vista da parede lateral, o `confineAll` põe o módulo escolhido que andou no começo da parede (`WV.st.ws + lt`, 630). Isso desfazia o encaixe do ímã no balcão (621, o encosto real pelo 3D, o mesmo do botão "Encostar no canto"), que ficava afastado 9 mm sem aviso.
+  - **Correção:** o redesenho logo depois do encaixe é feito com `S.m=null`, então não conta como "o escolhido andou". A trava continua igual no arrasto e em todo o resto.
+  - **Aéreo:** não era afetado.
+- **Testes:**
+  - `testCantoImaDuasVersoesArrastoDaPessoaEncostaSoNaVersaoBORestoSoSugere`, reescrito. As expectativas mudaram por este pedido; o comentário do teste diz qual pedido e a data. Cobre:
+    - versão A e B;
+    - arrasto no 2D e no 3D;
+    - vizinho igual bit a bit;
+    - ↶↶↷↷ (610/600/610/621);
+    - salvar e reabrir igual, inclusive projeto salvo afastado;
+    - tamponamento e largura (x igual, só sugere);
+    - gesto fora do 2D/3D, toque parado e ímã desligado (só sugere).
+  - `testModulosDeParedesDiferentesEncostamNoCantoSemEntrar` (PEDIDO 52): ganhou 6 casos de arrasto. Aéreos e balcões, cantos E e D, ficam "encostados · fundo igual"; o caso longe fica "afastados 489 mm · fundo igual". Os casos sem arrasto continuam "sugere encostar" e o botão encosta.
+  - **Antes da correção** (mesmo teste, 28/11): `arrastoBalcoesEsquerdo`/`Direito` = "afastados 9 mm", e `Barrasto` = "610 · x 610 → 621" com o gesto fora da superfície.

@@ -10615,8 +10615,12 @@ final class EditorWebKitTests: XCTestCase {
         var novo=function(){try{if(!document.getElementById('v3').hidden)document.getElementById('v3x').click()}catch(_){}loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;S.RD=3000;draw()};
         var caixa=function(i){var bb=null;__boxes().forEach(function(q){var k=String(q.nm||'').split(':');if(k[0]!==String(i))return;if(/Puxador|LED|Dobradi/.test(k[1]||''))return;bb=bb||[1e9,-1e9,1e9,-1e9,1e9,-1e9];bb[0]=Math.min(bb[0],q.x0);bb[1]=Math.max(bb[1],q.x1);bb[2]=Math.min(bb[2],q.z0);bb[3]=Math.max(bb[3],q.z1);bb[4]=Math.min(bb[4],q.y0);bb[5]=Math.max(bb[5],q.y1)});return bb};
         var rel=async function(){open3D();await W(250);__build();var a=caixa(0),b=caixa(1);if(!a||!b)return 'faltou módulo no 3D';var ox=Math.min(a[1],b[1])-Math.max(a[0],b[0]),oz=Math.min(a[3],b[3])-Math.max(a[2],b[2]),oy=Math.min(a[5],b[5])-Math.max(a[4],b[4]);var dentro=ox>0.5&&oz>0.5&&oy>0.5;var gap=Math.max(-ox,-oz);document.getElementById('v3x').click();return dentro?'ENTROU um no outro ('+Math.round(Math.min(ox,oz))+' mm)':(gap<=1.5?'encostados':'afastados '+Math.round(gap)+' mm')};
-        var caso=async function(nome,canto,item,ladoX,fundoX,quemMexe){novo();newTpl(T(item));draw();if(window.SOLO2)soloOff();var F=S.mods[0];F.x=canto==='e'?fundoX:S.W-F.w-fundoX;draw();
-         wvGo(canto);draw();newTpl(T(item));draw();if(window.SOLO2)soloOff();var Wm=S.mods[S.mods.length-1];Wm.x=ladoX;S.m=Wm;draw();await W(600);wvGo('f');draw();await W(400);
+        var pe=function(el,tp,x,y){el.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,pointerId:7,isPrimary:true,pointerType:'touch',clientX:x,clientY:y}))};
+        var caso=async function(nome,canto,item,ladoX,fundoX,quemMexe,arr){novo();newTpl(T(item));draw();if(window.SOLO2)soloOff();var F=S.mods[0];F.x=canto==='e'?fundoX:S.W-F.w-fundoX;draw();
+         wvGo(canto);draw();newTpl(T(item));draw();if(window.SOLO2)soloOff();var Wm=S.mods[S.mods.length-1];
+         /* Adauto 28/11 (VERSÃO B): arrastado com o dedo no 2D e solto perto do canto, o ímã encosta (PEDIDO 52 no arrasto) · o do fundo não muda nem um bit */
+         if(arr){Wm.x=900;S.m=Wm;draw();await W(1500);try{libSugLimpa()}catch(_){}var fun=function(){var r=S.mods.filter(function(o){return !o.wing})[0];var c=JSON.parse(JSON.stringify(r));delete c.uid;return JSON.stringify(c)};wvGo('f');draw();var f0=fun();wvGo(canto);draw();S.m=Wm;var sv=document.getElementById('svg'),r=sv.getBoundingClientRect();pe(sv,'pointerdown',r.left+5,r.top+5);pe(sv,'pointermove',r.left+40,r.top+5);Wm.x=ladoX;draw();pe(sv,'pointerup',r.left+40,r.top+5);await W(1500);draw();await W(400);wvGo('f');draw();await W(400);var bar_=document.getElementById('libsug');R[nome]=(await rel())+(bar_&&!bar_.hidden&&/Encostar no canto/.test(bar_.textContent)?' · sugere encostar':'')+(fun()===f0?' · fundo igual':' · FUNDO MUDOU');return}
+         Wm.x=ladoX;S.m=Wm;draw();await W(600);wvGo('f');draw();await W(400);
          if(quemMexe==='fundo'){S.m=S.mods[0];S.mods[0].x=canto==='e'?0:S.W-S.mods[0].w;draw();await W(600)}
          /* ERRO CANTO-NASCE (Chefe 28/11, regra do Adauto 27/11 "o app não altera uma vírgula sozinho", que vem depois do PEDIDO 52): ninguém anda sozinho até encostar;
             fica onde a pessoa deixou (entrando ou afastado) e aparece "Encostar no canto"; tocando no botão, encostam certinho como no PEDIDO 52 */
@@ -10629,6 +10633,12 @@ final class EditorWebKitTests: XCTestCase {
         await caso('direitaLadoNoCanto','d','Aéreo 2 portas',0,0,'lado');
         await caso('balcoesNoCantoEsquerdo','e','Balcão 2 portas',0,0,'lado');
         await caso('balcoesNoCantoDireito','d','Balcão 2 portas',100,0,'lado');
+        await caso('arrastoEsquerdaAereoNoCanto','e','Aéreo 2 portas',0,0,'lado',1);
+        await caso('arrastoEsquerdaAereoPerto','e','Aéreo 2 portas',420,0,'lado',1);
+        await caso('arrastoDireitaAereoNoCanto','d','Aéreo 2 portas',0,0,'lado',1);
+        await caso('arrastoBalcoesEsquerdo','e','Balcão 2 portas',0,0,'lado',1);
+        await caso('arrastoBalcoesDireito','d','Balcão 2 portas',100,0,'lado',1);
+        await caso('arrastoLonge','e','Aéreo 2 portas',900,0,'lado',1);
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
         // Expectativa mudada pelo pedido do Chefe de 28/11 (CANTO-NASCE): antes do botão fica onde a pessoa deixou e sugere; com o botão, encostados (PEDIDO 52)
@@ -10645,6 +10655,13 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["balcoesNoCantoEsquerdoBotao"] as? String, "encostados", "o botão encosta certinho")
         XCTAssertEqual(o["balcoesNoCantoDireito"] as? String, "afastados 9 mm · sugere encostar")
         XCTAssertEqual(o["balcoesNoCantoDireitoBotao"] as? String, "encostados", "o botão encosta certinho")
+        // Adauto 28/11 (VERSÃO B): no arrasto manual o ímã encosta sem entrar, sem sugestão, e o módulo do fundo fica igual bit a bit; longe (> 80 mm) não gruda
+        XCTAssertEqual(o["arrastoEsquerdaAereoNoCanto"] as? String, "encostados · fundo igual")
+        XCTAssertEqual(o["arrastoEsquerdaAereoPerto"] as? String, "encostados · fundo igual")
+        XCTAssertEqual(o["arrastoDireitaAereoNoCanto"] as? String, "encostados · fundo igual")
+        XCTAssertEqual(o["arrastoBalcoesEsquerdo"] as? String, "encostados · fundo igual")
+        XCTAssertEqual(o["arrastoBalcoesDireito"] as? String, "encostados · fundo igual")
+        XCTAssertEqual(o["arrastoLonge"] as? String, "afastados 489 mm · fundo igual")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 
@@ -20278,28 +20295,55 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
 
     // CANTO-NASCE · AS DUAS VERSÕES (Chefe 28/11, aguardando o Adauto): A (padrão, CANTO_IMA_ARRASTO=false) nada encosta sozinho, nem no arrasto · B (=true) o ímã do PEDIDO 52
     // vale só no ARRASTO da própria pessoa (soltou perto do canto → encosta, ↶ volta); criar, tamponamento e largura continuam só sugerindo, x igual bit a bit
+    // CANTO-NASCE · VERSÃO B (ADAUTO 28/11, autorizada com condições; expectativas mudadas por esse pedido, antes "padrão = versão A" e ↶ desfazia o gesto inteiro):
+    // o ímã do canto vale SÓ no arrasto manual (2D #svg e 3D #cv3, dedo andou ≥ 4 px); liga/desliga = 🧲 Ímã dos Ajustes (PR.ima); só o arrastado anda (vizinho igual,
+    // bit a bit); encaixe = passo próprio do histórico (↶ volta onde a pessoa soltou, ↷ encaixa de novo); criar, largura, tamponamento, gesto fora do 2D/3D,
+    // ímã desligado = só sugestão com botão; projeto salvo reabre exatamente igual (nada anda ao abrir). Versão A continua alcançável (CANTO_IMA_ARRASTO=false).
     func testCantoImaDuasVersoesArrastoDaPessoaEncostaSoNaVersaoBORestoSoSugere() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;draw();
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;draw();R.padrao=window.CANTO_IMA_ARRASTO;var ima0=PR.ima;
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
-        var pe=function(tp){window.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,pointerId:7,isPrimary:true,clientX:5,clientY:5}))};
+        var pe=function(el,tp,x,y){el.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,pointerId:7,isPrimary:true,pointerType:'touch',clientX:x,clientY:y}))};
         var mk=async function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();await W(400);newTpl(T('Balcão canto cego · cego na esquerda (porta na direita)'));S.mods[0].x=0;draw();await W(500);addWing('e');var w=S.mods[S.mods.length-1];draw();await W(1500);draw();await W(300);try{libSugLimpa()}catch(_){}return w};
         var sug=function(){var b=document.getElementById('libsug');return b&&!b.hidden&&/Encostar no canto/.test(b.textContent)?(b.textContent.match(/x [0-9.]+ → [0-9.]+/)||[''])[0]:'sem sugestão'};
-        for(const ver of ['A','B']){window.CANTO_IMA_ARRASTO=ver==='B';var w=await mk();await W(800);
-          /* arrasto da pessoa: encosta o dedo com o módulo escolhido, ele anda até 610 e solta */S.m=w;pe('pointerdown');w.x=610;draw();pe('pointerup');await W(1500);draw();await W(400);R[ver+'arrasto']=w.x+' · '+sug();
-          if(ver==='B'){await W(800);document.getElementById('und').click();await W(200);R.Bdesfaz=S.mods[S.mods.length-1].x;w=S.mods[S.mods.length-1];w.x=610;draw();await W(1500);draw();await W(400)}
+        /* arrasto: encosta o dedo na superfície, anda 30 px (o módulo vai pra x), solta */
+        var arrasta=async function(el,w,x){var r=el.getBoundingClientRect(),cx=r.left+5,cy=r.top+5;S.m=w;pe(el,'pointerdown',cx,cy);pe(el,'pointermove',cx+30,cy);w.x=x;draw();pe(el,'pointerup',cx+30,cy);await W(1500);draw();await W(400)};
+        var viz=function(){return JSON.stringify(S.mods[0])};
+        for(const ver of ['A','B']){window.CANTO_IMA_ARRASTO=ver==='B';var w=await mk();await W(800);var v0=viz();
+          await arrasta(document.getElementById('svg'),w,610);R[ver+'arrasto']=w.x+' · '+sug();R[ver+'vizinho']=viz()===v0;
+          if(ver==='B'){await W(800);document.getElementById('und').click();await W(300);R.Bdesfaz=S.mods[S.mods.length-1].x;document.getElementById('und').click();await W(300);R.Bdesfaz2=S.mods[S.mods.length-1].x;
+            document.getElementById('red').click();await W(300);R.Brefaz=S.mods[S.mods.length-1].x;document.getElementById('red').click();await W(300);R.Brefaz2=S.mods[S.mods.length-1].x;w=S.mods[S.mods.length-1];
+            /* salvar, fechar e reabrir: exatamente como foi salvo, nada anda ao abrir */var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();await W(1500);draw();await W(400);R.Breabre=(JSON.stringify(snapState())===sv)+' · '+S.mods[S.mods.length-1].x+' · '+sug();
+            /* projeto salvo com o módulo afastado (610): reabre igual e só sugere */w=S.mods[S.mods.length-1];w.x=610;var sv2=JSON.stringify(snapState());loadState(JSON.parse(sv2));draw();await W(1500);draw();await W(400);R.BreabreAfastado=(JSON.stringify(snapState())===sv2)+' · '+S.mods[S.mods.length-1].x;w=S.mods[S.mods.length-1];w.x=610;draw();await W(1500);draw();await W(400)}
           /* outras ações, sem arrasto: o x não muda nem um bit */var x0=w.x;w.tl=!w.tl;draw();await W(1500);draw();await W(400);R[ver+'tamp']=Object.is(w.x,x0)+' · '+sug();w.w=800;draw();await W(1500);draw();await W(400);R[ver+'largura']=Object.is(w.x,x0)+' · '+sug()}
-        window.CANTO_IMA_ARRASTO=false;R.padrao=window.CANTO_IMA_ARRASTO;R.errs=__errs.length-e0;return JSON.stringify(R);
+        window.CANTO_IMA_ARRASTO=true;
+        /* 3D: o mesmo arrasto no #cv3 */var w=await mk();open3D();await W(400);var v0=viz();await arrasta(document.getElementById('cv3'),w,610);R.B3d=w.x+' · '+sug();R.B3dVizinho=viz()===v0;try{document.getElementById('v3x').click()}catch(_){}
+        /* gesto fora do 2D/3D (botão, painel): não é arrasto */w=await mk();var bt=document.createElement('button');document.body.appendChild(bt);S.m=w;pe(bt,'pointerdown',5,5);pe(bt,'pointermove',60,5);w.x=610;draw();pe(bt,'pointerup',60,5);await W(1500);draw();await W(400);R.Bbotao=w.x+' · '+sug();bt.remove();
+        /* toque parado (sem andar 4 px) não é arrasto */w=await mk();var sv_=document.getElementById('svg'),r_=sv_.getBoundingClientRect();S.m=w;pe(sv_,'pointerdown',r_.left+5,r_.top+5);w.x=610;draw();pe(sv_,'pointerup',r_.left+6,r_.top+5);await W(1500);draw();await W(400);R.Btoque=w.x+' · '+sug();
+        /* 🧲 Ímã desligado nos Ajustes: o arrasto não encosta, só sugere */PR.ima=0;w=await mk();await arrasta(document.getElementById('svg'),w,610);R.BimaDesligado=w.x+' · '+sug();PR.ima=ima0;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["Aarrasto"] as? String, "610 · x 610 → 621", "versão A: o arrasto também só sugere")
-        XCTAssertEqual(o["Barrasto"] as? String, "621 · sem sugestão", "versão B: soltou perto do canto, o ímã encosta (PEDIDO 52)")
-        XCTAssertEqual(o["Bdesfaz"] as? Double, 600, "versão B: ↶ desfaz o gesto inteiro (arrasto + ímã, 1 passo do histórico), como era no PEDIDO 52")
+        XCTAssertEqual(o["padrao"] as? Bool, true, "Adauto 28/11: versão B é a padrão")
+        XCTAssertEqual(o["Aarrasto"] as? String, "610 · x 610 → 621", "versão A (CANTO_IMA_ARRASTO=false): o arrasto também só sugere")
+        XCTAssertEqual(o["Avizinho"] as? Bool, true)
+        XCTAssertEqual(o["Barrasto"] as? String, "621 · sem sugestão", "versão B: arrastou no 2D e soltou perto do canto, o ímã encosta (PEDIDO 52)")
+        XCTAssertEqual(o["Bvizinho"] as? Bool, true, "o módulo do canto não muda nem um bit")
+        XCTAssertEqual(o["Bdesfaz"] as? Double, 610, "↶ desfaz só o encaixe: volta onde a pessoa soltou")
+        XCTAssertEqual(o["Bdesfaz2"] as? Double, 600, "2º ↶ desfaz o arrasto")
+        XCTAssertEqual(o["Brefaz"] as? Double, 610, "↷ refaz o arrasto")
+        XCTAssertEqual(o["Brefaz2"] as? Double, 621, "↷ refaz o encaixe")
+        XCTAssertEqual(o["Breabre"] as? String, "true · 621 · sem sugestão", "salvar e reabrir: igual")
+        XCTAssertEqual(o["BreabreAfastado"] as? String, "true · 610", "projeto salvo afastado reabre exatamente como foi salvo")
         XCTAssertEqual(o["Atamp"] as? String, "true · x 610 → 651", "A: tamponamento não mexe no x")
         XCTAssertEqual(o["Alargura"] as? String, "true · x 610 → 651", "A: largura não mexe no x")
         XCTAssertEqual(o["Btamp"] as? String, "true · x 610 → 651", "B: tamponamento não mexe no x (não é arrasto)")
         XCTAssertEqual(o["Blargura"] as? String, "true · x 610 → 651", "B: largura não mexe no x")
-        XCTAssertEqual(o["padrao"] as? Bool, false, "padrão = versão A até o Adauto responder")
+        XCTAssertEqual(o["B3d"] as? String, "621 · sem sugestão", "arrasto no 3D: o ímã encosta igual")
+        XCTAssertEqual(o["B3dVizinho"] as? Bool, true)
+        XCTAssertEqual(o["Bbotao"] as? String, "610 · x 610 → 621", "gesto fora do 2D/3D não é arrasto: só sugere")
+        XCTAssertEqual(o["Btoque"] as? String, "610 · x 610 → 621", "toque parado não é arrasto: só sugere")
+        XCTAssertEqual(o["BimaDesligado"] as? String, "610 · x 610 → 621", "🧲 Ímã desligado: o arrasto não encosta, só sugere")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

@@ -2695,3 +2695,39 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - **3.** `testCORTEPRIORIDADE…`, cenário "normal": no iPad deu 23 etiquetas de sobra, quando o esperado eram 25.
     - **Causa:** o cenário apagava a métrica forçada, e no iPad a medida real já é a do iPad, então ele não era o "normal".
     - **Correção:** a normal passa a ser forçada em 0,95/0,26, com comentário no teste. Entrou um cenário próprio para a métrica do iPad medida (1,13/0,26 com `ip`), que dá os mesmos 23 do iPad real, com identificação 0 e callout em cima de etiqueta 0.
+
+## ITEM 13 (ETAPA 2, Adauto 26/11): custos fixos na biblioteca de preços — Claude 5 (commit 364c88b)
+- **Pedido:** custos fixos na BIBLIOTECA DE PREÇOS, junto dos materiais; vários (nome, descrição, R$ ou %); escolher por serviço com a % daquele serviço e a base à vista; editar, ativar/desativar, excluir; soma certa sem duplicar entre ambientes e o consolidado; orçamento guarda cópia; biblioteca nova só com o OK; fora do PDF, CSV e link.
+- **Antes:** o motor de 24/11 (`PR.cfxLib` + cópia `S.cfx`, `cfxCalc`, 5 garantias) já existia, mas a biblioteca só aparecia em Valores do projeto, sem ativar/desativar; e um custo fixo em R$ aplicado em dois ambientes do mesmo cliente somava duas vezes no orçamento de vários ambientes (cada ambiente leva o valor do próprio projeto).
+- **Feito (o mesmo motor, nenhum sistema novo):**
+  - tela de preços: caixa "Custos fixos" (`#cfxlibbox`, embrulho do `prRender`) com adicionar, editar, ativar/desativar (`tgl`) e excluir; editar não reativa sozinho; desativado não oferece "Aplicar";
+  - custo em R$ ganha o escopo **por ambiente** (padrão, igual a antes) ou **uma vez por serviço** (`esc:'srv'`, só gravado quando escolhido). Custo em % é proporcional: somado nos ambientes dá o mesmo % do total, não duplica;
+  - orçamento de vários ambientes: o 2º ambiente em diante não soma de novo o custo "uma vez por serviço" com o mesmo nome (`__cfxExcl` no `cfxCalc`, regra: o primeiro ambiente da lista que tem o custo fica com ele). A prévia do ↻ usa a mesma regra. Remover o ambiente que tinha o custo avisa e não muda outro ambiente sozinho (o ↻ com prévia volta a pôr);
+  - a linha do custo em % mostra a base e o valor dela ("8% do preço com margem (R$ X) = R$ Y");
+  - cada mudança de custo entra no desfazer na hora (`histTick` no fim da ação).
+- **Testes:** `testCustosFixosNaBibliotecaDePrecosPorServicoUmaVezNoConsolidadoForaDoPdfCsvLink` (26 asserts). No c38c9ba falha ("sem [data-cfx=adlp|]"); depois passa. Os 3 testes dos custos fixos de 24/11 continuam passando.
+- **Família/semelhantes:** CSV (`csvTexto`) só tem peças (conferido no teste); link do cliente sem valores (conferido); PDF do projeto com o mesmo total (conferido); orçamento consolidado ao centavo (conferido).
+- **Risco identificado:** o app grava o orçamento de ambientes sem campos extras, então a regra "uma vez por serviço" fica congelada no valor de cada ambiente (é cópia, como o resto); a nota "já contado em outro ambiente" some depois de reabrir pelo app (o valor não).
+
+## ITEM 20 (ETAPA 2, Adauto 26/11): fita manual por lado no ArqueCut — Claude 5 (commit 7a90dce)
+- **Pedido:** a pessoa escolhe em quais lados de cada peça vai fita; o automático de hoje continua o padrão; reflete na lista, nas linhas verdes do plano, nos metros de fita e no orçamento; desfazer; projeto antigo igual.
+- **Feito:** botão "✎ lados" em cada linha da lista do plano de corte (projeto e ArqueCut avulso) abre a escolha: frente, trás, ponta esquerda, ponta direita, as peças da linha (marcar quais) e "Automático".
+  - Projeto: `m.fitaMan = {pk: 'LRTB'…}` no módulo (vai junto ao salvar, duplicar e desfazer). Avulso: `p.f` na lista do ArqueCut.
+  - Uma leitura só: `edgeSidesOf(m,p)` / `edgeMmOf(m,p)` / `fitaSrc(src)` → linhas verdes (`planHtml`), lista (`fitaCel`), metros de fita (`mCost` → orçamento) e quadro do 3D (`fitaAcab`). Sem escolha, tudo igual a antes (mesma função `edgeSides`).
+- **Testes:** `testFitaManualPorLadoNoArqueCutListaPlanoMetrosOrcamentoDesfazerEAvulso` (17 asserts). No c38c9ba falha (não há o botão); depois passa. Evidência: `engenharia/referencias/item20/` (janela e lista a 430).
+- **Não muda (risco identificado):** a coluna "Fita" do CSV é a cor, não os lados (igual a antes); o desenho da fita no 3D (bordas pintadas) continua pela regra automática.
+
+## ITEM 30 / N11 (27/11): plano de corte diferente com a máquina carregada — Claude 5 (commit 44475b2)
+- **Erro original:** "Estante torre aberta com gavetas embaixo" dava outro HTML de plano sob carga e o mesmo 6/6 isolado.
+- **Causa raiz (comprovada):** o otimizador parava pelo relógio: `packG` (laços de `opt` e `max`: `Date.now()-t0<120/40…`), `packTight` (`Date.now()-t0>TM`) e o "melhor aproveitamento" em segundo plano (`deepStep`, tempo somado em `st.t1/st.t2`). Máquina carregada = menos tentativas = outro plano.
+- **Reprodução (sonda `tools/sondas/s49_corte_deterministico.js`, 142 modelos):** relógio "carregado" (cada leitura anda 40 ms) muda o plano direto em 119, o rápido em 95 e o de segundo plano em 114; com o relógio parado (só o limite de tentativas) nenhum muda → o resultado normal é o do limite de tentativas.
+- **Correção:** o limite passa a ser de **trabalho**: cada tentativa conta as peças que arruma; `CUTK` (packOnce) e `CUTK2` (packMax) peças valem "1 ms" dos limites de antes. O relógio só reparte o segundo plano em fatias (tela), sem mudar o resultado.
+- **Validação:** s49 depois: normal = parado = carregado nos 142 (0/0/0), e igual ao código antigo sem carga nos 3 caminhos (0 diferenças). Custo medido (Chromium deste PC): obra grande (151 peças na chapa) 270 → ~400 ms no plano direto, 1,4 → 2,0 s no segundo plano; um módulo e cozinha sem mudança perceptível.
+- **Teste:** `testPlanoDeCorteNaoDependeDoRelogioMaquinaCarregadaMesmoPlanoN11`. No c38c9ba falha (≠ sob carga nos 3 modelos); depois passa.
+
+## ITEM 31 (27/11): confineAll/roomClamp escreviam e desfaziam nos módulos — Claude 5 (commit 787f485)
+- **Risco original:** o `guarda` deixava as passadas (`confine`, `stPush`, `placeFree`, `roomClamp`) gravarem x/b/w/h/d e depois devolvia o que não era autorizado.
+- **Correção:** durante a passada, x/b/w/h/d de cada módulo existente viram uma sombra (mesmo objeto: quem lê vê o que a passada propôs, então a conta é a mesma). No fim, cada campo volta a ser dado com o valor decidido: o proposto (autorizado) ou o de antes, que nunca foi trocado. Campo que o módulo não tinha: como antes.
+- **Validação:** sonda `tools/sondas/s50_guarda_sem_escrita.js` (120 modelos postos fora do lugar + cozinha sobreposta; desenhar, 3D, campo, parede menor): projeto e avisos iguais ao código antigo, bit a bit. Desempenho do `draw`/`partsOf` igual.
+- **Teste:** `testConfineAllRoomClampNaoEscrevemNosModulosMesmoResultado` (espião nos campos). No c38c9ba: 8 escritas em x e 10 em b; agora 0, mesmo lugar e mesmos avisos.
+- **Fora (classificação):** o `sanM` (dentro do `partsOf`) regrava o mesmo valor (não muda nada) — comportamento correto. Pedra e móveis soltos no `roomClamp` ainda usam escrever-e-desfazer (mesmo mecanismo) — risco identificado, não pedido.

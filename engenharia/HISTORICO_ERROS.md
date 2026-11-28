@@ -2952,3 +2952,8 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - depois: corrediças 3 pares × R$ 35 = R$ 105 · material R$ 661,35 · valor R$ 1.653,37.
 - **Correção:** "Frente de gaveta (caixote)" conta 1 par de corrediça telescópica (`r.drw`). Orçamentos já salvos (cópias) não mudam.
 - **Teste:** `testItem40CorredicaDoCaixoteDeGavetasEntraNoOrcamento` (no código de antes: 0 pares e 12 modelos com diferença; depois: 3 pares e o catálogo inteiro bate).
+
+### Item 34 · salvar/reabrir e desfazer controle por controle (Chefe 28/11) — Claude 5
+- A sonda s51 (agora com salvar/desfazer/reabrir) aciona cada controle e, se ele mudou o projeto: espera o salvamento automático e confere que o arquivo é o estado da tela; toca ↶ e confere que volta ao estado de antes; reabre o arquivo e confere igual. Se mudou preços: confere que ficou gravado.
+- Resultado a 1366: Valores 23 controles que mudam o projeto, Preços 77, Plano de corte 61, ArqueCut 8 → todos salvam, desfazem e reabrem iguais; preços gravados. Clientes: nenhum controle muda o projeto aberto (cria/abre outro).
+- 1ª rodada acusou "não desfaz" por erro da sonda (reabria antes de desfazer e mexia no histórico); corrigida a ordem.

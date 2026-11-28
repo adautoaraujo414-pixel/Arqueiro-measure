@@ -459,3 +459,99 @@ jobs:
             ios/build/*.log
             ios/build/TestesIPad.xcresult
           if-no-files-found: ignore
+
+  # ETAPA 3 · 3.6 (Chefe 28/11, matriz de tamanhos do Code 1): os testes de TOQUE e 2D também num iPhone de 375 de largura (iPhone SE 3ª
+  # geração; sem ele, SE 2ª, 13 mini ou 12 mini — scripts/pick_sim.py iphone375 cria o aparelho se o runner não tiver). Job próprio (outro Mac),
+  # em paralelo com o iPhone e o iPad, sem `needs` (não segura nem libera nada) e sem publicar nada. Nenhum limite existente muda: os passos
+  # usam a mesma tolerância por teste do iPhone (120/240 s, 2 tentativas). A lista sai do código (scripts/testes_375.py: Toque*, DoisToques*,
+  # TOQUE*, Etapa2Vizinho*, Liberdade*, ETAPA3*, LedNoRipado*, PlanoDeCorteLegivel*) e o "confere" prova que nenhum ficou de fora.
+  iphone375:
+    if: ${{ !inputs.testado_em }}
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Xcode 26 (exigido pela App Store desde 28/04/2026)
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n1)
+          [ -n "$X" ] || X=/Applications/Xcode.app
+          sudo xcode-select -s "$X/Contents/Developer"
+          xcodebuild -version
+
+      - name: Gerar o projeto Xcode (XcodeGen)
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Compilar os testes (iPhone 375)
+        id: i375_build
+        timeout-minutes: 40
+        run: |
+          cd ios && mkdir -p build
+          python3 scripts/testes_375.py contagem | tee build/contagem-375.txt
+          UDID=$(python3 scripts/pick_sim.py iphone375)
+          echo "$UDID" > build/udid-375.txt
+          set -o pipefail
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
+            -destination "id=$UDID" -derivedDataPath build/dd \
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+            build-for-testing > build/xcodebuild-build-375.log 2>&1 || { grep -E "error:" build/xcodebuild-build-375.log | head -n 60; exit 1; }
+
+      - name: Testes de toque e 2D no iPhone 375
+        id: i375_tests
+        if: always() && steps.i375_build.outcome == 'success'
+        timeout-minutes: 40
+        run: |
+          cd ios && mkdir -p build
+          UDID=$(cat build/udid-375.txt)
+          T0=$(date +%s); xcrun simctl boot "$UDID" 2>/dev/null; xcrun simctl bootstatus "$UDID" -b > /dev/null 2>&1
+          echo "ABERTURA-DIAG simulador do iPhone 375 ligado em $(( $(date +%s) - T0 )) s (antes dos testes)"
+          set +e
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
+            -destination "id=$UDID" -derivedDataPath build/dd -resultBundlePath build/Testes375.xcresult \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 \
+            $(python3 scripts/testes_375.py args) -retry-tests-on-failure -test-iterations 2 \
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+            test-without-building > build/xcodebuild-test-375.log 2>&1
+          RC=$?
+          grep -E "error:|Test Case .*failed|Executed|\*\* " build/xcodebuild-test-375.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP" | tail -n 120
+          grep -oE "Test Case '-\[[^]]+\]' failed" build/xcodebuild-test-375.log | sed -E "s/Test Case '-\[(.*)\]' failed/\1/" | sort -u | while read T; do
+            if grep -qF "Test Case '-[$T]' passed" build/xcodebuild-test-375.log; then echo "::warning title=Teste repetido (375)::só passou na repetição · $T"; else echo "::error title=iPhone 375::FALHOU nas duas · $T"; fi
+          done
+          python3 scripts/testes_375.py confere build/xcodebuild-test-375.log || RC=1
+          exit $RC
+
+      - name: Guardar o resultado do iPhone 375 no ramo ci/ios-resultados-<ramo>-375
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          cd ios
+          OUT=$(mktemp -d); L=build/xcodebuild-test-375.log
+          if [ -f "$L" ]; then
+            { echo "commit $GITHUB_SHA · execução $GITHUB_RUN_NUMBER · iPhone 375 · $(sed -n 2p build/contagem-375.txt 2>/dev/null)"
+              cat build/contagem-375.txt 2>/dev/null | head -n 1
+              echo "==== falhas (mensagem completa) ===="; grep -E "error: |Test Case .*failed" "$L" | grep -v -E "ProcessAssertion|makeImagePlus|WEBP" | head -n 400
+              echo "==== totais ===="; grep -E "Executed [0-9]+ test" "$L" | tail -n 3
+              python3 scripts/testes_375.py confere "$L"; } > "$OUT/FALHAS-375.txt" 2>&1 || true
+            tail -c 3000000 "$L" > "$OUT/log-375-final.txt" 2>/dev/null || true
+          else
+            grep -E "error:" build/xcodebuild-build-375.log 2>/dev/null | head -n 100 > "$OUT/FALHAS-375.txt"; echo "sem log de teste (a compilação falhou?)" >> "$OUT/FALHAS-375.txt"
+          fi
+          cd "$OUT"
+          git init -q && git checkout -q -b ci/ios-resultados-375
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add -A && git commit -qm "Resultados iPhone 375 $GITHUB_RUN_NUMBER ($GITHUB_SHA)"
+          RB="ci/ios-resultados-$(echo "$GITHUB_REF_NAME" | tr -c 'A-Za-z0-9._-' '-' | sed 's/-*$//')-375"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "HEAD:refs/heads/$RB" || true
+          echo "::notice title=Resultados do iPhone 375 guardados::$RB"
+
+      - name: Publicar os logs do iPhone 375
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-resultados-375
+          path: |
+            ios/build/*.log
+            ios/build/Testes375.xcresult
+          if-no-files-found: ignore

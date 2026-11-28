@@ -3569,3 +3569,86 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **`pecaNoToque`:** se o que está na frente no ponto não é peça de módulo (eletro, pedra, painel), devolve `null`, como o toque. Antes devolvia a peça escondida atrás.
 - **Teste:** `testMOVEELETRO_TocarDeNovoNoEletroNaoMudaDeLugarEPecaAtrasNaoE`. Falha no f4f6c34e ("DIZ QUE MUDOU DE LUGAR"; "devolveu peça escondida") e passa depois. Os 31 testes de geladeira, eletro, ETAPA3 e PECANOTOQUE passam a 1366 e a 430.
 - **Para a s54 (Claude 5):** a verdade precisa contar eletros na frente, e a limpeza entre toques precisa desarmar o "mudar eletro de lugar".
+## Fita na régua de engrosso de 80 (decisão do Adauto 28/11, 3): o plano desenhava 4 lados e o orçamento cobrava 0 — Code 2
+- **Causa:** as réguas de 80 só existem na lista de corte (`cutLines` divide o tamponamento de 30 em face + réguas). O plano pintava a fita pelo nome (`edgeSides`: "Tamponamento…" = 4 lados), e o orçamento (`mCost`) só via as peças do módulo, onde a régua não existe.
+- **Correção:**
+  - `edgeSides` dá "sem fita" para "… · engrosso 80" (o padrão que o orçamento cobrava).
+  - `mCost` soma a fita marcada à mão nas réguas (`m.fitaMan`, pelo pk da régua), com a medida da régua.
+  - Uma fonte só para lista, plano e orçamento.
+- **Teste:** `testEtapa2FitaNaReguaDeEngrosso80BordaPorBordaListaPlanoEOrcamentoIguais` (padrão, marcar a frente de UMA régua = +0,720 m, orçamento igual, desfazer, projeto antigo).
+- **E1 (430):** o controle tocado no fim do painel pulava 44 px, porque a rolagem batia no fim. Um espaço temporário no fim do painel corrige. Conferido em `testEtapa2TravessaETeto…` (`telaNoFim`), a 1366 e a 430.
+## ITEM2-ATRAVESSADA (28/11): base atravessada no canto L e no canto cego (qual passa inteira, A ou B) — Claude 5
+- **Pedido:** Adauto 28/11 (DECISOES "5 pendências", nº 1). No canto cego vale a leitura do Chefe de 28/11, a opção (c). O botão é do Code 2.
+- **Contrato com o Code 2:** `m.cnPassa = {base:'A'|'B', rod:'A'|'B'}`, gravado no módulo do canto (canto L ou cego). Sem o campo, tudo fica como sempre foi. Leitura: `cnPassa(m,key)`. Par do cego: `cnPassaCego(m)`, nos dois sentidos. Motivo de não aplicar: `cnPassaInfo(m)`.
+- **Canto L (`m.corner`, `partsOf0` + `BX` do 3D):** antes, a parte do fundo passava sempre inteira. Agora o B é o espelho exato das contas do A, trocando fundo ↔ lado. Base e rodapé têm escolhas separadas.
+  - Medidas com 900/900/560, chapa 15, fundo 6, nesta ordem: base fundo/lado · rodapé frente fundo/lado · rodapé trás fundo/lado.
+    - A: 894/334 · 364/349 · 864/834;
+    - B: 334/894 · 349/364 · 834/864.
+- **Canto cego:** são 2 módulos retos (o cego e o 1º da parede lateral). Hoje não se encostam. Só funciona com o "Unir" (as duas marcas `m.une` iguais).
+  - **Rodapé, pelo recuo do lado (`rodLados`):** frente, trás, fechamento, divisória e travessas do pedestal acompanham.
+    - A: o do cego passa inteiro e o da asa vai até encostar no rodapé da frente dele (+84 mm, ou +105 depois de a asa encostar na régua espaçadora).
+    - B: o da asa passa inteiro até o rodapé traseiro do cego (fica no recuo de trás, como todo rodapé) e o do cego encurta onde ela cruza.
+  - **Base: não aplicada.** O painel cego e a porta descem na frente da base, cobrindo 5 mm da borda, e a régua espaçadora sai 40 mm para a frente. A base da asa só passaria entrando neles (a sonda mostrou a sobreposição). Fica como está e `cnPassaInfo` diz o porquê. Perguntado ao Chefe/Adauto.
+  - **Tamponamento da asa entre os dois, ou laterais até o piso:** não mexe e avisa.
+- **Erro encontrado ao fazer (corrigido):** o encaixe automático do canto (CANTO-SOZINHO: o módulo mexido anda até encostar, medido pelo contorno no 3D) passou a ver o rodapé atravessado. Com o B, mexer 10 mm no módulo da parede lateral fazia ele pular sozinho para 1216. Correção: o rodapé atravessado por escolha não entra nesse contorno (`ext()`). Provado: sem a correção, 1216; com ela, 621.
+- **Risco identificado (anterior, não mexido):** o 1º módulo da parede lateral criado junto de um canto cego anda sozinho de 600 para 621 ~1 s depois (CANTO-SOZINHO encostando na régua espaçadora de 40 mm). Isso também acontece no código de antes. Se está certo é decisão do Chefe (§12: é criação, não alteração).
+- **Testes** (os dois falham no código de antes e passam depois):
+  - `testCantoLBaseAtravessadaLadoAouBBaseERodapeEspelhadoSemSobreposicao`: E/D × A/B, base e rodapé separados, partsOf = 3D = corte, mesma área no orçamento, 0 sobreposição, laterais por fora, salvar/reabrir, desfazer.
+  - `testCantoCegoRodapeAtravessadoLadoAouBEncostaOuPassaInteiroSemSobreposicao`: E/D × sem escolha/A/B, 0 sobreposição entre TODAS as peças dos dois (portas, régua, laterais, fundo), partsOf = 3D = corte, base fica e avisa, não anda sozinho, tamponamento, sem Unir, salvar/reabrir, desfazer.
+- **Outros módulos:** o aéreo não tem base nem rodapé. O canto do guarda-roupa usa o mesmo bloco do canto L. Os pés de metal ficam de fora porque não têm peça corrida. As corridas (`moldRuns`/`lrRows`) leem `cl`/`rodLados`, então acompanham.
+
+## Matriz de dispositivos (Code 1, 28/11): 3 achados do Chefe para o Code 2 — Code 2
+- **(1) S.teto={} gravado só por trocar de aba no 🧱 Ambiente.**
+  - Causa: o tratador de cliques do painel fazia `S.teto=S.teto||{}` antes de saber se algum valor do teto ia mudar.
+  - Correção: o S.teto nasce só ao escolher um valor (ligar/esconder, cor, veio, rebaixo).
+  - Varredura dos outros painéis (🧱 Ambiente e abas, abas do módulo, Ajustes, Valores, Plano de corte, Preços, todos os botões do cabeçalho): nenhum outro grava nada só por abrir ou fechar.
+  - Teste: `testEtapa2AbrirEFecharPaineisNaoMudaOProjetoNemCriaTeto`. Antes falha com "teto:undefined→{}"; depois passa.
+- **(2) Liberdade de composição, mover no 3D a 375, "não pergunta ao soltar".** Não é defeito do app.
+  - O teste mandava só o 1º movimento ao canvas e os demais ao #v3. A 375 o 1º passo (9,1 px) não passa a zona morta de 10 px, e o arraste nunca começava. A 430 o passo é 10,4 px.
+  - No toque de verdade, todo movimento vai ao elemento onde o dedo encostou. Com isso, a 375 o móvel anda e a pergunta aparece.
+  - Teste ajustado (todos os movimentos no canvas), com comentário. Passa a 375×667, 430 e 1366.
+- **(3) Plano de corte a 375×2: 4 textos cruzando o contorno (o "#11" da torre por vãos).**
+  - Causa: com densidade 2, o plano sai pequeno na tela e a fonte desce mais (≈0,35 da letra) do que a métrica medida a 100 px (0,26). Era o mesmo efeito do iPad (CPMET-IPAD), que só ligava no iPad.
+  - Correção: a mesma medida em escala pequena vale para densidade ≥ 2. O computador (densidade 1) fica idêntico.
+  - Conferido: plano legível (3 terços, cm/mm), CORTEPRIORIDADE, NOMEIPAD e zoom passam 10/10 a 375×667×2, 430×900×3 e 1366.
+## CANTO-NASCE (28/11): o 1º módulo da parede lateral criado junto do canto cego andava SOZINHO até encostar — Claude 5
+- **Erro** (era risco no ITEM2-ATRAVESSADA; o Chefe classificou como erro em 28/11 pela regra "o app não mexe uma vírgula"): ao criar o 1º módulo da parede lateral junto de um canto cego, ele nasce em 600 e, ~1 s depois, anda sozinho para 621 (E) ou 651 (D), encostando na régua espaçadora do cego.
+- **Reproduzir:** Balcão canto cego + "módulo na lateral" (addWing). Espere 1,5 s: x passa de 600 para 621/651 sem nenhum toque. Sonda p8c no código de antes: 600 → 651.
+- **Causa:** CANTO-SOZINHO (`rodar`, no IIFE de `cantoEncosta`) faz andar até encostar quem "foi mexido ou acabou de entrar" (POS sem anotação). O módulo recém-criado contava como mexido.
+- **Correção:**
+  - O módulo que ACABOU DE NASCER (`!POS.has`) não anda. Fica onde nasceu e vira a sugestão `libSugere(...,'encosta')`: "Canto: dá pra encostar o módulo no módulo do canto (x 600 → 621 mm)", botão "Encostar no canto", desfazer.
+  - Quem a pessoa arrastou ou digitou continua encostando como sempre.
+  - Sugestão velha (o módulo já saiu da posição) some.
+  - Ao abrir um projeto a assinatura (`SIG`) é zerada: um projeto com o mesmo desenho do anterior não era conferido, e por isso a sugestão aparecia só às vezes.
+- **Teste:** `testCantoNasceModuloNovoNaParedeLateralNaoAndaSozinhoViraSugestaoComDesfazer` (E e D, 2 vezes seguidas, aplicar, desfazer, reabrir, mexido). Falha antes e passa depois. O `testCantoCegoRodape…` passou a encostar pelo botão.
+- **Ampliado (Chefe 28/11, o risco virou erro):** NENHUM módulo anda sozinho até encostar. Mexer nele não faz andar, seja posição de arrasto ou digitada, troca de tamponamento ou mudança de largura. Ele fica onde a pessoa deixou e aparece "Encostar no canto". A prévia é refeita quando a folga muda (ex.: tamponamento 621 ↔ 651), sem mover nada. O botão leva ao x da prévia, e o ↶ desfaz.
+  - O teste confere x = 610 bit a bit (`Object.is`) nas três mudanças, nos dois lados.
+  - O `testCantoCegoRodape…` mexido +10 agora fica em 631 (antes voltava a 621). Expectativa mudada por esse pedido do Chefe, de 28/11.
+
+## ITEM2-ATRAVESSADA · base do canto cego (Chefe 28/11, opção b) — Claude 5
+- A base da asa vai até a face do 1º obstáculo real do cego que cruza com ela: porta, painel cego ou régua espaçadora (descem 5 mm na frente da base). Ela não entra nesse obstáculo.
+  - E: a régua cruza a asa, face em 621. A base fica 900 com a asa encostada (antes da escolha ela entrava 21 na régua quando a asa estava em 600).
+  - D: a régua não cruza a asa e a face da porta está em 581, então a base estica +40.
+- No B a base da asa também não passa por baixo da porta (entraria 5 mm): fica igual ao A, e `cnPassaInfo` diz o porquê. A base do cego não muda.
+- A base atravessada também sai do contorno da CANTO-SOZINHO (senão o módulo andaria ao ser mexido).
+
+## CANTO-NASCE · as duas versões (Chefe 28/11, aguardando o Adauto · conflito com o PEDIDO 52) — Claude 5
+- **Conflito:** o PEDIDO 52 diz "chegando perto, encostam certinho" (ímã automático). A regra de 27/11 diz "o app não altera uma vírgula sozinho". O Chefe levou ao Adauto e pediu que o cdfe7a8 não seja integrado até a resposta.
+- **Chave `window.CANTO_IMA_ARRASTO`:**
+  - **A (false, padrão hoje):** nada encosta sozinho, nem no arrasto; tudo vira "Encostar no canto".
+  - **B (true, leitura do Chefe):** o ímã vale só no ARRASTO da própria pessoa. O gesto é detectado assim: o x ou a parede do módulo escolhido mudou entre encostar e soltar o dedo (`pointerdown`/`pointerup` em captura). Ele encosta e o ↶ desfaz o gesto inteiro. Criar, trocar tamponamento, mudar largura e digitar continuam só sugerindo, com o x igual bit a bit.
+- **Teste:** `testCantoImaDuasVersoesArrastoDaPessoaEncostaSoNaVersaoBORestoSoSugere` cobre as duas versões. Se o Adauto escolher B: basta pôr a chave em `true` e acrescentar ao teste do PEDIDO 52 os casos com gesto ("encostados", como era).
+
+## AUDITORIA 3.9 (Adauto 28/11): trocar de parede/câmera — Code 2
+- Detalhe completo em `engenharia/AUDITORIA_3_9_TROCA_DE_PAREDE.md`. Dois defeitos corrigidos:
+  - régua/peça da parede esquerda desenhada fora do espelho (`#emov`/`#emlp` por fora do `#wvmir`);
+  - virar canto deixava molduras que sumiam ao reabrir (`cnVira` sem a regra do canto).
+- Troca de parede, câmera e reabrir: iguais bit a bit nos ambientes L e cantos cegos.
+- Para decisão: a perna do canto não aparece na vista lateral (igual no publicado).
+
+## Canto cego (Adauto 28/11): a divisória ia até o fundo e atrapalhava a prateleira — Code 2
+- Antes: divisória com a profundidade toda (560), e a prateleira em 2 pedaços (um por vão).
+- Agora (módulo novo, ou pelo botão no antigo): divisória de 80 encostada na frente e prateleira inteira atrás.
+- Projeto antigo intacto.
+- Teste: `testEtapa2CantoCegoDivisoria8cmPrateleiraInteiraAtras`. Cobre catálogo inteiro E/D/inferior/superior/torre sem sobreposição no 3D, corte e fita, editar, digitar, desfazer/refazer, reabrir, duplicar, antigo e botão.
+- Prints: `diagnosticos/etapa2/code2/cego_div8_{antes,depois}.png`.

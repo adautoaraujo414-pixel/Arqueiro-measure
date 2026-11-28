@@ -19901,6 +19901,116 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* Item 34 (auditoria dos botões fora do editor, 28/11): achados da sonda que aciona cada botão/campo de Valores, Preços, Plano de corte e ArqueCut.
+       (1) a opção já escolhida (desconto, × o material) não dava retorno nenhum; agora avisa e não muda nada.
+       (2) ArqueCut: trocar o jeito de cortar (botões dentro do resultado) e "✎ lados" recalculavam e jogavam a tela pro começo do resultado; agora a tela fica onde estava. */
+    func testItem34OpcaoJaEscolhidaRespondeEArqueCutNaoRolaAoTrocarOJeitoDeCortar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});delete S.desc;
+        document.getElementById('vlb').click();await W(150);var st=JSON.stringify(snapState()),n0=TS.length;document.querySelector('#vlm [data-vdesc="0"]').click();await W(50);
+        R.semDesconto=(TS.slice(n0).join()==='Já está sem desconto')+' · '+(JSON.stringify(snapState())===st);
+        document.querySelector('#vlm [data-vdesc="10"]').click();await W(50);n0=TS.length;document.querySelector('#vlm [data-vdesc="10"]').click();await W(50);R.dezDuasVezes=TS.slice(n0).join()+' · '+S.desc;
+        document.getElementById('vlx').click();
+        PR.mult=2.5;document.getElementById('prb').click();await W(80);document.querySelector('[data-propen]').click();await W(150);var pr=JSON.stringify(PR);n0=TS.length;document.querySelector('#prbody [data-mx="2.5"]').click();await W(50);
+        R.mult=TS.slice(n0).join()+' · '+(JSON.stringify(PR)===pr);document.querySelector('#prbody [data-mx="3"]').click();await W(50);R.mult3=PR.mult;document.getElementById('prm').hidden=true;
+        MC=null;localStorage.removeItem('arque.corteAvulso.v1');mcLoad();/* o cenário da sonda s51 */MC.list=[{n:'Lateral',w:700,h:500,q:2},{n:'Porta',w:700,h:400,q:1}];mcSave();document.getElementById('mcb').click();await W(80);mcCalc();await W(150);
+        var sc=document.getElementById('mcm').firstElementChild,b=document.querySelector('#mcres [data-mcmt="comp"]');b.scrollIntoView({block:'center'});await W(30);var y0=sc.scrollTop;b.click();await W(150);R.metodo=PR.metodo+' · rolou '+Math.round(Math.abs(sc.scrollTop-y0));
+        document.getElementById('mcm').hidden=true;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["semDesconto"] as? String, "true · true", "Sem desconto já escolhido: avisa e não muda o projeto")
+        XCTAssertEqual(o["dezDuasVezes"] as? String, "Já está com 10% de desconto · 10")
+        XCTAssertEqual(o["mult"] as? String, "Já está em 2,5× o material · true")
+        XCTAssertEqual(o["mult3"] as? Double, 3, "a outra opção continua mudando")
+        XCTAssertEqual(o["metodo"] as? String, "comp · rolou 0", "ArqueCut: trocar o jeito de cortar não tira a tela do lugar")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+    func testItem34ArqueCutLadosDaFitaAplicaSemRolar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});delete S.desc;
+        document.getElementById('vlb').click();await W(150);var st=JSON.stringify(snapState()),n0=TS.length;document.querySelector('#vlm [data-vdesc="0"]').click();await W(50);
+        R.semDesconto=(TS.slice(n0).join()==='Já está sem desconto')+' · '+(JSON.stringify(snapState())===st);
+        document.querySelector('#vlm [data-vdesc="10"]').click();await W(50);n0=TS.length;document.querySelector('#vlm [data-vdesc="10"]').click();await W(50);R.dezDuasVezes=TS.slice(n0).join()+' · '+S.desc;
+        document.getElementById('vlx').click();
+        PR.mult=2.5;document.getElementById('prb').click();await W(80);document.querySelector('[data-propen]').click();await W(150);var pr=JSON.stringify(PR);n0=TS.length;document.querySelector('#prbody [data-mx="2.5"]').click();await W(50);
+        R.mult=TS.slice(n0).join()+' · '+(JSON.stringify(PR)===pr);document.querySelector('#prbody [data-mx="3"]').click();await W(50);R.mult3=PR.mult;document.getElementById('prm').hidden=true;
+        MC=null;localStorage.removeItem('arque.corteAvulso.v1');mcLoad();MC.list=[{n:'Lateral',w:700,h:500,q:2},{n:'Porta',w:700,h:400,q:3},{n:'Base',w:900,h:560,q:2}];mcSave();document.getElementById('mcb').click();await W(80);mcCalc();await W(150);
+        var sc=document.getElementById('mcm').firstElementChild,b=document.querySelector('#mcres [data-mcmt="comp"]');b.scrollIntoView({block:'center'});await W(30);var y0=sc.scrollTop;b.click();await W(150);R.metodo=PR.metodo+' · rolou '+Math.round(Math.abs(sc.scrollTop-y0));
+        var f=document.querySelector('#mcres [data-fted]');f.scrollIntoView({block:'center'});await W(30);y0=sc.scrollTop;f.click();await W(50);document.querySelector('#ftedm [data-ftk="T"]').click();document.querySelector('#ftedm [data-fta="ok"]').click();await W(150);/* a linha escolhida cresce (texto "manual"): o navegador segura o conteúdo à vista, até 30 px */R.fita=(Math.abs(sc.scrollTop-y0)<=30?'parada':'rolou '+Math.round(Math.abs(sc.scrollTop-y0)))+' · '+(MC.list.filter(function(p){return p.f!=null}).length);
+        document.getElementById('mcm').hidden=true;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["fita"] as? String, "parada · 1", "ArqueCut: ✎ lados aplica sem tirar a tela do lugar")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* Item 34 (28/11), achados da sonda em Clientes e Ajustes: (1) "📥 Colar o link e abrir" fechava a tela de Clientes ANTES de perguntar o link;
+       quem cancelava ficava fora da tela. Agora só fecha quando a pessoa cola um link. (2) Paredes (modo fácil): o formato que já está escolhido não dava retorno. */
+    func testItem34ColarLinkCanceladoNaoFechaClientesEFormatoDaParedeJaEscolhidoResponde() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length;
+        var pr0=window.prompt,cf0=window.confirm,pedidos=0,abriu=[],pl0=window.arquePasteLink;window.confirm=function(){return false};window.arquePasteLink=function(v){abriu.push(v)};
+        newProjFor({nome:'Cliente Link',end:'',cidade:'',tel:''});draw();
+        try{window.prompt=function(){pedidos++;return null};document.getElementById('clb').click();await W(150);document.querySelector('#clm [data-cpaste]').click();await W(150);
+         R.cancelar=pedidos+' · '+(!document.getElementById('clm').hidden)+' · '+abriu.length;
+         window.prompt=function(){pedidos++;return 'https://exemplo/p.html#x'};document.querySelector('#clm [data-cpaste]').click();await W(150);
+         R.colar=pedidos+' · '+document.getElementById('clm').hidden+' · '+abriu.length}
+        finally{window.prompt=pr0;window.confirm=cf0;window.arquePasteLink=pl0}
+        document.getElementById('clm').hidden=true;
+        document.getElementById('prb').click();await W(200);var B=function(k){return document.querySelector('#stdm [data-pfo="'+k+'"]')};B('u').click();await W(80);var st=JSON.stringify(snapState()),n0=TS.length;B('u').click();await W(80);
+        R.formato=/^Já está escolhido: /.test(TS.slice(n0).join())+' · '+(JSON.stringify(snapState())===st);B('reta').click();await W(80);R.trocou=!(S.wl&&S.wl.L===undefined&&S.wl.R===undefined)?'reta':'?';
+        document.getElementById('stdm').hidden=true;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cancelar"] as? String, "1 · true · 0", "cancelar o link não fecha a tela de Clientes")
+        XCTAssertEqual(o["colar"] as? String, "2 · true · 1", "colando o link, fecha e abre o projeto")
+        XCTAssertEqual(o["formato"] as? String, "true · true", "formato já escolhido: avisa e não muda nada")
+        XCTAssertEqual(o["trocou"] as? String, "reta", "o outro formato continua mudando")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* Item 34 (28/11): Clientes · digitar na busca encolhia a lista e a tela descia o campo da busca (430: ~350 px; no celular, pra trás do teclado).
+       Agora o campo fica no mesmo lugar enquanto a pessoa digita; o filtro continua o mesmo; limpar a busca volta a lista inteira. */
+    func testItem34BuscaDeClientesNaoTiraOCampoDoLugar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        ['Ana Souza','Bruno Lima','Helena Prado'].forEach(function(n,i){newProjFor({nome:n,end:'Rua '+i,cidade:i%2?'Frutal':'Uberaba',tel:''});draw();saveNow()});
+        window.CLQ='';document.getElementById('clb').click();await W(200);var q=document.getElementById('clq'),sc=document.getElementById('clm').firstElementChild;/* o caso da sonda: poucos clientes e o campo no meio da tela; a lista encolher puxava a rolagem */q.scrollIntoView({block:'center'});await W(50);var y0=q.getBoundingClientRect().top,n0=document.querySelectorAll('#cllist [data-cl], #cllist > *').length;
+        q.focus({preventScroll:true});q.value='Teste';q.dispatchEvent(new Event('input',{bubbles:true}));await W(100);/* nada casa: a lista fica vazia (o caso da sonda) */var y1=document.getElementById('clq').getBoundingClientRect().top;q.value='Helena';q.dispatchEvent(new Event('input',{bubbles:true}));await W(100);y1=Math.abs(y1-y0)>Math.abs(document.getElementById('clq').getBoundingClientRect().top-y0)?y1:document.getElementById('clq').getBoundingClientRect().top;var n1=document.querySelectorAll('#cllist [data-cl], #cllist > *').length,tx=document.getElementById('cllist').textContent;
+        R.campo=Math.abs(y1-y0)<=2?'parado':'andou '+Math.round(y1-y0);R.filtro=(n1<n0)+' · '+/Helena/.test(tx)+' · '+!/Bruno/.test(tx);
+        q.value='';q.dispatchEvent(new Event('input',{bubbles:true}));await W(100);R.limpa=(document.querySelectorAll('#cllist [data-cl], #cllist > *').length===n0)+' · '+(document.getElementById('cllist').style.minHeight==='');
+        document.getElementById('clm').hidden=true;window.CLQ='';R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["campo"] as? String, "parado", "o campo da busca não sai do lugar enquanto digita")
+        XCTAssertEqual(o["filtro"] as? String, "true · true · true", "o filtro continua o mesmo")
+        XCTAssertEqual(o["limpa"] as? String, "true · true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* Item 40 (parte financeira, Chefe 28/11: "peça que existe nas peças e no 3D tem que entrar no orçamento"): a gaveta do CAIXOTE (guarda-roupas,
+       torres, closet) tem o par de corrediça telescópica nas peças e no 3D, mas o orçamento contava 0 (o mCost só via o nome "Frente de gaveta").
+       Agora cada "Frente de gaveta (caixote)" conta 1 par de corrediça. Catálogo inteiro: frentes de gaveta = pares de corrediça no orçamento. */
+    func testItem40CorredicaDoCaixoteDeGavetasEntraNoOrcamento() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.cor=45;PR.coro=90;
+        loadState(initLimpo());S.W=4000;S.mods=[];newTpl(T('Estante torre aberta com gavetas embaixo'));draw();var m=S.mods[0],P=partsOf(m),fr=P.filter(function(p){return p.name==='Frente de gaveta (caixote)'}).length,cr=P.filter(function(p){return /^Corrediça telescópica \(caixote\)/.test(p.name)}).length;
+        var b=budget(),L=prAuto(b).filter(function(r){return r[0]==='cor'})[0];R.estante=fr+' frentes · '+cr+' corrediças nas peças · orçamento '+mCost(m).drw+' pares · linha '+(L?L[3]+' × '+r2(+PR.cor)+' = '+r2(L[3]*PR.cor):'-');
+        var bad=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!t||t.act||!t.w)return;loadState(initLimpo());S.mods=[];newTpl(JSON.parse(JSON.stringify(t)));draw();var mm=S.mods[0];if(!mm)return;var f=0;partsOf(mm).forEach(function(p){if(/^Frente de gaveta|^Frente \(porta tempero\)$|^Gaveta interna · frente$/.test(p.name))f+=(+p.qty||1)});var r=mCost(mm);if(f!==r.drw+(r.drwO||0))bad.push(t.n+' '+f+'≠'+(r.drw+(r.drwO||0)))})});R.catalogo=bad.length?bad.slice(0,5).join(' | '):'todas as gavetas com corrediça';
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["estante"] as? String, "3 frentes · 6 corrediças nas peças · orçamento 3 pares · linha 3 × 45 = 135", "as 3 gavetas do caixote: 3 pares de corrediça no orçamento")
+        XCTAssertEqual(o["catalogo"] as? String, "todas as gavetas com corrediça")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto, via Chefe 24/11): cada módulo (m.uid) e peça (m.uid|pk) com a mesma chave no editor (partsOf), no 3D,
     // na lista, no corte e no DXF; cópia ganha id novo (módulo e peças); salvar/reabrir e desfazer/refazer mantêm; Meus modelos ganha id novo; id que existe
     // nunca é trocado; id repetido ao abrir: avisa e só muda se a pessoa mandar

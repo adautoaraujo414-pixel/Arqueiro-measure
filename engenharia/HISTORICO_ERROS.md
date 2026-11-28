@@ -3191,3 +3191,23 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Quem mede pela planta vê o móvel 30 mm menor do que ele ocupa.
   - **Não mexido:** precisa da decisão do Adauto (planta com ou sem tamponamento).
 - **Coberto por testes existentes (passaram 587/587 em 28/11):** sentido do arrasto e do toque no 2D da parede esquerda, nomes dos lados, projeto antigo na parede esquerda, trena e plano de corte da parede esquerda (12 testes `testParedeEsquerda*`/`testParedeDaEsquerda*`). Identidade de módulo e peça: D23 (`testIdentidadeUnica`).
+
+## INTEGRAÇÃO 28/11 · testValoresCobraAChapaPeloQueFoiUsadoNaoAChapaInteira "linhasDeChapaComOMesmoPreco: 0 · esperado 1" — Claude 5
+- **Reproduzido** na integração 48b46033 (a 1366); no ramo do Claude 5 (itens 13/20/30/31) passava.
+- **Causa (não é o item 13):** o teste precisa de 2 linhas de chapa com o mesmo preço; vinham da "Travessa frontal (régua corrida)" de 2700 (sem nome de cor, 2º grupo de chapa de cor). O item 21 (a74b638, aprovado) não une mais travessa sozinho e o "Unir" manual une só base e rodapé; a régua corrida continua só no projeto antigo (módulos sem `unV`).
+- **Correção (só o cenário do teste, a conferência é a mesma):** os balcões vêm de um arquivo antigo (salvo sem `unV`, reaberto), como o item 21 manda deixar. Comentário no teste com o pedido e a data. Passa 13/13; os 9 testes de custos, fita, N11, confineAll, item 34 e ambientes também passam no integrado.
+
+## ITEM 40 (A) · corrediça do caixote de gavetas fora do orçamento — Claude 5 (aprovado pelo Chefe 28/11)
+- **Erro (achado da sonda s52):** a gaveta do CAIXOTE (guarda-roupas, torres, closet) tem o par de corrediça telescópica nas peças ("Corrediça telescópica (caixote)") e no 3D, mas o orçamento contava 0. É o erro 3 do §11 (no 3D e fora da lista/orçamento).
+- **Causa:** o `mCost` conta a corrediça pelo nome exato da frente ("Frente de gaveta", "Frente (porta tempero)", "Gaveta interna · frente"); a frente do caixote se chama "Frente de gaveta (caixote)".
+- **Família:** catálogo inteiro (s52 + teste): 12 modelos com caixote (50 gavetas) ficavam sem corrediça; nos outros, frentes = pares no orçamento.
+- **Conta (Estante torre aberta com gavetas embaixo, preço médio da corrediça R$ 35, × 2,5):**
+  - antes: corrediças 0 · material R$ 556,35 · valor R$ 1.390,87;
+  - depois: corrediças 3 pares × R$ 35 = R$ 105 · material R$ 661,35 · valor R$ 1.653,37.
+- **Correção:** "Frente de gaveta (caixote)" conta 1 par de corrediça telescópica (`r.drw`). Orçamentos já salvos (cópias) não mudam.
+- **Teste:** `testItem40CorredicaDoCaixoteDeGavetasEntraNoOrcamento` (no código de antes: 0 pares e 12 modelos com diferença; depois: 3 pares e o catálogo inteiro bate).
+
+### Item 34 · salvar/reabrir e desfazer controle por controle (Chefe 28/11) — Claude 5
+- A sonda s51 (agora com salvar/desfazer/reabrir) aciona cada controle e, se ele mudou o projeto: espera o salvamento automático e confere que o arquivo é o estado da tela; toca ↶ e confere que volta ao estado de antes; reabre o arquivo e confere igual. Se mudou preços: confere que ficou gravado.
+- Resultado a 1366: Valores 23 controles que mudam o projeto, Preços 77, Plano de corte 61, ArqueCut 8 → todos salvam, desfazem e reabrem iguais; preços gravados. Clientes: nenhum controle muda o projeto aberto (cria/abre outro).
+- 1ª rodada acusou "não desfaz" por erro da sonda (reabria antes de desfazer e mexia no histórico); corrigida a ordem.

@@ -14589,6 +14589,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["r"] as? String, "f balcão: criou (foi pra parede do lado) | f canto aéreo E: criou  | e balcão: criou | e canto aéreo E: criou diz onde ficou · perna nesta parede true | d balcão: pergunta com Colocar mesmo assim | d canto aéreo E: criou diz onde ficou | erros 0", "criar em cada parede: nunca bloqueia calado; sem espaço pergunta com Colocar mesmo assim; canto diz onde ficou e a perna aparece")
     }
 
+    // AUDITORIA 3.9 · cenário exato do Claude 3 (28/11, "Não tem espaço livre" na parede esquerda): balcão e aéreo no fundo; na esquerda (2600 mm)
+    // o canto em L aéreo, o balcão canto cego levado a x=900 e um Balcão 2 portas. É falta real de espaço (maior vão 665 mm), não erro de referência:
+    // o app pergunta (Usar 665 mm / Colocar mesmo assim / Cancelar), sem aviso contraditório na tela; "Colocar mesmo assim" cria no tamanho dele e nada que já estava muda
+    func testETAPA3_CenarioDoClaude3ParedeEsquerdaSemEspacoPerguntaEColocaMesmoAssim() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var r=await (async function(){window.MINI3OFF=1;PR.setupDone=1;var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var e0=__errs.length,o=[];
+        var pick=function(re){var t=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var q=typeof it==='number'?TPL[it]:it;if(!t&&q&&!q.act&&re.test(q.n))t=q})});return JSON.parse(JSON.stringify(t))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.mods=[];draw();newTpl(pick(/^Balcão 2 portas$/));newTpl(pick(/^Aéreo 2 portas$/));await W(100);
+        wvGo('e');await W(150);newTpl(pick(/^Canto em L \(aéreo\) · esquerdo/));await W(200);newTpl(pick(/^Balcão canto cego · cego na direita/));S.m.x=900;draw();await W(200);
+        var antes=JSON.stringify(S.mods.map(function(m){return [m.x,m.w,m.b,m.d]})),n0=S.mods.length;
+        newTpl(pick(/^Balcão 2 portas$/));await W(300);var q=document.getElementById('fitq'),tx=q&&!q.hidden?q.textContent:'',el=document.getElementById('toast'),ts=el&&!el.hidden?el.textContent:'';
+        o.push('pergunta '+/maior espaço livre aqui tem 665 mm/.test(tx)+' · '+['Usar 665 mm','Colocar mesmo assim','Cancelar'].map(function(b){return b+' '+(tx.indexOf(b)>=0)}).join(' · '));
+        o.push('aviso contraditório '+/ajustado pra caber|está encostando/.test(ts)+' · criou antes de escolher '+(S.mods.length>n0));
+        [].slice.call(q.querySelectorAll('button')).filter(function(b){return /mesmo assim/.test(b.textContent)})[0].click();await W(300);
+        var nv=S.mods[S.mods.length-1];o.push('mesmo assim: criou '+(S.mods.length===n0+1)+' · tamanho '+nv.w+' · na parede '+(wvCur()||'f')+' · os outros iguais '+(JSON.stringify(S.mods.slice(0,n0).map(function(m){return [m.x,m.w,m.b,m.d]}))===antes));
+        o.push('erros '+(__errs.length-e0));return o.join(' | ');})();return JSON.stringify({r:r});
+        """#)
+        XCTAssertEqual(o["r"] as? String, "pergunta true · Usar 665 mm true · Colocar mesmo assim true · Cancelar true | aviso contraditório false · criou antes de escolher false | mesmo assim: criou true · tamanho 900 · na parede e · os outros iguais true | erros 0", "cenário do Claude 3: sem espaço pergunta, Colocar mesmo assim cria no tamanho dele, nada muda")
+    }
+
     // AUDITORIA 3.9 · item 4 aprovado pelo Chefe 28/11 ("a vista representa fielmente o projeto"; "L representado errado"): nas paredes laterais
     // a perna do canto em L aparece, das mesmas caixas do 3D do módulo do canto (partsOf), no começo da parede (direita na esquerda espelhada,
     // esquerda na direita). Só desenho: o projeto não muda. O toque nela escolhe o canto (o mesmo móvel, na parede do fundo). No fundo não desenha

@@ -3381,3 +3381,12 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Causa raiz:** depois do 1º toque a geladeira fica escolhida e ganha a alça de medida (`circle data-aph="w"`). A 375 a geladeira tem 37 px na tela e a alça cobre o meio dela. Os 2 toques caíam na alça, que não é eletro nem prateleira, e o handler não achava o módulo de baixo.
 - **Correção:** nos 2 toques, a alça do eletro conta igual ao eletro e ao puxador da prateleira (regra DUPLO-TOQUE de 18/11): vale o módulo de baixo. 1 toque e arrasto na alça seguem iguais.
 - **Prova:** os 15 testes com geladeira passam a 375, 430 e 1366.
+
+## AMB-MIN-375 (tela de 375, Chefe 28/11) — Claude 4
+- **Erro comprovado a 375×667:** minimizado, o quadro "✏️ Edição ambiente 3D" ficava com 76 px (`testEdicaoAmbiente3DParedeNo2DEAbasLimpas`, `min` falso, limite 70 px).
+- **Causa raiz:** o título tem `min-width:120px`. A 360 px de largura útil, título e três botões não cabem numa linha e a barra quebrava em duas.
+- **Correção:** só minimizado, o título pode encolher com reticências. Aberto continua igual.
+- **Prova:** passa a 375, 430 e 1366.
+- **Tentativas desfeitas (não estão no código):**
+  - TOPO-375 (diminuir a escala do 2D pra sair de baixo do 🔓): quebrava `testRebaixoDoTetoEPainelAcompanha` a 375, porque o rótulo do rebaixo encurtava.
+  - RIPADO-RAIO: não reproduzi o caso que ele corrigiria.

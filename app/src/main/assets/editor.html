@@ -5023,6 +5023,19 @@ var open3D_j=window.open3D;window.open3D=function(){ISX=null;if(IT4)IT4.hidden=t
 /* menu ＋ Criar: LED e cozinha */
 function ledAdd(where){var n=0;snap();if(where==='sup')S.mods.forEach(function(m){if(m.sup&&!m.corner){m.led=ledDef(true);n++}});else if(where==='mod'){var m=S.m;if(m&&S.mods.indexOf(m)>=0&&!m.corner){m.led=ledDef(m.sup);n=1}}else if(where==='prat')(S.rp||[]).forEach(function(a){if(a.prat){a.led={k:LK.k,c:LK.c,pf:LK.pf,on:1};n++}});else if(where==='isl')(S.isl||[]).forEach(function(a){a.led={k:LK.k,c:LK.c,pf:LK.pf,pos:'pedra',on:1};n++});
  try{draw();panel()}catch(_){}build();render();crpRender();ambMsg(n?'💡 LED colocado em '+n+(n===1?' lugar':' lugares')+' · toque na luz pra mudar':{sup:'Não tem módulo de cima (aéreo) no projeto.',mod:'Toque num módulo primeiro.',prat:'Não tem prateleira no projeto.',isl:'Crie uma ilha primeiro.'}[where])}
+/* LED-DESTINO (Etapa 3 · 3.5, Chefe 28/11): "＋ No módulo escolhido" continua sendo o LED de módulo, mas antes de criar MOSTRA o destino
+   ("vai no rodapé do Base 1 …") e acende o lugar; só cria no "Pôr aqui". Canto em L: diz o motivo de verdade e aponta o "Toque na peça". */
+function ledPrevFecha(){var o=document.getElementById('ledprev');if(o)o.remove()}
+function ledPrevMod(){ledPrevFecha();var m=S.m,mi=S.mods.indexOf(m);if(!m||mi<0){ambMsg('Toque num módulo primeiro.');return}
+ if(m.corner){ambMsg('O LED de módulo não vai no canto em L. Use "💡 Toque na peça" pra pôr o LED na peça que quiser.');return}
+ var P=[];try{P=partsOf(m)}catch(_){}var alvo=(m.sup?P.filter(function(p){return /^Base inferior$/.test(p.name)}):P.filter(function(p){return /^Rodapé/.test(p.name)&&!/lateral|traseiro/i.test(p.name)}))[0]||P.filter(function(p){return /^Base inferior$/.test(p.name)})[0];
+ var n=S.mods.filter(function(q,j){return j<=mi&&!!q.sup===!!m.sup&&!q.wing}).length,nome=(m.sup?'Superior ':'Base ')+n+((m.nome||m.n)?' · '+String(m.nome||m.n):''),onde=m.sup?'embaixo do '+nome+' (luz na bancada)':'no rodapé do '+nome,ja=m.led?' · troca o LED que já está nele':'';
+ window.SEL3=alvo?{mi:mi,pk:alvo.pk}:null;try{build();render()}catch(_){}
+ var d=document.createElement('div');d.id='ledprev';d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:80;background:rgba(255,255,255,.98);color:#1b1f27;border-radius:12px;padding:10px;box-shadow:0 6px 24px rgba(0,0,0,.4);font-size:14px;max-width:92%;text-align:center';
+ d.innerHTML='<div data-ledprevtx="1" style="margin-bottom:8px">💡 O LED vai '+onde+ja+' (aceso em laranja).</div><button data-ledprev="ok" style="padding:8px 14px;font-weight:700">Pôr aqui</button> <button data-ledprev="x" style="padding:8px 14px">Cancelar</button>';
+ d.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-ledprev]');if(!b)return;ev.stopPropagation();ledPrevFecha();window.SEL3=null;if(b.dataset.ledprev==='ok')ledAdd('mod');else{try{build();render()}catch(_){}}});
+ document.body.appendChild(d)}
+window.ledPrevMod=ledPrevMod;
 function ledAll(on){snap();ledOwners().forEach(function(q){q.L.on=on?1:0});build();render();crpRender()}
 function ledToOrc(){var c=(PR.cat||[]).filter(function(q){return /fita de led/i.test(q.n)})[0],m=Math.round(ledLen()*10)/10;if(!c){ambMsg('Crie o item "Fita de LED" nos preços (Ajustes).');return}snap();matQ()[c.id]=m;try{draw();panel()}catch(_){}crpRender();ambMsg('✓ '+String(m).replace('.',',')+' m de fita de LED no orçamento')}
 function crpMore(){var Bt=function(at,tx,on){return '<button '+at+' style="padding:4px 10px;min-height:34px;font-size:13px'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+tx+'</button>'},sec=function(ic,t){return '<div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin:10px 0 6px;border-top:1px solid #e3e6ea;padding-top:8px">'+ICO(ic,24)+t+'</div>'},row=function(h){return '<div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+h+'</div>'},
@@ -5037,7 +5050,7 @@ function crpMore(){var Bt=function(at,tx,on){return '<button '+at+' style="paddi
  +sec('ajustes','Editar no 3D')+'<div style="font-size:12px;color:#555">Toque em qualquer coisa: pedra, cooktop, eletros, LED, parede, piso, ilha ou módulo. Abre um quadro pra aumentar, diminuir ou mudar.</div>'}
 var crpRender_j=crpRender;crpRender=function(){crpRender_j();var C=crpBox();C.insertAdjacentHTML('beforeend',crpMore())};
 crpBox().addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;var d=t.dataset;if(d.cnight){NIGHT=NIGHT?0:1;build();render();crpRender();return}if(window.RO)return;
- if(d.clk){LK.k=d.clk;crpRender();return}if(d.clc){LK.c=d.clc;crpRender();return}if(d.cled){ledAdd(d.cled);return}if(d.clon){ledAll(d.clon==='1');return}if(d.corc){ledToOrc();return}
+ if(d.clk){LK.k=d.clk;crpRender();return}if(d.clc){LK.c=d.clc;crpRender();return}if(d.cled){if(d.cled==='mod'){ledPrevMod();return}ledAdd(d.cled);return}if(d.clon){ledAll(d.clon==='1');return}if(d.corc){ledToOrc();return}
  if(d.cfire){var on=d.cfire==='1';cooks().forEach(function(c){for(var i=0;i<cookB(c.st,c.it).length;i++)fireSet(c.st.id+':'+c.it.id+':'+i,on)});crpRender();return}
  if(d.cpan){var any=cooks().some(function(c){return c.it.pan});snap();cooks().forEach(function(c){c.it.pan=any?0:1});try{draw();panel()}catch(_){}build();render();crpRender();return}
  if(d.cwat){var w=d.cwat==='1';taps().forEach(function(f){waterSet(f.id,w)});crpRender();return}});

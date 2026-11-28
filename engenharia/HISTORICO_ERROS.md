@@ -3440,3 +3440,12 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Toque na quina: 4 opções, nenhum LED, destino aceso; escolher a 2ª cria o LED no fundo.
   - Toque claro na face de dentro da lateral, no 2º vão: LED em y 436..729 (vão 434..731) e a lateral acesa.
   - Passa no editor juntado (meu ramo + Claude 4). No meu ramo sozinho acusa "pecaNoToque FALTA (vem do Claude 4)": vale na integração.
+
+## LED-DESTINO · "＋ No módulo escolhido" mostra o destino antes de criar — Claude 3 (Etapa 3 · 3.5, decisão do Chefe 28/11)
+- **Decisão:** o botão continua sendo o LED de módulo (o que ele cria não muda, §0/§1). Antes de criar, mostra o destino e acende o lugar; só cria no "Pôr aqui".
+- **Antes:** o LED era criado na hora, sem mostrar onde.
+- **Agora:**
+  - Prévia "💡 O LED vai no rodapé do Base N" (base) ou "embaixo do Superior N (luz na bancada)" (aéreo), com a peça acesa (Rodapé do pedestal ou Base inferior). Botões [Pôr aqui] e [Cancelar].
+  - Canto em L: antes era recusado com "Toque num módulo primeiro" (motivo falso). Agora diz que o LED de módulo não vai no canto em L e aponta o "💡 Toque na peça".
+- **s54 (6):** passa a medir o "Toque na peça" (combinado com o Claude 5).
+- **Teste:** testLEDQUALQUER confere a prévia, o lugar aceso, que nada é criado antes do OK e o LED aceso depois. Comentário com pedido e data.

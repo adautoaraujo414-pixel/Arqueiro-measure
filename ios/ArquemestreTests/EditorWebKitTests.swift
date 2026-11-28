@@ -17546,12 +17546,14 @@ window.MINI3OFF=1;PR.setupDone=1;var MS=[];window.toast=function(t){MS.push(t)};
 var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
 open3D();await W(200);
 for(const n of ['Balcão 2 portas','Gaveteiro 3 gavetas','Balcão canto cego · cego na direita (porta na esquerda)','Aéreo 2 portas']){loadState(initLimpo());S.env='cozinha';S.mods=[];newTpl(achar(n));var m=S.mods[0];draw();re3();__build();var e1=__boxes().filter(function(b){return b.em}).length;MS=[];S.m=m;
- var b_=document.createElement('button');b_.dataset.cled='mod';document.getElementById('crp3').appendChild(b_);b_.click();b_.remove();re3();__build();var e2=__boxes().filter(function(b){return b.em}).length;
- out.push(n+': '+(m.led?'LED '+m.led.pos:'RECUSOU')+(e2>e1?' aceso no 3D':' APAGADO'))}
+ var b_=document.createElement('button');b_.dataset.cled='mod';document.getElementById('crp3').appendChild(b_);b_.click();b_.remove();
+ /* LED-DESTINO (Chefe 28/11, 3.5): antes de criar mostra o destino e acende o lugar; só cria no "Pôr aqui" */var pv=document.getElementById('ledprev'),txt=pv?pv.querySelector('[data-ledprevtx]').textContent:'(sem prévia)',antes=!!m.led,lugar=window.SEL3?SEL3.pk:'-';if(pv)pv.querySelector('[data-ledprev="ok"]').click();re3();__build();var e2=__boxes().filter(function(b){return b.em}).length;
+ out.push(n+': prévia "'+txt.replace(' (aceso em laranja).','')+'" · acende '+lugar+' · criou antes do OK '+antes+' · '+(m.led?'LED '+m.led.pos:'RECUSOU')+(e2>e1?' aceso no 3D':' APAGADO'))}
 loadState(initLimpo());S.env='cozinha';S.mods=[];newTpl(achar('Balcão 2 portas'));S.m=S.mods[0];draw();var dica=document.body.innerHTML.indexOf('LED vai só nos módulos de cima')<0;
 return JSON.stringify({out:out.join(' | '),dica:dica,errs:__errs.length-e0});
           """#)
-        XCTAssertEqual(o["out"] as? String, "Balcão 2 portas: LED rodape aceso no 3D | Gaveteiro 3 gavetas: LED rodape aceso no 3D | Balcão canto cego · cego na direita (porta na esquerda): LED rodape aceso no 3D | Aéreo 2 portas: LED base aceso no 3D")
+        /* LED-DESTINO (Chefe 28/11, 3.5): o botão mostra o destino e acende o lugar antes de criar; só cria no "Pôr aqui" */
+        XCTAssertEqual(o["out"] as? String, "Balcão 2 portas: prévia \"💡 O LED vai no rodapé do Base 1\" · acende Rodapé (pedestal)#1 · criou antes do OK false · LED rodape aceso no 3D | Gaveteiro 3 gavetas: prévia \"💡 O LED vai no rodapé do Base 1\" · acende Rodapé (pedestal)#1 · criou antes do OK false · LED rodape aceso no 3D | Balcão canto cego · cego na direita (porta na esquerda): prévia \"💡 O LED vai no rodapé do Base 1\" · acende Rodapé (pedestal)#1 · criou antes do OK false · LED rodape aceso no 3D | Aéreo 2 portas: prévia \"💡 O LED vai embaixo do Superior 1 (luz na bancada)\" · acende Base inferior#1 · criou antes do OK false · LED base aceso no 3D")
         XCTAssertEqual(o["dica"] as? Bool, true, "sem a dica de que o LED só vai em cima")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }

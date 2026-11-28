@@ -19656,6 +19656,52 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // TOQUE-ALCA (Adauto 27/11, ETAPA 2 item 27, mesma família): tremida de 5 px com o dedo movia a geladeira 50 mm (x 300→350), a alça dela mudava
+    // a largura (700→750), o painel ripado andava (x 1500→1550) e a alça dele mudava a largura, e o recorte do forno da torre descia (ot 60→63).
+    // Agora tremida e pinça não mexem; o arrasto de verdade continua.
+    func testTOQUEALCA_EletroPainelEFornoNaoAndamComTremida() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var sv=function(){return document.getElementById('svg')},pid=70;
+        var ev=function(tp,x,y,id,el){el=el||document.elementFromPoint(x,y)||sv();el.dispatchEvent(new PointerEvent(tp,{clientX:x,clientY:y,pointerId:id,bubbles:true,cancelable:true,isPrimary:id===pid,pointerType:'touch',width:16,height:16,pressure:tp==='pointerup'?0:0.5}))};
+        var tap=async function(x,y){pid++;ev('pointerdown',x,y,pid);await W(50);ev('pointerup',x,y,pid)};
+        /* o desenho captura o dedo (setPointerCapture): o resto do gesto vai pro svg */
+        var arr=async function(x,y,dx,dy,n){pid++;var id=pid,el=document.elementFromPoint(x,y);ev('pointerdown',x,y,id);if(el&&sv().contains(el))el=sv();for(var i=1;i<=n;i++){await W(16);ev('pointermove',x+dx*i/n,y+dy*i/n,id,el)}ev('pointerup',x+dx,y+dy,id,el)};
+        var pin=async function(x,y){pid++;var a=pid;pid++;var b=pid;ev('pointerdown',x-30,y,a);ev('pointerdown',x+30,y,b);for(var i=1;i<=6;i++){await W(16);ev('pointermove',x-30-8*i,y,a,sv());ev('pointermove',x+30+8*i,y,b,sv())}ev('pointerup',x-78,y,a,sv());ev('pointerup',x+78,y,b,sv())};
+        var cen=function(q){var e=document.querySelector('#svg '+q);if(!e)return null;var r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}};
+        var ini=async function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2600;S.H=2700;S.stones=[];S.mods=[];S.fr=[{id:77,t:'geladeira',x:300,y:0,w:700,h:1800,d:750,b:0}];S.rp=[{id:21,liso:true,x:1500,b:0,w:700,h:2400}];S.tab=0;window.SELAP=0;window.RPSEL=0;draw();panel();await W(500)};
+        var est=function(){var g=S.fr[0],p=S.rp[0];return 'geladeira '+g.x+'/'+g.w+' · painel '+p.x+'/'+p.w};
+        var caso=async function(sel,pre,g){await ini();if(pre){var a=cen(pre);await tap(a.x,a.y);await W(500)}var p=cen(sel);if(!p)return 'sem '+sel;if(g==='tremida')await arr(p.x,p.y,4,3,4);else if(g==='pinca')await pin(p.x,p.y);else await arr(p.x,p.y,60,0,8);await W(400);return est()};
+        await ini();R.inicio=est();
+        R.geladeiraTremida=await caso('[data-ap="77"]',null,'tremida');R.geladeiraPinca=await caso('[data-ap="77"]',null,'pinca');R.geladeiraArrasto=await caso('[data-ap="77"]',null,'arrasto');
+        R.alcaGeladeiraTremida=await caso('[data-aph="w"]','[data-ap="77"]','tremida');R.alcaGeladeiraArrasto=await caso('[data-aph="w"]','[data-ap="77"]','arrasto');
+        R.painelTremida=await caso('[data-rp="21"]',null,'tremida');R.painelPinca=await caso('[data-rp="21"]',null,'pinca');R.painelArrasto=await caso('[data-rp="21"]','[data-rp="21"]','arrasto');
+        R.alcaPainelTremida=await caso('[data-rph="21|l"]','[data-rp="21"]','tremida');R.alcaPainelArrasto=await caso('[data-rph="21|l"]','[data-rp="21"]','arrasto');
+        /* recorte do forno da torre quente (arrasto ov) */
+        var forno=async function(g){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2400;S.H=2700;S.stones=[];S.mods=[];S.fr=[];S.rp=[];draw();newTpl(T('Torre quente (forno)'));S.mods[0].x=600;S.m=S.mods[0];S.tab=0;draw();panel();await W(500);
+          var e=[].filter.call(document.querySelectorAll('#svg [data-ovd]'),function(q){return q.closest('#mod')})[0];if(!e)return 'sem forno';var r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,v=S.mods[0].v[0],a0=v.ot;if(g==='tremida')await arr(x,y,4,3,4);else await arr(x,y,0,40,8);await W(400);return S.mods[0].v[0].ot===a0?'parado':'andou'};
+        R.fornoTremida=await forno('tremida');R.fornoArrasto=await forno('arrasto');
+        S.fr=[];S.rp=[];S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        let ini = "geladeira 300/700 · painel 1500/700"
+        XCTAssertEqual(o["inicio"] as? String, ini)
+        XCTAssertEqual(o["geladeiraTremida"] as? String, ini, "tremida não move a geladeira")
+        XCTAssertEqual(o["geladeiraPinca"] as? String, ini, "pinça não move a geladeira")
+        XCTAssertNotEqual(o["geladeiraArrasto"] as? String, ini, "arrasto de verdade move a geladeira")
+        XCTAssertEqual(o["alcaGeladeiraTremida"] as? String, ini, "tremida na alça não muda a medida da geladeira")
+        XCTAssertNotEqual(o["alcaGeladeiraArrasto"] as? String, ini, "arrasto na alça muda a medida")
+        XCTAssertEqual(o["painelTremida"] as? String, ini, "tremida não move o painel")
+        XCTAssertEqual(o["painelPinca"] as? String, ini, "pinça não move o painel")
+        XCTAssertNotEqual(o["painelArrasto"] as? String, ini, "arrasto de verdade move o painel")
+        XCTAssertEqual(o["alcaPainelTremida"] as? String, ini, "tremida na alça não muda a medida do painel")
+        XCTAssertNotEqual(o["alcaPainelArrasto"] as? String, ini, "arrasto na alça muda a medida do painel")
+        XCTAssertEqual(o["fornoTremida"] as? String, "parado", "tremida não mexe no recorte do forno")
+        XCTAssertEqual(o["fornoArrasto"] as? String, "andou", "arrasto de verdade mexe no recorte do forno")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // TOQUE-JANELA (Adauto 27/11, ETAPA 2 item 25): janela (e porta/abertura/vão da parede) no desenho de frente, com eventos de DEDO (pointerType touch):
     // 1 toque só seleciona (contorno), não move e não grava desfazer; 2 toques abrem a configuração dela (aba Ambiente, no quadro dela); arrastar só com
     // ela selecionada e depois do limite de toque (SEL.mov); tremida, pinça e arrasto sem selecionar não movem nem selecionam; tocar fora tira a seleção.

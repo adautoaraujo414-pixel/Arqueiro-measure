@@ -2759,6 +2759,11 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Falha na 3ca951db em 4 pontos: tremidaAlca, tremidaDivisoria, pincaDedoFora, pincaNaPorta (que dava x 850 e peça escolhida).
   - Passa depois a 430 e a 1366.
 - **Módulos semelhantes:** a alça, a divisória e o tamponamento são os mesmos para inferiores, superiores, torres e guarda-roupas (mesmo `drag`). O arrasto do módulo e da janela já tinham a zona morta.
+- **Mesma família, achado na auditoria (toque real, antes da correção):** a tremida de 5 px movia a geladeira 50 mm (x 300→350), a alça da geladeira mudava a largura (700→750), o painel ripado andava (1500→1550) e a alça do painel mudava a largura, e o recorte do forno da torre quente descia (ot 60→63).
+  - Causa: os arrastos `ap`, `aph`, `rp` e `ov` também não tinham a zona morta.
+  - Correção: a mesma zona morta.
+  - Teste: `testTOQUEALCA_EletroPainelEFornoNaoAndamComTremida`. Falha na 3ca951db (geladeira 355, alça 755, painel 1555/645, forno andou) e passa depois a 430, a 1366 e no iPad simulado.
 - **Observações da auditoria (sem correção, para decidir):**
+  - a alça da geladeira tem 6 px na tela com o ambiente inteiro à vista, menor que um dedo (risco identificado);
   - a bolinha da alça (raio 15 no desenho) fica em cima da lateral e do tamponamento: 1 ou 2 toques na lateral não chegam na peça;
   - 2 toques na lateral também giram o engrosso (EGT), e isso mexe no projeto.

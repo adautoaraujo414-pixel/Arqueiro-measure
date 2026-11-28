@@ -3355,3 +3355,21 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Chromium novo com 1 aba só (a do editor): 20/20 PASSAM nos dois códigos.
 - **Causa provável:** com outra aba aberta, a aba do teste não é a que tem o foco; foco, teclado e eventos de campo não chegam como no app (só nesses testes, que dependem do foco real do campo).
 - **Como rodar:** a bateria precisa de um Chromium com UMA aba, a do editor (`curl -X PUT ".../json/new?<editor>"` e fechar o `about:blank`). Nada no código muda.
+
+## ITEM2-ATRAVESSADA (28/11): base atravessada no canto L — o usuário escolhe qual parte passa inteira — Claude 5
+- **Pedido:** Adauto 28/11 (DECISOES "5 pendências", nº 1). O usuário escolhe o lado A ou o B. A outra parte encurta exatamente o necessário, sem sobreposição, respeitando a espessura. Vale para a base e o rodapé, inclusive no canto cego, com espelho E/D.
+- **Antes:** o canto L (`m.corner`) sempre fazia a parte do fundo passar inteira, sem escolha. A parte do lado era encurtada pela profundidade do fundo + o fundo.
+- **Módulo e funções:** canto em L de baixo, em `editor.html`:
+  - `partsOf0`, no bloco `m.corner`: Base inferior e Rodapé (pedestal) da frente e de trás;
+  - 3D: `BX` da base e do rodapé do canto;
+  - nova `cnAtrOf(m)`.
+- **Correção:**
+  - Campo `m.cnAtr`: sem valor ou 'A' mantém tudo como era (projeto antigo igual); 'B' faz a parte do lado passar inteira.
+  - O B é o espelho exato das contas do A, trocando fundo ↔ lado. Base: fundo `W1−D2−eL` e lado `W2−f−eL`. Rodapé da frente: `W1−e−(D2−RR)` e `W2−e−(D−RR−e)`. Rodapé de trás: `W1−e−(RR+f+e)` e `W2−2e−f`.
+  - O botão é do Code 2.
+- **Teste:** `testCantoLBaseAtravessadaLadoAouBBaseERodapeEspelhadoSemSobreposicao`. Cobre E e D × A e B × base e rodapé (frente e trás); partsOf = 3D = corte; mesma área no orçamento; 0 sobreposição no 3D; salvar e reabrir; desfazer; laterais por fora. Medidas com 900/900/560, chapa 15, fundo 6:
+  - A: 894/334 · 364/349 · 864/834;
+  - B: 334/894 · 349/364 · 834/864.
+  - Falha antes da mudança (`cnAtrOf` não existe e o B sai igual ao A). Passa depois, a 1366 e a 430.
+- **Canto cego:** são dois módulos retos, e a asa começa em z=600, na frente do cego (prof. 566). Base e rodapé ficam com 34 e 84 mm de vão, sem se encostar, então não há peça a encurtar. A geometria foi perguntada ao Adauto (via Chefe) e não foi inventada (§2).
+- **Outros módulos:** aéreo de canto não tem base nem rodapé. O canto do guarda-roupa usa o mesmo bloco e recebe a escolha quando tem base ou rodapé. Os pés de metal (`pesPartesCanto`) ficam de fora porque não têm peça corrida.

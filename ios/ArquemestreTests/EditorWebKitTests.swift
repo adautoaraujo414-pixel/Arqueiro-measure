@@ -20163,6 +20163,49 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
        a profundidade digitada num módulo mudava a de TODOS os módulos de baixo. Agora muda só ele; os outros viram sugestão "Aplicar aos vizinhos"
        (prévia de cada um e desfazer). Proteção do E3 (posição digitada em cima de outro): o app já pergunta "Aplicar mesmo assim / Cancelar" e não
        move nada (o "x 100 → 5095" da auditoria era a sonda passando texto; a tela passa número). */
+    // ITEM 2 · BASE ATRAVESSADA NO CANTO L (Adauto 28/11, DECISOES "5 pendências" nº 1): o usuário escolhe qual parte passa inteira (m.cnAtr 'A' = parede do
+    // fundo, como sempre foi · 'B' = parede lateral); a outra encurta exatamente a profundidade da que passa (+ fundo), sem sobreposição. Base e rodapé
+    // (frente e trás), E e D, partsOf = 3D = corte = orçamento, salvar/reabrir, desfazer, projeto antigo igual (A). Canto cego: aguardando o Adauto
+    func testCantoLBaseAtravessadaLadoAouBBaseERodapeEspelhadoSemSobreposicao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;draw();open3D();await W(300);
+        var it=TPL.filter(function(x){return x.n==='Canto em L (base)'})[0],NM=['Base inferior','Base inferior (lado do canto)','Rodapé (pedestal)','Rodapé (pedestal) do lado','Rodapé traseiro (pedestal)','Rodapé traseiro (pedestal) do lado'];
+        var mk=function(cn,lf){loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=2800;draw();var t=JSON.parse(JSON.stringify(it));t.corner=cn;newTpl(t);var m=S.mods[0];m.base=true;m.rod=true;if(lf)m.latFora=true;S.m=m;draw();return m};
+        var cl=function(m){var P=partsOf(m);return NM.map(function(n){var p=P.filter(function(q){return q.name===n})[0];return p?p.cl:'-'}).join('/')};
+        var tres=function(){__build();var bx=__boxes().filter(function(q){return /^0:(Base inferior|Rodapé)/.test(String(q.nm))&&(q.x1-q.x0)>=10&&(q.z1-q.z0)>=10});var ov=0;for(var i=0;i<bx.length;i++)for(var j=i+1;j<bx.length;j++){var a=bx[i],b=bx[j];if(Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>0.5&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>0.5&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>0.5)ov++}
+          var zF=(+S.mods[0].d)+(+S.mods[0].fundoMm||6)+1;/* as 2 partes da base têm o mesmo nome no 3D: a do fundo termina na profundidade da parede do fundo; a do lado vai além */var L=function(n){var q=/^Base/.test(n)?bx.filter(function(b){return String(b.nm)==='0:Base inferior'&&(/lado do canto/.test(n)?b.z1>zF:b.z1<=zF)}):bx.filter(function(b){return String(b.nm)==='0:'+n});return q.map(function(b){return Math.round(/do lado|lado do canto/.test(n)?b.z1-b.z0:b.x1-b.x0)}).join('+')||'-'};return NM.map(L).join('/')+' · ov '+ov};
+        var corte=function(m){var C=cutLines(m);return NM.map(function(n){var l=C.filter(function(c){return (c.names||[]).indexOf(n)>=0})[0];return l?l.L:'-'}).join('/')};
+        ['e','d'].forEach(function(cn){['A','B'].forEach(function(a){var m=mk(cn);if(a==='B')m.cnAtr='B';draw();R[cn+a]=cl(m);R[cn+a+'3d']=tres();R[cn+a+'corte']=corte(m);R[cn+a+'aB']=Math.round(mCost(m).aB*1e4);
+          var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();R[cn+a+'reabre']=cl(S.mods[0])+' · '+cnAtrOf(S.mods[0])})});
+        var m=mk('e',true);m.cnAtr='B';draw();R.latFora=cl(m)+' · '+tres().split(' · ')[1];
+        m=mk('d');await W(800);snap();m.cnAtr='B';draw();await W(800);R.antesDesfaz=cl(S.mods[0]);document.getElementById('und').click();await W(80);R.desfaz=cl(S.mods[0])+' · '+cnAtrOf(S.mods[0]);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["eA"] as? String, "894/334/364/349/864/834", "canto e · lado A (padrão, projeto antigo): a parte do fundo passa inteira, igual a antes")
+        XCTAssertEqual(o["eB"] as? String, "334/894/349/364/834/864", "canto e · lado B: a parte do lado passa inteira e a do fundo encurta (espelho do A)")
+        XCTAssertEqual(o["eA3d"] as? String, "894/334/364/349/864/834 · ov 0", "canto e · A: o 3D tem as mesmas medidas e nada entra em nada")
+        XCTAssertEqual(o["eB3d"] as? String, "334/894/349/364/834/864 · ov 0", "canto e · B: o 3D tem as mesmas medidas e nada entra em nada")
+        XCTAssertEqual(o["eAcorte"] as? String, "894/334/364/349/864/834", "canto e · A: plano de corte = partsOf")
+        XCTAssertEqual(o["eBcorte"] as? String, "334/894/349/364/834/864", "canto e · B: plano de corte = partsOf")
+        XCTAssertEqual(o["eAaB"] as? Int, o["eBaB"] as? Int, "canto e: orçamento com a mesma área (nada some, nada conta duas vezes)")
+        XCTAssertEqual(o["eAreabre"] as? String, "894/334/364/349/864/834 · A", "canto e · A: salvar e reabrir")
+        XCTAssertEqual(o["eBreabre"] as? String, "334/894/349/364/834/864 · B", "canto e · B: salvar e reabrir mantém a escolha")
+        XCTAssertEqual(o["dA"] as? String, "894/334/364/349/864/834", "canto d · lado A (padrão, projeto antigo): a parte do fundo passa inteira, igual a antes")
+        XCTAssertEqual(o["dB"] as? String, "334/894/349/364/834/864", "canto d · lado B: a parte do lado passa inteira e a do fundo encurta (espelho do A)")
+        XCTAssertEqual(o["dA3d"] as? String, "894/334/364/349/864/834 · ov 0", "canto d · A: o 3D tem as mesmas medidas e nada entra em nada")
+        XCTAssertEqual(o["dB3d"] as? String, "334/894/349/364/834/864 · ov 0", "canto d · B: o 3D tem as mesmas medidas e nada entra em nada")
+        XCTAssertEqual(o["dAcorte"] as? String, "894/334/364/349/864/834", "canto d · A: plano de corte = partsOf")
+        XCTAssertEqual(o["dBcorte"] as? String, "334/894/349/364/834/864", "canto d · B: plano de corte = partsOf")
+        XCTAssertEqual(o["dAaB"] as? Int, o["dBaB"] as? Int, "canto d: orçamento com a mesma área (nada some, nada conta duas vezes)")
+        XCTAssertEqual(o["dAreabre"] as? String, "894/334/364/349/864/834 · A", "canto d · A: salvar e reabrir")
+        XCTAssertEqual(o["dBreabre"] as? String, "334/894/349/364/834/864 · B", "canto d · B: salvar e reabrir mantém a escolha")
+        XCTAssertEqual(o["latFora"] as? String, "319/879/349/364/834/864 · ov 0", "laterais por fora: as duas partes param na lateral do fim (− 15) e não se sobrepõem")
+        XCTAssertEqual(o["antesDesfaz"] as? String, "334/894/349/364/834/864")
+        XCTAssertEqual(o["desfaz"] as? String, "894/334/364/349/864/834 · A", "↶ desfaz a troca de lado")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testVizinhoIgualProfundidadeDigitadaSoNoModuloEPosicaoDigitadaPerguntaSemMoverCalado() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

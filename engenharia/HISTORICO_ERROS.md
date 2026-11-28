@@ -3177,3 +3177,17 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Na parede lateral, o painel mostra "⚠ Construção diferente do fundo" com a prévia (sai Divisória…, entra Lateral do meio…) e o botão "Igualar ao fundo", com desfazer. O botão grava o campo.
 - **Teste novo:** `testLATMEIOPAREDE_ModuloNovoIgualEmQualquerParedeAntigoNaoMuda`. Confere: novo na lateral = fundo (corte e 3D); antigo abre e salva igual e não muda; aviso com prévia; botão iguala; desfazer volta. Passa a 430 e a 1366.
 - **Teste ajustado:** `testPlanoDeCorteParedeEsquerda…` monta o "móvel antigo" apagando também o `latMeioW` (o de antes não tem o campo), com comentário. A expectativa (38) não mudou.
+
+### CRUZA-PROJETO (Code 1, 27–28/11, item 40, parte projeto × 2D × 3D × planta)
+- **Cenário:** cozinha de exemplo (`demoScene`). 9 módulos: fundo, parede esquerda (`wing:'e'`), parede direita (`wing:'d'`), aéreos.
+- **Comportamento correto:**
+  - **3D × dado:** posição de cada módulo, nas 3 paredes. Na parede esquerda, `x` ao longo da parede = `z` do 3D (x 900 → z 900..1760).
+  - **Planta × 3D:** o corpo de cada módulo bate ao milímetro (escala 0,1507 px/mm).
+  - **Mover e desfazer:** +100 mm no módulo da parede esquerda move o 3D (z 900 → 1000) e a planta (196 → 211 px). O ↶ volta os três.
+  - **Lados na parede esquerda:** a peça interna `Lateral esquerda#1` do módulo 3 fica junto da parede do fundo (z 908). A lista do corte chama essa peça de "Lateral direita", que é o lado de quem olha a parede de dentro. Bate com a decisão de 25/11 e com `testParedeEsquerdaNomesDosLadosSeguemQuemOlha`.
+  - **Base corrida:** a `Base inferior` do módulo 1 vai de 905 a 2705, por baixo do módulo 2. É a base unida. Esse assunto é do item 2/21 (Code 2).
+- **Risco identificado (diferença não identificada como intencional):**
+  - Na planta (`plantaSvg`), o polígono do módulo é só o corpo, sem os tamponamentos. Exemplo: o módulo 2 termina em 2705 na planta, e no 3D, na lista e no corte o tamponamento direito de 30 mm vai até 2735. A pedra, na mesma planta, vai até 2735.
+  - Quem mede pela planta vê o móvel 30 mm menor do que ele ocupa.
+  - **Não mexido:** precisa da decisão do Adauto (planta com ou sem tamponamento).
+- **Coberto por testes existentes (passaram 587/587 em 28/11):** sentido do arrasto e do toque no 2D da parede esquerda, nomes dos lados, projeto antigo na parede esquerda, trena e plano de corte da parede esquerda (12 testes `testParedeEsquerda*`/`testParedeDaEsquerda*`). Identidade de módulo e peça: D23 (`testIdentidadeUnica`).

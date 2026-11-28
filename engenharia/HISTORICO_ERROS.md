@@ -3355,3 +3355,217 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Chromium novo com 1 aba só (a do editor): 20/20 PASSAM nos dois códigos.
 - **Causa provável:** com outra aba aberta, a aba do teste não é a que tem o foco; foco, teclado e eventos de campo não chegam como no app (só nesses testes, que dependem do foco real do campo).
 - **Como rodar:** a bateria precisa de um Chromium com UMA aba, a do editor (`curl -X PUT ".../json/new?<editor>"` e fechar o `about:blank`). Nada no código muda.
+
+## REGUA-PAREDE (item 39, Adauto 28/11: "a régua aparece na parede errada") — Claude 4
+- **Pedido:** reproduzir a criação de réguas em todas as paredes e por todos os caminhos, corrigir a causa e provar com prints.
+- **Varredura feita** (sondas no navegador, todas as paredes):
+  - todo o catálogo, 1182 casos, criado com o 2D na esquerda e na direita: em que parede cada coisa nova fica;
+  - todos os modelos com réguas, tamponamentos, engrossos, travessa e régua do aéreo ligados, no fundo, na esquerda, na direita e no ambiente livre (530 casos): no 3D, cada peça fica no corpo do próprio módulo;
+  - régua livre ("+ Criar Régua"): mesmo lado no 2D e no 3D no fundo, na direita e na esquerda guardada virada (espE);
+  - módulo de outra parede com x encostado não muda as peças do vizinho (todas as combinações de 5 modelos);
+  - 2D de cada parede (só os módulos dela);
+  - canto em L com módulos nas duas paredes; canto cego;
+  - desfazer, salvar e reabrir com a vista do lado aberta;
+  - catálogo e botões de parede com o 2D na parede do lado.
+- **Erro comprovado: o que era mandado pra outra parede com o 2D na parede do lado aberto não ia.**
+  - Casos: catálogo "Módulo na lateral direita/esquerda" e os botões Fundo/Esquerda/Direita/Livre do módulo. O módulo ficava na parede da vista e o botão não fazia nada (item 34).
+  - Reproduzir: 2D na parede esquerda → "Módulo na lateral direita" → volte pro fundo: o módulo está na esquerda.
+  - Causa raiz: ao voltar pro projeto, `toCanon` carimbava a parede da vista em tudo que estava na lista dela, inclusive no que foi mandado de propósito pra outra parede.
+  - Correção:
+    - `toCanon` mantém a parede escolhida de propósito durante a vista. Cópia ou peça nova sem parede continua na parede da vista, como antes.
+    - `wvMandados()`, depois de cada toque, tira na hora do desenho da vista o que foi pra outra parede.
+  - Arquivos: `app/src/main/assets/editor.html` (`toCanon`, `wvMandados`).
+- **Não reproduzido pela interface:** tamponamento automático (com as réguas de 80) mudando ao trocar a parede do 2D.
+  - Numa chamada direta (`wvGo` logo depois do `newTpl`, sem o desenho da criação) o tamponamento da ponta do canto ligava na vista da lateral e desligava no fundo.
+  - Pelo caminho real (catálogo, espera e botões do cabeçalho; com e sem módulo no fundo) fica igual nas vistas, no 3D e depois de ida e volta.
+  - Uma correção no `tampExposed` (d3862cee) foi desfeita: ela contrariava testes aprovados (`testPedraEmQualquerParede…`, `testDoisToquesNoVaoDeCimaAteOTeto…`, `testParedeEsquerdaNomesDosLados…`), que esperam o tamponamento na ponta do canto do módulo criado no 2D da lateral.
+- **Comportamento correto:** réguas, tamponamentos e engrossos de cada módulo ficam no módulo e na parede dele em todas as sondas. Não achei régua de uma parede desenhada em outra.
+- **Teste:** `testREGUAPAREDE_ParedeEscolhidaNaVistaDoLadoEOlharAsParedesNaoMuda`. Confere botões de parede e catálogo da outra lateral (falham no 154591e0), olhar as paredes não muda o projeto, e salvar e reabrir. Passa a 1366 e a 430.
+- **Evidência:** `engenharia/evidencias/etapa2/item39_regua_parede/` (ANTES 154591e0 × DEPOIS; direita a 1366 e 430, esquerda a 1366).
+- **Não verificado:**
+  - paredes criadas no 3D: módulo não encosta nelas; painéis em outra parede já saem da vista antes de mudar (`rwAsk` → `wvExit`);
+  - "Unir" (régua corrida) entre paredes diferentes: a união só existe no fundo (`unViz` ignora asa e canto).
+
+## VISTA-3D (Chefe 28/11): «Isométrica», «Cima» e «Lado» do ⋯ Mais do 3D "sem função" na ParteB — Claude 4
+- **Reproduzir:** `testNadaDeEnfeite3DEValoresParteB` a 1366 (integração 3 e 154591e0) dá "1 a 3 botões de vista sem função".
+- **Causa raiz:** os botões giram a câmera (yaw/pitch), e os screenshots mudam. Mas `org3api.cam()` devolvia só zoom e deslocamento, então quem acompanha a câmera não via a troca de vista:
+  - o laço que redesenha as medidas por cima do 3D (`tick`) só acertava na volta seguinte;
+  - a sonda da bateria via "nada mudou".
+  - Quando a vista já estava na tela, o aviso "Já está na vista…" aparecia e o teste passava. Por isso a falha oscilava conforme a ordem.
+- **Correção (no app, não no teste):** `org3api.cam()` devolve a câmera inteira (`yaw`, `pitch`). Quem usa: o `tick` do 3D e as sondas NadaDeEnfeite.
+- **Resultado:** ParteB passa a 1366 (168 s, antes da divisão).
+
+## NADA-DIVIDIDO (Chefe 28/11): ParteB e Ajustes passavam de 120 s a 430 com a exploração completa — Claude 4
+- **Pedido:** dividir em partes abaixo de ~90 s a 430, sem aumentar limite, cobrindo juntas os mesmos controles, e provar a soma.
+- **Como:** cada parte recebe `window.PARTE[tela] = {setas, r:[[raiz_de, raiz_ate, sub_de, sub_ate]]}`.
+  - raiz = controle da lista inicial da tela;
+  - sub = controles do 1º nível que aparecem a partir daquela raiz; os de baixo vão junto do pai.
+  - Uma raiz pesada é tocada em todas as partes que a dividem (é ela que faz os filhos aparecerem).
+  - As setas de cada tela ficam numa parte só.
+- **Partes e tempos a 430:**
+  - ParteB1 3D sem o Pintar: 44 s, 54 controles;
+  - ParteB2 Pintar, 1º nível 0–3: 29 s, 45;
+  - ParteB3 Pintar, 4 em diante: 31 s, 5;
+  - ParteB4 Valores: 42 s, 62;
+  - AjustesParte1: 57 s, 36;
+  - AjustesParte2 "Começar", 1º nível 2 em diante: 59 s, 70;
+  - AjustesParte3: 26 s, 37.
+  - A 1366: tempos iguais (44 / 29 / 30 / 41 / 58 / 58 / 25 s).
+- **Prova da soma (430, chave = tela › controle):**
+  - ParteB inteira: 125 controles. Soma das partes: 165 (as partes acham 40 cores do Pintar que o inteiro não alcança depois do modo Ambiente). Do inteiro, falta 1: o «▁» (`minb`) de Ambiente › Teto.
+  - Esse «▁» oscila também na mesma sequência: a ParteB1 rodada 2 vezes a 430 alcançou numa e não na outra; a 1366 alcança. É da descoberta por exploração, não da divisão.
+  - Ajustes inteiro: 121. Soma das partes: 122, faltando 0.
+- **testouBastante:** mínimo de cada parte (40, 4, 4, 45 · 25, 40, 28). A soma passa dos 30/40 dos testes inteiros. Comentário NADA-DIVIDIDO nos testes.
+
+## MINB-JA (Chefe 28/11): o «▁» de Ambiente › Teto ora entrava, ora não, na ParteB1 — Claude 4
+- **Causa raiz:** o botão de minimizar dos quadros (`[data-minb]`) é posto por um `setInterval(scan, 500)`.
+  - Quando um toque redesenha o quadro (aba Teto do it4), o «▁» some e só volta na próxima volta, em até 500 ms.
+  - A sonda lê a tela 90 ms depois do toque: às vezes ele já estava, às vezes não. Para a pessoa, o «▁» piscava.
+- **Correção (app):** depois de cada clique, change e input (na captura, porque o toque que redesenha costuma parar a propagação), o scan roda logo em seguida (`setTimeout(scan,0)`). O intervalo de 500 ms continua.
+- **Prova:**
+  - medido no navegador: o «▁» presente a 0 e a 90 ms depois de "Teto" (antes: ausente);
+  - ParteB1 a 430, 3 de 3 rodadas com o «▁» pelo mesmo caminho (Ambiente › Teto › «▁»), 55 controles;
+  - os 12 NadaDeEnfeite passam a 1366.
+
+## MOVE-750 e TAMP-NEAR (ETAPA 3.1, Chefe 28/11, sonda s54 do Claude 5) — Claude 4
+- **MOVE-750 (erro comprovado):** no 3D, escolher o tamponamento (2 toques) e tocar de novo nele mudava o módulo de lugar (x 5 → 800), sem aviso, no livre e na cozinha.
+  - Causa raiz: toda escolha de peça arma o "mudar de lugar" pendente (`MDMV`, 12 s). No toque seguinte, `lbtRay` ignora as caixas do próprio módulo: o raio atravessava o módulo, batia no chão ou na parede de trás, e isso valia como "lugar novo" (`mdDropAt`).
+  - Correção: se a superfície visível no ponto (`pickFace`) é do próprio módulo, não é lugar novo. O toque segue como escolha normal.
+  - O gesto de mudar de lugar (2 toques no chão ou na parede) continua.
+- **TAMP-NEAR (erro comprovado):** tocando a lateral, a porta, o rodapé, o fundo, a frente ou a travessa perto do tamponamento, o tamponamento "roubava" o toque.
+  - Causa raiz: `tampNear` mede a distância até o retângulo da tela da placa. Uma placa fina vista de lado tem retângulo que cobre as peças do lado, então distância 0 e a peça escondida atrás ganhava.
+  - Correção: a ajuda pra pegar o tamponamento fino só vale quando o toque não acertou peça nenhuma (toque no vazio, raio 18 px).
+- **Teste:** `testETAPA3_ToqueNoMesmoModuloNaoMoveEPecaDaFrenteGanhaDoTamponamento`.
+  - Confere tocar de novo no tamponamento (livre e cozinha) e o gesto pelo chão.
+  - Confere 17 pontos inequívocos de peças em volta do tamponamento (iso, frente e lado), com a verdade dada pelo raio, como na s54.
+  - No ANTES (cópia b780ebf0, sem estas duas correções): x 5→800 e 8 pontos errados. Depois: passa a 1366 e a 430.
+
+## TOQUE-FINA e COOK-375 (telas de 375, matriz do Code 1, Chefe 28/11) — Claude 4
+- **TOQUE-FINA (erro comprovado a 375×667):** 2 toques na base davam o acesso rápido em vez da edição dela (`testTOQUEPECA…`).
+  - Causa raiz: a 375 a base fica com 3 px na tela, e a porta sobreposta (desenhada por cima) cobria o meio dela por arredondamento (a 430 a base ficava por cima).
+  - Correção (`pcEdAlvo`): peça da estrutura desenhada mais fina que `SEL.div` (12 px) ganha uma faixa de 12 px em volta do meio dela nos 2 toques de editar. É a mesma ideia do `latBorda` da lateral. O meio do vão continua abrindo o acesso rápido.
+  - Prova: TOQUEPECA passa a 375 e a 430. Rodado com a máquina livre: sob carga 28 ele levou 220 s e trocou os passos.
+- **COOK-375 (erro comprovado a 375×667):** o toque no vidro fora das bocas não abria o quadro do cooktop (`isx2` null).
+  - Causa raiz: `onBurner` dava no mínimo 12 px de raio por boca. A 375 a boca desenhada tem 9 px e fica a 12–16 px do meio do vidro, então o mínimo engolia o meio.
+  - Correção: o mínimo do dedo vai até 70% da distância da boca ao meio do vidro. A 1366 nada muda (raio desenhado 16 px).
+  - Prova: os 7 testes de cooktop passam a 375, 430 e 1366.
+
+## GELA-375 (tela de 375, Chefe 28/11) — Claude 4
+- **Erro comprovado a 375×667:** 2 toques na geladeira duplex dentro da caixa não abriam nada (`testDoisToquesFuncionamNaGeladeira…`, e o `doisToques` do `testTrocarDeParedeEMexerNaGeladeira…`).
+- **Causa raiz:** depois do 1º toque a geladeira fica escolhida e ganha a alça de medida (`circle data-aph="w"`). A 375 a geladeira tem 37 px na tela e a alça cobre o meio dela. Os 2 toques caíam na alça, que não é eletro nem prateleira, e o handler não achava o módulo de baixo.
+- **Correção:** nos 2 toques, a alça do eletro conta igual ao eletro e ao puxador da prateleira (regra DUPLO-TOQUE de 18/11): vale o módulo de baixo. 1 toque e arrasto na alça seguem iguais.
+- **Prova:** os 15 testes com geladeira passam a 375, 430 e 1366.
+
+## AMB-MIN-375 (tela de 375, Chefe 28/11) — Claude 4
+- **Erro comprovado a 375×667:** minimizado, o quadro "✏️ Edição ambiente 3D" ficava com 76 px (`testEdicaoAmbiente3DParedeNo2DEAbasLimpas`, `min` falso, limite 70 px).
+- **Causa raiz:** o título tem `min-width:120px`. A 360 px de largura útil, título e três botões não cabem numa linha e a barra quebrava em duas.
+- **Correção:** só minimizado, o título pode encolher com reticências. Aberto continua igual.
+- **Prova:** passa a 375, 430 e 1366.
+- **Tentativas desfeitas (não estão no código):**
+  - TOPO-375 (diminuir a escala do 2D pra sair de baixo do 🔓): quebrava `testRebaixoDoTetoEPainelAcompanha` a 375, porque o rótulo do rebaixo encurtava.
+  - RIPADO-RAIO: não reproduzi o caso que ele corrigiria.
+
+## ALTURA-667 (iPhone SE 375×667, Chefe 28/11: "confira se o controle fica fora de alcance… só ajuste o teste com prova") — Claude 4
+- **Testes:** `testTocarEmQualquerMedidaDoVaoEDigitar`, `testToqueNoVaoComoNoIPhone…`, `testEtapa2VizinhoIgualBitABit…` (passam a 375×900, falham a 375×667).
+- **Conferência (comportamento correto do app):** com a peça escolhida, a 375×667 o desenho começa em y 660. A medida "Vão de cima" fica em y 722, abaixo da dobra.
+  - A página rola (altura 1638 px). Rolada até ela, a medida fica em y 324 e o toque pega a própria medida (`text data-q="rgv|0;r;0;A"`).
+  - Não fica embaixo de botão nem fora de alcance.
+  - Os testes tocavam ou arrastavam num ponto fora da tela, onde `elementFromPoint` dá nulo.
+- **Ajuste dos testes (comentário ALTURA-667 em cada um):** rolar até o alvo antes de tocar ou arrastar, como a pessoa faria. Nenhuma expectativa mudou.
+- **Prova:** os 3 passam a 375×667, 430 e 1366.
+
+## PASSO-375 (tela de 375, Chefe 28/11) — Claude 4
+- **Teste:** `testLiberdadeDeComposicaoMoverNo3DECanto…`. A 375 "ao soltar sem pergunta": o módulo nem andava.
+- **Conferência (comportamento correto do app):** o mesmo arrasto (1400 mm, começando na porta do módulo 1) com toque real (CDP `dispatchTouchEvent`) anda e pergunta ao soltar:
+  - 375: passos de 9,1 e 2,3 px;
+  - 430: passos de 10,4 e 2,6 px;
+  - 1366: passos de 16,3 e 4,1 px;
+  - com mouse (CDP), a 1366: passos de 16,3 e 4,1 px.
+  - Só os eventos de ponteiro sintéticos do teste, sem o toque por trás, precisam do 1º passo acima de `SEL.mov` (10 px). A 375 os 1400 mm são 91 px, e 10 passos de 9,1 px não engatavam.
+- **Ajuste do teste (comentário PASSO-375):** nos arrastos longos o passo fica com pelo menos 11 px. O destino é o mesmo e nenhuma expectativa mudou.
+- **Prova:** passa a 375, 430 e 1366.
+
+## LED no ripado a 375 e vão de cima embaixo do 🔓 (Chefe 28/11) — Claude 4 · pendente de decisão
+- `testLedNoRipado…` ("toque fora"): a 375, de perto, o ponto do teste (x 20, 45% da altura) cai na peça lateral do ripado (o raio acerta uma caixa dele). Não é "fora do ripado", então o app trata certo e escolhe o vão mais perto. O teste supõe parede nesse ponto, o que só vale a partir de 430. Ajuste proposto: o teste procurar um ponto onde o raio acerte a parede fora do ripado.
+- `testDoisToquesNoVaoDeCimaAteOTeto…` (aéreo encostado na direita): a 375 o meio do vão de cima (7 px de altura) fica embaixo do 🔓 `#lockAll`. O resto da faixa continua alcançável.
+  - Opção A: diminuir a escala do 2D a 375 pra parede sair de baixo dos botões. Testada e desfeita: quebra `testRebaixoDoTetoEPainelAcompanha`, porque o rótulo do rebaixo encurta.
+  - Opção B: o teste tocar na parte livre da faixa.
+
+## TIPO-SEGUE (item 24, Chefe 28/11, matriz do Code 1) — Claude 4
+- **Erro comprovado:** com o balcão escolhido no 3D (`sel3`), o título "Editor de Móveis · Tipo: Superior" e o painel continuavam no aéreo, mesmo depois de fechar o 3D. É informação contraditória.
+- **Causa raiz:** o título é escrito à mão em cada caminho de escolha (mais de 15 lugares). O `sel3` do 3D troca o `S.m` sem escrever o título e sem refazer o painel.
+- **Correção (uma fonte só):**
+  - depois de todo `panel()`, o título vem do `S.m`;
+  - ao fechar o 3D, se o módulo escolhido mudou lá dentro, o painel é refeito.
+  - Os caminhos de sempre não mudam.
+- **Teste:** `testTIPOSEGUE_TituloEPainelSeguemOModuloEscolhidoNo3D`. Falha no `b780ebf0` ("título Superior · escolhido balcão") e passa a 375, 430 e 1366. NadaDeEnfeiteTelaPrincipal passa nas três.
+
+## VAO-LIVRE (Chefe 28/11, decisão B para o vão de cima a 375) — Claude 4
+- **Decisão do Chefe:** o layout não muda. O teste toca na parte livre da faixa (alcançável) e prova que o 🔓 e o vão não se confundem.
+- **Teste `testDoisToquesNoVaoDeCimaAteOTeto…`:** os 2 toques vão no 1º ponto livre da faixa (o desenho, não um botão), a partir do meio. Onde o meio está livre, é o meio, como antes.
+- **Prova nova (`cadeadoXvao`):** o toque no 🔓 não abre o vão e muda só o cadeado; os 2 toques na faixa livre abrem o vão e não mexem no cadeado.
+- **Resultado:** passa a 375, 430 e 1366.
+- O caso do LED no ripado fica com o ajuste do Claude 3 (db5c08d9).
+
+## PECA-NO-TOQUE (Chefe 28/11: "exponha o que está no sel3 como window.pecaNoToque(x,y), a mesma lógica, sem copiar") — Claude 4
+- **API:** `window.pecaNoToque(x,y)` → `{mi, pk, ppk, nm, face, ponto:[x,y,z], via, ambig:[{mi,pk}]}` ou `null`.
+  - x,y em px do canvas do 3D.
+  - `face`: 'esq' | 'dir' | 'baixo' | 'cima' | 'tras' | 'frente'.
+  - `via`: 'face' (superfície da frente) ou 'tampNear' (ajuda do tamponamento fino no vazio).
+  - `ambig`: outras peças a até 8 px.
+  - Não seleciona nem muda nada.
+- **Sem cópia:**
+  - a escolha do `sel3` base virou `peca3(cx,cy)`, usada pelo próprio `sel3` e pela `pecaNoToque`;
+  - o wrapper TAMP-NEAR usa a `pecaNoToque`;
+  - `rayHits` passou a guardar também o ponto e a face do acerto (campos novos, quem já usava não muda).
+- **Mesma ordem do toque:** sem peça no ponto exato e com parede no ponto, devolve `null`, porque o toque vai pra parede (escolha de porta/janela, que vem antes na cadeia do `sel3`).
+- **Teste:** `testPECANOTOQUE_MesmaEscolhaDoToqueSemMudarNada`.
+  - Grade proporcional à tela, nas vistas iso, frente e lado, com balcão e aéreo.
+  - Toda resposta é igual à escolha do `__sel3` no mesmo ponto, com formato completo, e não muda o projeto.
+  - Passa a 1366, 430 e 375.
+- Os 159 testes de 3D, seleção e tamponamento a 1366: 158 passam. A única falha é a `PosicaoDigitadaPertoDaParede…`, já conhecida e vinda do Code 2.
+
+## TOQUE-FINA, ajuste (achado do Claude 3, 28/11) — Claude 4
+- **Erro comprovado (regressão do e8b5de4e):** `testPuxadorBolaNaoEngoleOToqueNemOsDoisToquesDoMovel` falhava a 1366. Os 2 toques no puxador bola do "Rack suspenso basculante" (módulo não escolhido) não abriam o menu do vão.
+  - Busca por commits: c1cc2616 passa, e8b5de4e falha. A causa não foi a `peca3` do 3D.
+- **Causa raiz:** a faixa de 12 px da peça fina (`finaBorda`) pegava os 2 toques no puxador, que fica perto de uma peça fina. Além disso, ela percorria as peças de todos os módulos e lia pelo índice do `partsOf` do módulo tocado.
+- **Correção:**
+  - a faixa só vale quando o dedo cai num retângulo de peça (a porta que cobre a base de 3 px); puxador e outros elementos seguem a regra deles;
+  - só as peças do próprio módulo entram.
+- **Prova:** os 18 testes de puxador e TOQUEPECA passam a 1366, 430 e 375.
+- **2º ajuste (mesmo dia):** `testParedeEsquerdaToqueDoisToquesEArrasto…` falhava a 430 desde o e8b5de4e.
+  - Os 2 toques no meio do vão das gavetas (sobre a frente de gaveta) pegavam a "Travessa frontal", que fica atrás das frentes. Isso abria a edição; o painel rolava e o resto do roteiro caía fora da tela.
+  - Correção: a faixa só vale pra peça fina que aparece em algum ponto (a base a 375 aparece numa tira embaixo da porta). Peça toda coberta não ganha faixa, e o meio do vão volta a ser o acesso rápido.
+  - Prova: ParedeEsquerdaToque, PuxadorBola, TOQUEPECA e ToqueNoVao passam a 430, 375 e 1366.
+- **PASSO-375, revisto (28/11):** fica a correção do Code 2 (bbe5e688), que manda todos os pointermove ao canvas, como o toque real faz, e não depende da zona morta. O ajuste do passo ≥ 11 px (da053985) foi desfeito neste ramo. Sem o bbe5e688, o teste falha a 375 neste ramo sozinho; integrado, passa.
+
+## RAIO-EXATO (ETAPA 3.1, Chefe 28/11: zerar as seleções inequívocas erradas) — Claude 4
+- **Achado (s54 dos projetos, com os acertos do raio de cada falha):**
+  - o raio do app aceita 0,5 mm de tolerância na borda de cada caixa;
+  - a verdade (o que se vê) não tem tolerância;
+  - a borda da porta, do lado de fora dela, a menos de 0,5 mm, ganhava da lateral, do fundo ou da travessa que aparecem ali de verdade;
+  - de duas laterais encostadas na mesma profundidade, ganhava a do vizinho.
+  - Entre esses casos estão os 3 que o Claude 3 viu na escolha do LED (lateral do aéreo em P1; lateral e fundo do nicho em P3).
+- **Correção (`rayHits` + `pickFace`):** o `rayHits` marca o acerto exato (`ws`). O `pickFace` prefere a peça exata mais perto; sem acerto exato (peça fina), segue a tolerância de sempre.
+- **Resultado (s54, só projetos):** 96,8% → 99,1%, vizinho 3 → 0, inequívocos 100% (352/352).
+  - Os 6 que sobram são a régua do engrosso do tamponamento, escolhida sozinha pela regra A50 (é a caixa da frente no ponto).
+  - A s54 agrupa a régua com o tamponamento principal e conta erro. Isso é critério da sonda; avisado ao Claude 5.
+- Regressão (3D, seleção, toque, porta, gaveta a 1366) e a s54 do catálogo inteiro estão rodando.
+- **Regressão (265 testes de 3D, seleção, toque, porta e gaveta a 1366):** 263 passam. Uma falha é a `PosicaoDigitada…` (Code 2). A outra, `testToqueNo3DAchaAPecaCertaEBordaFina` (bad 5), vem da "verdade" do teste (`__rayMod` → `lbtRay`), que tinha a mesma tolerância de 0,5 mm.
+  - Nos pontos que divergem, a escolha nova bate com a verdade exata. Ex.: vista [1.1, 0.4], ponto 676,202: o `__rayMod` dizia "Porta", e a escolha e o raio exato dizem "Lateral esquerda".
+  - Correção do oráculo, não do teste: o `lbtRay` ganha o modo exato (opcional, só o `__rayMod` usa); os outros usos não mudam.
+  - Os 18 testes de toque no 3D, LED e lbt passam a 1366 e a 430.
+
+## MOVE-ELETRO e eletro na frente (s54 do catálogo inteiro, 28/11) — Claude 4
+- **s54 de falhas de seleção com o RAIO-EXATO (catálogo inteiro, 1366):**
+  - todas as peças 95,1% → 97,4%; vizinho 3 → 0; pequenas 93,4% → 97,5%; p95 11,6 ms.
+  - Inequívocos: 99,4%. As 15 que sobram são todas da "Caixa da geladeira" (side by side e duplex).
+- **Causa nas 15:**
+  - (a) Onde a geladeira está na frente do tamponamento, a verdade da s54 (só caixas de módulo) apontava o tamponamento escondido. O toque, certo, vai pra geladeira.
+  - (b) O toque seguinte da sonda caía no "mudar a geladeira de lugar" que o toque anterior deixou armado (a limpeza da sonda não desarma o `FRMV`).
+- **Erro comprovado do app (família do MOVE-750):** escolher a geladeira e tocar de novo nela dava "📍 Geladeira mudou de lugar · Em cima, na altura 2500 mm" e gravava um passo no desfazer. Ela não sai do lugar (fica presa na caixa), então o aviso é falso.
+  - Causa: o raio do "lugar novo" (`lbtRay`) ignora as caixas do próprio eletro e bate no que está atrás.
+  - Correção: se a superfície da frente no ponto é o próprio eletro, ele continua escolhido e o app avisa "já está escolhido · toque 2 vezes onde quer ele".
+- **`pecaNoToque`:** se o que está na frente no ponto não é peça de módulo (eletro, pedra, painel), devolve `null`, como o toque. Antes devolvia a peça escondida atrás.
+- **Teste:** `testMOVEELETRO_TocarDeNovoNoEletroNaoMudaDeLugarEPecaAtrasNaoE`. Falha no f4f6c34e ("DIZ QUE MUDOU DE LUGAR"; "devolveu peça escondida") e passa depois. Os 31 testes de geladeira, eletro, ETAPA3 e PECANOTOQUE passam a 1366 e a 430.
+- **Para a s54 (Claude 5):** a verdade precisa contar eletros na frente, e a limpeza entre toques precisa desarmar o "mudar eletro de lugar".

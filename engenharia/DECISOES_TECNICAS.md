@@ -118,3 +118,7 @@ O usuário decide; o app executa corretamente. Nenhum botão vazio, nenhuma alte
 - Criar módulos ou alterar medidas, portas, tamponamentos ou paredes: o app só sugere, nunca executa sozinho.
 - Todo encaixe tem desfazer/refazer; projetos antigos ficam como foram salvos; o usuário posiciona onde quiser.
 - Regra principal: o app auxilia, quem decide é o usuário. Mesmo comportamento em iPhone, iPad, Android e Windows.
+
+## REGUA-PAREDE (item 39, 28/11) — Claude 4
+- Mandar um módulo pra outra parede com o 2D na parede do lado aberto (catálogo "Módulo na lateral …" ou botões Fundo/Esquerda/Direita/Livre) vale e ele sai da vista na hora. Antes ficava na parede da vista sem aviso.
+- O que é criado ou copiado na vista sem parede escolhida continua nascendo na parede da vista (como antes).

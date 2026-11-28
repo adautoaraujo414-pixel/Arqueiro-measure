@@ -6665,7 +6665,7 @@ final class EditorWebKitTests: XCTestCase {
         var selD=function(path,i){RG.sel=null;RG.dsel={mi:0,path:path,i:i};RG.tab='div';draw();panel()},selV=function(path){RG.dsel=null;RG.sel={mi:0,path:path};draw();panel()};
         var qs=function(){return [].map.call(document.querySelectorAll('#svg text[data-q^="rgv|"]'),function(e){return e.dataset.q.split('|')[1].split(';')[3]+'='+e.textContent}).join(' ')};
         var inp=function(){return document.getElementById('qein')};
-        var tap=async function(w){var e=[].filter.call(document.querySelectorAll('#svg rect[data-q^="rgv|"]'),function(q){return q.dataset.q.split(';')[3]===w})[0];if(!e)return 'sem medida '+w;var r=e.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,o={bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,isPrimary:true,pointerType:'touch'};var t=document.elementFromPoint(x,y);if(!t||!t.closest('[data-q]')){return 'medida '+w+' tapada por '+(t?(t.id||t.tagName)+' '+(t.className&&t.className.baseVal!==undefined?'':t.className):'nada')+' em '+Math.round(x)+','+Math.round(y)+' tela '+innerWidth+'×'+innerHeight}t.dispatchEvent(new PointerEvent('pointerdown',o));t.dispatchEvent(new PointerEvent('pointerup',o));await W(60);return document.getElementById('qelab').textContent+' = '+inp().value};
+        var tap=async function(w){var e=[].filter.call(document.querySelectorAll('#svg rect[data-q^="rgv|"]'),function(q){return q.dataset.q.split(';')[3]===w})[0];if(!e)return 'sem medida '+w;/* ALTURA-667 (Chefe 28/11: "confira se no iPhone SE o controle fica fora de alcance… só ajuste o teste se o app estiver certo, com prova"): a 375×667 a medida fica abaixo da dobra (y 722 numa tela de 667), a página rola (1638 px) e, rolada, o toque pega a própria medida (prova no HISTORICO_ERROS, ALTURA-667). O teste rola até ela como a pessoa faria */try{e.scrollIntoView({block:'center'})}catch(_){}var r=e.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,o={bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,isPrimary:true,pointerType:'touch'};var t=document.elementFromPoint(x,y);if(!t||!t.closest('[data-q]')){return 'medida '+w+' tapada por '+(t?(t.id||t.tagName)+' '+(t.className&&t.className.baseVal!==undefined?'':t.className):'nada')+' em '+Math.round(x)+','+Math.round(y)+' tela '+innerWidth+'×'+innerHeight}t.dispatchEvent(new PointerEvent('pointerdown',o));t.dispatchEvent(new PointerEvent('pointerup',o));await W(60);return document.getElementById('qelab').textContent+' = '+inp().value};
         var key=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
         var typ=async function(v){if(document.getElementById('calcbar').hidden)return 'teclado fechado';String(v).split('').forEach(key);await W(40);key('ok');await W(80);return document.getElementById('calcbar').hidden&&document.getElementById('qebox').hidden};
         R.antes=szs();
@@ -8785,9 +8785,14 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
-    func testNadaDeEnfeite3DEValoresParteBTodoControleFazAlgumaCoisa() async throws {
+    // NADA-DIVIDIDO (Chefe 28/11): com a exploração completa (ORC=Infinity) o teste inteiro passava de 120 s a 430 ("não terminou"). Dividido em partes
+    // abaixo de 90 s a 430, sem aumentar limite: cada parte testa uma faixa dos controles de partida da tela (window.PARTE: [raiz_de, raiz_ate, sub_de, sub_ate];
+    // sub = controles do 1º nível que aparecem a partir daquela raiz, os de baixo vão junto do pai) e juntas cobrem a lista do teste inteiro (prova no HISTORICO_ERROS).
+    // testouBastante: mínimo de cada parte (a soma é maior que os 30 do teste inteiro).
+    func testNadaDeEnfeite3DEValoresParteB1_3DSemPintar() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.PARTE={"3D": {"setas": 1, "r": [[0, 7], [8, 1000000000.0]]}};window.__TST=[];
         window.MINI3OFF=1;PR.setupDone=1;var TN=0;var toast0=window.toast;window.toast=function(){TN++};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         var EXT=0;try{window.print=function(){EXT++};window.open=function(){EXT++;return null};var ic0=HTMLInputElement.prototype.click;HTMLInputElement.prototype.click=function(){if(this.type==='file'){EXT++;return}return ic0.apply(this,arguments)};if(window.ArqueApp)Object.keys(window.ArqueApp).forEach(function(k){var f=window.ArqueApp[k];if(typeof f==='function')window.ArqueApp[k]=function(){EXT++;try{return f.apply(window.ArqueApp,arguments)}catch(_){}}});if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText=function(){EXT++;return Promise.resolve()}}}catch(_){}
@@ -8821,12 +8826,12 @@ final class EditorWebKitTests: XCTestCase {
             var ks=[];NAV.forEach(function(q){q.ks.forEach(function(x){if(ks.indexOf(x)<0)ks.push(x)})});var cand=pares(lista().filter(function(o){var c=chaves(o);return c.length&&c.every(function(x){return ks.indexOf(x)>=0})}));
             for(var q2=0;q2<cand.length&&q2<8;q2++){var e3=acha(lista(),cand[q2][0],cand[q2][1]);if(!e3)continue;try{await age(e3)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}
             return null};
-          await volta(aba);var fila=pares(lista()).map(function(q){return {k:q[0],idx:q[1],vias:[]}}),visto={},pend={},nb=fila.length,tv0=0;fila.forEach(function(q){visto[q.k+'#'+q.idx]=1});
+          await volta(aba);var fila=pares(lista()).map(function(q){return {k:q[0],idx:q[1],vias:[]}}),visto={},pend={},nb=fila.length,tv0=0;fila.forEach(function(q){visto[q.k+'#'+q.idx]=1});var P_=window.PARTE&&PARTE[nome];fila.forEach(function(q,i){q.r=i});if(P_){fila=fila.filter(function(q){return P_.r.some(function(g){return q.r>=g[0]&&q.r<g[1]})});nb=fila.length}var CNT_={};var pp_=function(n,it){n.r=it.r;if(!it.vias.length){CNT_[it.r]=CNT_[it.r]||0;n.o=CNT_[it.r]++}else n.o=it.o;if(!P_)return n;var ok=P_.r.some(function(g){return n.r>=g[0]&&n.r<g[1]&&n.o>=(g[2]||0)&&n.o<(g[3]===undefined?1e9:g[3])});return ok?n:null};
           for(var i=0;i<fila.length;i++){var it=fila[i],k=it.k,idx=it.idx;if(i>=nb){if(!tv0)tv0=Date.now();if(Date.now()-tv0>ORC)break}
             var el=await pega(it);if(!el){/* estava numa vista de dentro (sub-aba) que mudou: fica esperando ser achado de novo pelo caminho certo */if(!it.vias.length)pend[k+'#'+idx]=1;else (window.__na=window.__na||[]).push(nome+' › '+k.slice(0,60));continue}
-            var c0=cena(),obs='';try{obs=await age(el)}catch(e){exc.push(k+': '+String(e).slice(0,80));continue}await W(90);var c1=cena();n++;
+            var c0=cena(),obs='';try{obs=await age(el)}catch(e){exc.push(k+': '+String(e).slice(0,80));continue}await W(90);var c1=cena();n++;(window.__TST=window.__TST||[]).push(nome+' › '+(it.vias||[]).map(function(v){return v.k+'#'+v.idx}).concat([k+'#'+idx]).join(' » '));
             if(c0===c1){await W(400);c1=cena()}
-            if(c0!==c1&&it.vias.length<2){/* só trocou o que aparece (projeto igual, nenhuma janela nova)? os controles novos entram na fila */var A0=c0.split('|'),A1=c1.split('|');if(A0[0]===A1[0]&&A0[3]===A1[3]&&A0[6]===A1[6]&&A0[12]===A1[12]){var nv=pares(lista()).filter(function(q){return !visto[q[0]+'#'+q[1]]||pend[q[0]+'#'+q[1]]}).slice(0,SUBCAP);if(nv.length){NAV.push({k:k,idx:idx,ks:chaves(el)});nv.forEach(function(q){visto[q[0]+'#'+q[1]]=1;delete pend[q[0]+'#'+q[1]];fila.push({k:q[0],idx:q[1],vias:it.vias.concat([{k:k,idx:idx}])})})}}}
+            if(c0!==c1&&it.vias.length<2){/* só trocou o que aparece (projeto igual, nenhuma janela nova)? os controles novos entram na fila */var A0=c0.split('|'),A1=c1.split('|');if(A0[0]===A1[0]&&A0[3]===A1[3]&&A0[6]===A1[6]&&A0[12]===A1[12]){var nv=pares(lista()).filter(function(q){return !visto[q[0]+'#'+q[1]]||pend[q[0]+'#'+q[1]]}).slice(0,SUBCAP);if(nv.length){NAV.push({k:k,idx:idx,ks:chaves(el)});nv.forEach(function(q){visto[q[0]+'#'+q[1]]=1;delete pend[q[0]+'#'+q[1]];(function(n_){if(n_)fila.push(n_)})(pp_({k:q[0],idx:q[1],vias:it.vias.concat([{k:k,idx:idx}])},it))})}}}
             if(c0===c1&&el.dataset){var ks0=chaves(el),irm=null;if(ks0.length){var L3=lista();for(var q=0;q<L3.length&&!irm;q++){var o=L3[q];if(o!==el&&o.tagName===el.tagName&&o.dataset&&ks0.every(function(kk){return o.dataset[kk]!==undefined})&&ks0.some(function(kk){return o.dataset[kk]!==el.dataset[kk]}))irm=o}}
               if(irm){try{await age(irm)}catch(_){}await W(120);var L4=lista(),el2=null;for(var j2=0;j2<L4.length;j2++){if(L4[j2].dataset&&L4[j2].tagName===el.tagName&&ks0.every(function(kk){return L4[j2].dataset[kk]===el.dataset[kk]})){el2=L4[j2];break}}if(el2){var c4=cena();try{await age(el2)}catch(_){}await W(120);if(cena()!==c4)c1='mudou'}else c1='mudou(sumiu)'}
               else if(/\b(sel|on|ativo)\b/.test(el.className||''))c1='já é a escolhida (única)'}
@@ -8849,17 +8854,278 @@ final class EditorWebKitTests: XCTestCase {
         var olha=async function(nome,aba,roots){RAIZ=roots;await volta(aba);var L=setas(roots()),n=L.length;tot+=n;for(var i=0;i<n;i++){await volta(aba);var e=setas(roots())[i];if(!e)continue;var alvo=clicavel(e),c0=cena();try{(alvo||e).click()}catch(_){}await W(120);var c1=cena();if(c0===c1){await W(400);c1=cena()}if(c0===c1){var ctx=((e.parentNode||e).textContent||'').replace(/\s+/g,' ').trim().slice(0,46);enf.push(nome+' › «'+e.textContent.trim()+'» em "'+ctx+'"'+(alvo?' (dentro de '+alvo.tagName.toLowerCase()+')':' (sem nada clicável em volta)'))}}};
         
         var totc=0,M=[],EX=[],porTela=[];
-        var tela=async function(nome,abre,raiz,fora,cap){window.ABRE=abre;RAIZ=raiz;FORA=fora||null;CAP=cap||1e9;var r=await varre(nome,0);totc+=r.n;M=M.concat(r.mortos);EX=EX.concat(r.exc);porTela.push(nome+' '+r.n);CAP=1e9;await olha(nome,0,raiz)};
+        var tela=async function(nome,abre,raiz,fora,cap){if(window.PARTE&&!PARTE[nome])return;window.ABRE=abre;RAIZ=raiz;FORA=fora||null;CAP=cap||1e9;var r=await varre(nome,0);totc+=r.n;M=M.concat(r.mortos);EX=EX.concat(r.exc);porTela.push(nome+' '+r.n);CAP=1e9;if(!window.PARTE||PARTE[nome].setas)await olha(nome,0,raiz)};
         var el=function(id){return function(){return [document.getElementById(id)]}};
-        var MINC=30;
+        var MINC=40;
         /* tela principal (barra de cima, botões do 2D, abas), 3D, Clientes e Valores: todo controle faz alguma coisa e nenhuma seta é só desenho */
         await tela('3D',async function(){draw();open3D();await W(380)},el('v3'),'canvas');
         await tela('Valores',async function(){document.getElementById('vlb').click();await W(350)},el('vlm'));
         
         window.ABRE=null;FORA=null;RAIZ=function(){return [document.getElementById('bd')]};await volta(0);
-        R.telas=porTela.length;R.porTela=porTela.join(' · ');R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;return JSON.stringify(R);
+        R.telas=porTela.length;R.porTela=porTela.join(' · ');R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;R.testados=(window.__TST||[]).join('\n');window.PARTE=null;return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["telas"] as? Int, 2)
+        XCTAssertEqual(o["telas"] as? Int, 1)
+        XCTAssertEqual(o["testouBastante"] as? Bool, true)
+        XCTAssertEqual(o["semFuncao"] as? String, "0")
+        XCTAssertEqual(o["setasSoDeEnfeite"] as? String, "0")
+        XCTAssertEqual(o["quebrou"] as? String, "0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // NADA-DIVIDIDO (Chefe 28/11): com a exploração completa (ORC=Infinity) o teste inteiro passava de 120 s a 430 ("não terminou"). Dividido em partes
+    // abaixo de 90 s a 430, sem aumentar limite: cada parte testa uma faixa dos controles de partida da tela (window.PARTE: [raiz_de, raiz_ate, sub_de, sub_ate];
+    // sub = controles do 1º nível que aparecem a partir daquela raiz, os de baixo vão junto do pai) e juntas cobrem a lista do teste inteiro (prova no HISTORICO_ERROS).
+    // testouBastante: mínimo de cada parte (a soma é maior que os 30 do teste inteiro).
+    func testNadaDeEnfeite3DEValoresParteB2_3DPintarComeco() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.PARTE={"3D": {"setas": 0, "r": [[7, 8, 0, 4]]}};window.__TST=[];
+        window.MINI3OFF=1;PR.setupDone=1;var TN=0;var toast0=window.toast;window.toast=function(){TN++};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var EXT=0;try{window.print=function(){EXT++};window.open=function(){EXT++;return null};var ic0=HTMLInputElement.prototype.click;HTMLInputElement.prototype.click=function(){if(this.type==='file'){EXT++;return}return ic0.apply(this,arguments)};if(window.ArqueApp)Object.keys(window.ArqueApp).forEach(function(k){var f=window.ArqueApp[k];if(typeof f==='function')window.ArqueApp[k]=function(){EXT++;try{return f.apply(window.ArqueApp,arguments)}catch(_){}}});if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText=function(){EXT++;return Promise.resolve()}}}catch(_){}
+        try{var sf0=window.svFechar;window.svFechar=function(){EXT++;try{return sf0&&sf0.apply(this,arguments)}catch(_){}}}catch(_){}try{window.confirm=function(){EXT++;return false};window.alert=function(){EXT++};window.prompt=function(){EXT++;return null};if(navigator.share)navigator.share=function(){EXT++;return Promise.resolve()}}catch(_){}var hs=function(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0}return h+':'+s.length},vis=function(e){return e.getClientRects().length>0};
+        /* cena: balcão com porta e gavetas, aéreo, pedra com cuba, geladeira e painel */
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();
+        newTpl(T('Balcão porta + gavetas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Balcão da pia (cuba)'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Aéreo 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}
+        S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);try{apAdd('geladeira',0)}catch(_){}S.mods[0].tl=S.mods[0].tr=true;S.m=S.mods[0];draw();await W(900);
+        var Z0=JSON.stringify(snapState());
+        var MI=+(window.C30MI||0),volta=async function(t){try{[].forEach.call(document.body.children,function(e){if(!e.dataset||e.tagName==='SCRIPT'||e.tagName==='STYLE')return;if(!e.dataset.c30)e.dataset.c30='1';/* janela criada depois: fecha */if(e.dataset.c30==='1'){if(!e.hidden)e.hidden=true}else if(e.hidden)e.hidden=false})}catch(_){}/* a troca de parede agora fica sempre no cabeçalho (15/11): volta pra parede do fundo antes de restaurar, senão o teste seguinte fica na parede do lado */try{if(window.wvGo)wvGo('f')}catch(_){}UNDOING=true;try{loadState(JSON.parse(Z0))}finally{UNDOING=false}try{if(window.SOLO2)soloOff()}catch(_){}try{var v3=document.getElementById('v3');if(v3&&!v3.hidden)document.getElementById('v3x').click()}catch(_){}try{if(window.secAbreTudo)secAbreTudo()}catch(_){}S.m=S.mods[MI];S.sv=0;S.tab=t;LAST='mod';draw();panel();await W(25);if(window.ABRE)await window.ABRE()};
+        [].forEach.call(document.body.children,function(e){e.dataset.c30=e.hidden?'1':'0'});
+        var foto=function(){var z=snapState();delete z.trena;return hs(JSON.stringify(z))};
+        var X3=function(){try{var v3=document.getElementById('v3');if(!v3||v3.hidden)return '';var s=0,B=__boxes();for(var i=0;i<B.length;i++){s+=B[i].x0+B[i].y0*3+B[i].z1*7+(B[i].a||0)*11}return JSON.stringify(org3api.cam())+'/'+B.length+'/'+Math.round(s)}catch(_){return 'x'}};var cena=function(){var b=[].map.call(document.body.children,function(e){return (e.id||e.tagName)+(vis(e)?'+':'-')}).join(',');var a=document.activeElement;return [foto(),hs(document.getElementById('bd').innerHTML),hs(document.getElementById('svg').innerHTML),hs(b),TN,EXT,S.tab,S.sv,(a&&a!==document.body?(a.tagName+(a.id||'')+(a.dataset?JSON.stringify(a.dataset):'')):''),(document.getElementById('tabs')||{}).innerHTML?hs(document.getElementById('tabs').innerHTML):'',window.scrollY,RAIZ().map(function(r){return r?hs(r.innerHTML):''}).join(','),X3()].join('|')};
+        var rot=function(e){var d=e.dataset?Object.keys(e.dataset).filter(function(k){return k!=='c30'&&k!=='secf'}).map(function(k){return k+'='+String(e.dataset[k]).slice(0,18)}).join(','):'';var tx=(e.tagName==='INPUT'||e.tagName==='SELECT')?((e.closest('.g,.chk,label')||e.parentNode).textContent||'').trim():(e.textContent||'').trim();var an=e;while(an&&an!==document.body&&!an.id)an=an.parentNode;return e.tagName.toLowerCase()+(e.type?':'+e.type:'')+(e.id?'#'+e.id:(an&&an.id?'@'+an.id:''))+'['+d+'] «'+tx.replace(/\s+/g,' ').slice(0,34)+'»'};
+        var RAIZ=function(){return [document.getElementById('bd')]},FORA=null;var lista=function(){var o=[],seen=new Set();RAIZ().forEach(function(bd){if(!bd)return;[].forEach.call(bd.querySelectorAll('button,input,select,textarea'),function(e){if(vis(e)&&!e.disabled&&!e.readOnly&&!(FORA&&e.closest(FORA))){o.push(e);seen.add(e)}});
+          [].forEach.call(bd.querySelectorAll('*'),function(e){if(seen.has(e)||!vis(e)||e.closest('button,select,label input')||(FORA&&e.closest(FORA))||e.closest('svg'))return;var cs=getComputedStyle(e);if(cs.cursor!=='pointer')return;if(e.querySelector('button,input,select,textarea'))return;var p=e.parentNode;if(p&&p!==bd&&getComputedStyle(p).cursor==='pointer'&&!p.querySelector('button,input,select,textarea'))return;o.push(e)})});return o};
+        var age=async function(e){var tg=e.tagName,ty=e.type;if(tg==='SELECT'){var i=e.selectedIndex,n=e.options.length;if(n<2)return 'select com 1 opção';e.selectedIndex=(i+1)%n;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&(ty==='checkbox'||ty==='radio'))e.click();
+          else if(tg==='INPUT'&&ty==='range'){var v=+e.value,mx=+e.max||100,mn=+e.min||0;e.value=String(v+(+e.step||1)<=mx?v+(+e.step||1):Math.max(mn,v-(+e.step||1)));e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&ty==='color'){e.value=e.value==='#123456'?'#654321':'#123456';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
+          else e.click();return ''};
+        
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
+        var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
+          var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
+          var pares=function(L){var c={},o=[];L.forEach(function(e){var k=rot(e);c[k]=c[k]||0;o.push([k,c[k]++])});return o};
+          var pega=async function(it){await volta(aba);var el=acha(lista(),it.k,it.idx);if(el)return el;/* refaz o caminho; botão de abrir/fechar pode já estar aberto: confere a cada passo e, se fechou, toca de novo */for(var s=0;s<(it.vias||[]).length;s++){var e=acha(lista(),it.vias[s].k,it.vias[s].idx);if(e){try{await age(e)}catch(_){}await W(120)}el=acha(lista(),it.k,it.idx);if(el)return el}for(var s2=(it.vias||[]).length-1;s2>=0;s2--){var e9=acha(lista(),it.vias[s2].k,it.vias[s2].idx);if(e9){try{await age(e9)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}}if((it.vias||[]).length)return null;
+            /* a tela ficou em outra vista (sub-aba que não volta sozinha): tenta os botões de troca conhecidos e os irmãos deles */
+            var ks=[];NAV.forEach(function(q){q.ks.forEach(function(x){if(ks.indexOf(x)<0)ks.push(x)})});var cand=pares(lista().filter(function(o){var c=chaves(o);return c.length&&c.every(function(x){return ks.indexOf(x)>=0})}));
+            for(var q2=0;q2<cand.length&&q2<8;q2++){var e3=acha(lista(),cand[q2][0],cand[q2][1]);if(!e3)continue;try{await age(e3)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}
+            return null};
+          await volta(aba);var fila=pares(lista()).map(function(q){return {k:q[0],idx:q[1],vias:[]}}),visto={},pend={},nb=fila.length,tv0=0;fila.forEach(function(q){visto[q.k+'#'+q.idx]=1});var P_=window.PARTE&&PARTE[nome];fila.forEach(function(q,i){q.r=i});if(P_){fila=fila.filter(function(q){return P_.r.some(function(g){return q.r>=g[0]&&q.r<g[1]})});nb=fila.length}var CNT_={};var pp_=function(n,it){n.r=it.r;if(!it.vias.length){CNT_[it.r]=CNT_[it.r]||0;n.o=CNT_[it.r]++}else n.o=it.o;if(!P_)return n;var ok=P_.r.some(function(g){return n.r>=g[0]&&n.r<g[1]&&n.o>=(g[2]||0)&&n.o<(g[3]===undefined?1e9:g[3])});return ok?n:null};
+          for(var i=0;i<fila.length;i++){var it=fila[i],k=it.k,idx=it.idx;if(i>=nb){if(!tv0)tv0=Date.now();if(Date.now()-tv0>ORC)break}
+            var el=await pega(it);if(!el){/* estava numa vista de dentro (sub-aba) que mudou: fica esperando ser achado de novo pelo caminho certo */if(!it.vias.length)pend[k+'#'+idx]=1;else (window.__na=window.__na||[]).push(nome+' › '+k.slice(0,60));continue}
+            var c0=cena(),obs='';try{obs=await age(el)}catch(e){exc.push(k+': '+String(e).slice(0,80));continue}await W(90);var c1=cena();n++;(window.__TST=window.__TST||[]).push(nome+' › '+(it.vias||[]).map(function(v){return v.k+'#'+v.idx}).concat([k+'#'+idx]).join(' » '));
+            if(c0===c1){await W(400);c1=cena()}
+            if(c0!==c1&&it.vias.length<2){/* só trocou o que aparece (projeto igual, nenhuma janela nova)? os controles novos entram na fila */var A0=c0.split('|'),A1=c1.split('|');if(A0[0]===A1[0]&&A0[3]===A1[3]&&A0[6]===A1[6]&&A0[12]===A1[12]){var nv=pares(lista()).filter(function(q){return !visto[q[0]+'#'+q[1]]||pend[q[0]+'#'+q[1]]}).slice(0,SUBCAP);if(nv.length){NAV.push({k:k,idx:idx,ks:chaves(el)});nv.forEach(function(q){visto[q[0]+'#'+q[1]]=1;delete pend[q[0]+'#'+q[1]];(function(n_){if(n_)fila.push(n_)})(pp_({k:q[0],idx:q[1],vias:it.vias.concat([{k:k,idx:idx}])},it))})}}}
+            if(c0===c1&&el.dataset){var ks0=chaves(el),irm=null;if(ks0.length){var L3=lista();for(var q=0;q<L3.length&&!irm;q++){var o=L3[q];if(o!==el&&o.tagName===el.tagName&&o.dataset&&ks0.every(function(kk){return o.dataset[kk]!==undefined})&&ks0.some(function(kk){return o.dataset[kk]!==el.dataset[kk]}))irm=o}}
+              if(irm){try{await age(irm)}catch(_){}await W(120);var L4=lista(),el2=null;for(var j2=0;j2<L4.length;j2++){if(L4[j2].dataset&&L4[j2].tagName===el.tagName&&ks0.every(function(kk){return L4[j2].dataset[kk]===el.dataset[kk]})){el2=L4[j2];break}}if(el2){var c4=cena();try{await age(el2)}catch(_){}await W(120);if(cena()!==c4)c1='mudou'}else c1='mudou(sumiu)'}
+              else if(/\b(sel|on|ativo)\b/.test(el.className||''))c1='já é a escolhida (única)'}
+            if(c0===c1&&el.tagName==='BUTTON'){/* pode depender do estado (ex.: diminuir o zoom sem ter aumentado): aperta antes cada vizinho e tenta de novo */var viz=[].filter.call((el.parentNode||{}).children||[],function(s){return s!==el&&vis(s)&&(s.tagName==='BUTTON'||getComputedStyle(s).cursor==='pointer')}).slice(0,6).map(rot);
+              for(var v=0;v<viz.length&&c0===c1;v++){var e5=await pega(it);if(!e5)break;var sv=null;lista().forEach(function(o){if(!sv&&rot(o)===viz[v])sv=o});if(!sv)continue;try{await age(sv)}catch(_){}await W(150);if(!document.body.contains(e5)||!vis(e5)){e5=acha(lista(),k,idx);if(!e5)continue}var c6=cena();try{await age(e5)}catch(_){}await W(150);if(cena()!==c6)c1='mudou depois de '+viz[v]}}
+            if(c0===c1&&el.tagName==='BUTTON'){/* botão de ajustar/voltar a vista: só faz diferença se a vista estiver mexida → aumenta o zoom antes */var ez=await pega(it);if(ez){var zm=[].filter.call(document.querySelectorAll('button'),function(b){return vis(b)&&/^[＋+]$/.test((b.textContent||'').trim())})[0];if(zm){try{zm.click();zm.click()}catch(_){}await W(150);if(document.body.contains(ez)&&vis(ez)){var cz=cena();try{await age(ez)}catch(_){}await W(200);if(cena()!==cz)c1='mudou depois do zoom'}}}}
+            if(c0===c1&&el.tagName==='BUTTON'&&/Desfazer|Refazer|[↶↷]/.test((el.title||'')+' '+(el.getAttribute('aria-label')||'')+' '+(el.textContent||''))){/* desfazer/refazer só faz diferença se tiver o que desfazer/refazer: faz uma mexida antes */var eu=await pega(it);if(eu){var refaz=/Refazer|↷/.test((eu.title||'')+(eu.textContent||''));try{snap();S.mods[0].x=S.mods[0].x+10;draw();await W(950);if(refaz){document.getElementById('und').click();await W(150)}}catch(_){}if(document.body.contains(eu)){var cu=cena();try{await age(eu)}catch(_){}await W(200);if(cena()!==cu)c1='mudou com história pra desfazer/refazer'}}}
+            if(c0===c1){/* pode ser botão que só rola a tela até um lugar */var e7=await pega(it);if(e7){var rsig=function(){var o=[];RAIZ().forEach(function(r){if(!r)return;var all=r.querySelectorAll('*');for(var z=0;z<all.length&&o.length<80;z+=Math.max(1,Math.floor(all.length/80))){var b=all[z].getBoundingClientRect();o.push(Math.round(b.top)+','+Math.round(b.left))}});return o.join(';')},q0=rsig();await W(350);if(rsig()===q0){try{await age(e7)}catch(_){}await W(800);if(rsig()!==q0)c1='rolou'}}}
+            if(c0===c1&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA')&&el.id&&!/^(checkbox|radio|range|color)$/.test(el.type||'')){if(!window.__SRC){var sx='';[].forEach.call(document.scripts,function(sc){sx+=sc.textContent||''});window.__SRC=sx}var idq=el.id.replace(/[^A-Za-z0-9_-]/g,'');if(new RegExp("\\$\\('"+idq+"'\\)|getElementById\\('"+idq+"'\\)|#"+idq+"\\b|\\.id===?'"+idq+"'").test(window.__SRC))c1='campo de formulário lido pelo código'}
+            if(c0===c1)mortos.push(nome+' › '+k+(obs?' ('+obs+')':''))}
+          /* controle de sub-aba de dentro que o teste não conseguiu abrir de novo sozinho: fica anotado como não testado (não é defeito do app) */Object.keys(pend).forEach(function(q){(window.__na=window.__na||[]).push(nome+' › '+q.slice(0,60))});
+          return {n:n,mortos:mortos,exc:exc,extras:fila.length-nb}};
+        
+        var CAP=1e9,_l0=lista;lista=function(){return _l0().slice(0,CAP)};
+        /* setas e sinais que parecem de tocar (⌃ ⌄ › ‹ ▸ ▾ ▼ ▲ ► ◀ ⋯ ⋮ ☰ ✕) e não estão dentro de botão nem de coisa clicável: fazem alguma coisa? */
+        var GL=/^[⌃⌄›‹»«▸▾▼▲►◀⋯⋮☰≡✕✖>]$/;
+        var setas=function(roots){var o=[];roots.forEach(function(r){if(!r)return;var tw=document.createTreeWalker(r,NodeFilter.SHOW_TEXT,null),n;while((n=tw.nextNode())){var tx=(n.nodeValue||'').trim();if(!GL.test(tx))continue;var e=n.parentNode;if(!e||!vis(e)||e.closest('svg,canvas,script,style'))continue;if((e.textContent||'').trim()!==tx)continue;o.push(e)}});return o};
+        var clicavel=function(e){for(var k=0,p=e;p&&p!==document.body&&k<4;k++,p=p.parentNode){if(/^(BUTTON|A|LABEL|SELECT|INPUT|SUMMARY)$/.test(p.tagName)||getComputedStyle(p).cursor==='pointer')return p}return null};
+        var out=[],tot=0,enf=[];
+        var olha=async function(nome,aba,roots){RAIZ=roots;await volta(aba);var L=setas(roots()),n=L.length;tot+=n;for(var i=0;i<n;i++){await volta(aba);var e=setas(roots())[i];if(!e)continue;var alvo=clicavel(e),c0=cena();try{(alvo||e).click()}catch(_){}await W(120);var c1=cena();if(c0===c1){await W(400);c1=cena()}if(c0===c1){var ctx=((e.parentNode||e).textContent||'').replace(/\s+/g,' ').trim().slice(0,46);enf.push(nome+' › «'+e.textContent.trim()+'» em "'+ctx+'"'+(alvo?' (dentro de '+alvo.tagName.toLowerCase()+')':' (sem nada clicável em volta)'))}}};
+        
+        var totc=0,M=[],EX=[],porTela=[];
+        var tela=async function(nome,abre,raiz,fora,cap){if(window.PARTE&&!PARTE[nome])return;window.ABRE=abre;RAIZ=raiz;FORA=fora||null;CAP=cap||1e9;var r=await varre(nome,0);totc+=r.n;M=M.concat(r.mortos);EX=EX.concat(r.exc);porTela.push(nome+' '+r.n);CAP=1e9;if(!window.PARTE||PARTE[nome].setas)await olha(nome,0,raiz)};
+        var el=function(id){return function(){return [document.getElementById(id)]}};
+        var MINC=4;
+        /* tela principal (barra de cima, botões do 2D, abas), 3D, Clientes e Valores: todo controle faz alguma coisa e nenhuma seta é só desenho */
+        await tela('3D',async function(){draw();open3D();await W(380)},el('v3'),'canvas');
+        await tela('Valores',async function(){document.getElementById('vlb').click();await W(350)},el('vlm'));
+        
+        window.ABRE=null;FORA=null;RAIZ=function(){return [document.getElementById('bd')]};await volta(0);
+        R.telas=porTela.length;R.porTela=porTela.join(' · ');R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;R.testados=(window.__TST||[]).join('\n');window.PARTE=null;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["telas"] as? Int, 1)
+        XCTAssertEqual(o["testouBastante"] as? Bool, true)
+        XCTAssertEqual(o["semFuncao"] as? String, "0")
+        XCTAssertEqual(o["setasSoDeEnfeite"] as? String, "0")
+        XCTAssertEqual(o["quebrou"] as? String, "0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // NADA-DIVIDIDO (Chefe 28/11): com a exploração completa (ORC=Infinity) o teste inteiro passava de 120 s a 430 ("não terminou"). Dividido em partes
+    // abaixo de 90 s a 430, sem aumentar limite: cada parte testa uma faixa dos controles de partida da tela (window.PARTE: [raiz_de, raiz_ate, sub_de, sub_ate];
+    // sub = controles do 1º nível que aparecem a partir daquela raiz, os de baixo vão junto do pai) e juntas cobrem a lista do teste inteiro (prova no HISTORICO_ERROS).
+    // testouBastante: mínimo de cada parte (a soma é maior que os 30 do teste inteiro).
+    func testNadaDeEnfeite3DEValoresParteB3_3DPintarResto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.PARTE={"3D": {"setas": 0, "r": [[7, 8, 4]]}};window.__TST=[];
+        window.MINI3OFF=1;PR.setupDone=1;var TN=0;var toast0=window.toast;window.toast=function(){TN++};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var EXT=0;try{window.print=function(){EXT++};window.open=function(){EXT++;return null};var ic0=HTMLInputElement.prototype.click;HTMLInputElement.prototype.click=function(){if(this.type==='file'){EXT++;return}return ic0.apply(this,arguments)};if(window.ArqueApp)Object.keys(window.ArqueApp).forEach(function(k){var f=window.ArqueApp[k];if(typeof f==='function')window.ArqueApp[k]=function(){EXT++;try{return f.apply(window.ArqueApp,arguments)}catch(_){}}});if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText=function(){EXT++;return Promise.resolve()}}}catch(_){}
+        try{var sf0=window.svFechar;window.svFechar=function(){EXT++;try{return sf0&&sf0.apply(this,arguments)}catch(_){}}}catch(_){}try{window.confirm=function(){EXT++;return false};window.alert=function(){EXT++};window.prompt=function(){EXT++;return null};if(navigator.share)navigator.share=function(){EXT++;return Promise.resolve()}}catch(_){}var hs=function(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0}return h+':'+s.length},vis=function(e){return e.getClientRects().length>0};
+        /* cena: balcão com porta e gavetas, aéreo, pedra com cuba, geladeira e painel */
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();
+        newTpl(T('Balcão porta + gavetas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Balcão da pia (cuba)'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Aéreo 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}
+        S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);try{apAdd('geladeira',0)}catch(_){}S.mods[0].tl=S.mods[0].tr=true;S.m=S.mods[0];draw();await W(900);
+        var Z0=JSON.stringify(snapState());
+        var MI=+(window.C30MI||0),volta=async function(t){try{[].forEach.call(document.body.children,function(e){if(!e.dataset||e.tagName==='SCRIPT'||e.tagName==='STYLE')return;if(!e.dataset.c30)e.dataset.c30='1';/* janela criada depois: fecha */if(e.dataset.c30==='1'){if(!e.hidden)e.hidden=true}else if(e.hidden)e.hidden=false})}catch(_){}/* a troca de parede agora fica sempre no cabeçalho (15/11): volta pra parede do fundo antes de restaurar, senão o teste seguinte fica na parede do lado */try{if(window.wvGo)wvGo('f')}catch(_){}UNDOING=true;try{loadState(JSON.parse(Z0))}finally{UNDOING=false}try{if(window.SOLO2)soloOff()}catch(_){}try{var v3=document.getElementById('v3');if(v3&&!v3.hidden)document.getElementById('v3x').click()}catch(_){}try{if(window.secAbreTudo)secAbreTudo()}catch(_){}S.m=S.mods[MI];S.sv=0;S.tab=t;LAST='mod';draw();panel();await W(25);if(window.ABRE)await window.ABRE()};
+        [].forEach.call(document.body.children,function(e){e.dataset.c30=e.hidden?'1':'0'});
+        var foto=function(){var z=snapState();delete z.trena;return hs(JSON.stringify(z))};
+        var X3=function(){try{var v3=document.getElementById('v3');if(!v3||v3.hidden)return '';var s=0,B=__boxes();for(var i=0;i<B.length;i++){s+=B[i].x0+B[i].y0*3+B[i].z1*7+(B[i].a||0)*11}return JSON.stringify(org3api.cam())+'/'+B.length+'/'+Math.round(s)}catch(_){return 'x'}};var cena=function(){var b=[].map.call(document.body.children,function(e){return (e.id||e.tagName)+(vis(e)?'+':'-')}).join(',');var a=document.activeElement;return [foto(),hs(document.getElementById('bd').innerHTML),hs(document.getElementById('svg').innerHTML),hs(b),TN,EXT,S.tab,S.sv,(a&&a!==document.body?(a.tagName+(a.id||'')+(a.dataset?JSON.stringify(a.dataset):'')):''),(document.getElementById('tabs')||{}).innerHTML?hs(document.getElementById('tabs').innerHTML):'',window.scrollY,RAIZ().map(function(r){return r?hs(r.innerHTML):''}).join(','),X3()].join('|')};
+        var rot=function(e){var d=e.dataset?Object.keys(e.dataset).filter(function(k){return k!=='c30'&&k!=='secf'}).map(function(k){return k+'='+String(e.dataset[k]).slice(0,18)}).join(','):'';var tx=(e.tagName==='INPUT'||e.tagName==='SELECT')?((e.closest('.g,.chk,label')||e.parentNode).textContent||'').trim():(e.textContent||'').trim();var an=e;while(an&&an!==document.body&&!an.id)an=an.parentNode;return e.tagName.toLowerCase()+(e.type?':'+e.type:'')+(e.id?'#'+e.id:(an&&an.id?'@'+an.id:''))+'['+d+'] «'+tx.replace(/\s+/g,' ').slice(0,34)+'»'};
+        var RAIZ=function(){return [document.getElementById('bd')]},FORA=null;var lista=function(){var o=[],seen=new Set();RAIZ().forEach(function(bd){if(!bd)return;[].forEach.call(bd.querySelectorAll('button,input,select,textarea'),function(e){if(vis(e)&&!e.disabled&&!e.readOnly&&!(FORA&&e.closest(FORA))){o.push(e);seen.add(e)}});
+          [].forEach.call(bd.querySelectorAll('*'),function(e){if(seen.has(e)||!vis(e)||e.closest('button,select,label input')||(FORA&&e.closest(FORA))||e.closest('svg'))return;var cs=getComputedStyle(e);if(cs.cursor!=='pointer')return;if(e.querySelector('button,input,select,textarea'))return;var p=e.parentNode;if(p&&p!==bd&&getComputedStyle(p).cursor==='pointer'&&!p.querySelector('button,input,select,textarea'))return;o.push(e)})});return o};
+        var age=async function(e){var tg=e.tagName,ty=e.type;if(tg==='SELECT'){var i=e.selectedIndex,n=e.options.length;if(n<2)return 'select com 1 opção';e.selectedIndex=(i+1)%n;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&(ty==='checkbox'||ty==='radio'))e.click();
+          else if(tg==='INPUT'&&ty==='range'){var v=+e.value,mx=+e.max||100,mn=+e.min||0;e.value=String(v+(+e.step||1)<=mx?v+(+e.step||1):Math.max(mn,v-(+e.step||1)));e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&ty==='color'){e.value=e.value==='#123456'?'#654321':'#123456';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
+          else e.click();return ''};
+        
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
+        var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
+          var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
+          var pares=function(L){var c={},o=[];L.forEach(function(e){var k=rot(e);c[k]=c[k]||0;o.push([k,c[k]++])});return o};
+          var pega=async function(it){await volta(aba);var el=acha(lista(),it.k,it.idx);if(el)return el;/* refaz o caminho; botão de abrir/fechar pode já estar aberto: confere a cada passo e, se fechou, toca de novo */for(var s=0;s<(it.vias||[]).length;s++){var e=acha(lista(),it.vias[s].k,it.vias[s].idx);if(e){try{await age(e)}catch(_){}await W(120)}el=acha(lista(),it.k,it.idx);if(el)return el}for(var s2=(it.vias||[]).length-1;s2>=0;s2--){var e9=acha(lista(),it.vias[s2].k,it.vias[s2].idx);if(e9){try{await age(e9)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}}if((it.vias||[]).length)return null;
+            /* a tela ficou em outra vista (sub-aba que não volta sozinha): tenta os botões de troca conhecidos e os irmãos deles */
+            var ks=[];NAV.forEach(function(q){q.ks.forEach(function(x){if(ks.indexOf(x)<0)ks.push(x)})});var cand=pares(lista().filter(function(o){var c=chaves(o);return c.length&&c.every(function(x){return ks.indexOf(x)>=0})}));
+            for(var q2=0;q2<cand.length&&q2<8;q2++){var e3=acha(lista(),cand[q2][0],cand[q2][1]);if(!e3)continue;try{await age(e3)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}
+            return null};
+          await volta(aba);var fila=pares(lista()).map(function(q){return {k:q[0],idx:q[1],vias:[]}}),visto={},pend={},nb=fila.length,tv0=0;fila.forEach(function(q){visto[q.k+'#'+q.idx]=1});var P_=window.PARTE&&PARTE[nome];fila.forEach(function(q,i){q.r=i});if(P_){fila=fila.filter(function(q){return P_.r.some(function(g){return q.r>=g[0]&&q.r<g[1]})});nb=fila.length}var CNT_={};var pp_=function(n,it){n.r=it.r;if(!it.vias.length){CNT_[it.r]=CNT_[it.r]||0;n.o=CNT_[it.r]++}else n.o=it.o;if(!P_)return n;var ok=P_.r.some(function(g){return n.r>=g[0]&&n.r<g[1]&&n.o>=(g[2]||0)&&n.o<(g[3]===undefined?1e9:g[3])});return ok?n:null};
+          for(var i=0;i<fila.length;i++){var it=fila[i],k=it.k,idx=it.idx;if(i>=nb){if(!tv0)tv0=Date.now();if(Date.now()-tv0>ORC)break}
+            var el=await pega(it);if(!el){/* estava numa vista de dentro (sub-aba) que mudou: fica esperando ser achado de novo pelo caminho certo */if(!it.vias.length)pend[k+'#'+idx]=1;else (window.__na=window.__na||[]).push(nome+' › '+k.slice(0,60));continue}
+            var c0=cena(),obs='';try{obs=await age(el)}catch(e){exc.push(k+': '+String(e).slice(0,80));continue}await W(90);var c1=cena();n++;(window.__TST=window.__TST||[]).push(nome+' › '+(it.vias||[]).map(function(v){return v.k+'#'+v.idx}).concat([k+'#'+idx]).join(' » '));
+            if(c0===c1){await W(400);c1=cena()}
+            if(c0!==c1&&it.vias.length<2){/* só trocou o que aparece (projeto igual, nenhuma janela nova)? os controles novos entram na fila */var A0=c0.split('|'),A1=c1.split('|');if(A0[0]===A1[0]&&A0[3]===A1[3]&&A0[6]===A1[6]&&A0[12]===A1[12]){var nv=pares(lista()).filter(function(q){return !visto[q[0]+'#'+q[1]]||pend[q[0]+'#'+q[1]]}).slice(0,SUBCAP);if(nv.length){NAV.push({k:k,idx:idx,ks:chaves(el)});nv.forEach(function(q){visto[q[0]+'#'+q[1]]=1;delete pend[q[0]+'#'+q[1]];(function(n_){if(n_)fila.push(n_)})(pp_({k:q[0],idx:q[1],vias:it.vias.concat([{k:k,idx:idx}])},it))})}}}
+            if(c0===c1&&el.dataset){var ks0=chaves(el),irm=null;if(ks0.length){var L3=lista();for(var q=0;q<L3.length&&!irm;q++){var o=L3[q];if(o!==el&&o.tagName===el.tagName&&o.dataset&&ks0.every(function(kk){return o.dataset[kk]!==undefined})&&ks0.some(function(kk){return o.dataset[kk]!==el.dataset[kk]}))irm=o}}
+              if(irm){try{await age(irm)}catch(_){}await W(120);var L4=lista(),el2=null;for(var j2=0;j2<L4.length;j2++){if(L4[j2].dataset&&L4[j2].tagName===el.tagName&&ks0.every(function(kk){return L4[j2].dataset[kk]===el.dataset[kk]})){el2=L4[j2];break}}if(el2){var c4=cena();try{await age(el2)}catch(_){}await W(120);if(cena()!==c4)c1='mudou'}else c1='mudou(sumiu)'}
+              else if(/\b(sel|on|ativo)\b/.test(el.className||''))c1='já é a escolhida (única)'}
+            if(c0===c1&&el.tagName==='BUTTON'){/* pode depender do estado (ex.: diminuir o zoom sem ter aumentado): aperta antes cada vizinho e tenta de novo */var viz=[].filter.call((el.parentNode||{}).children||[],function(s){return s!==el&&vis(s)&&(s.tagName==='BUTTON'||getComputedStyle(s).cursor==='pointer')}).slice(0,6).map(rot);
+              for(var v=0;v<viz.length&&c0===c1;v++){var e5=await pega(it);if(!e5)break;var sv=null;lista().forEach(function(o){if(!sv&&rot(o)===viz[v])sv=o});if(!sv)continue;try{await age(sv)}catch(_){}await W(150);if(!document.body.contains(e5)||!vis(e5)){e5=acha(lista(),k,idx);if(!e5)continue}var c6=cena();try{await age(e5)}catch(_){}await W(150);if(cena()!==c6)c1='mudou depois de '+viz[v]}}
+            if(c0===c1&&el.tagName==='BUTTON'){/* botão de ajustar/voltar a vista: só faz diferença se a vista estiver mexida → aumenta o zoom antes */var ez=await pega(it);if(ez){var zm=[].filter.call(document.querySelectorAll('button'),function(b){return vis(b)&&/^[＋+]$/.test((b.textContent||'').trim())})[0];if(zm){try{zm.click();zm.click()}catch(_){}await W(150);if(document.body.contains(ez)&&vis(ez)){var cz=cena();try{await age(ez)}catch(_){}await W(200);if(cena()!==cz)c1='mudou depois do zoom'}}}}
+            if(c0===c1&&el.tagName==='BUTTON'&&/Desfazer|Refazer|[↶↷]/.test((el.title||'')+' '+(el.getAttribute('aria-label')||'')+' '+(el.textContent||''))){/* desfazer/refazer só faz diferença se tiver o que desfazer/refazer: faz uma mexida antes */var eu=await pega(it);if(eu){var refaz=/Refazer|↷/.test((eu.title||'')+(eu.textContent||''));try{snap();S.mods[0].x=S.mods[0].x+10;draw();await W(950);if(refaz){document.getElementById('und').click();await W(150)}}catch(_){}if(document.body.contains(eu)){var cu=cena();try{await age(eu)}catch(_){}await W(200);if(cena()!==cu)c1='mudou com história pra desfazer/refazer'}}}
+            if(c0===c1){/* pode ser botão que só rola a tela até um lugar */var e7=await pega(it);if(e7){var rsig=function(){var o=[];RAIZ().forEach(function(r){if(!r)return;var all=r.querySelectorAll('*');for(var z=0;z<all.length&&o.length<80;z+=Math.max(1,Math.floor(all.length/80))){var b=all[z].getBoundingClientRect();o.push(Math.round(b.top)+','+Math.round(b.left))}});return o.join(';')},q0=rsig();await W(350);if(rsig()===q0){try{await age(e7)}catch(_){}await W(800);if(rsig()!==q0)c1='rolou'}}}
+            if(c0===c1&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA')&&el.id&&!/^(checkbox|radio|range|color)$/.test(el.type||'')){if(!window.__SRC){var sx='';[].forEach.call(document.scripts,function(sc){sx+=sc.textContent||''});window.__SRC=sx}var idq=el.id.replace(/[^A-Za-z0-9_-]/g,'');if(new RegExp("\\$\\('"+idq+"'\\)|getElementById\\('"+idq+"'\\)|#"+idq+"\\b|\\.id===?'"+idq+"'").test(window.__SRC))c1='campo de formulário lido pelo código'}
+            if(c0===c1)mortos.push(nome+' › '+k+(obs?' ('+obs+')':''))}
+          /* controle de sub-aba de dentro que o teste não conseguiu abrir de novo sozinho: fica anotado como não testado (não é defeito do app) */Object.keys(pend).forEach(function(q){(window.__na=window.__na||[]).push(nome+' › '+q.slice(0,60))});
+          return {n:n,mortos:mortos,exc:exc,extras:fila.length-nb}};
+        
+        var CAP=1e9,_l0=lista;lista=function(){return _l0().slice(0,CAP)};
+        /* setas e sinais que parecem de tocar (⌃ ⌄ › ‹ ▸ ▾ ▼ ▲ ► ◀ ⋯ ⋮ ☰ ✕) e não estão dentro de botão nem de coisa clicável: fazem alguma coisa? */
+        var GL=/^[⌃⌄›‹»«▸▾▼▲►◀⋯⋮☰≡✕✖>]$/;
+        var setas=function(roots){var o=[];roots.forEach(function(r){if(!r)return;var tw=document.createTreeWalker(r,NodeFilter.SHOW_TEXT,null),n;while((n=tw.nextNode())){var tx=(n.nodeValue||'').trim();if(!GL.test(tx))continue;var e=n.parentNode;if(!e||!vis(e)||e.closest('svg,canvas,script,style'))continue;if((e.textContent||'').trim()!==tx)continue;o.push(e)}});return o};
+        var clicavel=function(e){for(var k=0,p=e;p&&p!==document.body&&k<4;k++,p=p.parentNode){if(/^(BUTTON|A|LABEL|SELECT|INPUT|SUMMARY)$/.test(p.tagName)||getComputedStyle(p).cursor==='pointer')return p}return null};
+        var out=[],tot=0,enf=[];
+        var olha=async function(nome,aba,roots){RAIZ=roots;await volta(aba);var L=setas(roots()),n=L.length;tot+=n;for(var i=0;i<n;i++){await volta(aba);var e=setas(roots())[i];if(!e)continue;var alvo=clicavel(e),c0=cena();try{(alvo||e).click()}catch(_){}await W(120);var c1=cena();if(c0===c1){await W(400);c1=cena()}if(c0===c1){var ctx=((e.parentNode||e).textContent||'').replace(/\s+/g,' ').trim().slice(0,46);enf.push(nome+' › «'+e.textContent.trim()+'» em "'+ctx+'"'+(alvo?' (dentro de '+alvo.tagName.toLowerCase()+')':' (sem nada clicável em volta)'))}}};
+        
+        var totc=0,M=[],EX=[],porTela=[];
+        var tela=async function(nome,abre,raiz,fora,cap){if(window.PARTE&&!PARTE[nome])return;window.ABRE=abre;RAIZ=raiz;FORA=fora||null;CAP=cap||1e9;var r=await varre(nome,0);totc+=r.n;M=M.concat(r.mortos);EX=EX.concat(r.exc);porTela.push(nome+' '+r.n);CAP=1e9;if(!window.PARTE||PARTE[nome].setas)await olha(nome,0,raiz)};
+        var el=function(id){return function(){return [document.getElementById(id)]}};
+        var MINC=4;
+        /* tela principal (barra de cima, botões do 2D, abas), 3D, Clientes e Valores: todo controle faz alguma coisa e nenhuma seta é só desenho */
+        await tela('3D',async function(){draw();open3D();await W(380)},el('v3'),'canvas');
+        await tela('Valores',async function(){document.getElementById('vlb').click();await W(350)},el('vlm'));
+        
+        window.ABRE=null;FORA=null;RAIZ=function(){return [document.getElementById('bd')]};await volta(0);
+        R.telas=porTela.length;R.porTela=porTela.join(' · ');R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;R.testados=(window.__TST||[]).join('\n');window.PARTE=null;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["telas"] as? Int, 1)
+        XCTAssertEqual(o["testouBastante"] as? Bool, true)
+        XCTAssertEqual(o["semFuncao"] as? String, "0")
+        XCTAssertEqual(o["setasSoDeEnfeite"] as? String, "0")
+        XCTAssertEqual(o["quebrou"] as? String, "0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // NADA-DIVIDIDO (Chefe 28/11): com a exploração completa (ORC=Infinity) o teste inteiro passava de 120 s a 430 ("não terminou"). Dividido em partes
+    // abaixo de 90 s a 430, sem aumentar limite: cada parte testa uma faixa dos controles de partida da tela (window.PARTE: [raiz_de, raiz_ate, sub_de, sub_ate];
+    // sub = controles do 1º nível que aparecem a partir daquela raiz, os de baixo vão junto do pai) e juntas cobrem a lista do teste inteiro (prova no HISTORICO_ERROS).
+    // testouBastante: mínimo de cada parte (a soma é maior que os 30 do teste inteiro).
+    func testNadaDeEnfeite3DEValoresParteB4_Valores() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.PARTE={"Valores": {"setas": 1, "r": [[0, 1000000000.0]]}};window.__TST=[];
+        window.MINI3OFF=1;PR.setupDone=1;var TN=0;var toast0=window.toast;window.toast=function(){TN++};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var EXT=0;try{window.print=function(){EXT++};window.open=function(){EXT++;return null};var ic0=HTMLInputElement.prototype.click;HTMLInputElement.prototype.click=function(){if(this.type==='file'){EXT++;return}return ic0.apply(this,arguments)};if(window.ArqueApp)Object.keys(window.ArqueApp).forEach(function(k){var f=window.ArqueApp[k];if(typeof f==='function')window.ArqueApp[k]=function(){EXT++;try{return f.apply(window.ArqueApp,arguments)}catch(_){}}});if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText=function(){EXT++;return Promise.resolve()}}}catch(_){}
+        try{var sf0=window.svFechar;window.svFechar=function(){EXT++;try{return sf0&&sf0.apply(this,arguments)}catch(_){}}}catch(_){}try{window.confirm=function(){EXT++;return false};window.alert=function(){EXT++};window.prompt=function(){EXT++;return null};if(navigator.share)navigator.share=function(){EXT++;return Promise.resolve()}}catch(_){}var hs=function(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0}return h+':'+s.length},vis=function(e){return e.getClientRects().length>0};
+        /* cena: balcão com porta e gavetas, aéreo, pedra com cuba, geladeira e painel */
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();
+        newTpl(T('Balcão porta + gavetas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Balcão da pia (cuba)'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Aéreo 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}
+        S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);try{apAdd('geladeira',0)}catch(_){}S.mods[0].tl=S.mods[0].tr=true;S.m=S.mods[0];draw();await W(900);
+        var Z0=JSON.stringify(snapState());
+        var MI=+(window.C30MI||0),volta=async function(t){try{[].forEach.call(document.body.children,function(e){if(!e.dataset||e.tagName==='SCRIPT'||e.tagName==='STYLE')return;if(!e.dataset.c30)e.dataset.c30='1';/* janela criada depois: fecha */if(e.dataset.c30==='1'){if(!e.hidden)e.hidden=true}else if(e.hidden)e.hidden=false})}catch(_){}/* a troca de parede agora fica sempre no cabeçalho (15/11): volta pra parede do fundo antes de restaurar, senão o teste seguinte fica na parede do lado */try{if(window.wvGo)wvGo('f')}catch(_){}UNDOING=true;try{loadState(JSON.parse(Z0))}finally{UNDOING=false}try{if(window.SOLO2)soloOff()}catch(_){}try{var v3=document.getElementById('v3');if(v3&&!v3.hidden)document.getElementById('v3x').click()}catch(_){}try{if(window.secAbreTudo)secAbreTudo()}catch(_){}S.m=S.mods[MI];S.sv=0;S.tab=t;LAST='mod';draw();panel();await W(25);if(window.ABRE)await window.ABRE()};
+        [].forEach.call(document.body.children,function(e){e.dataset.c30=e.hidden?'1':'0'});
+        var foto=function(){var z=snapState();delete z.trena;return hs(JSON.stringify(z))};
+        var X3=function(){try{var v3=document.getElementById('v3');if(!v3||v3.hidden)return '';var s=0,B=__boxes();for(var i=0;i<B.length;i++){s+=B[i].x0+B[i].y0*3+B[i].z1*7+(B[i].a||0)*11}return JSON.stringify(org3api.cam())+'/'+B.length+'/'+Math.round(s)}catch(_){return 'x'}};var cena=function(){var b=[].map.call(document.body.children,function(e){return (e.id||e.tagName)+(vis(e)?'+':'-')}).join(',');var a=document.activeElement;return [foto(),hs(document.getElementById('bd').innerHTML),hs(document.getElementById('svg').innerHTML),hs(b),TN,EXT,S.tab,S.sv,(a&&a!==document.body?(a.tagName+(a.id||'')+(a.dataset?JSON.stringify(a.dataset):'')):''),(document.getElementById('tabs')||{}).innerHTML?hs(document.getElementById('tabs').innerHTML):'',window.scrollY,RAIZ().map(function(r){return r?hs(r.innerHTML):''}).join(','),X3()].join('|')};
+        var rot=function(e){var d=e.dataset?Object.keys(e.dataset).filter(function(k){return k!=='c30'&&k!=='secf'}).map(function(k){return k+'='+String(e.dataset[k]).slice(0,18)}).join(','):'';var tx=(e.tagName==='INPUT'||e.tagName==='SELECT')?((e.closest('.g,.chk,label')||e.parentNode).textContent||'').trim():(e.textContent||'').trim();var an=e;while(an&&an!==document.body&&!an.id)an=an.parentNode;return e.tagName.toLowerCase()+(e.type?':'+e.type:'')+(e.id?'#'+e.id:(an&&an.id?'@'+an.id:''))+'['+d+'] «'+tx.replace(/\s+/g,' ').slice(0,34)+'»'};
+        var RAIZ=function(){return [document.getElementById('bd')]},FORA=null;var lista=function(){var o=[],seen=new Set();RAIZ().forEach(function(bd){if(!bd)return;[].forEach.call(bd.querySelectorAll('button,input,select,textarea'),function(e){if(vis(e)&&!e.disabled&&!e.readOnly&&!(FORA&&e.closest(FORA))){o.push(e);seen.add(e)}});
+          [].forEach.call(bd.querySelectorAll('*'),function(e){if(seen.has(e)||!vis(e)||e.closest('button,select,label input')||(FORA&&e.closest(FORA))||e.closest('svg'))return;var cs=getComputedStyle(e);if(cs.cursor!=='pointer')return;if(e.querySelector('button,input,select,textarea'))return;var p=e.parentNode;if(p&&p!==bd&&getComputedStyle(p).cursor==='pointer'&&!p.querySelector('button,input,select,textarea'))return;o.push(e)})});return o};
+        var age=async function(e){var tg=e.tagName,ty=e.type;if(tg==='SELECT'){var i=e.selectedIndex,n=e.options.length;if(n<2)return 'select com 1 opção';e.selectedIndex=(i+1)%n;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&(ty==='checkbox'||ty==='radio'))e.click();
+          else if(tg==='INPUT'&&ty==='range'){var v=+e.value,mx=+e.max||100,mn=+e.min||0;e.value=String(v+(+e.step||1)<=mx?v+(+e.step||1):Math.max(mn,v-(+e.step||1)));e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&ty==='color'){e.value=e.value==='#123456'?'#654321':'#123456';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
+          else e.click();return ''};
+        
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
+        var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
+          var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
+          var pares=function(L){var c={},o=[];L.forEach(function(e){var k=rot(e);c[k]=c[k]||0;o.push([k,c[k]++])});return o};
+          var pega=async function(it){await volta(aba);var el=acha(lista(),it.k,it.idx);if(el)return el;/* refaz o caminho; botão de abrir/fechar pode já estar aberto: confere a cada passo e, se fechou, toca de novo */for(var s=0;s<(it.vias||[]).length;s++){var e=acha(lista(),it.vias[s].k,it.vias[s].idx);if(e){try{await age(e)}catch(_){}await W(120)}el=acha(lista(),it.k,it.idx);if(el)return el}for(var s2=(it.vias||[]).length-1;s2>=0;s2--){var e9=acha(lista(),it.vias[s2].k,it.vias[s2].idx);if(e9){try{await age(e9)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}}if((it.vias||[]).length)return null;
+            /* a tela ficou em outra vista (sub-aba que não volta sozinha): tenta os botões de troca conhecidos e os irmãos deles */
+            var ks=[];NAV.forEach(function(q){q.ks.forEach(function(x){if(ks.indexOf(x)<0)ks.push(x)})});var cand=pares(lista().filter(function(o){var c=chaves(o);return c.length&&c.every(function(x){return ks.indexOf(x)>=0})}));
+            for(var q2=0;q2<cand.length&&q2<8;q2++){var e3=acha(lista(),cand[q2][0],cand[q2][1]);if(!e3)continue;try{await age(e3)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}
+            return null};
+          await volta(aba);var fila=pares(lista()).map(function(q){return {k:q[0],idx:q[1],vias:[]}}),visto={},pend={},nb=fila.length,tv0=0;fila.forEach(function(q){visto[q.k+'#'+q.idx]=1});var P_=window.PARTE&&PARTE[nome];fila.forEach(function(q,i){q.r=i});if(P_){fila=fila.filter(function(q){return P_.r.some(function(g){return q.r>=g[0]&&q.r<g[1]})});nb=fila.length}var CNT_={};var pp_=function(n,it){n.r=it.r;if(!it.vias.length){CNT_[it.r]=CNT_[it.r]||0;n.o=CNT_[it.r]++}else n.o=it.o;if(!P_)return n;var ok=P_.r.some(function(g){return n.r>=g[0]&&n.r<g[1]&&n.o>=(g[2]||0)&&n.o<(g[3]===undefined?1e9:g[3])});return ok?n:null};
+          for(var i=0;i<fila.length;i++){var it=fila[i],k=it.k,idx=it.idx;if(i>=nb){if(!tv0)tv0=Date.now();if(Date.now()-tv0>ORC)break}
+            var el=await pega(it);if(!el){/* estava numa vista de dentro (sub-aba) que mudou: fica esperando ser achado de novo pelo caminho certo */if(!it.vias.length)pend[k+'#'+idx]=1;else (window.__na=window.__na||[]).push(nome+' › '+k.slice(0,60));continue}
+            var c0=cena(),obs='';try{obs=await age(el)}catch(e){exc.push(k+': '+String(e).slice(0,80));continue}await W(90);var c1=cena();n++;(window.__TST=window.__TST||[]).push(nome+' › '+(it.vias||[]).map(function(v){return v.k+'#'+v.idx}).concat([k+'#'+idx]).join(' » '));
+            if(c0===c1){await W(400);c1=cena()}
+            if(c0!==c1&&it.vias.length<2){/* só trocou o que aparece (projeto igual, nenhuma janela nova)? os controles novos entram na fila */var A0=c0.split('|'),A1=c1.split('|');if(A0[0]===A1[0]&&A0[3]===A1[3]&&A0[6]===A1[6]&&A0[12]===A1[12]){var nv=pares(lista()).filter(function(q){return !visto[q[0]+'#'+q[1]]||pend[q[0]+'#'+q[1]]}).slice(0,SUBCAP);if(nv.length){NAV.push({k:k,idx:idx,ks:chaves(el)});nv.forEach(function(q){visto[q[0]+'#'+q[1]]=1;delete pend[q[0]+'#'+q[1]];(function(n_){if(n_)fila.push(n_)})(pp_({k:q[0],idx:q[1],vias:it.vias.concat([{k:k,idx:idx}])},it))})}}}
+            if(c0===c1&&el.dataset){var ks0=chaves(el),irm=null;if(ks0.length){var L3=lista();for(var q=0;q<L3.length&&!irm;q++){var o=L3[q];if(o!==el&&o.tagName===el.tagName&&o.dataset&&ks0.every(function(kk){return o.dataset[kk]!==undefined})&&ks0.some(function(kk){return o.dataset[kk]!==el.dataset[kk]}))irm=o}}
+              if(irm){try{await age(irm)}catch(_){}await W(120);var L4=lista(),el2=null;for(var j2=0;j2<L4.length;j2++){if(L4[j2].dataset&&L4[j2].tagName===el.tagName&&ks0.every(function(kk){return L4[j2].dataset[kk]===el.dataset[kk]})){el2=L4[j2];break}}if(el2){var c4=cena();try{await age(el2)}catch(_){}await W(120);if(cena()!==c4)c1='mudou'}else c1='mudou(sumiu)'}
+              else if(/\b(sel|on|ativo)\b/.test(el.className||''))c1='já é a escolhida (única)'}
+            if(c0===c1&&el.tagName==='BUTTON'){/* pode depender do estado (ex.: diminuir o zoom sem ter aumentado): aperta antes cada vizinho e tenta de novo */var viz=[].filter.call((el.parentNode||{}).children||[],function(s){return s!==el&&vis(s)&&(s.tagName==='BUTTON'||getComputedStyle(s).cursor==='pointer')}).slice(0,6).map(rot);
+              for(var v=0;v<viz.length&&c0===c1;v++){var e5=await pega(it);if(!e5)break;var sv=null;lista().forEach(function(o){if(!sv&&rot(o)===viz[v])sv=o});if(!sv)continue;try{await age(sv)}catch(_){}await W(150);if(!document.body.contains(e5)||!vis(e5)){e5=acha(lista(),k,idx);if(!e5)continue}var c6=cena();try{await age(e5)}catch(_){}await W(150);if(cena()!==c6)c1='mudou depois de '+viz[v]}}
+            if(c0===c1&&el.tagName==='BUTTON'){/* botão de ajustar/voltar a vista: só faz diferença se a vista estiver mexida → aumenta o zoom antes */var ez=await pega(it);if(ez){var zm=[].filter.call(document.querySelectorAll('button'),function(b){return vis(b)&&/^[＋+]$/.test((b.textContent||'').trim())})[0];if(zm){try{zm.click();zm.click()}catch(_){}await W(150);if(document.body.contains(ez)&&vis(ez)){var cz=cena();try{await age(ez)}catch(_){}await W(200);if(cena()!==cz)c1='mudou depois do zoom'}}}}
+            if(c0===c1&&el.tagName==='BUTTON'&&/Desfazer|Refazer|[↶↷]/.test((el.title||'')+' '+(el.getAttribute('aria-label')||'')+' '+(el.textContent||''))){/* desfazer/refazer só faz diferença se tiver o que desfazer/refazer: faz uma mexida antes */var eu=await pega(it);if(eu){var refaz=/Refazer|↷/.test((eu.title||'')+(eu.textContent||''));try{snap();S.mods[0].x=S.mods[0].x+10;draw();await W(950);if(refaz){document.getElementById('und').click();await W(150)}}catch(_){}if(document.body.contains(eu)){var cu=cena();try{await age(eu)}catch(_){}await W(200);if(cena()!==cu)c1='mudou com história pra desfazer/refazer'}}}
+            if(c0===c1){/* pode ser botão que só rola a tela até um lugar */var e7=await pega(it);if(e7){var rsig=function(){var o=[];RAIZ().forEach(function(r){if(!r)return;var all=r.querySelectorAll('*');for(var z=0;z<all.length&&o.length<80;z+=Math.max(1,Math.floor(all.length/80))){var b=all[z].getBoundingClientRect();o.push(Math.round(b.top)+','+Math.round(b.left))}});return o.join(';')},q0=rsig();await W(350);if(rsig()===q0){try{await age(e7)}catch(_){}await W(800);if(rsig()!==q0)c1='rolou'}}}
+            if(c0===c1&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA')&&el.id&&!/^(checkbox|radio|range|color)$/.test(el.type||'')){if(!window.__SRC){var sx='';[].forEach.call(document.scripts,function(sc){sx+=sc.textContent||''});window.__SRC=sx}var idq=el.id.replace(/[^A-Za-z0-9_-]/g,'');if(new RegExp("\\$\\('"+idq+"'\\)|getElementById\\('"+idq+"'\\)|#"+idq+"\\b|\\.id===?'"+idq+"'").test(window.__SRC))c1='campo de formulário lido pelo código'}
+            if(c0===c1)mortos.push(nome+' › '+k+(obs?' ('+obs+')':''))}
+          /* controle de sub-aba de dentro que o teste não conseguiu abrir de novo sozinho: fica anotado como não testado (não é defeito do app) */Object.keys(pend).forEach(function(q){(window.__na=window.__na||[]).push(nome+' › '+q.slice(0,60))});
+          return {n:n,mortos:mortos,exc:exc,extras:fila.length-nb}};
+        
+        var CAP=1e9,_l0=lista;lista=function(){return _l0().slice(0,CAP)};
+        /* setas e sinais que parecem de tocar (⌃ ⌄ › ‹ ▸ ▾ ▼ ▲ ► ◀ ⋯ ⋮ ☰ ✕) e não estão dentro de botão nem de coisa clicável: fazem alguma coisa? */
+        var GL=/^[⌃⌄›‹»«▸▾▼▲►◀⋯⋮☰≡✕✖>]$/;
+        var setas=function(roots){var o=[];roots.forEach(function(r){if(!r)return;var tw=document.createTreeWalker(r,NodeFilter.SHOW_TEXT,null),n;while((n=tw.nextNode())){var tx=(n.nodeValue||'').trim();if(!GL.test(tx))continue;var e=n.parentNode;if(!e||!vis(e)||e.closest('svg,canvas,script,style'))continue;if((e.textContent||'').trim()!==tx)continue;o.push(e)}});return o};
+        var clicavel=function(e){for(var k=0,p=e;p&&p!==document.body&&k<4;k++,p=p.parentNode){if(/^(BUTTON|A|LABEL|SELECT|INPUT|SUMMARY)$/.test(p.tagName)||getComputedStyle(p).cursor==='pointer')return p}return null};
+        var out=[],tot=0,enf=[];
+        var olha=async function(nome,aba,roots){RAIZ=roots;await volta(aba);var L=setas(roots()),n=L.length;tot+=n;for(var i=0;i<n;i++){await volta(aba);var e=setas(roots())[i];if(!e)continue;var alvo=clicavel(e),c0=cena();try{(alvo||e).click()}catch(_){}await W(120);var c1=cena();if(c0===c1){await W(400);c1=cena()}if(c0===c1){var ctx=((e.parentNode||e).textContent||'').replace(/\s+/g,' ').trim().slice(0,46);enf.push(nome+' › «'+e.textContent.trim()+'» em "'+ctx+'"'+(alvo?' (dentro de '+alvo.tagName.toLowerCase()+')':' (sem nada clicável em volta)'))}}};
+        
+        var totc=0,M=[],EX=[],porTela=[];
+        var tela=async function(nome,abre,raiz,fora,cap){if(window.PARTE&&!PARTE[nome])return;window.ABRE=abre;RAIZ=raiz;FORA=fora||null;CAP=cap||1e9;var r=await varre(nome,0);totc+=r.n;M=M.concat(r.mortos);EX=EX.concat(r.exc);porTela.push(nome+' '+r.n);CAP=1e9;if(!window.PARTE||PARTE[nome].setas)await olha(nome,0,raiz)};
+        var el=function(id){return function(){return [document.getElementById(id)]}};
+        var MINC=45;
+        /* tela principal (barra de cima, botões do 2D, abas), 3D, Clientes e Valores: todo controle faz alguma coisa e nenhuma seta é só desenho */
+        await tela('3D',async function(){draw();open3D();await W(380)},el('v3'),'canvas');
+        await tela('Valores',async function(){document.getElementById('vlb').click();await W(350)},el('vlm'));
+        
+        window.ABRE=null;FORA=null;RAIZ=function(){return [document.getElementById('bd')]};await volta(0);
+        R.telas=porTela.length;R.porTela=porTela.join(' · ');R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;R.testados=(window.__TST||[]).join('\n');window.PARTE=null;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["telas"] as? Int, 1)
         XCTAssertEqual(o["testouBastante"] as? Bool, true)
         XCTAssertEqual(o["semFuncao"] as? String, "0")
         XCTAssertEqual(o["setasSoDeEnfeite"] as? String, "0")
@@ -8948,9 +9214,14 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
-    func testNadaDeEnfeiteAjustes() async throws {
+    // NADA-DIVIDIDO (Chefe 28/11): com a exploração completa (ORC=Infinity) o teste inteiro passava de 120 s a 430 ("não terminou"). Dividido em partes
+    // abaixo de 90 s a 430, sem aumentar limite: cada parte testa uma faixa dos controles de partida da tela (window.PARTE: [raiz_de, raiz_ate, sub_de, sub_ate];
+    // sub = controles do 1º nível que aparecem a partir daquela raiz, os de baixo vão junto do pai) e juntas cobrem a lista do teste inteiro (prova no HISTORICO_ERROS).
+    // testouBastante: mínimo de cada parte (a soma é maior que os 30 do teste inteiro).
+    func testNadaDeEnfeiteAjustesParte1() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.PARTE={"Ajustes": {"setas": 0, "r": [[0, 1], [1, 2, 0, 2], [2, 14]]}};window.__TST=[];
         window.MINI3OFF=1;PR.setupDone=1;var TN=0;var toast0=window.toast;window.toast=function(){TN++};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         var EXT=0;try{window.print=function(){EXT++};window.open=function(){EXT++;return null};var ic0=HTMLInputElement.prototype.click;HTMLInputElement.prototype.click=function(){if(this.type==='file'){EXT++;return}return ic0.apply(this,arguments)};if(window.ArqueApp)Object.keys(window.ArqueApp).forEach(function(k){var f=window.ArqueApp[k];if(typeof f==='function')window.ArqueApp[k]=function(){EXT++;try{return f.apply(window.ArqueApp,arguments)}catch(_){}}});if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText=function(){EXT++;return Promise.resolve()}}}catch(_){}
@@ -8984,12 +9255,12 @@ final class EditorWebKitTests: XCTestCase {
             var ks=[];NAV.forEach(function(q){q.ks.forEach(function(x){if(ks.indexOf(x)<0)ks.push(x)})});var cand=pares(lista().filter(function(o){var c=chaves(o);return c.length&&c.every(function(x){return ks.indexOf(x)>=0})}));
             for(var q2=0;q2<cand.length&&q2<8;q2++){var e3=acha(lista(),cand[q2][0],cand[q2][1]);if(!e3)continue;try{await age(e3)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}
             return null};
-          await volta(aba);var fila=pares(lista()).map(function(q){return {k:q[0],idx:q[1],vias:[]}}),visto={},pend={},nb=fila.length,tv0=0;fila.forEach(function(q){visto[q.k+'#'+q.idx]=1});
+          await volta(aba);var fila=pares(lista()).map(function(q){return {k:q[0],idx:q[1],vias:[]}}),visto={},pend={},nb=fila.length,tv0=0;fila.forEach(function(q){visto[q.k+'#'+q.idx]=1});var P_=window.PARTE&&PARTE[nome];fila.forEach(function(q,i){q.r=i});if(P_){fila=fila.filter(function(q){return P_.r.some(function(g){return q.r>=g[0]&&q.r<g[1]})});nb=fila.length}var CNT_={};var pp_=function(n,it){n.r=it.r;if(!it.vias.length){CNT_[it.r]=CNT_[it.r]||0;n.o=CNT_[it.r]++}else n.o=it.o;if(!P_)return n;var ok=P_.r.some(function(g){return n.r>=g[0]&&n.r<g[1]&&n.o>=(g[2]||0)&&n.o<(g[3]===undefined?1e9:g[3])});return ok?n:null};
           for(var i=0;i<fila.length;i++){var it=fila[i],k=it.k,idx=it.idx;if(i>=nb){if(!tv0)tv0=Date.now();if(Date.now()-tv0>ORC)break}
             var el=await pega(it);if(!el){/* estava numa vista de dentro (sub-aba) que mudou: fica esperando ser achado de novo pelo caminho certo */if(!it.vias.length)pend[k+'#'+idx]=1;else (window.__na=window.__na||[]).push(nome+' › '+k.slice(0,60));continue}
-            var c0=cena(),obs='';try{obs=await age(el)}catch(e){exc.push(k+': '+String(e).slice(0,80));continue}await W(90);var c1=cena();n++;
+            var c0=cena(),obs='';try{obs=await age(el)}catch(e){exc.push(k+': '+String(e).slice(0,80));continue}await W(90);var c1=cena();n++;(window.__TST=window.__TST||[]).push(nome+' › '+(it.vias||[]).map(function(v){return v.k+'#'+v.idx}).concat([k+'#'+idx]).join(' » '));
             if(c0===c1){await W(400);c1=cena()}
-            if(c0!==c1&&it.vias.length<2){/* só trocou o que aparece (projeto igual, nenhuma janela nova)? os controles novos entram na fila */var A0=c0.split('|'),A1=c1.split('|');if(A0[0]===A1[0]&&A0[3]===A1[3]&&A0[6]===A1[6]&&A0[12]===A1[12]){var nv=pares(lista()).filter(function(q){return !visto[q[0]+'#'+q[1]]||pend[q[0]+'#'+q[1]]}).slice(0,SUBCAP);if(nv.length){NAV.push({k:k,idx:idx,ks:chaves(el)});nv.forEach(function(q){visto[q[0]+'#'+q[1]]=1;delete pend[q[0]+'#'+q[1]];fila.push({k:q[0],idx:q[1],vias:it.vias.concat([{k:k,idx:idx}])})})}}}
+            if(c0!==c1&&it.vias.length<2){/* só trocou o que aparece (projeto igual, nenhuma janela nova)? os controles novos entram na fila */var A0=c0.split('|'),A1=c1.split('|');if(A0[0]===A1[0]&&A0[3]===A1[3]&&A0[6]===A1[6]&&A0[12]===A1[12]){var nv=pares(lista()).filter(function(q){return !visto[q[0]+'#'+q[1]]||pend[q[0]+'#'+q[1]]}).slice(0,SUBCAP);if(nv.length){NAV.push({k:k,idx:idx,ks:chaves(el)});nv.forEach(function(q){visto[q[0]+'#'+q[1]]=1;delete pend[q[0]+'#'+q[1]];(function(n_){if(n_)fila.push(n_)})(pp_({k:q[0],idx:q[1],vias:it.vias.concat([{k:k,idx:idx}])},it))})}}}
             if(c0===c1&&el.dataset){var ks0=chaves(el),irm=null;if(ks0.length){var L3=lista();for(var q=0;q<L3.length&&!irm;q++){var o=L3[q];if(o!==el&&o.tagName===el.tagName&&o.dataset&&ks0.every(function(kk){return o.dataset[kk]!==undefined})&&ks0.some(function(kk){return o.dataset[kk]!==el.dataset[kk]}))irm=o}}
               if(irm){try{await age(irm)}catch(_){}await W(120);var L4=lista(),el2=null;for(var j2=0;j2<L4.length;j2++){if(L4[j2].dataset&&L4[j2].tagName===el.tagName&&ks0.every(function(kk){return L4[j2].dataset[kk]===el.dataset[kk]})){el2=L4[j2];break}}if(el2){var c4=cena();try{await age(el2)}catch(_){}await W(120);if(cena()!==c4)c1='mudou'}else c1='mudou(sumiu)'}
               else if(/\b(sel|on|ativo)\b/.test(el.className||''))c1='já é a escolhida (única)'}
@@ -9012,14 +9283,186 @@ final class EditorWebKitTests: XCTestCase {
         var olha=async function(nome,aba,roots){RAIZ=roots;await volta(aba);var L=setas(roots()),n=L.length;tot+=n;for(var i=0;i<n;i++){await volta(aba);var e=setas(roots())[i];if(!e)continue;var alvo=clicavel(e),c0=cena();try{(alvo||e).click()}catch(_){}await W(120);var c1=cena();if(c0===c1){await W(400);c1=cena()}if(c0===c1){var ctx=((e.parentNode||e).textContent||'').replace(/\s+/g,' ').trim().slice(0,46);enf.push(nome+' › «'+e.textContent.trim()+'» em "'+ctx+'"'+(alvo?' (dentro de '+alvo.tagName.toLowerCase()+')':' (sem nada clicável em volta)'))}}};
         
         var totc=0,M=[],EX=[],porTela=[];
-        var tela=async function(nome,abre,raiz,fora,cap){window.ABRE=abre;RAIZ=raiz;FORA=fora||null;CAP=cap||1e9;var r=await varre(nome,0);totc+=r.n;M=M.concat(r.mortos);EX=EX.concat(r.exc);porTela.push(nome+' '+r.n);CAP=1e9;await olha(nome,0,raiz)};
+        var tela=async function(nome,abre,raiz,fora,cap){if(window.PARTE&&!PARTE[nome])return;window.ABRE=abre;RAIZ=raiz;FORA=fora||null;CAP=cap||1e9;var r=await varre(nome,0);totc+=r.n;M=M.concat(r.mortos);EX=EX.concat(r.exc);porTela.push(nome+' '+r.n);CAP=1e9;if(!window.PARTE||PARTE[nome].setas)await olha(nome,0,raiz)};
+        var el=function(id){return function(){return [document.getElementById(id)]}};
+        var MINC=25;
+        /* ⚙ Ajustes: todo controle faz alguma coisa e nenhuma seta é só desenho */
+        await tela('Ajustes',async function(){stdOpen(0);await W(200)},el('stdm'),null,50);
+        
+        window.ABRE=null;FORA=null;RAIZ=function(){return [document.getElementById('bd')]};await volta(0);
+        R.telas=porTela.length;R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;R.testados=(window.__TST||[]).join('\n');window.PARTE=null;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["telas"] as? Int, 1)
+        XCTAssertEqual(o["testouBastante"] as? Bool, true)
+        XCTAssertEqual(o["semFuncao"] as? String, "0")
+        XCTAssertEqual(o["setasSoDeEnfeite"] as? String, "0")
+        XCTAssertEqual(o["quebrou"] as? String, "0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // NADA-DIVIDIDO (Chefe 28/11): com a exploração completa (ORC=Infinity) o teste inteiro passava de 120 s a 430 ("não terminou"). Dividido em partes
+    // abaixo de 90 s a 430, sem aumentar limite: cada parte testa uma faixa dos controles de partida da tela (window.PARTE: [raiz_de, raiz_ate, sub_de, sub_ate];
+    // sub = controles do 1º nível que aparecem a partir daquela raiz, os de baixo vão junto do pai) e juntas cobrem a lista do teste inteiro (prova no HISTORICO_ERROS).
+    // testouBastante: mínimo de cada parte (a soma é maior que os 30 do teste inteiro).
+    func testNadaDeEnfeiteAjustesParte2_Comecar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.PARTE={"Ajustes": {"setas": 0, "r": [[1, 2, 2]]}};window.__TST=[];
+        window.MINI3OFF=1;PR.setupDone=1;var TN=0;var toast0=window.toast;window.toast=function(){TN++};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var EXT=0;try{window.print=function(){EXT++};window.open=function(){EXT++;return null};var ic0=HTMLInputElement.prototype.click;HTMLInputElement.prototype.click=function(){if(this.type==='file'){EXT++;return}return ic0.apply(this,arguments)};if(window.ArqueApp)Object.keys(window.ArqueApp).forEach(function(k){var f=window.ArqueApp[k];if(typeof f==='function')window.ArqueApp[k]=function(){EXT++;try{return f.apply(window.ArqueApp,arguments)}catch(_){}}});if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText=function(){EXT++;return Promise.resolve()}}}catch(_){}
+        try{var sf0=window.svFechar;window.svFechar=function(){EXT++;try{return sf0&&sf0.apply(this,arguments)}catch(_){}}}catch(_){}try{window.confirm=function(){EXT++;return false};window.alert=function(){EXT++};window.prompt=function(){EXT++;return null};if(navigator.share)navigator.share=function(){EXT++;return Promise.resolve()}}catch(_){}var hs=function(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0}return h+':'+s.length},vis=function(e){return e.getClientRects().length>0};
+        /* cena: balcão com porta e gavetas, aéreo, pedra com cuba, geladeira e painel */
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();
+        newTpl(T('Balcão porta + gavetas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Balcão da pia (cuba)'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Aéreo 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}
+        S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);try{apAdd('geladeira',0)}catch(_){}S.mods[0].tl=S.mods[0].tr=true;S.m=S.mods[0];draw();await W(900);
+        var Z0=JSON.stringify(snapState());
+        var MI=+(window.C30MI||0),volta=async function(t){try{[].forEach.call(document.body.children,function(e){if(!e.dataset||e.tagName==='SCRIPT'||e.tagName==='STYLE')return;if(!e.dataset.c30)e.dataset.c30='1';/* janela criada depois: fecha */if(e.dataset.c30==='1'){if(!e.hidden)e.hidden=true}else if(e.hidden)e.hidden=false})}catch(_){}/* a troca de parede agora fica sempre no cabeçalho (15/11): volta pra parede do fundo antes de restaurar, senão o teste seguinte fica na parede do lado */try{if(window.wvGo)wvGo('f')}catch(_){}UNDOING=true;try{loadState(JSON.parse(Z0))}finally{UNDOING=false}try{if(window.SOLO2)soloOff()}catch(_){}try{var v3=document.getElementById('v3');if(v3&&!v3.hidden)document.getElementById('v3x').click()}catch(_){}try{if(window.secAbreTudo)secAbreTudo()}catch(_){}S.m=S.mods[MI];S.sv=0;S.tab=t;LAST='mod';draw();panel();await W(25);if(window.ABRE)await window.ABRE()};
+        [].forEach.call(document.body.children,function(e){e.dataset.c30=e.hidden?'1':'0'});
+        var foto=function(){var z=snapState();delete z.trena;return hs(JSON.stringify(z))};
+        var X3=function(){try{var v3=document.getElementById('v3');if(!v3||v3.hidden)return '';var s=0,B=__boxes();for(var i=0;i<B.length;i++){s+=B[i].x0+B[i].y0*3+B[i].z1*7+(B[i].a||0)*11}return JSON.stringify(org3api.cam())+'/'+B.length+'/'+Math.round(s)}catch(_){return 'x'}};var cena=function(){var b=[].map.call(document.body.children,function(e){return (e.id||e.tagName)+(vis(e)?'+':'-')}).join(',');var a=document.activeElement;return [foto(),hs(document.getElementById('bd').innerHTML),hs(document.getElementById('svg').innerHTML),hs(b),TN,EXT,S.tab,S.sv,(a&&a!==document.body?(a.tagName+(a.id||'')+(a.dataset?JSON.stringify(a.dataset):'')):''),(document.getElementById('tabs')||{}).innerHTML?hs(document.getElementById('tabs').innerHTML):'',window.scrollY,RAIZ().map(function(r){return r?hs(r.innerHTML):''}).join(','),X3()].join('|')};
+        var rot=function(e){var d=e.dataset?Object.keys(e.dataset).filter(function(k){return k!=='c30'&&k!=='secf'}).map(function(k){return k+'='+String(e.dataset[k]).slice(0,18)}).join(','):'';var tx=(e.tagName==='INPUT'||e.tagName==='SELECT')?((e.closest('.g,.chk,label')||e.parentNode).textContent||'').trim():(e.textContent||'').trim();var an=e;while(an&&an!==document.body&&!an.id)an=an.parentNode;return e.tagName.toLowerCase()+(e.type?':'+e.type:'')+(e.id?'#'+e.id:(an&&an.id?'@'+an.id:''))+'['+d+'] «'+tx.replace(/\s+/g,' ').slice(0,34)+'»'};
+        var RAIZ=function(){return [document.getElementById('bd')]},FORA=null;var lista=function(){var o=[],seen=new Set();RAIZ().forEach(function(bd){if(!bd)return;[].forEach.call(bd.querySelectorAll('button,input,select,textarea'),function(e){if(vis(e)&&!e.disabled&&!e.readOnly&&!(FORA&&e.closest(FORA))){o.push(e);seen.add(e)}});
+          [].forEach.call(bd.querySelectorAll('*'),function(e){if(seen.has(e)||!vis(e)||e.closest('button,select,label input')||(FORA&&e.closest(FORA))||e.closest('svg'))return;var cs=getComputedStyle(e);if(cs.cursor!=='pointer')return;if(e.querySelector('button,input,select,textarea'))return;var p=e.parentNode;if(p&&p!==bd&&getComputedStyle(p).cursor==='pointer'&&!p.querySelector('button,input,select,textarea'))return;o.push(e)})});return o};
+        var age=async function(e){var tg=e.tagName,ty=e.type;if(tg==='SELECT'){var i=e.selectedIndex,n=e.options.length;if(n<2)return 'select com 1 opção';e.selectedIndex=(i+1)%n;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&(ty==='checkbox'||ty==='radio'))e.click();
+          else if(tg==='INPUT'&&ty==='range'){var v=+e.value,mx=+e.max||100,mn=+e.min||0;e.value=String(v+(+e.step||1)<=mx?v+(+e.step||1):Math.max(mn,v-(+e.step||1)));e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&ty==='color'){e.value=e.value==='#123456'?'#654321':'#123456';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
+          else e.click();return ''};
+        
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
+        var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
+          var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
+          var pares=function(L){var c={},o=[];L.forEach(function(e){var k=rot(e);c[k]=c[k]||0;o.push([k,c[k]++])});return o};
+          var pega=async function(it){await volta(aba);var el=acha(lista(),it.k,it.idx);if(el)return el;/* refaz o caminho; botão de abrir/fechar pode já estar aberto: confere a cada passo e, se fechou, toca de novo */for(var s=0;s<(it.vias||[]).length;s++){var e=acha(lista(),it.vias[s].k,it.vias[s].idx);if(e){try{await age(e)}catch(_){}await W(120)}el=acha(lista(),it.k,it.idx);if(el)return el}for(var s2=(it.vias||[]).length-1;s2>=0;s2--){var e9=acha(lista(),it.vias[s2].k,it.vias[s2].idx);if(e9){try{await age(e9)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}}if((it.vias||[]).length)return null;
+            /* a tela ficou em outra vista (sub-aba que não volta sozinha): tenta os botões de troca conhecidos e os irmãos deles */
+            var ks=[];NAV.forEach(function(q){q.ks.forEach(function(x){if(ks.indexOf(x)<0)ks.push(x)})});var cand=pares(lista().filter(function(o){var c=chaves(o);return c.length&&c.every(function(x){return ks.indexOf(x)>=0})}));
+            for(var q2=0;q2<cand.length&&q2<8;q2++){var e3=acha(lista(),cand[q2][0],cand[q2][1]);if(!e3)continue;try{await age(e3)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}
+            return null};
+          await volta(aba);var fila=pares(lista()).map(function(q){return {k:q[0],idx:q[1],vias:[]}}),visto={},pend={},nb=fila.length,tv0=0;fila.forEach(function(q){visto[q.k+'#'+q.idx]=1});var P_=window.PARTE&&PARTE[nome];fila.forEach(function(q,i){q.r=i});if(P_){fila=fila.filter(function(q){return P_.r.some(function(g){return q.r>=g[0]&&q.r<g[1]})});nb=fila.length}var CNT_={};var pp_=function(n,it){n.r=it.r;if(!it.vias.length){CNT_[it.r]=CNT_[it.r]||0;n.o=CNT_[it.r]++}else n.o=it.o;if(!P_)return n;var ok=P_.r.some(function(g){return n.r>=g[0]&&n.r<g[1]&&n.o>=(g[2]||0)&&n.o<(g[3]===undefined?1e9:g[3])});return ok?n:null};
+          for(var i=0;i<fila.length;i++){var it=fila[i],k=it.k,idx=it.idx;if(i>=nb){if(!tv0)tv0=Date.now();if(Date.now()-tv0>ORC)break}
+            var el=await pega(it);if(!el){/* estava numa vista de dentro (sub-aba) que mudou: fica esperando ser achado de novo pelo caminho certo */if(!it.vias.length)pend[k+'#'+idx]=1;else (window.__na=window.__na||[]).push(nome+' › '+k.slice(0,60));continue}
+            var c0=cena(),obs='';try{obs=await age(el)}catch(e){exc.push(k+': '+String(e).slice(0,80));continue}await W(90);var c1=cena();n++;(window.__TST=window.__TST||[]).push(nome+' › '+(it.vias||[]).map(function(v){return v.k+'#'+v.idx}).concat([k+'#'+idx]).join(' » '));
+            if(c0===c1){await W(400);c1=cena()}
+            if(c0!==c1&&it.vias.length<2){/* só trocou o que aparece (projeto igual, nenhuma janela nova)? os controles novos entram na fila */var A0=c0.split('|'),A1=c1.split('|');if(A0[0]===A1[0]&&A0[3]===A1[3]&&A0[6]===A1[6]&&A0[12]===A1[12]){var nv=pares(lista()).filter(function(q){return !visto[q[0]+'#'+q[1]]||pend[q[0]+'#'+q[1]]}).slice(0,SUBCAP);if(nv.length){NAV.push({k:k,idx:idx,ks:chaves(el)});nv.forEach(function(q){visto[q[0]+'#'+q[1]]=1;delete pend[q[0]+'#'+q[1]];(function(n_){if(n_)fila.push(n_)})(pp_({k:q[0],idx:q[1],vias:it.vias.concat([{k:k,idx:idx}])},it))})}}}
+            if(c0===c1&&el.dataset){var ks0=chaves(el),irm=null;if(ks0.length){var L3=lista();for(var q=0;q<L3.length&&!irm;q++){var o=L3[q];if(o!==el&&o.tagName===el.tagName&&o.dataset&&ks0.every(function(kk){return o.dataset[kk]!==undefined})&&ks0.some(function(kk){return o.dataset[kk]!==el.dataset[kk]}))irm=o}}
+              if(irm){try{await age(irm)}catch(_){}await W(120);var L4=lista(),el2=null;for(var j2=0;j2<L4.length;j2++){if(L4[j2].dataset&&L4[j2].tagName===el.tagName&&ks0.every(function(kk){return L4[j2].dataset[kk]===el.dataset[kk]})){el2=L4[j2];break}}if(el2){var c4=cena();try{await age(el2)}catch(_){}await W(120);if(cena()!==c4)c1='mudou'}else c1='mudou(sumiu)'}
+              else if(/\b(sel|on|ativo)\b/.test(el.className||''))c1='já é a escolhida (única)'}
+            if(c0===c1&&el.tagName==='BUTTON'){/* pode depender do estado (ex.: diminuir o zoom sem ter aumentado): aperta antes cada vizinho e tenta de novo */var viz=[].filter.call((el.parentNode||{}).children||[],function(s){return s!==el&&vis(s)&&(s.tagName==='BUTTON'||getComputedStyle(s).cursor==='pointer')}).slice(0,6).map(rot);
+              for(var v=0;v<viz.length&&c0===c1;v++){var e5=await pega(it);if(!e5)break;var sv=null;lista().forEach(function(o){if(!sv&&rot(o)===viz[v])sv=o});if(!sv)continue;try{await age(sv)}catch(_){}await W(150);if(!document.body.contains(e5)||!vis(e5)){e5=acha(lista(),k,idx);if(!e5)continue}var c6=cena();try{await age(e5)}catch(_){}await W(150);if(cena()!==c6)c1='mudou depois de '+viz[v]}}
+            if(c0===c1&&el.tagName==='BUTTON'){/* botão de ajustar/voltar a vista: só faz diferença se a vista estiver mexida → aumenta o zoom antes */var ez=await pega(it);if(ez){var zm=[].filter.call(document.querySelectorAll('button'),function(b){return vis(b)&&/^[＋+]$/.test((b.textContent||'').trim())})[0];if(zm){try{zm.click();zm.click()}catch(_){}await W(150);if(document.body.contains(ez)&&vis(ez)){var cz=cena();try{await age(ez)}catch(_){}await W(200);if(cena()!==cz)c1='mudou depois do zoom'}}}}
+            if(c0===c1&&el.tagName==='BUTTON'&&/Desfazer|Refazer|[↶↷]/.test((el.title||'')+' '+(el.getAttribute('aria-label')||'')+' '+(el.textContent||''))){/* desfazer/refazer só faz diferença se tiver o que desfazer/refazer: faz uma mexida antes */var eu=await pega(it);if(eu){var refaz=/Refazer|↷/.test((eu.title||'')+(eu.textContent||''));try{snap();S.mods[0].x=S.mods[0].x+10;draw();await W(950);if(refaz){document.getElementById('und').click();await W(150)}}catch(_){}if(document.body.contains(eu)){var cu=cena();try{await age(eu)}catch(_){}await W(200);if(cena()!==cu)c1='mudou com história pra desfazer/refazer'}}}
+            if(c0===c1){/* pode ser botão que só rola a tela até um lugar */var e7=await pega(it);if(e7){var rsig=function(){var o=[];RAIZ().forEach(function(r){if(!r)return;var all=r.querySelectorAll('*');for(var z=0;z<all.length&&o.length<80;z+=Math.max(1,Math.floor(all.length/80))){var b=all[z].getBoundingClientRect();o.push(Math.round(b.top)+','+Math.round(b.left))}});return o.join(';')},q0=rsig();await W(350);if(rsig()===q0){try{await age(e7)}catch(_){}await W(800);if(rsig()!==q0)c1='rolou'}}}
+            if(c0===c1&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA')&&el.id&&!/^(checkbox|radio|range|color)$/.test(el.type||'')){if(!window.__SRC){var sx='';[].forEach.call(document.scripts,function(sc){sx+=sc.textContent||''});window.__SRC=sx}var idq=el.id.replace(/[^A-Za-z0-9_-]/g,'');if(new RegExp("\\$\\('"+idq+"'\\)|getElementById\\('"+idq+"'\\)|#"+idq+"\\b|\\.id===?'"+idq+"'").test(window.__SRC))c1='campo de formulário lido pelo código'}
+            if(c0===c1)mortos.push(nome+' › '+k+(obs?' ('+obs+')':''))}
+          /* controle de sub-aba de dentro que o teste não conseguiu abrir de novo sozinho: fica anotado como não testado (não é defeito do app) */Object.keys(pend).forEach(function(q){(window.__na=window.__na||[]).push(nome+' › '+q.slice(0,60))});
+          return {n:n,mortos:mortos,exc:exc,extras:fila.length-nb}};
+        
+        var CAP=1e9,_l0=lista;lista=function(){return _l0().slice(0,CAP)};
+        /* setas e sinais que parecem de tocar (⌃ ⌄ › ‹ ▸ ▾ ▼ ▲ ► ◀ ⋯ ⋮ ☰ ✕) e não estão dentro de botão nem de coisa clicável: fazem alguma coisa? */
+        var GL=/^[⌃⌄›‹»«▸▾▼▲►◀⋯⋮☰≡✕✖>]$/;
+        var setas=function(roots){var o=[];roots.forEach(function(r){if(!r)return;var tw=document.createTreeWalker(r,NodeFilter.SHOW_TEXT,null),n;while((n=tw.nextNode())){var tx=(n.nodeValue||'').trim();if(!GL.test(tx))continue;var e=n.parentNode;if(!e||!vis(e)||e.closest('svg,canvas,script,style'))continue;if((e.textContent||'').trim()!==tx)continue;o.push(e)}});return o};
+        var clicavel=function(e){for(var k=0,p=e;p&&p!==document.body&&k<4;k++,p=p.parentNode){if(/^(BUTTON|A|LABEL|SELECT|INPUT|SUMMARY)$/.test(p.tagName)||getComputedStyle(p).cursor==='pointer')return p}return null};
+        var out=[],tot=0,enf=[];
+        var olha=async function(nome,aba,roots){RAIZ=roots;await volta(aba);var L=setas(roots()),n=L.length;tot+=n;for(var i=0;i<n;i++){await volta(aba);var e=setas(roots())[i];if(!e)continue;var alvo=clicavel(e),c0=cena();try{(alvo||e).click()}catch(_){}await W(120);var c1=cena();if(c0===c1){await W(400);c1=cena()}if(c0===c1){var ctx=((e.parentNode||e).textContent||'').replace(/\s+/g,' ').trim().slice(0,46);enf.push(nome+' › «'+e.textContent.trim()+'» em "'+ctx+'"'+(alvo?' (dentro de '+alvo.tagName.toLowerCase()+')':' (sem nada clicável em volta)'))}}};
+        
+        var totc=0,M=[],EX=[],porTela=[];
+        var tela=async function(nome,abre,raiz,fora,cap){if(window.PARTE&&!PARTE[nome])return;window.ABRE=abre;RAIZ=raiz;FORA=fora||null;CAP=cap||1e9;var r=await varre(nome,0);totc+=r.n;M=M.concat(r.mortos);EX=EX.concat(r.exc);porTela.push(nome+' '+r.n);CAP=1e9;if(!window.PARTE||PARTE[nome].setas)await olha(nome,0,raiz)};
         var el=function(id){return function(){return [document.getElementById(id)]}};
         var MINC=40;
         /* ⚙ Ajustes: todo controle faz alguma coisa e nenhuma seta é só desenho */
         await tela('Ajustes',async function(){stdOpen(0);await W(200)},el('stdm'),null,50);
         
         window.ABRE=null;FORA=null;RAIZ=function(){return [document.getElementById('bd')]};await volta(0);
-        R.telas=porTela.length;R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;return JSON.stringify(R);
+        R.telas=porTela.length;R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;R.testados=(window.__TST||[]).join('\n');window.PARTE=null;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["telas"] as? Int, 1)
+        XCTAssertEqual(o["testouBastante"] as? Bool, true)
+        XCTAssertEqual(o["semFuncao"] as? String, "0")
+        XCTAssertEqual(o["setasSoDeEnfeite"] as? String, "0")
+        XCTAssertEqual(o["quebrou"] as? String, "0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // NADA-DIVIDIDO (Chefe 28/11): com a exploração completa (ORC=Infinity) o teste inteiro passava de 120 s a 430 ("não terminou"). Dividido em partes
+    // abaixo de 90 s a 430, sem aumentar limite: cada parte testa uma faixa dos controles de partida da tela (window.PARTE: [raiz_de, raiz_ate, sub_de, sub_ate];
+    // sub = controles do 1º nível que aparecem a partir daquela raiz, os de baixo vão junto do pai) e juntas cobrem a lista do teste inteiro (prova no HISTORICO_ERROS).
+    // testouBastante: mínimo de cada parte (a soma é maior que os 30 do teste inteiro).
+    func testNadaDeEnfeiteAjustesParte3() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.PARTE={"Ajustes": {"setas": 1, "r": [[14, 1000000000.0]]}};window.__TST=[];
+        window.MINI3OFF=1;PR.setupDone=1;var TN=0;var toast0=window.toast;window.toast=function(){TN++};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var EXT=0;try{window.print=function(){EXT++};window.open=function(){EXT++;return null};var ic0=HTMLInputElement.prototype.click;HTMLInputElement.prototype.click=function(){if(this.type==='file'){EXT++;return}return ic0.apply(this,arguments)};if(window.ArqueApp)Object.keys(window.ArqueApp).forEach(function(k){var f=window.ArqueApp[k];if(typeof f==='function')window.ArqueApp[k]=function(){EXT++;try{return f.apply(window.ArqueApp,arguments)}catch(_){}}});if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText=function(){EXT++;return Promise.resolve()}}}catch(_){}
+        try{var sf0=window.svFechar;window.svFechar=function(){EXT++;try{return sf0&&sf0.apply(this,arguments)}catch(_){}}}catch(_){}try{window.confirm=function(){EXT++;return false};window.alert=function(){EXT++};window.prompt=function(){EXT++;return null};if(navigator.share)navigator.share=function(){EXT++;return Promise.resolve()}}catch(_){}var hs=function(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0}return h+':'+s.length},vis=function(e){return e.getClientRects().length>0};
+        /* cena: balcão com porta e gavetas, aéreo, pedra com cuba, geladeira e painel */
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();
+        newTpl(T('Balcão porta + gavetas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Balcão da pia (cuba)'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Aéreo 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}
+        S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);try{apAdd('geladeira',0)}catch(_){}S.mods[0].tl=S.mods[0].tr=true;S.m=S.mods[0];draw();await W(900);
+        var Z0=JSON.stringify(snapState());
+        var MI=+(window.C30MI||0),volta=async function(t){try{[].forEach.call(document.body.children,function(e){if(!e.dataset||e.tagName==='SCRIPT'||e.tagName==='STYLE')return;if(!e.dataset.c30)e.dataset.c30='1';/* janela criada depois: fecha */if(e.dataset.c30==='1'){if(!e.hidden)e.hidden=true}else if(e.hidden)e.hidden=false})}catch(_){}/* a troca de parede agora fica sempre no cabeçalho (15/11): volta pra parede do fundo antes de restaurar, senão o teste seguinte fica na parede do lado */try{if(window.wvGo)wvGo('f')}catch(_){}UNDOING=true;try{loadState(JSON.parse(Z0))}finally{UNDOING=false}try{if(window.SOLO2)soloOff()}catch(_){}try{var v3=document.getElementById('v3');if(v3&&!v3.hidden)document.getElementById('v3x').click()}catch(_){}try{if(window.secAbreTudo)secAbreTudo()}catch(_){}S.m=S.mods[MI];S.sv=0;S.tab=t;LAST='mod';draw();panel();await W(25);if(window.ABRE)await window.ABRE()};
+        [].forEach.call(document.body.children,function(e){e.dataset.c30=e.hidden?'1':'0'});
+        var foto=function(){var z=snapState();delete z.trena;return hs(JSON.stringify(z))};
+        var X3=function(){try{var v3=document.getElementById('v3');if(!v3||v3.hidden)return '';var s=0,B=__boxes();for(var i=0;i<B.length;i++){s+=B[i].x0+B[i].y0*3+B[i].z1*7+(B[i].a||0)*11}return JSON.stringify(org3api.cam())+'/'+B.length+'/'+Math.round(s)}catch(_){return 'x'}};var cena=function(){var b=[].map.call(document.body.children,function(e){return (e.id||e.tagName)+(vis(e)?'+':'-')}).join(',');var a=document.activeElement;return [foto(),hs(document.getElementById('bd').innerHTML),hs(document.getElementById('svg').innerHTML),hs(b),TN,EXT,S.tab,S.sv,(a&&a!==document.body?(a.tagName+(a.id||'')+(a.dataset?JSON.stringify(a.dataset):'')):''),(document.getElementById('tabs')||{}).innerHTML?hs(document.getElementById('tabs').innerHTML):'',window.scrollY,RAIZ().map(function(r){return r?hs(r.innerHTML):''}).join(','),X3()].join('|')};
+        var rot=function(e){var d=e.dataset?Object.keys(e.dataset).filter(function(k){return k!=='c30'&&k!=='secf'}).map(function(k){return k+'='+String(e.dataset[k]).slice(0,18)}).join(','):'';var tx=(e.tagName==='INPUT'||e.tagName==='SELECT')?((e.closest('.g,.chk,label')||e.parentNode).textContent||'').trim():(e.textContent||'').trim();var an=e;while(an&&an!==document.body&&!an.id)an=an.parentNode;return e.tagName.toLowerCase()+(e.type?':'+e.type:'')+(e.id?'#'+e.id:(an&&an.id?'@'+an.id:''))+'['+d+'] «'+tx.replace(/\s+/g,' ').slice(0,34)+'»'};
+        var RAIZ=function(){return [document.getElementById('bd')]},FORA=null;var lista=function(){var o=[],seen=new Set();RAIZ().forEach(function(bd){if(!bd)return;[].forEach.call(bd.querySelectorAll('button,input,select,textarea'),function(e){if(vis(e)&&!e.disabled&&!e.readOnly&&!(FORA&&e.closest(FORA))){o.push(e);seen.add(e)}});
+          [].forEach.call(bd.querySelectorAll('*'),function(e){if(seen.has(e)||!vis(e)||e.closest('button,select,label input')||(FORA&&e.closest(FORA))||e.closest('svg'))return;var cs=getComputedStyle(e);if(cs.cursor!=='pointer')return;if(e.querySelector('button,input,select,textarea'))return;var p=e.parentNode;if(p&&p!==bd&&getComputedStyle(p).cursor==='pointer'&&!p.querySelector('button,input,select,textarea'))return;o.push(e)})});return o};
+        var age=async function(e){var tg=e.tagName,ty=e.type;if(tg==='SELECT'){var i=e.selectedIndex,n=e.options.length;if(n<2)return 'select com 1 opção';e.selectedIndex=(i+1)%n;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&(ty==='checkbox'||ty==='radio'))e.click();
+          else if(tg==='INPUT'&&ty==='range'){var v=+e.value,mx=+e.max||100,mn=+e.min||0;e.value=String(v+(+e.step||1)<=mx?v+(+e.step||1):Math.max(mn,v-(+e.step||1)));e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&ty==='color'){e.value=e.value==='#123456'?'#654321':'#123456';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
+          else e.click();return ''};
+        
+        var SUBCAP=20,ORC=Infinity/* ESTAVEL (Chefe 28/11, homologação precisa de bateria determinística): antes ORC=8000 ms — quantos controles das vistas extras eram testados dependia da velocidade da rodada (botão com problema real às vezes entrava, às vezes não). Agora testa TODOS (a fila é finita: cada controle entra uma vez); mais rígido, nunca mais frouxo */;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
+        var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
+          var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
+          var pares=function(L){var c={},o=[];L.forEach(function(e){var k=rot(e);c[k]=c[k]||0;o.push([k,c[k]++])});return o};
+          var pega=async function(it){await volta(aba);var el=acha(lista(),it.k,it.idx);if(el)return el;/* refaz o caminho; botão de abrir/fechar pode já estar aberto: confere a cada passo e, se fechou, toca de novo */for(var s=0;s<(it.vias||[]).length;s++){var e=acha(lista(),it.vias[s].k,it.vias[s].idx);if(e){try{await age(e)}catch(_){}await W(120)}el=acha(lista(),it.k,it.idx);if(el)return el}for(var s2=(it.vias||[]).length-1;s2>=0;s2--){var e9=acha(lista(),it.vias[s2].k,it.vias[s2].idx);if(e9){try{await age(e9)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}}if((it.vias||[]).length)return null;
+            /* a tela ficou em outra vista (sub-aba que não volta sozinha): tenta os botões de troca conhecidos e os irmãos deles */
+            var ks=[];NAV.forEach(function(q){q.ks.forEach(function(x){if(ks.indexOf(x)<0)ks.push(x)})});var cand=pares(lista().filter(function(o){var c=chaves(o);return c.length&&c.every(function(x){return ks.indexOf(x)>=0})}));
+            for(var q2=0;q2<cand.length&&q2<8;q2++){var e3=acha(lista(),cand[q2][0],cand[q2][1]);if(!e3)continue;try{await age(e3)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}
+            return null};
+          await volta(aba);var fila=pares(lista()).map(function(q){return {k:q[0],idx:q[1],vias:[]}}),visto={},pend={},nb=fila.length,tv0=0;fila.forEach(function(q){visto[q.k+'#'+q.idx]=1});var P_=window.PARTE&&PARTE[nome];fila.forEach(function(q,i){q.r=i});if(P_){fila=fila.filter(function(q){return P_.r.some(function(g){return q.r>=g[0]&&q.r<g[1]})});nb=fila.length}var CNT_={};var pp_=function(n,it){n.r=it.r;if(!it.vias.length){CNT_[it.r]=CNT_[it.r]||0;n.o=CNT_[it.r]++}else n.o=it.o;if(!P_)return n;var ok=P_.r.some(function(g){return n.r>=g[0]&&n.r<g[1]&&n.o>=(g[2]||0)&&n.o<(g[3]===undefined?1e9:g[3])});return ok?n:null};
+          for(var i=0;i<fila.length;i++){var it=fila[i],k=it.k,idx=it.idx;if(i>=nb){if(!tv0)tv0=Date.now();if(Date.now()-tv0>ORC)break}
+            var el=await pega(it);if(!el){/* estava numa vista de dentro (sub-aba) que mudou: fica esperando ser achado de novo pelo caminho certo */if(!it.vias.length)pend[k+'#'+idx]=1;else (window.__na=window.__na||[]).push(nome+' › '+k.slice(0,60));continue}
+            var c0=cena(),obs='';try{obs=await age(el)}catch(e){exc.push(k+': '+String(e).slice(0,80));continue}await W(90);var c1=cena();n++;(window.__TST=window.__TST||[]).push(nome+' › '+(it.vias||[]).map(function(v){return v.k+'#'+v.idx}).concat([k+'#'+idx]).join(' » '));
+            if(c0===c1){await W(400);c1=cena()}
+            if(c0!==c1&&it.vias.length<2){/* só trocou o que aparece (projeto igual, nenhuma janela nova)? os controles novos entram na fila */var A0=c0.split('|'),A1=c1.split('|');if(A0[0]===A1[0]&&A0[3]===A1[3]&&A0[6]===A1[6]&&A0[12]===A1[12]){var nv=pares(lista()).filter(function(q){return !visto[q[0]+'#'+q[1]]||pend[q[0]+'#'+q[1]]}).slice(0,SUBCAP);if(nv.length){NAV.push({k:k,idx:idx,ks:chaves(el)});nv.forEach(function(q){visto[q[0]+'#'+q[1]]=1;delete pend[q[0]+'#'+q[1]];(function(n_){if(n_)fila.push(n_)})(pp_({k:q[0],idx:q[1],vias:it.vias.concat([{k:k,idx:idx}])},it))})}}}
+            if(c0===c1&&el.dataset){var ks0=chaves(el),irm=null;if(ks0.length){var L3=lista();for(var q=0;q<L3.length&&!irm;q++){var o=L3[q];if(o!==el&&o.tagName===el.tagName&&o.dataset&&ks0.every(function(kk){return o.dataset[kk]!==undefined})&&ks0.some(function(kk){return o.dataset[kk]!==el.dataset[kk]}))irm=o}}
+              if(irm){try{await age(irm)}catch(_){}await W(120);var L4=lista(),el2=null;for(var j2=0;j2<L4.length;j2++){if(L4[j2].dataset&&L4[j2].tagName===el.tagName&&ks0.every(function(kk){return L4[j2].dataset[kk]===el.dataset[kk]})){el2=L4[j2];break}}if(el2){var c4=cena();try{await age(el2)}catch(_){}await W(120);if(cena()!==c4)c1='mudou'}else c1='mudou(sumiu)'}
+              else if(/\b(sel|on|ativo)\b/.test(el.className||''))c1='já é a escolhida (única)'}
+            if(c0===c1&&el.tagName==='BUTTON'){/* pode depender do estado (ex.: diminuir o zoom sem ter aumentado): aperta antes cada vizinho e tenta de novo */var viz=[].filter.call((el.parentNode||{}).children||[],function(s){return s!==el&&vis(s)&&(s.tagName==='BUTTON'||getComputedStyle(s).cursor==='pointer')}).slice(0,6).map(rot);
+              for(var v=0;v<viz.length&&c0===c1;v++){var e5=await pega(it);if(!e5)break;var sv=null;lista().forEach(function(o){if(!sv&&rot(o)===viz[v])sv=o});if(!sv)continue;try{await age(sv)}catch(_){}await W(150);if(!document.body.contains(e5)||!vis(e5)){e5=acha(lista(),k,idx);if(!e5)continue}var c6=cena();try{await age(e5)}catch(_){}await W(150);if(cena()!==c6)c1='mudou depois de '+viz[v]}}
+            if(c0===c1&&el.tagName==='BUTTON'){/* botão de ajustar/voltar a vista: só faz diferença se a vista estiver mexida → aumenta o zoom antes */var ez=await pega(it);if(ez){var zm=[].filter.call(document.querySelectorAll('button'),function(b){return vis(b)&&/^[＋+]$/.test((b.textContent||'').trim())})[0];if(zm){try{zm.click();zm.click()}catch(_){}await W(150);if(document.body.contains(ez)&&vis(ez)){var cz=cena();try{await age(ez)}catch(_){}await W(200);if(cena()!==cz)c1='mudou depois do zoom'}}}}
+            if(c0===c1&&el.tagName==='BUTTON'&&/Desfazer|Refazer|[↶↷]/.test((el.title||'')+' '+(el.getAttribute('aria-label')||'')+' '+(el.textContent||''))){/* desfazer/refazer só faz diferença se tiver o que desfazer/refazer: faz uma mexida antes */var eu=await pega(it);if(eu){var refaz=/Refazer|↷/.test((eu.title||'')+(eu.textContent||''));try{snap();S.mods[0].x=S.mods[0].x+10;draw();await W(950);if(refaz){document.getElementById('und').click();await W(150)}}catch(_){}if(document.body.contains(eu)){var cu=cena();try{await age(eu)}catch(_){}await W(200);if(cena()!==cu)c1='mudou com história pra desfazer/refazer'}}}
+            if(c0===c1){/* pode ser botão que só rola a tela até um lugar */var e7=await pega(it);if(e7){var rsig=function(){var o=[];RAIZ().forEach(function(r){if(!r)return;var all=r.querySelectorAll('*');for(var z=0;z<all.length&&o.length<80;z+=Math.max(1,Math.floor(all.length/80))){var b=all[z].getBoundingClientRect();o.push(Math.round(b.top)+','+Math.round(b.left))}});return o.join(';')},q0=rsig();await W(350);if(rsig()===q0){try{await age(e7)}catch(_){}await W(800);if(rsig()!==q0)c1='rolou'}}}
+            if(c0===c1&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA')&&el.id&&!/^(checkbox|radio|range|color)$/.test(el.type||'')){if(!window.__SRC){var sx='';[].forEach.call(document.scripts,function(sc){sx+=sc.textContent||''});window.__SRC=sx}var idq=el.id.replace(/[^A-Za-z0-9_-]/g,'');if(new RegExp("\\$\\('"+idq+"'\\)|getElementById\\('"+idq+"'\\)|#"+idq+"\\b|\\.id===?'"+idq+"'").test(window.__SRC))c1='campo de formulário lido pelo código'}
+            if(c0===c1)mortos.push(nome+' › '+k+(obs?' ('+obs+')':''))}
+          /* controle de sub-aba de dentro que o teste não conseguiu abrir de novo sozinho: fica anotado como não testado (não é defeito do app) */Object.keys(pend).forEach(function(q){(window.__na=window.__na||[]).push(nome+' › '+q.slice(0,60))});
+          return {n:n,mortos:mortos,exc:exc,extras:fila.length-nb}};
+        
+        var CAP=1e9,_l0=lista;lista=function(){return _l0().slice(0,CAP)};
+        /* setas e sinais que parecem de tocar (⌃ ⌄ › ‹ ▸ ▾ ▼ ▲ ► ◀ ⋯ ⋮ ☰ ✕) e não estão dentro de botão nem de coisa clicável: fazem alguma coisa? */
+        var GL=/^[⌃⌄›‹»«▸▾▼▲►◀⋯⋮☰≡✕✖>]$/;
+        var setas=function(roots){var o=[];roots.forEach(function(r){if(!r)return;var tw=document.createTreeWalker(r,NodeFilter.SHOW_TEXT,null),n;while((n=tw.nextNode())){var tx=(n.nodeValue||'').trim();if(!GL.test(tx))continue;var e=n.parentNode;if(!e||!vis(e)||e.closest('svg,canvas,script,style'))continue;if((e.textContent||'').trim()!==tx)continue;o.push(e)}});return o};
+        var clicavel=function(e){for(var k=0,p=e;p&&p!==document.body&&k<4;k++,p=p.parentNode){if(/^(BUTTON|A|LABEL|SELECT|INPUT|SUMMARY)$/.test(p.tagName)||getComputedStyle(p).cursor==='pointer')return p}return null};
+        var out=[],tot=0,enf=[];
+        var olha=async function(nome,aba,roots){RAIZ=roots;await volta(aba);var L=setas(roots()),n=L.length;tot+=n;for(var i=0;i<n;i++){await volta(aba);var e=setas(roots())[i];if(!e)continue;var alvo=clicavel(e),c0=cena();try{(alvo||e).click()}catch(_){}await W(120);var c1=cena();if(c0===c1){await W(400);c1=cena()}if(c0===c1){var ctx=((e.parentNode||e).textContent||'').replace(/\s+/g,' ').trim().slice(0,46);enf.push(nome+' › «'+e.textContent.trim()+'» em "'+ctx+'"'+(alvo?' (dentro de '+alvo.tagName.toLowerCase()+')':' (sem nada clicável em volta)'))}}};
+        
+        var totc=0,M=[],EX=[],porTela=[];
+        var tela=async function(nome,abre,raiz,fora,cap){if(window.PARTE&&!PARTE[nome])return;window.ABRE=abre;RAIZ=raiz;FORA=fora||null;CAP=cap||1e9;var r=await varre(nome,0);totc+=r.n;M=M.concat(r.mortos);EX=EX.concat(r.exc);porTela.push(nome+' '+r.n);CAP=1e9;if(!window.PARTE||PARTE[nome].setas)await olha(nome,0,raiz)};
+        var el=function(id){return function(){return [document.getElementById(id)]}};
+        var MINC=28;
+        /* ⚙ Ajustes: todo controle faz alguma coisa e nenhuma seta é só desenho */
+        await tela('Ajustes',async function(){stdOpen(0);await W(200)},el('stdm'),null,50);
+        
+        window.ABRE=null;FORA=null;RAIZ=function(){return [document.getElementById('bd')]};await volta(0);
+        R.telas=porTela.length;R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;R.testados=(window.__TST||[]).join('\n');window.PARTE=null;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["telas"] as? Int, 1)
         XCTAssertEqual(o["testouBastante"] as? Bool, true)
@@ -10051,7 +10494,7 @@ final class EditorWebKitTests: XCTestCase {
         R.falhas=falhas.length+(falhas.length?': '+falhas.join(' | '):'');
         /* Android/computador: o click que chega depois do toque não escolhe de novo nem desfaz */
         loadState(initLimpo());S.env='quarto';S.room='quarto';draw();var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
-        newTpl(T('Armário alto livre · montar do zero'));await W(600);RG.sel=null;draw();var el=document.querySelector('#svg [data-rgr]');var r=el.getBoundingClientRect();var c0=window.__tapClick||0;await tap(el);var s1=JSON.stringify(RG.sel);
+        newTpl(T('Armário alto livre · montar do zero'));await W(600);RG.sel=null;draw();var el=document.querySelector('#svg [data-rgr]');/* ALTURA-667 (Chefe 28/11, ver testTocarEmQualquerMedidaDoVaoEDigitar): a 375×667 o alvo fica abaixo da dobra e a página rola até ele; o teste rola como a pessoa faria */try{el.scrollIntoView({block:'center'})}catch(_){}await W(20);var r=el.getBoundingClientRect();var c0=window.__tapClick||0;await tap(el);var s1=JSON.stringify(RG.sel);
         var el3=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);el3.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,clientX:r.left+r.width/2,clientY:r.top+r.height/2}));await W(100);
         R.cliqueDepoisDoToque='depois do toque '+s1+' · depois do click '+JSON.stringify(RG.sel)+' · click mandado pelo app quando o iPhone não manda: '+((window.__tapClick||0)>c0?'sim':'não');
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
@@ -10268,7 +10711,9 @@ final class EditorWebKitTests: XCTestCase {
         var cli=function(xm,ym){var sv=document.getElementById('svg'),g=document.getElementById('wvmir')||sv,pt=sv.createSVGPoint();pt.x=OX+xm*K;pt.y=OY+S.H*K-ym*K;var q=pt.matrixTransform(g.getScreenCTM());return [q.x,q.y]};
         var tap=function(c){var el=document.elementFromPoint(c[0],c[1])||document.getElementById('svg');['pointerdown','pointerup'].forEach(function(t){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:c[0],clientY:c[1],pointerId:7,isPrimary:true,pointerType:'touch'}))})};
         var menu=function(){var d=document.getElementById('vmenu');return d&&d.dataset.topgap!==undefined?d:null};
-        var dois=async function(m){if(window.SOLO2)soloOff();draw();var top=m.b+m.h,c=cli(m.x+m.w/2,(top+S.H)/2);tap(c);await W(120);tap(c);await W(450);return menu()};
+        /* VAO-LIVRE (Chefe 28/11, decisão B): a 375 o meio da faixa do aéreo encostado na direita fica embaixo do 🔓; a faixa continua alcançável fora dele. O ponto é o 1º livre (o desenho, não um botão) a partir do meio; onde o meio está livre, é o meio como antes */
+        var livre=function(m,y){for(var k=0;k<=20;k++){var f=0.5+(k%2?-1:1)*Math.ceil(k/2)*0.025;if(f<0.03||f>0.97)continue;var q=cli(m.x+m.w*f,y),el=document.elementFromPoint(q[0],q[1]);if(el&&el.closest&&el.closest('#svg'))return q}return cli(m.x+m.w/2,y)};
+        var dois=async function(m){if(window.SOLO2)soloOff();draw();var top=m.b+m.h,c=livre(m,(top+S.H)/2);tap(c);await W(120);tap(c);await W(450);return menu()};
         var bt=function(k){var b=menu()&&menu().querySelector('[data-tg="'+k+'"]');if(b)b.click();return !!b};
         var pn=function(){var a=S.rp[S.rp.length-1];return a?(a.liso?'liso':'ripado')+' '+a.x+'..'+(a.x+a.w)+' de '+a.b+' até '+(a.b+a.h)+' · afastado da parede '+(+a.af||0):'nenhum'};
         /* 1. aéreo: o menu tem as 3 opções */
@@ -10302,6 +10747,10 @@ final class EditorWebKitTests: XCTestCase {
         /* 7c. PEDIDO 56b: atrás nada; lado aberto vira L até a parede · encostado na parede ou em módulo alto, sem L */
         novo();newTpl(T('Aéreo 2 portas'));draw();if(window.SOLO2)soloOff();m=S.mods[0];m.x=1000;draw();await dois(m);bt('rip');bt('rip|f');draw();R.noMeioDaParede=cx();open3D();await W(200);var bb=__boxes().filter(function(b){return b.rpid===S.rp[0].id});R.ladoRipado3D=bb.filter(function(b){return b.z1<=S.rp[0].af+0.5&&Math.round(b.x1-b.x0)===22}).length+' ripas nas laterais · nada encostado na parede atrás do painel: '+(bb.some(function(b){return b.z0<1&&b.x1-b.x0>100})?'tem':'nada');
         novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];m.x=S.W-m.w;draw();await dois(m);bt('rip');bt('rip|f');draw();R.encostadoNaDireita=cx();
+        /* VAO-LIVRE: o toque no 🔓 não abre o vão de cima e os 2 toques na faixa livre não mexem no 🔓 */
+        novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];m.x=S.W-m.w;draw();var lk=function(){return S.mods.map(function(q){return q.lock?1:0}).join('')},L0=lk(),lb=document.getElementById('lockAll'),lr=lb.getBoundingClientRect(),lc=[lr.left+lr.width/2,lr.top+lr.height/2];
+        var elc=document.elementFromPoint(lc[0],lc[1]);if(elc&&elc.closest&&elc.closest('#lockAll'))lb.click();await W(300);var noCadeado=(menu()?'abriu o vão (ERRADO)':'não abre o vão')+' · cadeado '+(lk()!==L0?'mudou':'igual');if(lk()!==L0){lb.click();await W(200)}try{vmenuClose()}catch(_){}
+        var L1=lk();var dm=await dois(m);R.cadeadoXvao='toque no 🔓: '+noCadeado+' · 2 toques na faixa: '+(dm?'abre o vão':'NÃO ABRE')+' · cadeado '+(lk()===L1?'igual':'MUDOU');try{vmenuClose()}catch(_){}
         novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];m.x=1000;draw();newTpl(T('Aéreo 2 portas'));draw();var m2=S.mods[1];m2.x=m.x+m.w;m2.b=0;m2.h=S.H;draw();await dois(m);bt('rip');bt('rip|f');draw();R.coladoEmModuloAlto=cx();
         /* 8. na parede da esquerda também */
         novo();wvGo('e');draw();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[S.mods.length-1];await dois(m);bt('rip');bt('rip|c');R.paredeEsquerda=pn();wvGo('f');draw();R.guardadoNaEsquerda=snapState().rp.map(function(a){return (a.wall||'f')}).join(',');
@@ -10333,6 +10782,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["noMeioDaParede"] as? String, "corte 2 Base da lateral do L ripada (do painel até a parede) 100x322,8 Ripa da lateral do L 100x40 · L lateral esquerda,lateral direita · peças 3D começam em z Infinity")
         XCTAssertEqual(o["ladoRipado3D"] as? String, "8 ripas nas laterais · nada encostado na parede atrás do painel: nada")
         XCTAssertEqual(o["encostadoNaDireita"] as? String, "corte 1 Base da lateral do L ripada (do painel até a parede) 100x322,4 Ripa da lateral do L 100x40 · L lateral esquerda · peças 3D começam em z Infinity")
+        XCTAssertEqual(o["cadeadoXvao"] as? String, "toque no 🔓: não abre o vão · cadeado mudou · 2 toques na faixa: abre o vão · cadeado igual", "VAO-LIVRE (Chefe 28/11): o 🔓 faz só o dele e a faixa livre abre o vão sem mexer no 🔓")
         XCTAssertEqual(o["coladoEmModuloAlto"] as? String, "corte 1 Base da lateral do L ripada (do painel até a parede) 100x322,4 Ripa da lateral do L 100x40 · L lateral esquerda · peças 3D começam em z Infinity")
         XCTAssertEqual(o["paredeEsquerda"] as? String, "ripado 35..1035 de 2500 até 2600 · afastado da parede 0")
         XCTAssertEqual(o["guardadoNaEsquerda"] as? String, "e")
@@ -14581,7 +15031,7 @@ return JSON.stringify({r:o.join(' | '),errs:__errs.length-e0});
         var c=await cena(),j0=can(c.b);atArm();newTpl(T('Balcão 1 porta'));S.m.x=c.b.x+c.b.w;draw();await W(300);ok('criar',c.b,j0,'novo em x '+S.mods[2].x+', fora do tamponamento do vizinho');
         c=await cena();j0=can(c.b);S.m=c.b;S.tab=0;draw();panel();await W(60);document.querySelector('#bd [data-mcopy]').click();await W(300);ok('copiar',c.b,j0,S.mods.length+' módulos');
         c=await cena();j0=can(c.b);S.m=c.a;draw();panel();setv('x',c.b.x+c.b.w);await W(300);ok('digitar',c.b,j0,'encostou '+(c.a.x===c.b.x+c.b.w));
-        c=await cena();j0=can(c.b);S.m=c.a;draw();panel();await W(60);var svg=document.getElementById('svg'),rc=document.querySelector('#mod[data-mi="1"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/c.a.h,x=rc.left+rc.width*.5,y=rc.top+rc.height*.5,el=document.elementFromPoint(x,y)||svg,tx=-(c.a.x-(c.b.x+c.b.w))*cpm-12;pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=6;i++){pe('pointermove',svg,x+tx*i/6,y);await W(20)}pe('pointerup',svg,x+tx,y);await W(400);ok('arrastar',c.b,j0,'encostou '+(Math.abs(c.a.x-(c.b.x+c.b.w))<=31));
+        c=await cena();j0=can(c.b);S.m=c.a;draw();panel();await W(60);/* ALTURA-667 (Chefe 28/11, ver testTocarEmQualquerMedidaDoVaoEDigitar): a 375×667 o alvo fica abaixo da dobra e a página rola até ele; o teste rola como a pessoa faria */try{document.querySelector('#mod[data-mi="1"] rect[data-mi]').scrollIntoView({block:'center'})}catch(_){}await W(20);var svg=document.getElementById('svg'),rc=document.querySelector('#mod[data-mi="1"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/c.a.h,x=rc.left+rc.width*.5,y=rc.top+rc.height*.5,el=document.elementFromPoint(x,y)||svg,tx=-(c.a.x-(c.b.x+c.b.w))*cpm-12;pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=6;i++){pe('pointermove',svg,x+tx*i/6,y);await W(20)}pe('pointerup',svg,x+tx,y);await W(400);ok('arrastar',c.b,j0,'encostou '+(Math.abs(c.a.x-(c.b.x+c.b.w))<=31));
         c=await cena();open3D();await W(200);lvSolta(c.a);c.a.rot=0;c.a.lx=c.b.x+c.b.w+1;c.a.lz=200;draw();await W(300);c.a.lz=+c.a.lz+(10-so(c.a).z0);draw();await W(300);j0=can(c.b);var r5=__mv3.encaixa(c.a,__mv3.alvo(c.a));await W(300);ok('encaixar3D',c.b,j0,/entraria em/.test(r5)?'recusou e diz em quem':String(r5).slice(0,40));
         c=await cena();lvSolta(c.a);c.a.rot=0;c.a.lx=2500;c.a.lz=600;draw();await W(300);j0=can(c.b);mv3On(1);await W(300);var ix=document.querySelector('#mv3bar [data-mv3="x"]');ix.value=String(c.b.x+c.b.w);ix.dispatchEvent(new Event('change',{bubbles:true}));await W(300);ok('digitar3D',c.b,j0,'x '+Math.round(+c.a.lx));try{mv3Off()}catch(_){}
         c=await cena();c.a.x=c.b.x+c.b.w;draw();await W(300);j0=can(c.b);EM.afastar(c.a,100);draw();await W(300);ok('afastar',c.b,j0);
@@ -20804,6 +21254,133 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         """#)
         XCTAssertEqual(o["semRolar"] as? String, "⌂ avisa · − avisa · + aproxima · ⌂ com zoom volta · rolagem igual")
         XCTAssertEqual(o["rolada"] as? String, "⌂ avisa · − avisa · + aproxima · ⌂ com zoom volta · rolagem igual · rolada", "com a página rolada (barra abaixo da dobra a 1366×768) os 3 botões funcionam e a página não rola sozinha")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // MOVE-ELETRO (família do MOVE-750, 28/11, achado pela s54): no 3D, escolher a geladeira e tocar de novo nela levava a geladeira sozinha pra cima
+    // da caixa (altura 2500): o "mudar de lugar" pendente lançava o raio ignorando o próprio eletro. E a pecaNoToque não devolve a peça escondida atrás do eletro.
+    func testMOVEELETRO_TocarDeNovoNoEletroNaoMudaDeLugarEPecaAtrasNaoE() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&/side by side/.test(t.n))it=t})});
+        loadState(initLimpo());S.env='livre';S.room='livre';S.W=8000;S.H=3200;draw();newTpl(JSON.parse(JSON.stringify(it)));S.m=null;window.SEL3=null;draw();open3D();await W(600);var bi=document.querySelector('#v3 [data-v="iso"]');if(bi)bi.click();await W(60);try{re3()}catch(_){}
+        var f=S.fr[0],pos=function(){var g=S.fr.filter(function(q){return q.id===f.id})[0];return g?[Math.round(g.x),Math.round(g.y),Math.round(+g.b||0)].join(','):'sumiu'},p0=pos();
+        var PROJ=function(c){var P=window.PM3,d=function(r){return r[0]*c[0]+r[1]*c[1]+r[2]*c[2]+r[3]},w=d(P.W);return [(d(P.X)/w+1)/2*P.w,(1-d(P.Y)/w)/2*P.h]};
+        var fb=__boxes().filter(function(b){return b.fr===f.id}),bb={x0:1e9,x1:-1e9,y0:1e9,y1:-1e9,z1:-1e9};fb.forEach(function(b){bb.x0=Math.min(bb.x0,b.x0);bb.x1=Math.max(bb.x1,b.x1);bb.y0=Math.min(bb.y0,b.y0);bb.y1=Math.max(bb.y1,b.y1);bb.z1=Math.max(bb.z1,b.z1)});
+        var c=PROJ([(bb.x0+bb.x1)/2,(bb.y0+bb.y1)/2,bb.z1]),am=function(){var e=document.getElementById('amsg');return e?e.textContent:''};__sel3(c[0],c[1]);__sel3(c[0],c[1]);await W(50);R.deNovo=(pos()===p0?'parada':'MUDOU '+p0+'→'+pos())+' · '+(/já está escolhid/.test(am())?'avisa que já está escolhida':/mudou de lugar/.test(am())?'DIZ QUE MUDOU DE LUGAR':'aviso: '+am().slice(0,40));
+        R.pecaAtras=window.pecaNoToque(c[0],c[1])===null?'null (eletro na frente)':'devolveu peça escondida';
+        window.__sel3(-99999,-99999);window.SEL3=null;document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["deNovo"] as? String, "parada · avisa que já está escolhida", "tocar de novo na geladeira escolhida não muda ela de lugar nem diz que mudou")
+        XCTAssertEqual(o["pecaAtras"] as? String, "null (eletro na frente)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // PECA-NO-TOQUE (Chefe 28/11): window.pecaNoToque(x,y) é a escolha do toque do 3D (a mesma do sel3, sem copiar), pro LED e o destaque do Claude 3:
+    // devolve {mi, pk, face, ponto, via, ambig} igual ao que o toque escolheria e não seleciona nem muda nada.
+    func testPECANOTOQUE_MesmaEscolhaDoToqueSemMudarNada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4200;S.H=2700;S.mods=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.mods[0].x=600;newTpl(T('Aéreo 2 portas'));S.mods[1].x=600;draw();S.m=null;window.SEL3=null;open3D();await W(600);
+        var igual=0,dif=[],n=0,forma=true,falhaForma='',sem=0,J0=JSON.stringify(snapState().mods);
+        for(const v of ['iso','front','left']){var b_=document.querySelector('#v3 [data-v="'+v+'"]');if(b_)b_.click();await W(60);try{re3()}catch(_){}await W(30);var P=window.PM3;
+          var sy=Math.max(8,P.h/22),sx=Math.max(8,P.w/30);for(var y=sy/2;y<P.h;y+=sy)for(var x=sx/2;x<P.w;x+=sx){var r=window.pecaNoToque(x,y);if(!r){sem++;continue}n++;
+            if(!(typeof r.mi==='number'&&r.pk&&r.ponto&&r.ponto.length===3&&r.face&&Array.isArray(r.ambig))){forma=false;falhaForma=r.mi+':'+r.pk+' via '+r.via+' ponto '+JSON.stringify(r.ponto)}
+            window.__sel3(-99999,-99999);window.SEL3=null;window.__sel3(x,y);var s=window.SEL3;if(s&&s.mi===r.mi&&s.pk===r.pk)igual++;else if(dif.length<4)dif.push(v+' '+x+','+y+' '+r.mi+':'+r.pk+' × '+(s?s.mi+':'+s.pk:'nada'));/* limpa a escolha e o "mudar de lugar" pendente (igual à s54) */window.__sel3(-99999,-99999);window.SEL3=null;S.m=null}}
+        R.mesma=(n>=80?'pontos ≥80':'POUCOS '+n)+(forma?'':' ('+falhaForma+')')+' · iguais ao toque '+(igual===n?'todos':igual+'/'+n+' '+dif.join('; '))+' · formato '+(forma?'ok':'ERRADO');
+        window.SEL3=null;S.m=null;var J1=JSON.stringify(snapState().mods);var r2=window.pecaNoToque(PM3.w/2,PM3.h/2);R.naoMuda=(JSON.stringify(snapState().mods)===J1?'projeto igual':'MUDOU')+' · nada escolhido '+(!window.SEL3&&!S.m);
+        document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["mesma"] as? String, "pontos ≥80 · iguais ao toque todos · formato ok")
+        XCTAssertEqual(o["naoMuda"] as? String, "projeto igual · nada escolhido true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // TIPO-SEGUE (item 24, Chefe 28/11, matriz do Code 1 a 375 e 430): com o balcão escolhido no 3D, o título "Tipo:" e o painel continuavam no aéreo
+    // (informação contraditória). Ao fechar o 3D os dois seguem o módulo escolhido; nos caminhos de sempre (catálogo, toque no 2D) nada muda.
+    func testTIPOSEGUE_TituloEPainelSeguemOModuloEscolhidoNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var PROJ=function(c){var P=window.PM3,d=function(r){return r[0]*c[0]+r[1]*c[1]+r[2]*c[2]+r[3]},w=d(P.W);return [(d(P.X)/w+1)/2*P.w,(1-d(P.Y)/w)/2*P.h]};
+        var st=function(){var e=(document.getElementById('bd')||{}).textContent||'';var m=/Editando:\s*(Base|Superior)/.exec(e);return 'título '+document.getElementById('tipo').textContent+' · escolhido '+(S.m?(S.m.sup?'aéreo':'balcão'):'nada')+' · painel '+(m?m[1]:'?')};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.mods=[];draw();newTpl(T('Balcão 2 portas'));S.mods[0].x=1000;newTpl(T('Aéreo 2 portas'));S.mods[1].x=1000;draw();panel();R.catalogo=st();
+        open3D();await W(600);var b=__boxes().filter(function(q){return /^0:Porta/.test(q.nm)})[0],c=PROJ([(b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1]);__sel3(c[0],c[1]);await W(150);document.getElementById('v3x').click();await W(150);R.depoisDo3D=st();
+        open3D();await W(400);b=__boxes().filter(function(q){return /^1:Porta/.test(q.nm)})[0];c=PROJ([(b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1]);__sel3(c[0],c[1]);await W(150);document.getElementById('v3x').click();await W(150);R.volta=st();
+        window.SEL3=null;R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["catalogo"] as? String, "título Superior · escolhido aéreo · painel Superior")
+        XCTAssertEqual(o["depoisDo3D"] as? String, "título Base · escolhido balcão · painel Base", "balcão escolhido no 3D: título e painel do balcão")
+        XCTAssertEqual(o["volta"] as? String, "título Superior · escolhido aéreo · painel Superior")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // ETAPA 3.1 (Chefe 28/11, sonda s54 do Claude 5): (1) MOVE-750: no 3D, escolher o tamponamento e tocar de novo nele levava o módulo pra outro
+    // lugar (x 5 → 800): o "mudar de lugar" pendente lançava o raio ignorando o próprio módulo e batia no chão/parede de trás. (2) TAMP-NEAR: tocando a
+    // lateral, a porta, o rodapé ou a frente perto do tamponamento, o tamponamento "roubava" o toque (seleciona peça que não é a da frente).
+    func testETAPA3_ToqueNoMesmoModuloNaoMoveEPecaDaFrenteGanhaDoTamponamento() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var amb0=window.ambMsg;window.ambMsg=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        /* verdade = a caixa mais perto do olho no ponto (igual à s54) */
+        var RAY=function(cx,cy,bx){var P=window.PM3;var nx=cx/P.w*2-1,ny=1-cy/P.h*2,r1=[0,1,2,3].map(function(i){return P.X[i]-nx*P.W[i]}),r2=[0,1,2,3].map(function(i){return P.Y[i]-ny*P.W[i]}),best=null,bw=1e18;
+          for(var k=0;k<bx.length;k++){var b=bx[k],lo=[b.x0,b.y0,b.z0],hi=[b.x1,b.y1,b.z1];for(var a=0;a<3;a++)for(var s2=0;s2<2;s2++){var v=s2?hi[a]:lo[a],u1=(a+1)%3,u2=(a+2)%3,A=r1[u1],B_=r1[u2],C=r2[u1],D=r2[u2],det=A*D-B_*C;if(Math.abs(det)<1e-12)continue;
+            var e1=-(r1[a]*v+r1[3]),e2=-(r2[a]*v+r2[3]),p1=(e1*D-B_*e2)/det,p2=(A*e2-e1*C)/det;if(p1<lo[u1]||p1>hi[u1]||p2<lo[u2]||p2>hi[u2])continue;var q=[0,0,0];q[a]=v;q[u1]=p1;q[u2]=p2;var w=P.W[0]*q[0]+P.W[1]*q[1]+P.W[2]*q[2]+P.W[3];if(w<=0)continue;if(w<bw){bw=w;best=b}}}return best};
+        var OKB=function(b){return b.nm&&/^\d+:/.test(b.nm)&&b.g!=='sh'&&!b.nol&&b.a>0&&!b.wl&&!b.cs};var PROJ=function(c){var P=window.PM3,d=function(r){return r[0]*c[0]+r[1]*c[1]+r[2]*c[2]+r[3]},w=d(P.W);if(!(w>0))return null;return [(d(P.X)/w+1)/2*P.w,(1-d(P.Y)/w)/2*P.h]};
+        var monta=async function(env){loadState(initLimpo());S.env=env;S.room=env==='livre'?'':'cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.stones=[];draw();newTpl(T('Balcão 2 portas'));S.m=null;window.SEL3=null;draw();open3D();await W(600);var b=document.querySelector('#v3 [data-v="iso"]');if(b)b.click();await W(60);try{re3()}catch(_){}await W(40)};
+        /* 1. 2 toques no tamponamento e de novo nele: nada sai do lugar; o "mudar de lugar" pelo chão continua */
+        var mv=[];for(const env of ['livre','cozinha']){await monta(env);var m=S.mods[0],x0=m.x;var t=__boxes().filter(function(b){return /^0:Tamponamento direito$/.test(b.nm)&&b.pk})[0];var c=PROJ([(t.x0+t.x1)/2,(t.y0+t.y1)/2,t.z1]);
+          __sel3(c[0],c[1]);var s1=window.SEL3?window.SEL3.pk:'nada';__sel3(c[0],c[1]);var s2=window.SEL3?window.SEL3.pk:'nada';var dep=m.x;mv.push(env+': '+s1+' · de novo '+s2+' · x '+(dep===x0?'parado':'MUDOU '+x0+'→'+dep));
+          /* escolhido, 2 toques no chão longe: o gesto de mudar de lugar continua */var chao=PROJ([m.x+m.w+900,0,700]);__sel3(chao[0],chao[1]);mv.push(env+' gesto de mudar de lugar pelo chão: '+(m.x!==dep?'move':'NÃO MOVE'))}
+        R.mover=mv.join(' · ');
+        /* 2. em cada vista (iso, frente, lado) e zoom: o ponto visível de cada peça mais perto do tamponamento escolhe a própria peça */
+        await monta('livre');var falhas=[],n=0;for(const v of ['iso','front','left']){var b_=document.querySelector('#v3 [data-v="'+v+'"]');if(b_)b_.click();await W(40);try{re3()}catch(_){}await W(30);
+          var P=window.PM3,bx=__boxes().filter(OKB),tp=bx.filter(function(b){return /:Tamponamento direito/.test(b.nm)}),G={};
+          var tb=null;tp.forEach(function(b){[[b.x0,b.y0,b.z0],[b.x1,b.y1,b.z1],[b.x0,b.y1,b.z1],[b.x1,b.y0,b.z0]].forEach(function(q){var s=PROJ(q);if(!s)return;tb=tb||{x0:1e9,x1:-1e9,y0:1e9,y1:-1e9};tb.x0=Math.min(tb.x0,s[0]);tb.x1=Math.max(tb.x1,s[0]);tb.y0=Math.min(tb.y0,s[1]);tb.y1=Math.max(tb.y1,s[1])})});if(!tb)continue;
+          for(var y=Math.max(2,tb.y0-12);y<Math.min(P.h,tb.y1+12);y+=4)for(var x=Math.max(2,tb.x0-12);x<Math.min(P.w,tb.x1+12);x+=4){var h=RAY(x,y,bx);if(!h||!h.pk||/:Tamponamento/.test(h.nm))continue;
+            /* inequívoco: os vizinhos a 8 px são da mesma peça */var ok=true;for(var dx=-8;dx<=8&&ok;dx+=4)for(var dy=-8;dy<=8&&ok;dy+=4){var h2=RAY(x+dx,y+dy,bx);if(!h2||(h2.ppk||h2.pk)!==(h.ppk||h.pk))ok=false}if(!ok)continue;var k=v+'|'+(h.ppk||h.pk);G[k]=(G[k]||0)+1;if(G[k]>8||n>=40*(['iso','front','left'].indexOf(v)+1))continue;
+            window.SEL3=null;__sel3(x,y);n++;var s=window.SEL3;if(!s||s.mi!==parseInt(h.nm,10)||(s.pk!==h.pk&&s.pk!==h.ppk&&s.ppk!==h.ppk))falhas.push(v+' '+h.nm+' → '+(s?s.pk:'nada'))}}
+        R.pertoDoTamp=(n>=15?'pontos testados ≥15':'POUCOS '+n)+' · erradas '+falhas.length+(falhas.length?' ('+falhas.slice(0,4).join('; ')+')':'');
+        window.SEL3=null;window.ambMsg=amb0;R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["mover"] as? String, "livre: Tamponamento direito#1 · de novo Tamponamento direito#1 · x parado · livre gesto de mudar de lugar pelo chão: move · cozinha: Tamponamento direito#1 · de novo Tamponamento direito#1 · x parado · cozinha gesto de mudar de lugar pelo chão: move", "tocar de novo no próprio módulo não muda ele de lugar; 2 toques no chão longe continua mudando")
+        XCTAssertEqual(o["pertoDoTamp"] as? String, "pontos testados ≥15 · erradas 0", "perto do tamponamento, a peça da frente no ponto é a escolhida")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // REGUA-PAREDE (item 39, Adauto 28/11: "reproduza a criação de réguas em todas as paredes… corrija a causa"): com o 2D na parede do lado aberta,
+    // o que era mandado pra outra parede (catálogo "Módulo na lateral direita/esquerda", botões Fundo/Esquerda/Direita/Livre do módulo) ficava na parede
+    // da vista (o botão não fazia nada). Olhar as paredes e salvar/reabrir com a vista do lado não mudam o projeto.
+    func testREGUAPAREDE_ParedeEscolhidaNaVistaDoLadoEOlharAsParedesNaoMuda() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var novo=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.ops=[];S.stones=[];draw()};
+        /* 2. olhar as paredes não muda o projeto (tamponamento, réguas, posição) */
+        novo();mkCorner('e');newTpl(T('Balcão 2 portas + 4 gavetas'));wvGo('e');newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));wvGo('d');newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Balcão canto cego · cego na direita (porta na esquerda)'));wvGo('f');draw();
+        var J0=JSON.stringify(snapState().mods);for(const v of ['e','d','f','d','e','f'])wvGo(v);R.olharAsParedes=JSON.stringify(snapState().mods)===J0?'projeto igual':'PROJETO MUDOU';
+        /* 3. botões da parede do módulo com o 2D na parede do lado */
+        var bt=[];for(const v of ['e','d']){for(const to of ['0','e','d','L']){if(to===v)continue;novo();newTpl(T('Balcão 2 portas'));S.mods[0].x=1500;wvGo(v);newTpl(T('Balcão 2 portas'));var mm=S.mods[S.mods.length-1];mm.__t=1;S.m=mm;S.tab=0;draw();panel();await W(20);
+          var b_=document.querySelector('#bd [data-wing="'+to+'"]');if(b_)b_.click();await W(20);var fica=S.mods.indexOf(mm)>=0?'fica na vista':'sai da vista';wvGo('f');var x=S.mods.filter(function(q){return q.__t})[0];bt.push(v+'→'+to+': '+(x?(x.wing||'f'):'sumiu')+' '+fica)}}
+        R.botoes=bt.join(' · ');
+        /* 4. catálogo "Módulo na lateral …" com o 2D na outra lateral */
+        var ct=[];for(const v of ['e','d']){novo();wvGo(v);var it=null,cid='';CATS.forEach(function(c){(c.it||[]).forEach(function(q,i){var t=typeof q==='number'?TPL[q]:q;if(t&&t.act===(v==='e'?'wd':'we')){it=t;cid=c.id+'|'+i}})});catOpen();var bb=document.createElement('button');bb.dataset.cati=cid;$('catm').appendChild(bb);bb.click();bb.remove();$('catm').hidden=true;await W(20);wvGo('f');ct.push('vista '+v+' → '+S.mods.map(function(q){return q.wing||'f'}).join(','))}
+        R.catalogo=ct.join(' · ');
+        /* 5. salvar e reabrir com a vista do lado aberta */
+        /* (wing vazio, undefined ou 0 = parede do fundo: o loadState grava 0) */var J=function(L){return JSON.stringify(L,function(k,v){return k==='wing'&&!v?undefined:v})};
+        novo();newTpl(T('Balcão 2 portas'));wvGo('d');newTpl(T('Balcão 2 portas'));var s1=J(snapState().mods);var re_=JSON.parse(JSON.stringify(snapState()));wvGo('f');loadState(re_);draw();R.reabrir=J(snapState().mods)===s1?'igual':'MUDOU';
+        R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["olharAsParedes"] as? String, "projeto igual", "trocar a parede do 2D não muda nada no projeto")
+        XCTAssertEqual(o["botoes"] as? String, "e→0: f sai da vista · e→d: d sai da vista · e→L: L sai da vista · d→0: f sai da vista · d→e: e sai da vista · d→L: L sai da vista")
+        XCTAssertEqual(o["catalogo"] as? String, "vista e → d · vista d → e", "o módulo da outra lateral vai pra ela")
+        XCTAssertEqual(o["reabrir"] as? String, "igual")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

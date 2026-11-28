@@ -3355,3 +3355,12 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Chromium novo com 1 aba só (a do editor): 20/20 PASSAM nos dois códigos.
 - **Causa provável:** com outra aba aberta, a aba do teste não é a que tem o foco; foco, teclado e eventos de campo não chegam como no app (só nesses testes, que dependem do foco real do campo).
 - **Como rodar:** a bateria precisa de um Chromium com UMA aba, a do editor (`curl -X PUT ".../json/new?<editor>"` e fechar o `about:blank`). Nada no código muda.
+
+## Fita na régua de engrosso de 80 (decisão do Adauto 28/11, 3): o plano desenhava 4 lados e o orçamento cobrava 0 — Code 2
+- **Causa:** as réguas de 80 só existem na lista de corte (`cutLines` divide o tamponamento de 30 em face + réguas). O plano pintava a fita pelo nome (`edgeSides`: "Tamponamento…" = 4 lados), e o orçamento (`mCost`) só via as peças do módulo, onde a régua não existe.
+- **Correção:**
+  - `edgeSides` dá "sem fita" para "… · engrosso 80" (o padrão que o orçamento cobrava).
+  - `mCost` soma a fita marcada à mão nas réguas (`m.fitaMan`, pelo pk da régua), com a medida da régua.
+  - Uma fonte só para lista, plano e orçamento.
+- **Teste:** `testEtapa2FitaNaReguaDeEngrosso80BordaPorBordaListaPlanoEOrcamentoIguais` (padrão, marcar a frente de UMA régua = +0,720 m, orçamento igual, desfazer, projeto antigo).
+- **E1 (430):** o controle tocado no fim do painel pulava 44 px, porque a rolagem batia no fim. Um espaço temporário no fim do painel corrige. Conferido em `testEtapa2TravessaETeto…` (`telaNoFim`), a 1366 e a 430.

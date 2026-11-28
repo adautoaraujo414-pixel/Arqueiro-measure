@@ -14478,6 +14478,35 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
     }
 
+    // Decisão do Adauto 28/11 (3): fita na régua de engrosso de 80 do tamponamento — disponível, borda por borda pelo "✎ lados" (item 20);
+    // padrão = o que o orçamento sempre cobrou (sem fita na régua) e o plano mostra igual; lista, plano (linhas verdes) e orçamento leem a
+    // MESMA escolha; metragem certa; desfazer; projeto antigo igual.
+    func testEtapa2FitaNaReguaDeEngrosso80BordaPorBordaListaPlanoEOrcamentoIguais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.tr=true;m.trM=1;m.trW=30;draw();await W(900);
+        var c0=mCost(m);var lista=function(){openCut();return [].map.call(document.querySelectorAll('#cutm [data-fted]'),function(b){return b}).filter(function(b){return /ngrosso/.test(b.dataset.ftl)})};
+        var plano=function(){var r=[];sheetPlan(true).groups.forEach(function(g){g.sheets.forEach(function(s){s.used.forEach(function(u){if(/ngrosso/.test(u.p.lab)){var f=null;try{f=fitaSrc(u.p.src)}catch(_){}r.push(f!==null?f:edgeSides(u.p.lab))}})})});return r.sort().join(',')||'-'};
+        var txt=function(b){return (b.closest('td')||b.parentElement).textContent.replace(/\s+/g,' ').replace('✎ lados','').replace('− tirar','').trim()};
+        var L0=lista();R.padrao='lista '+L0.map(txt).join(' / ')+' · plano ['+plano()+'] · orçamento fita na cor '+c0.tC.toFixed(3)+' larga '+c0.tT.toFixed(3);
+        /* ✎ lados na régua do comprimento: frente (B), só na 1ª das duas */
+        L0[0].click();await W(200);var M=document.getElementById('ftedm');M.querySelector('[data-ftk="B"]').click();await W(50);var p1=M.querySelector('[data-ftp="1"]');if(p1&&p1.checked)p1.click();await W(50);M.querySelector('[data-fta="ok"]').click();await W(300);
+        var c1=mCost(S.mods[0]),L1=lista();R.marcou='lista '+L1.map(txt).join(' / ')+' · plano ['+plano()+'] · fita na cor +'+(c1.tC-c0.tC).toFixed(3)+' m';
+        var b=budget();R.orcamento=(Math.abs(b.T.tC-c1.tC)<0.0005)+'';
+        await W(900);document.getElementById('und').click();await W(300);var c2=mCost(S.mods[0]);R.desfez='plano ['+plano()+'] · fita na cor '+c2.tC.toFixed(3);
+        /* projeto antigo (sem a marca): fita no orçamento igual */var st=JSON.parse(JSON.stringify(snapState()));loadState(st);draw();R.antigo=mCost(S.mods[0]).tC.toFixed(3)+' '+mCost(S.mods[0]).tT.toFixed(3);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+        XCTAssertEqual(o["padrao"] as? String, "lista sem fita / sem fita · plano [,,,] · orçamento fita na cor 8.800 larga 2.610", "padrão = o que o orçamento sempre cobrou (sem fita na régua) e o plano mostra igual (antes: 4 lados no plano e 0 no orçamento)")
+        XCTAssertEqual(o["marcou"] as? String, "lista sem fita · automático ×1 1 lado (frente) · manual ×1 / sem fita · plano [,,,B] · fita na cor +0.720 m", "frente de UMA régua de 720: lista, plano e orçamento iguais")
+        XCTAssertEqual(o["orcamento"] as? String, "true", "o orçamento soma a mesma fita do módulo")
+        XCTAssertEqual(o["desfez"] as? String, "plano [,,,] · fita na cor 8.800")
+        XCTAssertEqual(o["antigo"] as? String, "8.800 2.610", "projeto antigo: fita igual")
+    }
+
     // ETAPA 2 · item 2, canto L (Chefe 28/11; parte do Code 2, a geometria da base atravessada é do Claude 5): o "Unir" vale no canto — com o
     // vizinho da fileira do fundo e com o 1º módulo da parede lateral (asa). Unir, separar cada junta e desfazer, pelos botões da Estrutura.
     func testEtapa2UnirNoCantoLComOFundoEComAAsaSepararEDesfazer() async throws {
@@ -14619,7 +14648,7 @@ return JSON.stringify({r:o.join(' | '),errs:__errs.length-e0});
         await W(900);document.getElementById('und').click();await W(200);R.aereoDesfaz=pc(S.mods[0],/^Travessa frontal$/)+' · '+(dif(s0,sig(S.mods[0])).length===0);
         m=novo('Armário alto 2 portas');await W(900);cb('trav').click();await W(100);m=S.mods[0];R.alto=pc(m,/^Travessa frontal$/)+' · teto '+pc(m,/^Base superior$/)+' · 3D sobrepõe '+conf();
         /* balcão antigo (travessa no lugar do teto): desligar a travessa não mexe em lateral nem porta; ligar o teto põe só o teto, atrás da travessa */
-        m=novo('Balcão 2 portas');await W(900);var lat=pc(m,/^Lateral esquerda$/),por=pc(m,/^Porta$/);cb('trav').click();await W(100);m=S.mods[0];R.balcaoSemTravessa=pc(m,/^Travessa frontal$/)+' · lateral '+(pc(m,/^Lateral esquerda$/)===lat)+' · portas '+(pc(m,/^Porta$/)===por);
+        m=novo('Balcão 2 portas');await W(900);var lat=pc(m,/^Lateral esquerda$/),por=pc(m,/^Porta$/);/* E1 (430): no fim do painel, o conteúdo de baixo diminui ao tirar a travessa — a tela não pode pular */var bd_=document.getElementById('bd');bd_.scrollTop=1e6;await W(50);var yF=cb('trav').getBoundingClientRect().top;cb('trav').click();await W(100);m=S.mods[0];R.balcaoSemTravessa=pc(m,/^Travessa frontal$/)+' · lateral '+(pc(m,/^Lateral esquerda$/)===lat)+' · portas '+(pc(m,/^Porta$/)===por);R.telaNoFim=Math.abs(cb('trav').getBoundingClientRect().top-yF)<3;
         cb('trav').click();await W(100);cb('teto').click();await W(100);m=S.mods[0];R.balcaoComTeto=pc(m,/^Travessa frontal$/)+' · teto '+pc(m,/^Base superior$/)+' · lateral '+(pc(m,/^Lateral esquerda$/)===lat)+' · portas '+(pc(m,/^Porta$/)===por)+' · 3D sobrepõe '+conf()+' · corte '+nCut(m,'Base superior');
         /* salvar e reabrir */var sv=JSON.stringify(S.mods);loadState(initLimpo());S.mods=JSON.parse(sv);S.m=S.mods[0];draw();R.reabre=pc(S.mods[0],/^Travessa frontal$/)+' · teto '+pc(S.mods[0],/^Base superior$/);
         /* gaveta em cima: a travessa não entra e o motivo aparece */m=novo('Gabinete com gavetas');await W(900);s0=sig(m);TL=[];cb('trav').click();await W(100);R.gaveta=(dif(s0,sig(S.mods[0])).length===0)+' · caixa '+cb('trav').checked+' · '+(TL.slice(-1)[0]||'').slice(0,44);
@@ -14633,6 +14662,7 @@ return JSON.stringify({r:o.join(' | '),errs:__errs.length-e0});
         XCTAssertEqual(o["aereoDesfaz"] as? String, "- · true")
         XCTAssertEqual(o["alto"] as? String, "870×70 y15 · teto 900×550 y0 · 3D sobrepõe 0")
         XCTAssertEqual(o["balcaoSemTravessa"] as? String, "- · lateral true · portas true")
+        XCTAssertEqual(o["telaNoFim"] as? Bool, true, "E1 (Chefe 28/11): no fim do painel a tela também não pula (antes 44 px a 430)")
         XCTAssertEqual(o["balcaoComTeto"] as? String, "900×70 y15 · teto 870×545 y15 · lateral true · portas true · 3D sobrepõe 0 · corte 1")
         XCTAssertEqual(o["reabre"] as? String, "900×70 y15 · teto 870×545 y15")
         XCTAssertEqual(o["gaveta"] as? String, "true · caixa false · ⚠ A travessa não cabe: a gaveta de cima ocup")

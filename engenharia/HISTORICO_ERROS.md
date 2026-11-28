@@ -3390,3 +3390,12 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Tentativas desfeitas (não estão no código):**
   - TOPO-375 (diminuir a escala do 2D pra sair de baixo do 🔓): quebrava `testRebaixoDoTetoEPainelAcompanha` a 375, porque o rótulo do rebaixo encurtava.
   - RIPADO-RAIO: não reproduzi o caso que ele corrigiria.
+
+## ALTURA-667 (iPhone SE 375×667, Chefe 28/11: "confira se o controle fica fora de alcance… só ajuste o teste com prova") — Claude 4
+- **Testes:** `testTocarEmQualquerMedidaDoVaoEDigitar`, `testToqueNoVaoComoNoIPhone…`, `testEtapa2VizinhoIgualBitABit…` (passam a 375×900, falham a 375×667).
+- **Conferência (comportamento correto do app):** com a peça escolhida, a 375×667 o desenho começa em y 660. A medida "Vão de cima" fica em y 722, abaixo da dobra.
+  - A página rola (altura 1638 px). Rolada até ela, a medida fica em y 324 e o toque pega a própria medida (`text data-q="rgv|0;r;0;A"`).
+  - Não fica embaixo de botão nem fora de alcance.
+  - Os testes tocavam ou arrastavam num ponto fora da tela, onde `elementFromPoint` dá nulo.
+- **Ajuste dos testes (comentário ALTURA-667 em cada um):** rolar até o alvo antes de tocar ou arrastar, como a pessoa faria. Nenhuma expectativa mudou.
+- **Prova:** os 3 passam a 375×667, 430 e 1366.

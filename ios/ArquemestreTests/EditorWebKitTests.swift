@@ -7015,7 +7015,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["rnd"] as? Int, 1)
         XCTAssertEqual(o["opcoes"] as? String, "1")
         /* FASE2 (23/11/2026, decisão do Adauto): o rodapé lateral do ENCONTRO de balcões com rodapé corrido sai da lista de peças (já não ia pro corte nem pro 3D): 2 peças a menos */// JUNÇÃO 4 (Adauto 23/11): com a lateral do meio a travessa frontal sai em uma peça por vão (+22 peças no catálogo, todas em mm inteiro)
-        XCTAssertEqual(o["pecas"] as? Int, 6310) // ETAPA 2 item 21 (Adauto 26/11, aprovado pelo Chefe): módulos encostados não unem peças sozinhos — cada um tem as suas (antes 6308)
+        /* CEGO-ESTRUTURA (pedido do Adauto/Chefe 27/11, ETAPA 2 item 7): o canto cego novo do catálogo nasce com as travessas da frente e de trás deitadas (2 no lugar de 1) · 6310 → 6314; sem a marca cgTrav ao nascer volta a 6310 (provado 28/11) */XCTAssertEqual(o["pecas"] as? Int, 6314) // ETAPA 2 item 21 (Adauto 26/11, aprovado pelo Chefe): módulos encostados não unem peças sozinhos — cada um tem as suas (antes 6308)
         XCTAssertEqual(o["maiorQueODesenho"] as? Int, 0)
         XCTAssertEqual(o["maiorEx"] as? String, "")
         XCTAssertEqual(o["comDecimo"] as? Int, 0)
@@ -8125,7 +8125,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["planosConferidos"] as? Bool, true)
         XCTAssertEqual(o["pecasConferidas"] as? Bool, true)
         XCTAssertEqual(o["problemas"] as? String, "0")
-        XCTAssertEqual(o["numeros"] as? String, "176 planos · 13076 peças", "sorteio no catálogo, que mudou em 15/11 (montar do zero no fim e 5 novos)") // ETAPA 2 item 21 (Adauto 26/11, aprovado pelo Chefe): módulos encostados não unem base/rodapé/travessa/moldura sozinhos — cada um tem as suas peças, por isso a contagem subiu (antes 12836)
+        /* CEGO-ESTRUTURA (pedido do Adauto/Chefe 27/11, ETAPA 2 item 7): 2 travessas deitadas no lugar da frontal em pé nos cantos cegos do catálogo · 13076 → 13092; sem a marca cgTrav ao nascer volta a 13076 (provado 28/11) */
+        XCTAssertEqual(o["numeros"] as? String, "176 planos · 13092 peças", "sorteio no catálogo, que mudou em 15/11 (montar do zero no fim e 5 novos)") // ETAPA 2 item 21 (Adauto 26/11, aprovado pelo Chefe): módulos encostados não unem base/rodapé/travessa/moldura sozinhos — cada um tem as suas peças, por isso a contagem subiu (antes 12836)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

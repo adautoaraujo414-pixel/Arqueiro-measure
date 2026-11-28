@@ -2767,3 +2767,36 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - a alça da geladeira tem 6 px na tela com o ambiente inteiro à vista, menor que um dedo (risco identificado);
   - a bolinha da alça (raio 15 no desenho) fica em cima da lateral e do tamponamento: 1 ou 2 toques na lateral não chegam na peça;
   - 2 toques na lateral também giram o engrosso (EGT), e isso mexe no projeto.
+
+## TOQUE-PECA (ETAPA 2 item 26, Adauto 27/11, decidido pelo Chefe 28/11): 2 toques em qualquer peça do módulo abriam só o acesso rápido — Claude 4
+- **Antes (toque real pelo CDP, 430, "Balcão 2 portas + 4 gavetas"):**
+  - 2 toques na porta, na base ou no rodapé abriam o acesso rápido do vão. Não existia edição da peça no 2D.
+  - A bolinha da alça de medida (raio 15) cobria a lateral e o tamponamento: 1 ou 2 toques ali não chegavam na peça.
+  - 2 toques na lateral giravam o engrosso, mexendo no projeto.
+  - 2 toques na alça da divisória não abriam nada.
+- **Pedido:** "2 toques no MEIO do módulo abrem o acesso rápido que JÁ EXISTE…; 2 toques numa peça específica abrem a edição dela".
+- **Decisão do Chefe (28/11):**
+  - 2 toques no meio do vão, inclusive em cima da porta ou frente, abrem o acesso rápido.
+  - 2 toques em peça da estrutura abrem a aba onde ela é editada, com o campo destacado.
+  - O giro do engrosso vira o botão "Girar engrosso" no painel.
+  - A alça fica na borda de fora.
+- **Correção (`editor.html`):**
+  - No contador de 2 toques do `#svg` (o mesmo `tapCount`), `pcEdAlvo` decide pela peça tocada:
+    - lateral e base → Estrutura, campo "Espessura das chapas";
+    - tamponamento e engrosso cava → Tamponamentos, na seção da peça;
+    - divisória e prateleira → Divisões;
+    - rodapé → Estrutura, seção Rodapé (abre se estiver fechada);
+    - travessa → Altura da travessa;
+    - fundo → Fundos.
+  - A porta cobre a lateral (sobra de 1 a 2 px). Por isso, a faixa da borda de fora (no mínimo `SEL.div`, no máximo 1/6 da largura) conta como lateral. O tamponamento tem prioridade.
+  - `pcEdOpen` escolhe a peça (o mesmo `pcSel`), vai pra aba, destaca o campo (`data-pcfoco`) e põe o cabeçalho "✏️ Editando: …".
+  - `window.egGira` é o mesmo código do engrosso de antes (snap, conta e aviso), agora no botão `data-pcgira`.
+  - Alças `data-h` na borda de fora, depois do tamponamento (`lt`/`rt`), com o mesmo raio.
+  - Abrir não muda nada no projeto.
+- **Teste novo:** `testTOQUEPECA_DoisToquesNoMeioAcessoRapidoNaPecaEdicaoDela`, com eventos de dedo.
+  - Falha na f51cc698 e passa a 430, a 1366 e no iPad simulado.
+  - Os testes de toque TOQUEALCA (2) e TOQUEJANELA continuam passando.
+- **Risco identificado:** agora a alça da borda de fora fica em cima da lateral do vizinho encostado. Tocar ali pega a alça do módulo escolhido, não o vizinho.
+- **Bateria:** a 3ca951db teve 2 falhas, ambas tratadas na mesma entrega:
+  - `testSetinhaDoTituloDaSecao…` contava 51 seções e há 52, por causa da "Composição da frente" do item 19. A expectativa foi atualizada com comentário do pedido;
+  - `testNadaDeEnfeiteAbasDoModuloParte1b` também falha na referência antiga (8811, antes das entregas) e com outros botões a cada rodada. É **pré-existente e instável** (Estilos de porta: est=c|regua, j|45, rw|50).

@@ -72,3 +72,12 @@ Só entra aqui o que o Adauto aprovou. Sugestões ficam em `PLANO_EVOLUCAO.md`.
 - **Gavetão:** é a mesma gaveta, só com a frente maior. A caixa segue a regra de hoje (`gavH` ou automática); não tem fórmula nova.
 - **Livre montagem:** converte para o módulo por vãos que já existe (`rgConvert`). Se a conversão não der, só avisa.
 - O app só muda o vão quando a pessoa toca na composição, e ↶ desfaz.
+
+
+## Toques no módulo do 2D (ETAPA 2 item 26, Adauto 27/11, decidido pelo Chefe 28/11)
+- 1 toque escolhe a peça, como antes.
+- 2 toques no meio do vão, inclusive na porta ou frente, abrem o acesso rápido.
+- 2 toques em peça da estrutura abrem a aba dela com o campo em destaque.
+- O giro do engrosso saiu do gesto de 2 toques na lateral e foi para o botão "Girar engrosso" no painel da lateral. Nada foi removido.
+- Alça de medida na borda de fora do módulo.
+- Pinça e arrasto nunca contam como toque.

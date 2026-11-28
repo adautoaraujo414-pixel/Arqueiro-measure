@@ -8442,9 +8442,9 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["abas"] as? Int, 11)
         // PAREDES C (23/11, ab9d030): + seção "Paredes do ambiente" (remover/restaurar) na aba Ambiente · JUNÇÃO 5 (23/11, a849a43): + seção "Travessão" na aba Estrutura
-        XCTAssertEqual(o["secoesComSetinha"] as? Int, 51, "ESTILOS DE PORTA (23/11): +1 na aba Portas · PAREDES C + JUNÇÃO 5 (23/11): +2 · ESTRUTURA-AFASTA 22/11: +1 (Estrutura do Módulo) · Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)")
+        XCTAssertEqual(o["secoesComSetinha"] as? Int, 52, "FRENTE-COMP (ETAPA 2 item 19, Adauto 26/11): +1 na Estrutura (Composição da frente) · ESTILOS DE PORTA (23/11): +1 na aba Portas · PAREDES C + JUNÇÃO 5 (23/11): +2 · ESTRUTURA-AFASTA 22/11: +1 (Estrutura do Módulo) · Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)")
         // ESTRUTURA-AFASTA (pedido do Adauto 22/11): + a seção "Estrutura do Módulo" (com setinha) na aba Estrutura
-        XCTAssertEqual(o["porAba"] as? String, "Ambiente 5 | 🎨 Cores 1 | Estrutura 9 | Divisões 4 | Portas 7 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
+        XCTAssertEqual(o["porAba"] as? String, /* FRENTE-COMP (item 19, 26/11): Estrutura 9→10 */ "Ambiente 5 | 🎨 Cores 1 | Estrutura 10 | Divisões 4 | Portas 7 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
         XCTAssertEqual(o["ruins"] as? String, "0")
         XCTAssertEqual(o["tituloSemSetinha"] as? String, "0")
         XCTAssertEqual(o["nascemFechadas"] as? String, "Estrutura › Rodapé")
@@ -19604,6 +19604,54 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ipad"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 22", "métrica do iPad: a régua 815×30 ganha o callout e só sai a etiqueta da sobra que ficaria embaixo (antes: sem identificação 1)")
         XCTAssertEqual(o["ipad113"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 23", "métrica do iPad medida (iOS 708): o mesmo que o iPad deu no CI")
         XCTAssertEqual(o["e"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // TOQUE-PECA (Adauto 27/11, ETAPA 2 item 26; decidido pelo Chefe 28/11): no 2D, com eventos de DEDO: 1 toque segue escolhendo a peça; 2 toques no MEIO
+    // do vão (porta/frente) abrem o acesso rápido que já existe; 2 toques numa peça da estrutura (lateral, tamponamento, divisória, base, rodapé) abrem a aba
+    // onde ela é editada com o campo em destaque. Os 2 toques na lateral giravam o engrosso: agora abrem a edição e o giro fica no botão "Girar engrosso"
+    // (mesma conta, com desfazer). A alça de medida foi pra borda de fora (não cobre mais a lateral nem o tamponamento). Abrir não muda nada no projeto.
+    func testTOQUEPECA_DoisToquesNoMeioAcessoRapidoNaPecaEdicaoDela() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var sv=function(){return document.getElementById('svg')},pid=90,eg0=STD().egOn;
+        var ev=function(tp,x,y,id){var el=document.elementFromPoint(x,y)||sv();el.dispatchEvent(new PointerEvent(tp,{clientX:x,clientY:y,pointerId:id,bubbles:true,cancelable:true,isPrimary:id===pid,pointerType:'touch',width:16,height:16,pressure:tp==='pointerup'?0:0.5}))};
+        var tap=async function(x,y){pid++;ev('pointerdown',x,y,pid);await W(50);ev('pointerup',x,y,pid)};
+        var dois=async function(p){window.scrollTo(0,0);await tap(p.x,p.y);await W(90);await tap(p.x,p.y);await W(800)};
+        var ini=async function(egOn){try{vmenuClose()}catch(_){}STD().egOn=egOn?1:0;loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2400;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.mods[0].x=600;S.mods[0].tl=true;S.m=S.mods[0];S.tab=0;draw();panel();window.PSEL=null;window.PCED=null;window.scrollTo(0,0);await W(500);
+          for(var it=0;it<4;it++){var L=[].slice.call(document.querySelectorAll('#svg [data-p]')),X0=1e9,Y0=1e9,X1=-1e9,Y1=-1e9;L.forEach(function(e){var r=e.getBoundingClientRect();X0=Math.min(X0,r.x);Y0=Math.min(Y0,r.y);X1=Math.max(X1,r.right);Y1=Math.max(Y1,r.bottom)});var Q=sv().getBoundingClientRect(),f=Math.min(Q.width*0.75/(X1-X0),Q.height*0.8/(Y1-Y0)),a=sv().getScreenCTM().a;if(Math.abs(f-1)>0.02)zoom(f);else{VB.x+=((X0+X1)/2-(Q.x+Q.width/2))/a;VB.y+=((Y0+Y1)/2-(Q.y+Q.height/2))/a;setVB()}draw()}await W(300);window.__m0=JSON.stringify(S.mods)};
+        var peca=function(re){var m=S.mods[0],P=partsOf(m),e=[].filter.call(document.querySelectorAll('#svg #mod [data-p]'),function(q){return re.test((P[+q.dataset.p]||{}).name||'')})[0];if(!e)return null;var r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}};
+        var vm=function(){var e=document.getElementById('vmenu');return !!(e&&e.getClientRects().length&&getComputedStyle(e).display!=='none')};
+        var est=function(){var c=document.querySelector('#bd [data-pcedcab]'),fo=document.querySelector('#bd [data-pcfoco]');return 'aba '+S.tab+(vm()?' · acesso rápido':'')+(c?' · '+c.textContent.replace(/↻ Girar engrosso/,'').trim():'')+(fo?' · campo: '+fo.textContent.trim().replace(/[⌃⌄]/g,'').slice(0,21).trim():'')+(window.PSEL?' · peça escolhida':'')+(JSON.stringify(S.mods)===window.__m0?' · sem mudança':' · MUDOU')};
+        var mrc=function(){return document.querySelector('#svg #mod rect[data-mi]').getBoundingClientRect()};
+        await ini();var p=peca(/^Porta/);await dois(p);R.doisPorta=est();
+        await ini();p=peca(/^Porta/);await tap(p.x,p.y);await W(800);R.umPorta=est();
+        await ini();var r=mrc();await dois({x:r.left+3,y:r.top+r.height/2});R.doisLateral=est();
+        await ini();p=peca(/^Tamponamento esquerdo/);await dois(p);R.doisTamponamento=est();
+        await ini();var d=document.querySelector('#svg [data-d="0"]').getBoundingClientRect();await dois({x:d.x+d.width/2,y:d.y+d.height/2});R.doisDivisoria=est();
+        await ini();p=peca(/^Rodapé \(pedestal\)/);await dois(p);R.doisRodape=est();
+        await ini();p=peca(/^Base inferior/);await dois(p);R.doisBase=est();
+        /* alça de medida na borda de fora: não cobre o tamponamento nem a lateral */
+        await ini();var hl=document.querySelector('#svg circle[data-h="l"]').getBoundingClientRect(),tp=peca(/^Tamponamento esquerdo/),tr=[].filter.call(document.querySelectorAll('#svg #mod [data-p]'),function(q){return /^Tamponamento esquerdo/.test((partsOf(S.mods[0])[+q.dataset.p]||{}).name||'')})[0].getBoundingClientRect();R.alcaFora=hl.right<=tr.left+1?'fora':'cobre ('+Math.round(hl.right)+' > '+Math.round(tr.left)+')';R.alcaTamanho=hl.width>=30?'grande':'pequena '+Math.round(hl.width);
+        /* engrosso: 2 toques não giram mais; o botão gira com desfazer */
+        await ini(true);r=mrc();await dois({x:r.left+3,y:r.top+r.height/2});R.egDoisToques='egL '+(S.mods[0].egL||0);var b=document.querySelector('#bd [data-pcgira]');R.egBotao=b?b.textContent.trim():'sem botão';var h0=HIST.length;if(b)b.click();await W(300);R.egGirou='egL '+(S.mods[0].egL||0)+' · desfazer '+(HIST.length-h0);$('und').click();await W(300);R.egDesfez='egL '+(S.mods[0].egL||0);
+        STD().egOn=eg0;try{vmenuClose()}catch(_){}S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["doisPorta"] as? String, "aba 0 · acesso rápido · sem mudança", "2 toques no meio (porta) abrem o acesso rápido que já existe")
+        XCTAssertEqual(o["umPorta"] as? String, "aba 0 · peça escolhida · sem mudança", "1 toque segue escolhendo a peça")
+        XCTAssertEqual(o["doisLateral"] as? String, "aba 0 · ✏️ Editando: Lateral esquerda · campo: Espessura das chapas · peça escolhida · sem mudança")
+        XCTAssertEqual(o["doisTamponamento"] as? String, "aba 4 · ✏️ Editando: Tamponamento esquerdo · campo: Tamponamento esquerdo · peça escolhida · sem mudança")
+        XCTAssertEqual(o["doisDivisoria"] as? String, "aba 1 · ✏️ Editando: Divisória · campo: ▥ Divisórias no vão 1 · sem mudança")
+        XCTAssertEqual(o["doisRodape"] as? String, "aba 0 · ✏️ Editando: Rodapé (pedestal) · campo: Rodapé · peça escolhida · sem mudança")
+        XCTAssertEqual(o["doisBase"] as? String, "aba 0 · ✏️ Editando: Base inferior · campo: Espessura das chapas · peça escolhida · sem mudança")
+        XCTAssertEqual(o["alcaFora"] as? String, "fora", "a alça de medida fica na borda de fora")
+        XCTAssertEqual(o["alcaTamanho"] as? String, "grande", "continua fácil de pegar com o dedo")
+        XCTAssertEqual(o["egDoisToques"] as? String, "egL 0", "2 toques na lateral não giram mais o engrosso sozinhos")
+        XCTAssertEqual(o["egBotao"] as? String, "↻ Girar engrosso")
+        XCTAssertEqual(o["egGirou"] as? String, "egL 1 · desfazer 1", "o botão gira o engrosso e grava desfazer")
+        XCTAssertEqual(o["egDesfez"] as? String, "egL 0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

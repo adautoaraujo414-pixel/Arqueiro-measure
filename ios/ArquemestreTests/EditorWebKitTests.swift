@@ -14521,6 +14521,63 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antigo"] as? String, "8.800 2.610", "projeto antigo: fita igual")
     }
 
+    // AUDITORIA 3.9 · item 4 aprovado pelo Chefe 28/11 ("a vista representa fielmente o projeto"; "L representado errado"): nas paredes laterais
+    // a perna do canto em L aparece, das mesmas caixas do 3D do módulo do canto (partsOf), no começo da parede (direita na esquerda espelhada,
+    // esquerda na direita). Só desenho: o projeto não muda. O toque nela escolhe o canto (o mesmo móvel, na parede do fundo). No fundo não desenha
+    func testETAPA3_PernaDoCantoLNaVistaLateralFielEToqueEscolheOCanto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        /* constrói o ambiente como um projeto salvo (cada módulo nasce sozinho, depois parede/posição) */
+        window.__mkCena=async function(A){var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&(t.n===n||(n instanceof RegExp&&n.test(t.n))))r=t})});if(!r)throw new Error('sem modelo '+n);return JSON.parse(JSON.stringify(r))};
+        var um=async function(nome,o,corner){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.mods=[];draw();newTpl(T(nome));var m=S.mods[0];if(corner){S.m=m;S.tab=0;draw();panel();await W(50);document.querySelector('#bd [data-corner="'+corner+'"]').click();await W(150);m=S.mods[0]}var j=JSON.parse(JSON.stringify(m));Object.assign(j,o||{});return j};
+        var mods=[];
+        if(A==='L'){mods.push(await um('Balcão 2 portas',{x:5},'e'));mods.push(await um('Balcão 2 portas',{x:905}));mods.push(await um('Balcão porta + gavetas',{x:1805}));
+        var cd=await um('Balcão 2 portas',{},'d');cd.x=4195-cd.w;mods.push(cd);mods.push(await um('Aéreo 2 portas',{x:1200}));mods.push(await um('Aéreo 2 portas',{x:2300}));
+        mods.push(await um('Balcão 2 portas',{wing:'e',x:905,espE:1}));mods.push(await um('Balcão 1 porta',{wing:'e',x:1805,espE:1}));mods.push(await um('Aéreo 2 portas',{wing:'e',x:1000,espE:1}));
+        mods.push(await um('Balcão porta + gavetas',{wing:'d',x:905}));mods.push(await um('Armário alto 2 portas',{wing:'d',x:2000}))}
+        else{var c1=await um(/^Balcão canto cego · cego na esquerda/,{x:5});var c2=await um(/^Balcão canto cego · cego na direita/,{});c2.x=4195-c2.w;mods.push(c1,c2);mods.push(await um('Balcão 2 portas',{x:5+c1.w}));
+        mods.push(await um('Balcão 2 portas',{wing:'e',x:566,espE:1}));mods.push(await um('Balcão porta + gavetas',{wing:'d',x:566}));mods.push(await um('Aéreo 2 portas',{wing:'d',x:600}))}
+        var st=JSON.parse(JSON.stringify(initLimpo()));st.env='cozinha';st.room='cozinha';st.W=4200;st.H=2700;st.RD=3200;st.wl={L:'p',R:'p'};st.mods=mods;st.mi=-1;loadState(st);draw();await W(400);return S.mods.length};
+        var r=await (async function(){window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};await __mkCena('L');var o=[],e0=__errs.length;
+        var sig=function(){var w=wvCur();if(w)__wvCanon();try{/* chaves em ordem: a troca de parede tira e devolve o "wing" (a ordem das chaves muda, o conteúdo não) */var can=function(o){return JSON.stringify(o,function(k,v){return v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce(function(a,x){a[x]=v[x];return a},{}):v})};return can(snapState().mods)+S.mods.map(function(m){return partsOf(m).length}).join(',')+JSON.stringify(cutGroups().ord.length)}finally{if(w)__wvTo(w)}},s0=sig();
+        for(const w of ['e','d']){wvGo(w);await W(150);var g=document.querySelector('#svg #cnleg'),sv=document.getElementById('svg'),R=g?g.getBoundingClientRect():null,P=sv.querySelector('rect').getBoundingClientRect(),wl=[].slice.call(sv.querySelectorAll('rect')).map(function(r){return r.getBoundingClientRect()}).sort(function(a,b){return (b.width*b.height)-(a.width*a.height)})[0];
+        var lado=R?((R.left+R.width/2)>(wl.left+wl.width/2)?'direita':'esquerda'):'-',caixas=g?g.querySelectorAll('rect').length:0,dentroDoEspelho=!!(g&&g.closest('#wvmir'));
+        o.push(w+': perna '+(!!g)+' · '+(caixas>5?'caixas do canto':'poucas caixas '+caixas)+' · do lado '+lado+(w==='e'?' · no espelho '+dentroDoEspelho:''))}
+        o.push('projeto igual '+(sig()===s0));
+        wvGo('e');await W(100);document.querySelector('#svg #cnleg rect').dispatchEvent(new MouseEvent('click',{bubbles:true}));await W(150);o.push('toque na perna: parede '+(wvCur()||'f')+' · escolhido é o canto '+(S.m&&S.m.corner==='e'));
+        wvGo('f');o.push('na parede do fundo não desenha perna '+!document.querySelector('#svg #cnleg'));o.push('erros '+(__errs.length-e0));return o.join(' | ');})();return JSON.stringify({r:r});
+        """#)
+        XCTAssertEqual(o["r"] as? String, "e: perna true · caixas do canto · do lado direita · no espelho true | d: perna true · caixas do canto · do lado esquerda | projeto igual true | toque na perna: parede f · escolhido é o canto true | na parede do fundo não desenha perna true | erros 0", "perna do canto nas duas laterais, fiel, toque escolhe o canto")
+    }
+
+    // AUDITORIA 3.9 (achado do Code 1, Chefe 28/11): trocar de parede não troca o módulo escolhido. Dar a volta nas paredes volta ao mesmo (antes
+    // S.mi 1→8); o escolhido numa parede lateral volta quando a pessoa retorna a ela; o fundo guarda o dele; reabrir guarda o mesmo
+    func testETAPA3_TrocarParedeNaoTrocaOModuloEscolhido() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        /* constrói o ambiente como um projeto salvo (cada módulo nasce sozinho, depois parede/posição) */
+        window.__mkCena=async function(A){var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&(t.n===n||(n instanceof RegExp&&n.test(t.n))))r=t})});if(!r)throw new Error('sem modelo '+n);return JSON.parse(JSON.stringify(r))};
+        var um=async function(nome,o,corner){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.mods=[];draw();newTpl(T(nome));var m=S.mods[0];if(corner){S.m=m;S.tab=0;draw();panel();await W(50);document.querySelector('#bd [data-corner="'+corner+'"]').click();await W(150);m=S.mods[0]}var j=JSON.parse(JSON.stringify(m));Object.assign(j,o||{});return j};
+        var mods=[];
+        if(A==='L'){mods.push(await um('Balcão 2 portas',{x:5},'e'));mods.push(await um('Balcão 2 portas',{x:905}));mods.push(await um('Balcão porta + gavetas',{x:1805}));
+        var cd=await um('Balcão 2 portas',{},'d');cd.x=4195-cd.w;mods.push(cd);mods.push(await um('Aéreo 2 portas',{x:1200}));mods.push(await um('Aéreo 2 portas',{x:2300}));
+        mods.push(await um('Balcão 2 portas',{wing:'e',x:905,espE:1}));mods.push(await um('Balcão 1 porta',{wing:'e',x:1805,espE:1}));mods.push(await um('Aéreo 2 portas',{wing:'e',x:1000,espE:1}));
+        mods.push(await um('Balcão porta + gavetas',{wing:'d',x:905}));mods.push(await um('Armário alto 2 portas',{wing:'d',x:2000}))}
+        else{var c1=await um(/^Balcão canto cego · cego na esquerda/,{x:5});var c2=await um(/^Balcão canto cego · cego na direita/,{});c2.x=4195-c2.w;mods.push(c1,c2);mods.push(await um('Balcão 2 portas',{x:5+c1.w}));
+        mods.push(await um('Balcão 2 portas',{wing:'e',x:566,espE:1}));mods.push(await um('Balcão porta + gavetas',{wing:'d',x:566}));mods.push(await um('Aéreo 2 portas',{wing:'d',x:600}))}
+        var st=JSON.parse(JSON.stringify(initLimpo()));st.env='cozinha';st.room='cozinha';st.W=4200;st.H=2700;st.RD=3200;st.wl={L:'p',R:'p'};st.mods=mods;st.mi=-1;loadState(st);draw();await W(400);return S.mods.length};
+        var r=await (async function(){window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};await __mkCena('L');var o=[],e0=__errs.length;
+        S.m=S.mods[1];draw();panel();var m0=S.m;o.push('antes mi '+snapState().mi);
+        for(const w of ['e','f','d','f','e','d','f']){wvGo(w);await W(60)}o.push('volta inteira: mi '+snapState().mi+' · mesmo módulo '+(S.m===m0));
+        wvGo('e');var esc=S.mods[0];S.m=esc;draw();wvGo('f');o.push('escolheu um da esquerda e foi pro fundo: fundo com o de antes '+(S.m===m0));
+        wvGo('d');wvGo('e');o.push('voltou à esquerda: o que escolheu lá '+(S.m===esc));wvGo('f');o.push('fundo ainda com o de antes '+(S.m===m0));
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();o.push('reabriu: mi '+snapState().mi);o.push('erros '+(__errs.length-e0));return o.join(' | ');})();return JSON.stringify({r:r});
+        """#)
+        XCTAssertEqual(o["r"] as? String, "antes mi 1 | volta inteira: mi 1 · mesmo módulo true | escolheu um da esquerda e foi pro fundo: fundo com o de antes true | voltou à esquerda: o que escolheu lá true | fundo ainda com o de antes true | reabriu: mi 1 | erros 0", "o escolhido não muda ao trocar de parede")
+    }
+
     // AUDITORIA 3.9 (Adauto 28/11, liderada pelo Code 2): trocar a parede vista ou a câmera NUNCA altera o projeto. Ambiente completo com
     // canto em L esquerdo e direito, módulos no fundo, aéreos, asa esquerda (espelhada) e direita, torre: 11 trocas f/e/d nos dois sentidos,
     // as 4 câmeras do 3D (2 voltas), salvar/fechar/reabrir e trocar de novo — estado, peças de cada módulo, corte e orçamento iguais bit a bit

@@ -3459,3 +3459,7 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - a faixa só vale quando o dedo cai num retângulo de peça (a porta que cobre a base de 3 px); puxador e outros elementos seguem a regra deles;
   - só as peças do próprio módulo entram.
 - **Prova:** os 18 testes de puxador e TOQUEPECA passam a 1366, 430 e 375.
+- **2º ajuste (mesmo dia):** `testParedeEsquerdaToqueDoisToquesEArrasto…` falhava a 430 desde o e8b5de4e.
+  - Os 2 toques no meio do vão das gavetas (sobre a frente de gaveta) pegavam a "Travessa frontal", que fica atrás das frentes. Isso abria a edição; o painel rolava e o resto do roteiro caía fora da tela.
+  - Correção: a faixa só vale pra peça fina que aparece em algum ponto (a base a 375 aparece numa tira embaixo da porta). Peça toda coberta não ganha faixa, e o meio do vão volta a ser o acesso rápido.
+  - Prova: ParedeEsquerdaToque, PuxadorBola, TOQUEPECA e ToqueNoVao passam a 430, 375 e 1366.

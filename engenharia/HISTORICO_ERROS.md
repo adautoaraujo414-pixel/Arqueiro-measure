@@ -3364,4 +3364,4 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Teste:** `testETAPA3_ToqueNoMesmoModuloNaoMoveEPecaDaFrenteGanhaDoTamponamento`.
   - Confere tocar de novo no tamponamento (livre e cozinha) e o gesto pelo chão.
   - Confere 17 pontos inequívocos de peças em volta do tamponamento (iso, frente e lado), com a verdade dada pelo raio, como na s54.
-  - No ANTES (cópia c1cc2616 sem estas duas correções): x 5→800 e 8 pontos errados. Depois: passa a 1366 e a 430.
+  - No ANTES (cópia b780ebf0, sem estas duas correções): x 5→800 e 8 pontos errados. Depois: passa a 1366 e a 430.

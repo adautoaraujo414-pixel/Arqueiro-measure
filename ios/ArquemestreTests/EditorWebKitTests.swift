@@ -20230,6 +20230,32 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // PLANTA-TAMP (achado do Code 1, CRUZA-PROJETO, Chefe 28/11): a planta desenhava o módulo sem o tamponamento (terminava em 2705; o 3D, a lista, o corte
+    // e a pedra em 2735). Agora a planta desenha os tamponamentos esquerdo/direito (com engrosso) das mesmas caixas do 3D: planta = 3D nas 3 paredes, sem
+    // tamponamento (nada a mais), com engrosso e no móvel livre (deslocado e girado). Nenhum dado do projeto muda.
+    func testPLANTATAMP_PlantaDesenhaOTamponamentoIgualAo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length,eg0=STD().egOn;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var caso=async function(cfg){STD().egOn=cfg.eg?1:0;loadState(initLimpo());S.env='cozinha';S.W=3200;S.H=2700;S.mods=[];S.stones=[];S.fr=[];S.rp=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));var m=S.mods[0];S.m=m;m.x=1505;m.tl=!!cfg.tamp;m.tr=!!cfg.tamp;if(cfg.eg){m.egL=1;m.egR=1}if(cfg.w)m.wing=cfg.w;if(cfg.w==='L'){m.x=900;m.lx=1000;m.lz=800;if(cfg.rot)m.rot=cfg.rot}draw();var M0=JSON.stringify(S.mods);PLV=true;draw();await W(200);
+          var toW=function(el){var pts=el.getAttribute('points').trim().split(/\s+/).map(function(p){return p.split(',').map(Number)});var xs=pts.map(function(p){return (p[0]-OX)/PLK}),zs=pts.map(function(p){return (p[1]-(OY+10))/PLK});return [Math.min.apply(null,xs),Math.max.apply(null,xs),Math.min.apply(null,zs),Math.max.apply(null,zs)]};
+          var P=[].map.call(document.querySelectorAll('#svg [data-pltp="0"]'),toW);__build();var B=__boxes().filter(function(b){return /^0:Tamponamento (esquerdo|direito)/.test(String(b.nm))});
+          var ext=function(L){if(!L.length)return 'nenhum';return [Math.min.apply(null,L.map(function(q){return q[0]})),Math.max.apply(null,L.map(function(q){return q[1]})),Math.min.apply(null,L.map(function(q){return q[2]})),Math.max.apply(null,L.map(function(q){return q[3]}))].map(Math.round).join(',')};
+          var pl=ext(P),d3=ext(B.map(function(b){return [b.x0,b.x1,b.z0,b.z1]}));PLV=false;draw();var mud=JSON.stringify(S.mods)!==M0;return (pl===d3?'planta = 3D':'DIFERENTE planta '+pl+' 3D '+d3)+' · '+P.length+' peças'+(mud?' · PROJETO MUDOU':'')};
+        R.fundo=await caso({tamp:1});R.esquerda=await caso({tamp:1,w:'e'});R.direita=await caso({tamp:1,w:'d'});R.semTamp=await caso({});R.engrosso=await caso({tamp:1,eg:1});R.livre=await caso({tamp:1,w:'L'});R.livreGirado=await caso({tamp:1,w:'L',rot:90});
+        STD().egOn=eg0;S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["fundo"] as? String, "planta = 3D · 2 peças", "parede do fundo: termina em 2735 como o 3D")
+        XCTAssertEqual(o["esquerda"] as? String, "planta = 3D · 2 peças")
+        XCTAssertEqual(o["direita"] as? String, "planta = 3D · 2 peças")
+        XCTAssertEqual((o["semTamp"] as? String)?.hasPrefix("planta = 3D"), true, "sem marcar tamponamento: a planta desenha o mesmo que o 3D (a ponta exposta ganha o tamponamento automático) · \(o["semTamp"] ?? "")")
+        XCTAssertEqual((o["engrosso"] as? String)?.hasPrefix("planta = 3D"), true, "com engrosso: \(o["engrosso"] ?? "")")
+        XCTAssertEqual(o["livre"] as? String, "planta = 3D · 2 peças", "móvel livre deslocado")
+        XCTAssertEqual(o["livreGirado"] as? String, "planta = 3D · 2 peças", "móvel livre girado 90°")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // ITEM 41 (Chefe 28/11, achados da auditoria de toques): (1) a dica do 3D dizia "arraste pra mover", mas arrastar gira a vista (move segurando o dedo
     // ou com 2 toques no lugar novo); (2) 2 toques num ponto sem chão/parede levavam o módulo pra "a NaN mm" (depois 0); (3) a bolinha da alça da geladeira
     // tinha raio 7 do desenho (6 px na tela); (4) a alça de medida do escolhido fica em cima da lateral do vizinho encostado: toque parado nela escolhe o

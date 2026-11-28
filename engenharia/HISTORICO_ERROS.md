@@ -3075,3 +3075,16 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Validação:** sonda `tools/sondas/s50_guarda_sem_escrita.js` (120 modelos postos fora do lugar + cozinha sobreposta; desenhar, 3D, campo, parede menor): projeto e avisos iguais ao código antigo, bit a bit. Desempenho do `draw`/`partsOf` igual.
 - **Teste:** `testConfineAllRoomClampNaoEscrevemNosModulosMesmoResultado` (espião nos campos). No c38c9ba: 8 escritas em x e 10 em b; agora 0, mesmo lugar e mesmos avisos.
 - **Fora (classificação):** o `sanM` (dentro do `partsOf`) regrava o mesmo valor (não muda nada) — comportamento correto. Pedra e móveis soltos no `roomClamp` ainda usam escrever-e-desfazer (mesmo mecanismo) — risco identificado, não pedido.
+
+## PLANTA-TAMP (achado do Code 1, CRUZA-PROJETO, Chefe 28/11): a planta desenhava o módulo sem o tamponamento — Claude 4
+- **Antes:** na planta o módulo terminava em 2705, e no 3D, na lista, no corte e na pedra em 2735 (tamponamento de 30). Medi pelas caixas do 3D (`__boxes`): o tamponamento esquerdo ocupa x 1475..1505 e vai do fundo até 25 mm à frente do corpo (z 6..591).
+- **Correção (`plantaSvg` e o desenho do móvel livre):** a planta desenha, vista de cima, a união das caixas do 3D de cada "Tamponamento esquerdo/direito" (o engrosso entra no mesmo nome).
+  - Mesma posição e espessura do 3D, sem conta nova.
+  - Nas paredes, o mapa da planta P(x,z) é o mesmo do 3D. No móvel livre as caixas já vêm no lugar e giradas.
+  - Só desenho (`pointer-events:none`): nenhum dado muda.
+- **Teste novo:** `testPLANTATAMP_PlantaDesenhaOTamponamentoIgualAo3D`, comparando planta e 3D:
+  - nas paredes do fundo, esquerda e direita;
+  - sem marcar tamponamento (a ponta exposta ganha o tamponamento automático, igual ao 3D);
+  - com engrosso;
+  - com o móvel livre deslocado e girado 90°.
+  - Falha na 6ae7f4af e passa a 430 e a 1366. Os 11 testes da planta passam.

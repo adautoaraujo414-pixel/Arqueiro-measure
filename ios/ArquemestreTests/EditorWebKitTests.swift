@@ -8443,9 +8443,9 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["abas"] as? Int, 11)
         // PAREDES C (23/11, ab9d030): + seção "Paredes do ambiente" (remover/restaurar) na aba Ambiente · JUNÇÃO 5 (23/11, a849a43): + seção "Travessão" na aba Estrutura
-        XCTAssertEqual(o["secoesComSetinha"] as? Int, 52, "FRENTE-COMP (ETAPA 2 item 19, Adauto 26/11): +1 na Estrutura (Composição da frente) · ESTILOS DE PORTA (23/11): +1 na aba Portas · PAREDES C + JUNÇÃO 5 (23/11): +2 · ESTRUTURA-AFASTA 22/11: +1 (Estrutura do Módulo) · Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)")
+        XCTAssertEqual(o["secoesComSetinha"] as? Int, 53, "BASES UNIDAS (Code 2, ETAPA 2, integração 28/11): +1 na Estrutura · FRENTE-COMP (ETAPA 2 item 19, Adauto 26/11): +1 na Estrutura (Composição da frente) · ESTILOS DE PORTA (23/11): +1 na aba Portas · PAREDES C + JUNÇÃO 5 (23/11): +2 · ESTRUTURA-AFASTA 22/11: +1 (Estrutura do Módulo) · Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)")
         // ESTRUTURA-AFASTA (pedido do Adauto 22/11): + a seção "Estrutura do Módulo" (com setinha) na aba Estrutura
-        XCTAssertEqual(o["porAba"] as? String, /* FRENTE-COMP (item 19, 26/11): Estrutura 9→10 */ "Ambiente 5 | 🎨 Cores 1 | Estrutura 10 | Divisões 4 | Portas 7 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
+        XCTAssertEqual(o["porAba"] as? String, /* FRENTE-COMP (item 19, 26/11): Estrutura 9→10 · BASES UNIDAS (Code 2, integração 28/11): 10→11 */ "Ambiente 5 | 🎨 Cores 1 | Estrutura 11 | Divisões 4 | Portas 7 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
         XCTAssertEqual(o["ruins"] as? String, "0")
         XCTAssertEqual(o["tituloSemSetinha"] as? String, "0")
         XCTAssertEqual(o["nascemFechadas"] as? String, "Estrutura › Rodapé")

@@ -2957,3 +2957,24 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - A sonda s51 (agora com salvar/desfazer/reabrir) aciona cada controle e, se ele mudou o projeto: espera o salvamento automático e confere que o arquivo é o estado da tela; toca ↶ e confere que volta ao estado de antes; reabre o arquivo e confere igual. Se mudou preços: confere que ficou gravado.
 - Resultado a 1366: Valores 23 controles que mudam o projeto, Preços 77, Plano de corte 61, ArqueCut 8 → todos salvam, desfazem e reabrem iguais; preços gravados. Clientes: nenhum controle muda o projeto aberto (cria/abre outro).
 - 1ª rodada acusou "não desfaz" por erro da sonda (reabria antes de desfazer e mexia no histórico); corrigida a ordem.
+
+### Item 30 · tempo depois da correção (Chefe 28/11: "o Adauto não aceita atraso") — Claude 5
+- **Problema:** o 44475b2 trocou o relógio por um limite de trabalho que deixava obra grande e o "melhor aproveitamento" (segundo plano) mais lentos. Medido: obra grande direto ~315–360 ms e segundo plano ~2,5 s, contra ~320 ms e ~1,3 s sem o item 30.
+- **Causa:** o trabalho contava 1 por peça, mas o custo de cada tentativa cresce com o quadrado das peças. Além disso, a busca "já no mínimo de chapas" (que antes parava em 60–200 ms sem mudar o plano) ia até o limite de tentativas.
+- **Correção (sem relógio, determinística):**
+  - cada tentativa conta peças²/50 (`cutU`), com `CUTK=1000` (packOnce) e `CUTK2=400` (packMax) por "ms" dos limites antigos;
+  - o aperto da chapa conta peças com `CUTKT=500`;
+  - acima de 70 peças na chapa, o nº máximo de tentativas cai na proporção do quadrado (`cutCap`).
+- **Mesmo plano:** sonda s49 nos 142 modelos: igual ao código sem o item 30 com o relógio parado (o resultado "sem carga"), e igual com relógio normal, parado e carregado (0 diferenças nos 3 caminhos).
+- **Tempo (Chromium desta máquina, mediana de 3 rodadas, ms):**
+
+| Tela | Obra | Direto: sem item 30 / 44475b2 / agora | Rápido (abrir): idem | Segundo plano: idem |
+|---|---|---|---|---|
+| 1366 | pequena (1 módulo) | 43 / 40 / 46 | 8 / 7 / 8 | 244 / 343 / 304 |
+| 1366 | cozinha (9 módulos) | 155 / 158 / 120 | 42 / 40 / 35 | 573 / 1126 / 565 |
+| 1366 | grande (40 módulos) | 324 / 315 / 168 | 68 / 56 / 67 | 1302 / 2508 / 850 |
+| 430 | pequena | 50 / 44 / 47 | 8 / 8 / 8 | 240 / 352 / 250 |
+| 430 | cozinha | 161 / 161 / 133 | 41 / 40 / 46 | 581 / 1019 / 586 |
+| 430 | grande | 322 / 361 / 163 | 74 / 59 / 63 | 1262 / 2642 / 812 |
+
+- **Leitura:** direto e rápido iguais ou mais rápidos; segundo plano igual ou mais rápido, menos a obra pequena a 1366 (+60 ms em segundo plano, a tela não espera). Em aparelho real: não medido.

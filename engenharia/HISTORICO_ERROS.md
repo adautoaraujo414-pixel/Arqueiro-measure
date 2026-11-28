@@ -3425,3 +3425,10 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - ao fechar o 3D, se o módulo escolhido mudou lá dentro, o painel é refeito.
   - Os caminhos de sempre não mudam.
 - **Teste:** `testTIPOSEGUE_TituloEPainelSeguemOModuloEscolhidoNo3D`. Falha no `b780ebf0` ("título Superior · escolhido balcão") e passa a 375, 430 e 1366. NadaDeEnfeiteTelaPrincipal passa nas três.
+
+## VAO-LIVRE (Chefe 28/11, decisão B para o vão de cima a 375) — Claude 4
+- **Decisão do Chefe:** o layout não muda. O teste toca na parte livre da faixa (alcançável) e prova que o 🔓 e o vão não se confundem.
+- **Teste `testDoisToquesNoVaoDeCimaAteOTeto…`:** os 2 toques vão no 1º ponto livre da faixa (o desenho, não um botão), a partir do meio. Onde o meio está livre, é o meio, como antes.
+- **Prova nova (`cadeadoXvao`):** o toque no 🔓 não abre o vão e muda só o cadeado; os 2 toques na faixa livre abrem o vão e não mexem no cadeado.
+- **Resultado:** passa a 375, 430 e 1366.
+- O caso do LED no ripado fica com o ajuste do Claude 3 (db5c08d9).

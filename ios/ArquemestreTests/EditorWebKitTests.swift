@@ -10710,7 +10710,9 @@ final class EditorWebKitTests: XCTestCase {
         var cli=function(xm,ym){var sv=document.getElementById('svg'),g=document.getElementById('wvmir')||sv,pt=sv.createSVGPoint();pt.x=OX+xm*K;pt.y=OY+S.H*K-ym*K;var q=pt.matrixTransform(g.getScreenCTM());return [q.x,q.y]};
         var tap=function(c){var el=document.elementFromPoint(c[0],c[1])||document.getElementById('svg');['pointerdown','pointerup'].forEach(function(t){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:c[0],clientY:c[1],pointerId:7,isPrimary:true,pointerType:'touch'}))})};
         var menu=function(){var d=document.getElementById('vmenu');return d&&d.dataset.topgap!==undefined?d:null};
-        var dois=async function(m){if(window.SOLO2)soloOff();draw();var top=m.b+m.h,c=cli(m.x+m.w/2,(top+S.H)/2);tap(c);await W(120);tap(c);await W(450);return menu()};
+        /* VAO-LIVRE (Chefe 28/11, decisão B): a 375 o meio da faixa do aéreo encostado na direita fica embaixo do 🔓; a faixa continua alcançável fora dele. O ponto é o 1º livre (o desenho, não um botão) a partir do meio; onde o meio está livre, é o meio como antes */
+        var livre=function(m,y){for(var k=0;k<=20;k++){var f=0.5+(k%2?-1:1)*Math.ceil(k/2)*0.025;if(f<0.03||f>0.97)continue;var q=cli(m.x+m.w*f,y),el=document.elementFromPoint(q[0],q[1]);if(el&&el.closest&&el.closest('#svg'))return q}return cli(m.x+m.w/2,y)};
+        var dois=async function(m){if(window.SOLO2)soloOff();draw();var top=m.b+m.h,c=livre(m,(top+S.H)/2);tap(c);await W(120);tap(c);await W(450);return menu()};
         var bt=function(k){var b=menu()&&menu().querySelector('[data-tg="'+k+'"]');if(b)b.click();return !!b};
         var pn=function(){var a=S.rp[S.rp.length-1];return a?(a.liso?'liso':'ripado')+' '+a.x+'..'+(a.x+a.w)+' de '+a.b+' até '+(a.b+a.h)+' · afastado da parede '+(+a.af||0):'nenhum'};
         /* 1. aéreo: o menu tem as 3 opções */
@@ -10744,6 +10746,10 @@ final class EditorWebKitTests: XCTestCase {
         /* 7c. PEDIDO 56b: atrás nada; lado aberto vira L até a parede · encostado na parede ou em módulo alto, sem L */
         novo();newTpl(T('Aéreo 2 portas'));draw();if(window.SOLO2)soloOff();m=S.mods[0];m.x=1000;draw();await dois(m);bt('rip');bt('rip|f');draw();R.noMeioDaParede=cx();open3D();await W(200);var bb=__boxes().filter(function(b){return b.rpid===S.rp[0].id});R.ladoRipado3D=bb.filter(function(b){return b.z1<=S.rp[0].af+0.5&&Math.round(b.x1-b.x0)===22}).length+' ripas nas laterais · nada encostado na parede atrás do painel: '+(bb.some(function(b){return b.z0<1&&b.x1-b.x0>100})?'tem':'nada');
         novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];m.x=S.W-m.w;draw();await dois(m);bt('rip');bt('rip|f');draw();R.encostadoNaDireita=cx();
+        /* VAO-LIVRE: o toque no 🔓 não abre o vão de cima e os 2 toques na faixa livre não mexem no 🔓 */
+        novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];m.x=S.W-m.w;draw();var lk=function(){return S.mods.map(function(q){return q.lock?1:0}).join('')},L0=lk(),lb=document.getElementById('lockAll'),lr=lb.getBoundingClientRect(),lc=[lr.left+lr.width/2,lr.top+lr.height/2];
+        var elc=document.elementFromPoint(lc[0],lc[1]);if(elc&&elc.closest&&elc.closest('#lockAll'))lb.click();await W(300);var noCadeado=(menu()?'abriu o vão (ERRADO)':'não abre o vão')+' · cadeado '+(lk()!==L0?'mudou':'igual');if(lk()!==L0){lb.click();await W(200)}try{vmenuClose()}catch(_){}
+        var L1=lk();var dm=await dois(m);R.cadeadoXvao='toque no 🔓: '+noCadeado+' · 2 toques na faixa: '+(dm?'abre o vão':'NÃO ABRE')+' · cadeado '+(lk()===L1?'igual':'MUDOU');try{vmenuClose()}catch(_){}
         novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];m.x=1000;draw();newTpl(T('Aéreo 2 portas'));draw();var m2=S.mods[1];m2.x=m.x+m.w;m2.b=0;m2.h=S.H;draw();await dois(m);bt('rip');bt('rip|f');draw();R.coladoEmModuloAlto=cx();
         /* 8. na parede da esquerda também */
         novo();wvGo('e');draw();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[S.mods.length-1];await dois(m);bt('rip');bt('rip|c');R.paredeEsquerda=pn();wvGo('f');draw();R.guardadoNaEsquerda=snapState().rp.map(function(a){return (a.wall||'f')}).join(',');
@@ -10775,6 +10781,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["noMeioDaParede"] as? String, "corte 2 Base da lateral do L ripada (do painel até a parede) 100x322,8 Ripa da lateral do L 100x40 · L lateral esquerda,lateral direita · peças 3D começam em z Infinity")
         XCTAssertEqual(o["ladoRipado3D"] as? String, "8 ripas nas laterais · nada encostado na parede atrás do painel: nada")
         XCTAssertEqual(o["encostadoNaDireita"] as? String, "corte 1 Base da lateral do L ripada (do painel até a parede) 100x322,4 Ripa da lateral do L 100x40 · L lateral esquerda · peças 3D começam em z Infinity")
+        XCTAssertEqual(o["cadeadoXvao"] as? String, "toque no 🔓: não abre o vão · cadeado mudou · 2 toques na faixa: abre o vão · cadeado igual", "VAO-LIVRE (Chefe 28/11): o 🔓 faz só o dele e a faixa livre abre o vão sem mexer no 🔓")
         XCTAssertEqual(o["coladoEmModuloAlto"] as? String, "corte 1 Base da lateral do L ripada (do painel até a parede) 100x322,4 Ripa da lateral do L 100x40 · L lateral esquerda · peças 3D começam em z Infinity")
         XCTAssertEqual(o["paredeEsquerda"] as? String, "ripado 35..1035 de 2500 até 2600 · afastado da parede 0")
         XCTAssertEqual(o["guardadoNaEsquerda"] as? String, "e")

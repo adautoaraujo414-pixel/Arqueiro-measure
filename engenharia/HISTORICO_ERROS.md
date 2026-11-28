@@ -2958,3 +2958,20 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Não muda:** aéreo canto cego (regra: base em cima e embaixo), painel cego, régua espaçadora, porta (2 dobradiças), 165° e E/D.
 - **Divisória interna, parametrizada** (decisão do Adauto pendente, Chefe 28/11): por padrão fica como era (620). A opção "Divisória interna sobe até a travessa" (`m.cgDivTopo`) leva a 675, encostada embaixo da travessa deitada. Com desfazer.
 - **Teste:** `testE2ITEM7_CantoCegoComTravessasDaFrenteEDeTrasEmbutidasOuApoiadas`. No HEAD anterior falha (sem a estrutura nem o botão); agora passa.
+
+## PV2D (ETAPA 2 item 9, Adauto/Chefe 27/11, V2/V3): perspectiva livre como modo a mais do editor 2D — Claude 3 · 1ª parte
+- **Pedido:** câmera em perspectiva livre dentro do 2D, girando em volta dos módulos (frente/cima/lado/diagonal), com a mesma geometria do partsOf.
+  - Na mesma vista: tocar seleciona, 2 toques configuram, alças, cota até a parede, pôr do catálogo ao lado.
+  - Gestos: 1 dedo edita/arrasta; 2 dedos giram; pinça dá zoom; a câmera nunca move peça; mouse meio/direito gira e a roda dá zoom; caneta com palma.
+  - Todas as vistas e ferramentas do 2D continuam.
+- **1ª parte (feita):**
+  - botão "🧊 Perspectiva" na barra do 2D: a mesma cena do 3D (as caixas do partsOf) encaixada no quadro do desenho; o painel ao lado e a barra de baixo continuam;
+  - barra própria: Frente, Cima, Lado, Diagonal e "↩ 2D";
+  - `PV2D` nos tratadores do 3D:
+    - 2 dedos giram e a pinça dá zoom; 1 dedo nunca move a câmera; mouse do meio/direito gira, a roda dá zoom (a de sempre);
+    - 1 dedo no móvel arrasta na hora (sem segurar 350 ms);
+    - 1 toque escolhe com contorno (`LP3MI`); 2 toques abrem as configurações pelo `pcEdOpen` do Claude 4;
+    - a caneta usa o `window.PALMA` do Claude 4, que já cobre o 3D.
+  - Fechar volta ao 2D. O projeto não muda por abrir, girar ou fechar.
+- **2ª parte (a fazer):** alças de tamanho, cota até a parede e "pôr do catálogo ao lado" dentro da perspectiva.
+- **Teste:** `testE2ITEM9_PerspectivaLivreNo2DGestosSemACameraMoverPeca` (falha antes, passa agora). Print: `tools/sondas/etapa2_c3/item9_perspectiva_no_2d.png`.

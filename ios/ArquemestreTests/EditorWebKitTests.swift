@@ -17239,6 +17239,30 @@ final class EditorWebKitTests: XCTestCase {
 
     /// MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11 "cálculos reais e automáticos" e "Regras do módulo · organização"; checklist D21/D24): as 24
     /// combinações (balcão e aéreo × moldura × Frontal × travessão sem/externo/interno) com cada peça igual no 3D e no corte (nenhuma espessura somada
+    /// ETAPA 2 · item 9 (Adauto/Chefe 27/11, V2/V3): perspectiva livre como modo a mais do 2D — mesma cena do partsOf dentro do quadro do desenho, painel ao lado
+    /// visível; 1 dedo no vazio não mexe a câmera; 2 dedos giram sem mudar o projeto; 1 dedo no móvel arrasta na hora; 1 toque escolhe (contorno); 2 toques abrem as
+    /// configurações (pcEdOpen do Claude 4); fechar volta ao 2D.
+    func testE2ITEM9_PerspectivaLivreNo2DGestosSemACameraMoverPeca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var AM=[];window.ambMsg=function(t){AM.push(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[];
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;newTpl(achar('Balcão 2 portas'));S.m.x=600;newTpl(achar('Gaveteiro 3 gavetas'));S.m.x=1600;newTpl(achar('Aéreo 2 portas'));S.m.x=600;draw();var sv0=JSON.stringify(snapState());
+out.push('botão: '+!!document.getElementById('pv2db'));document.getElementById('pv2db').click();await W(1500);
+var v=document.getElementById('v3'),r=v.getBoundingClientRect(),c=document.getElementById('svg').parentElement.getBoundingClientRect();out.push('quadro do 2D '+Math.round(c.left)+','+Math.round(c.top)+' '+Math.round(c.width)+'×'+Math.round(c.height)+' · vista '+Math.round(r.left)+','+Math.round(r.top)+' '+Math.round(r.width)+'×'+Math.round(r.height)+' · painel visível '+(document.getElementById('bd').getBoundingClientRect().left>=r.right-1));
+var cen=function(mi){var B=__boxes().filter(function(b){return String(b.nm).indexOf(mi+':')===0&&!b.nol});return [(Math.min.apply(null,B.map(function(b){return b.x0}))+Math.max.apply(null,B.map(function(b){return b.x1})))/2,(Math.min.apply(null,B.map(function(b){return b.y0}))+Math.max.apply(null,B.map(function(b){return b.y1})))/2,(Math.min.apply(null,B.map(function(b){return b.z0}))+Math.max.apply(null,B.map(function(b){return b.z1})))/2]};
+var cv=document.getElementById('cv3'),ref=function(){return __p3(0,0,0)},pe=function(n,x,y,id,ty,bt){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:id||1,pointerType:ty||'touch',isPrimary:(id||1)===1,button:bt||0,buttons:n==='pointerup'?0:(bt===2?2:1)}))};
+/* 1 dedo no vazio: a câmera não mexe */var a0=ref();pe('pointerdown',r.left+40,r.bottom-40);for(var k=1;k<=5;k++){pe('pointermove',r.left+40+k*20,r.bottom-40);await W(20)}pe('pointerup',r.left+140,r.bottom-40);await W(100);var a1=ref();out.push('1 dedo no vazio: câmera '+(Math.hypot(a1[0]-a0[0],a1[1]-a0[1])<1?'parada':'MEXEU'));
+/* 2 dedos: giram */__build();var a2=ref();pe('pointerdown',r.left+300,r.top+300,1);pe('pointerdown',r.left+500,r.top+300,2);for(var k=1;k<=5;k++){pe('pointermove',r.left+300+k*15,r.top+300,1);pe('pointermove',r.left+500+k*15,r.top+300,2);await W(20)}pe('pointerup',r.left+375,r.top+300,1);pe('pointerup',r.left+575,r.top+300,2);await W(150);var a3=ref();out.push('2 dedos: câmera '+(Math.hypot(a3[0]-a2[0],a3[1]-a2[1])>3?'girou':'parada')+' · móveis '+(JSON.stringify(snapState())===sv0?'iguais':'MUDARAM'));
+/* 1 dedo no móvel: arrasta na hora */var m0=S.mods[0],x0=m0.x;__build();var cr=cv.getBoundingClientRect(),cc=cen(0),sp0=__p3(cc[0],cc[1],cc[2]),sp=[cr.left+sp0[0],cr.top+sp0[1]];pe('pointerdown',sp[0],sp[1]);await W(30);for(var k=1;k<=6;k++){pe('pointermove',sp[0]+k*12,sp[1]);await W(30)}pe('pointerup',sp[0]+72,sp[1]);await W(150);out.push('1 dedo no balcão: x '+x0+'→'+m0.x);
+/* toque e 2 toques */S.m=null;var cc2=cen(1),sp2=__p3(cc2[0],cc2[1],cc2[2]);org3api.one(sp2[0],sp2[1]);await W(100);out.push('1 toque: escolhido '+(S.m===S.mods[1])+' · contorno '+(window.LP3MI===1));org3api.one(sp2[0],sp2[1]);await W(150);out.push('2 toques: '+AM.slice(-1)[0]+' · aba '+S.tab);
+document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!window.PV2D)+" · 2D de volta "+!!document.querySelector("#svg #mod"));out.push("errs "+__errs.length);var tem=function(f){return out.some(f)?1:0};var R={res:[tem(function(x){return x==="botão: true"}),tem(function(x){return /vista 16,/.test(x)&&/painel visível true$/.test(x)}),tem(function(x){return x==="1 dedo no vazio: câmera parada"}),tem(function(x){return x==="2 dedos: câmera girou · móveis iguais"}),tem(function(x){return /^1 dedo no balcão: x 600→/.test(x)&&!/→600$/.test(x)}),tem(function(x){return x==="1 toque: escolhido true · contorno true"}),tem(function(x){return /^2 toques: ⚙ Configurações/.test(x)}),tem(function(x){return x==="fechou: true · 2D de volta true"}),tem(function(x){return x==="errs 0"})].join(""),out:out.join(" ‖ ")};return JSON.stringify(R);
+
+          """#)
+        /* botão · no quadro do 2D com o painel · 1 dedo no vazio parado · 2 dedos giram sem mudar · 1 dedo arrasta · 1 toque escolhe · 2 toques configura · fecha · sem erro */
+        XCTAssertEqual(o["res"] as? String, "111111111", "perspectiva livre no 2D: \(o["out"] ?? "")")
+    }
+
     /// ETAPA 2 · item 7 (Adauto/Chefe 27/11, referências R12/R13/R15): balcão canto cego E e D com laterais inteiras, travessa da frente e de trás
     /// deitadas (embutidas entre as laterais OU apoiadas em cima), painel cego, régua entre o cego e a porta, porta com 2 dobradiças; medidas de fora iguais;
     /// lista = corte = 3D (cada travessa com a sua chave); projeto antigo igual, com "Atualizar estrutura" e desfazer; salvar e reabrir; aéreo não muda.

@@ -2827,7 +2827,8 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   3. **Espessura do fundo** 123 virava 6 calado, e o campo mostrava 123. Causa: `def()` volta `fundoMm` fora de 2–30 para 6.
 - **Correção:**
   - Tecla "✕ Cancelar" no teclado do app: volta o valor de antes (`data-kpv`), fecha e não aplica nada.
-  - Na entrada dos campos `data-r` (esp, fundoMm, rasgoP, rasgoR) e `data-k` (w, d), fora da faixa do `def()` sai o aviso "⚠ … não pode: o mínimo/máximo é … mm. Nada foi alterado.", nada muda e o campo volta. É o mesmo jeito que a Altura já tinha.
+  - Na entrada dos campos `data-r`, usa o mesmo `medLim`/`medRecusa` que a largura e a altura já usavam (simula no `sanM`), sem tabela própria (§4). O que o `sanM` mudaria gera o aviso "⚠ … não pode: o mínimo/máximo é … mm. Nada foi alterado.", nada muda e o campo volta.
+  - Quando o `sanM` volta para o padrão em vez de segurar no limite (fundo fora de 2–30 vira 6), o limite do aviso é achado por busca no próprio `medLim` (30, e não 6). Os campos `data-k` (largura, profundidade) já passavam por `medLim`.
   - O `def()` não mudou: ele também abre projetos antigos (§3).
 - **Teste novo:** `testCAMPONUM_TecladoOkCancelarValorExatoEForaDaFaixaAvisa`, com toque nas teclas. Falha na 53344a39 e passa a 430, a 1366 e no iPad simulado. Os outros 13 testes de digitação continuam passando.
 - **Achado sem correção (decidir):** "Desconto na altura (mm)" da aba Portas grava nos Ajustes gerais (`STD().cvDesc`), vale para o projeto todo e **não tem desfazer**, porque os Ajustes não entram no `snapState`. Colocar os Ajustes no desfazer mexe no formato do histórico.

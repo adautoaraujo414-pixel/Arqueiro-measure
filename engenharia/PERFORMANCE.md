@@ -139,3 +139,55 @@ Os testes contam o trabalho, não o relógio. O relógio varia com a máquina e 
   - câmera mexendo desenha direto.
 - **Como medir de novo** (scripts da seção 2): rodar alternando antes e depois, com a máquina parada.
   - Se uma mudança fizer o quadro da animação passar de 25 ms ou a seleção passar de 60 ms (mediana, cozinha grande), avisar antes de liberar.
+
+## 9. ETAPA 2 · item 14 (Adauto, 26/11/2026): medição antes × depois e PERF-CORTE
+Antes = `3174dbd8` (base da etapa 2). Medido no Chromium sem tela deste servidor (2 processadores, 3D pelo SwiftShader): **não vale como medida de iPhone, iPad, Android ou Windows de verdade** (seção 1). Scripts na pasta de trabalho da sessão (`perf2/`), fora do repositório.
+
+### Cenários
+- **pequeno:** 1 balcão e 1 aéreo (2 módulos, 21 peças).
+- **médio:** a cozinha de exemplo (`demoScene`, 9 módulos, 123 peças).
+- **grande:** 8 balcões, 7 aéreos, 2 guarda-roupas e pedra (15 módulos, 249 peças).
+- **ambientes:** 2 guarda-roupas, cristaleira, balcões e aéreos, 4 espelhos com LED, geladeira, micro-ondas, prateleira com LED, painel liso e painel ripado (7 módulos, 202 peças).
+- Telas 430 × 900 (densidade 3) e 1366 × 768.
+
+### Antes (mediana de 7 repetições, até o próximo quadro da tela; o mínimo é 1 quadro, ~16,7 ms)
+| Ação | pequeno | médio | grande | ambientes |
+|---|---|---|---|---|
+| Desenhar o 2D | 7 ms | 20 ms | 20 ms | 19 ms |
+| Selecionar módulo (2D + painel) | 20 ms | 20 ms | 22 ms | 20 ms |
+| Trocar de aba | 10 ms | 12 ms | 13 ms | 15 ms |
+| Digitar a largura | 21 ms | 19 ms | 26 ms | 49 ms (a 1366: 44 ms) |
+| Arrastar módulo (por movimento) | 17 ms | 17 ms | 17 ms | 20 ms |
+| Salvar / reabrir o projeto | 5 / 19 ms | 5 / 29 ms | 5 / 36 ms | 6 / 34 ms |
+| Abrir o 3D | 25 ms | 34 ms | 50 ms | 89 ms |
+| Memória do JavaScript | 13 MB | 19 MB | 20 MB | 27 MB |
+
+- **Digitar a largura no projeto "ambientes":** são 2 desenhos porque o `rowFix` ajusta a fila ao mudar a largura do guarda-roupa. É mudança de verdade e não desperdício. O recálculo de layout é de 2 a 5 ms por digitação: medir a tela (`getBoundingClientRect` no `imF`) não é o gargalo.
+- **Girar e zoom no 3D:** não refazem a cena. Girar manda geometria pra placa só quando uma parede aparece ou some (`WV`/`WGH`/`CORK`), que é mudança de verdade. Zoom: 0 envios.
+- **Abrir portas no 3D:** refaz a cena a cada quadro (seção 7, depende de aprovação).
+- **Memória:** nada vaza. Reabrir 20 vezes, abrir e fechar o 3D 20 vezes, 20 seleções e 6 aberturas do plano de corte: a memória e os nós da página ficam estáveis. A 1ª abertura do 3D guarda de 5 a 10 MB de texturas, uma vez só.
+
+### PERF-CORTE (b85ea5fe, teste 6784eff9)
+- **Achado:** abrir o plano de corte do projeto grande pedia 582 vezes o `partsOf`. Desse total, 239 vinham do `furSvg`, que pedia as peças do módulo inteiro **de novo a cada peça desenhada**, só pra achar a furação dela.
+- **Correção:** durante o `planHtml`, as peças de cada módulo saem do `partsOf` uma vez só (`window.__furPO`). A cópia é jogada fora no fim do desenho. Fora do desenho nada muda, e a próxima abertura lê tudo de novo.
+- **Mesmo resultado:**
+  - O HTML do plano de corte e as peças são idênticos, byte a byte, antes e depois, nos 142 modelos do catálogo e nos 4 cenários.
+  - Os números de identificação que nascem diferentes a cada vez (`uid` do módulo e o id do ripado, que vem da hora) ficam fora da comparação.
+  - Uma diferença única com a máquina carregada ("Estante torre aberta com gavetas embaixo") não se repetiu isolada: 6 de 6 iguais nas duas versões. É o risco N11, já registrado.
+- **Trabalho:** 582 → 358 chamadas ao abrir o plano. Só no desenho, 307 → 83. No teste: 9,32,11,24 → 1,1,1,1 por módulo.
+- **Tempo** (430 × 900 × 3, 3 rodadas × 6 aberturas, máquina parada):
+
+| Plano de corte | antes | depois |
+|---|---|---|
+| grande, 1ª abertura (mediana) | 394 ms | 366 ms |
+| grande, aberturas seguintes (mediana) | 178 ms | 154 ms |
+| ambientes, 1ª abertura | 409 ms | 383 ms |
+| ambientes, aberturas seguintes | 193 ms | 167 ms |
+
+  O ganho é de cerca de 7 a 15% e fica perto da variação entre rodadas.
+- **Bateria completa** (`tools/bateria_editor.py`): 587/587 a 1366 × 768 e 587/587 a 430 × 900 × 3, no editor do b85ea5fe com o teste novo. A rodada foi interrompida pelo reinício do ambiente e completada com os 277/279 que faltavam, todos passando.
+
+### Gargalos que continuam no plano de corte (medidos, não mexidos)
+- A lista de grupos (`cutGroups`) é montada **6 vezes** em cada abertura: 2 vezes em cada `sheetPlan` (o do plano e o do `budget`) e 2 no `cutAll`. Os chamadores podem mexer no resultado, então não dá pra guardar sem conferir cada um.
+- O `sheetPlan` roda 2 vezes (plano e orçamento).
+- O layout do HTML do plano (cerca de 8 mil nós e 77 ms de layout no projeto grande) é o maior custo fora do JavaScript.

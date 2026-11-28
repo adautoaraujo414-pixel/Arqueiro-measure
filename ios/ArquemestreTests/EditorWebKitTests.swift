@@ -11602,10 +11602,10 @@ final class EditorWebKitTests: XCTestCase {
         S.geo.push({id:1,tp:'tamp',desce:'tl',x:370,b:0,z:6,w:30,h:850,d:585,c:'#e6d9be'});S.geo.push({id:2,tp:'placa',x:3200,b:0,z:300,w:600,h:1200,d:15,c:'#e6d9be'});draw();
         var foto=function(){SPC={};var G=cutGroups(),q=0,lin=[];G.ord.forEach(function(k){var g=G.map[k];q+=+g.qty||0;lin.push(g.qty+'x'+g.L+'x'+g.W)});var P=sheetPlan(1),nch=0;P.groups.forEach(function(g){nch+=g.n});var b=budget();
           return JSON.stringify({pecas:q,linhas:lin.sort(),chapas:nch,tB:Math.round(b.T.tB*1000),tC:Math.round(b.T.tC*1000),tT:Math.round(b.T.tT*1000),tot:Math.round(b.tot*100)})};
-        var f1=foto(),f2=foto(),f3=foto();R.repetir=f1===f2&&f2===f3?'igual nas 3 vezes':'mudou: '+f1+' ≠ '+f3;
-        /* pôr e tirar: porta a mais no aéreo, tamponamento livre, placa solta */var v0=JSON.stringify(ae.v);ae.v[0].n=1;draw();var fp=foto();ae.v=JSON.parse(v0);draw();R.porta=(fp!==f1?'mudou ao editar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
-        var tl=S.geo.splice(0,1)[0];draw();var ft=foto();S.geo.unshift(tl);draw();R.livre=(ft!==f1?'mudou ao tirar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
-        var pl=S.geo.splice(1,1)[0];draw();var fpl=foto();S.geo.push(pl);draw();R.placa=(fpl!==f1?'mudou ao tirar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
+        var f1=foto(),f2=foto(),f3=foto(),B0=budget();/* Chefe 28/11 (financeiro ao centavo): além de "mudou", a diferença exata de cada parte do cálculo e a soma fechando com o total */var c2=function(v){return (Math.round(v*100)/100).toFixed(2)},fF=function(b){return (b.T.tB*(+PR.fitaB||0)+b.T.tC*(+PR.fitaC||0)+(b.T.tT||0)*(+PR.fitaT||0))*fK()},Dl=function(b){var dC=(b.cB+b.cC+b.cF)-(B0.cB+B0.cC+B0.cF),dF=fF(b)-fF(B0),dT=b.tot-B0.tot;return 'Δ '+c2(dT)+' = chapas '+c2(dC)+' + fita '+c2(dF)+' + ferragens '+c2(dT-dC-dF)+' · fita '+Math.round(((b.T.tB+b.T.tC+(b.T.tT||0))-(B0.T.tB+B0.T.tC+(B0.T.tT||0)))*1000)+' mm · dobradiças '+(b.T.dob-B0.T.dob)+' (×'+(+PR.dob||0)+' = '+c2((b.T.dob-B0.T.dob)*(+PR.dob||0))+')'};R.repetir=f1===f2&&f2===f3?'igual nas 3 vezes':'mudou: '+f1+' ≠ '+f3;
+        /* pôr e tirar: porta a mais no aéreo, tamponamento livre, placa solta */var v0=JSON.stringify(ae.v);ae.v[0].n=1;draw();var fp=foto();R.portaD=Dl(budget());ae.v=JSON.parse(v0);draw();R.porta=(fp!==f1?'mudou ao editar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
+        var tl=S.geo.splice(0,1)[0];draw();var ft=foto();R.livreD=Dl(budget());S.geo.unshift(tl);draw();R.livre=(ft!==f1?'mudou ao tirar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
+        var pl=S.geo.splice(1,1)[0];draw();var fpl=foto();R.placaD=Dl(budget());S.geo.push(pl);draw();R.placa=(fpl!==f1?'mudou ao tirar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
         /* placa solta: regra própria (sem fita, como antes) · tamponamento livre: fita */var bA=budget().T;S.geo=S.geo.filter(function(g){return g.tp!=='placa'});var bS=budget().T;S.geo.push(pl);R.placaFita=Math.round(((bA.tB+bA.tC+bA.tT)-(bS.tB+bS.tC+bS.tT))*1000)+' mm de fita da placa';
         /* salvar e reabrir: mesma foto */var js=JSON.stringify(snapState());loadState(JSON.parse(js));draw();R.reaberto=foto()===f1?'igual':'mudou';
         R.errs=__errs.length-e0;return JSON.stringify(R);
@@ -11614,6 +11614,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["porta"] as? String, "mudou ao editar · voltou igual")
         XCTAssertEqual(o["livre"] as? String, "mudou ao tirar · voltou igual")
         XCTAssertEqual(o["placa"] as? String, "mudou ao tirar · voltou igual")
+        XCTAssertEqual(o["portaD"] as? String, "Δ -19.70 = chapas 0.11 + fita -1.81 + ferragens -18.00 · fita -1496 mm · dobradiças -2 (×9 = -18.00)", "porta a menos no aéreo: diferença ao centavo")
+        XCTAssertEqual(o["livreD"] as? String, "Δ -78.05 = chapas -72.06 + fita -6.00 + ferragens 0.00 · fita -2870 mm · dobradiças 0 (×9 = 0.00)", "tamponamento livre tirado: diferença ao centavo · fita = perímetro 2 × (850 + 585) = 2870 mm, × R$ 1,90 × 1,10 = R$ 6,00")
+        XCTAssertEqual(o["placaD"] as? String, "Δ -52.17 = chapas -52.17 + fita 0.00 + ferragens 0.00 · fita 0 mm · dobradiças 0 (×9 = 0.00)", "placa solta tirada: diferença ao centavo (sem fita)")
         XCTAssertEqual(o["placaFita"] as? String, "0 mm de fita da placa", "placa solta mantém a regra dela (sem fita no orçamento)")
         XCTAssertEqual(o["reaberto"] as? String, "igual")
         XCTAssertEqual(o["errs"] as? Int, 0)

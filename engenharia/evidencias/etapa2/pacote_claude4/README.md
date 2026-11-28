@@ -19,7 +19,7 @@ Como foi feito: toque real pelo Chromium (CDP `Input.dispatchTouchEvent`), canet
 | 25 · toque na janela | `i25_*` | ANTES: tremida de 5 px movia a janela (x 1400 → 1425 a 1366, → 1470 a 430); 1 e 2 toques não faziam nada. DEPOIS: tremida = toque (seleciona, não move); 2 toques abrem o quadro da janela na aba Ambiente; arrasto depois de selecionar move. |
 | 26 · 2 toques na peça | `i26_*` | ANTES: lateral não abria nada; rodapé e base abriam só o acesso rápido. DEPOIS: lateral, rodapé e base abrem a edição deles ("✏️ Editando: …"); no meio do vão continua o acesso rápido. |
 | 27 · tremida na alça e na divisória | `i27_*` | ANTES: tremida de 5 px na bolinha mudava a largura (1200 → 1190 a 1366, → 1180 a 430) e na divisória mudava a posição (0,667 → 0,673 / 0,682). DEPOIS: nada muda. O arrasto de verdade continua igual nos dois. |
-| 34 (editor) · botão calado | `i34_*` | O − com a parede inteira na tela: ANTES calado, DEPOIS avisa. O ⌂: veja o achado abaixo. |
+| 34 (editor) · botão calado | `i34_*` | O − com a parede inteira na tela e o ⌂ com a vista no começo: ANTES calados; DEPOIS (**154591e0**, com a correção ZOOM-ROLADA) avisam, também a 1366 com a página rolada 107 px. |
 | 36 · palma com caneta | `i36_*` | ANTES: com a caneta encostada, a palma arrastava o módulo (x 600 → 350 a 1366, → 35 a 430) e abria o acesso rápido. DEPOIS: módulo parado e nada abre; caneta solta, o dedo volta a funcionar. |
 | 37 · teclado numérico | `i37_*` | ANTES: sem Cancelar; espessura 123 virava 50 sem aviso. DEPOIS: "✕ Cancelar" devolve o valor (1200); espessura 123 é recusada com aviso ("o máximo é 50 mm. Nada foi alterado") e fica 15. |
 | 38 · distância digitada | `i38_*` | ANTES: digitar 250 na distância moveu o módulo sozinho (x 1900 → 1810). DEPOIS: nada muda até escolher Mover, Redimensionar ou Cancelar. |
@@ -28,7 +28,7 @@ Como foi feito: toque real pelo Chromium (CDP `Input.dispatchTouchEvent`), canet
 | LATMEIO-PAREDE | `latmeio_*` | Balcão novo na parede direita: ANTES "Divisória 1", diferente do fundo; DEPOIS "Lateral do meio 1", igual ao fundo. Projeto antigo não muda sozinho: aviso com prévia e o botão "Igualar ao fundo". |
 | ESTAVEL | `estavel_*` | Abrir o teclado, OK e tocar de novo no mesmo campo: funciona igual nos dois (sem regressão). A correção do ESTAVEL é da estabilidade com página sem foco do sistema; a prova está nas execuções repetidas da bateria registradas no `HISTORICO_ERROS.md` (PesDeMetal 20/20 isolado, Parte1b/ParteB 10/10). |
 
-## Achado ao fazer o pacote (risco identificado, sem correção; para decisão)
-- **⌂ a 1366 × 768:** a barra de baixo (−, +, ⌂) fica abaixo da dobra da tela. Para tocar no ⌂ é preciso rolar a página, e com a página rolada o ⌂ não avisa nada e não volta a página ao começo (prancha `i34_1366`, quadros 3 e 4).
-  - Isso acontece no ANTES e no DEPOIS.
-  - A 430 o aviso aparece.
+## Achado ao fazer o pacote (corrigido no 154591e0, ZOOM-ROLADA)
+- A 1366 × 768, a barra de baixo (−, +, ⌂) fica abaixo da dobra da tela, e com a página rolada o ⌂ ficava calado. Isso acontecia no c38c9ba e no e98e8187.
+- O Chefe transformou o achado em item 34 (28/11). Agora o ⌂ avisa em qualquer rolagem, sem mudar o layout nem rolar a página.
+- Teste: `testZOOMROLADA_BotoesDaVistaFuncionamComAPaginaRolada`. A prancha `i34_*` mostra o DEPOIS já no 154591e0.

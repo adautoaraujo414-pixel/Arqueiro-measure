@@ -14560,6 +14560,35 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
     }
 
+    // AUDITORIA 3.9 (achado do Claude 3, Chefe 28/11): criar móvel com cada parede na tela. Sem espaço: nunca bloqueia calado — pergunta e oferece
+    // "Colocar mesmo assim" (§12). Canto em L criado com a parede lateral na tela: antes nada acontecia na tela (ele vai pro canto da parede do fundo);
+    // agora o app diz onde ele ficou e a perna aparece na parede lateral do lado dele
+    func testETAPA3_CriarComCadaParedeNaTelaNuncaBloqueiaCaladoECantoDizOndeFicou() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        /* constrói o ambiente como um projeto salvo (cada módulo nasce sozinho, depois parede/posição) */
+        window.__mkCena=async function(A){var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&(t.n===n||(n instanceof RegExp&&n.test(t.n))))r=t})});if(!r)throw new Error('sem modelo '+n);return JSON.parse(JSON.stringify(r))};
+        var um=async function(nome,o,corner){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.mods=[];draw();newTpl(T(nome));var m=S.mods[0];if(corner){S.m=m;S.tab=0;draw();panel();await W(50);document.querySelector('#bd [data-corner="'+corner+'"]').click();await W(150);m=S.mods[0]}var j=JSON.parse(JSON.stringify(m));Object.assign(j,o||{});return j};
+        var mods=[];
+        if(A==='L'){mods.push(await um('Balcão 2 portas',{x:5},'e'));mods.push(await um('Balcão 2 portas',{x:905}));mods.push(await um('Balcão porta + gavetas',{x:1805}));
+        var cd=await um('Balcão 2 portas',{},'d');cd.x=4195-cd.w;mods.push(cd);mods.push(await um('Aéreo 2 portas',{x:1200}));mods.push(await um('Aéreo 2 portas',{x:2300}));
+        mods.push(await um('Balcão 2 portas',{wing:'e',x:905,espE:1}));mods.push(await um('Balcão 1 porta',{wing:'e',x:1805,espE:1}));mods.push(await um('Aéreo 2 portas',{wing:'e',x:1000,espE:1}));
+        mods.push(await um('Balcão porta + gavetas',{wing:'d',x:905}));mods.push(await um('Armário alto 2 portas',{wing:'d',x:2000}))}
+        else{var c1=await um(/^Balcão canto cego · cego na esquerda/,{x:5});var c2=await um(/^Balcão canto cego · cego na direita/,{});c2.x=4195-c2.w;mods.push(c1,c2);mods.push(await um('Balcão 2 portas',{x:5+c1.w}));
+        mods.push(await um('Balcão 2 portas',{wing:'e',x:566,espE:1}));mods.push(await um('Balcão porta + gavetas',{wing:'d',x:566}));mods.push(await um('Aéreo 2 portas',{wing:'d',x:600}))}
+        var st=JSON.parse(JSON.stringify(initLimpo()));st.env='cozinha';st.room='cozinha';st.W=4200;st.H=2700;st.RD=3200;st.wl={L:'p',R:'p'};st.mods=mods;st.mi=-1;loadState(st);draw();await W(400);return S.mods.length};
+        var r=await (async function(){window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var e0=__errs.length;
+        var pick=function(re){var t=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var q=typeof it==='number'?TPL[it]:it;if(!t&&q&&!q.act&&re.test(q.n))t=q})});return JSON.parse(JSON.stringify(t))};
+        var dlg=function(){return [].slice.call(document.querySelectorAll('body > div')).filter(function(d){return !d.hidden&&getComputedStyle(d).display!=='none'&&getComputedStyle(d).position==='fixed'&&/mesmo assim|Não tem espaço|entra dentro/.test(d.textContent)})[0]||null},fq=function(){var q=dlg();return q?(/Colocar mesmo assim/.test(q.textContent)?'pergunta com Colocar mesmo assim':'pergunta sem Colocar mesmo assim'):''},fecha=function(){var q=dlg();if(q)q.hidden=true;var f=document.getElementById('fitq');if(f)f.hidden=true},o=[];
+        for(const w of ['f','e','d']){await __mkCena('L');wvGo(w);await W(100);var st=__wvSt(),tot0=st?st.mods.length:S.mods.length;TL=[];newTpl(pick(/^Balcão 2 portas$/));await W(150);var tot1=__wvSt()?__wvSt().mods.length+S.mods.filter(function(m){return __wvSt().mods.indexOf(m)<0}).length:S.mods.length;o.push(w+' balcão: '+(fq()||(tot1>tot0?'criou':'nada'))+(TL.some(function(t){return /foi pra parede/.test(t)})?' (foi pra parede do lado)':''));fecha();
+        await __mkCena('L');wvGo(w);await W(100);var tot=function(){var st=__wvSt();return st?st.mods.length+S.mods.filter(function(m){return st.mods.indexOf(m)<0}).length:S.mods.length},c0=tot(),leg0=document.querySelectorAll('#svg #cnleg rect').length;TL=[];newTpl(pick(/^Canto em L \(aéreo\) · esquerdo/));await W(250);var leg1=document.querySelectorAll('#svg #cnleg rect').length;
+        o.push(w+' canto aéreo E: '+(fq()||(tot()>c0?'criou ':'nada '))+(TL.some(function(t){return /Canto em L aéreo criado no canto esquerdo/.test(t)})?'diz onde ficou':'')+(w==='e'?' · perna nesta parede '+(leg1>leg0):''));fecha()}
+        o.push('erros '+(__errs.length-e0));return o.join(' | ');})();return JSON.stringify({r:r});
+        """#)
+        XCTAssertEqual(o["r"] as? String, "f balcão: criou (foi pra parede do lado) | f canto aéreo E: criou  | e balcão: criou | e canto aéreo E: criou diz onde ficou · perna nesta parede true | d balcão: pergunta com Colocar mesmo assim | d canto aéreo E: criou diz onde ficou | erros 0", "criar em cada parede: nunca bloqueia calado; sem espaço pergunta com Colocar mesmo assim; canto diz onde ficou e a perna aparece")
+    }
+
     // AUDITORIA 3.9 · item 4 aprovado pelo Chefe 28/11 ("a vista representa fielmente o projeto"; "L representado errado"): nas paredes laterais
     // a perna do canto em L aparece, das mesmas caixas do 3D do módulo do canto (partsOf), no começo da parede (direita na esquerda espelhada,
     // esquerda na direita). Só desenho: o projeto não muda. O toque nela escolhe o canto (o mesmo móvel, na parede do fundo). No fundo não desenha

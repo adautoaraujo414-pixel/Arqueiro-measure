@@ -3148,9 +3148,20 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
     - a caneta usa o `window.PALMA` do Claude 4, que já cobre o 3D.
   - Fechar volta ao 2D. O projeto não muda por abrir, girar ou fechar.
 - **Ajuste (Chefe 28/11, mesma regra do TOQUE-ALCA do Claude 4):** o arrasto do móvel só começa depois de `SEL.mov` px, então a tremida de 5 px não move. Caindo um 2º dedo com o arrasto já começado (pinça em cima do móvel), o móvel volta para onde estava e o desfazer não ganha passo. Teste `testE2ITEM9_TremidaEPincaNaoMovemOMovelNaPerspectiva`: no a8e75134 a pinça deixava o móvel fora do lugar.
-- **2ª parte (a fazer):** alças de tamanho, cota até a parede e "pôr do catálogo ao lado" dentro da perspectiva.
+- **2ª parte (feita):** na barra da perspectiva:
+  - cota do módulo escolhido até a parede/vizinho de cada lado, na mesma parede e na mesma faixa de altura;
+  - "↔ Tamanho" liga o modo Tamanho do 3D: o toque abre as alças e o quadro de medidas de sempre;
+  - "＋ Ao lado" abre o catálogo, e o módulo novo encosta do lado do escolhido que tem espaço (`modHit`). Os vizinhos nunca andam; sem espaço, avisa e fica onde o catálogo pôs. Se o próprio catálogo recusar por falta de espaço, nada muda.
+  - Teste `testE2ITEM9_PerspectivaCotaAlcasEModuloAoLadoSemMexerNoVizinho` (falha antes, passa agora). Print: `tools/sondas/etapa2_c3/item9_perspectiva_tamanho_cota.png`.
 - **Teste:** `testE2ITEM9_PerspectivaLivreNo2DGestosSemACameraMoverPeca` (falha antes, passa agora). Print: `tools/sondas/etapa2_c3/item9_perspectiva_no_2d.png`.
 
+## BAS-DOB (achado do Claude 5, Chefe 28/11): porta basculante cobra as dobradiças e o 3D não desenhava — Claude 3
+- **Erro:** o aéreo basculante e os racks basculantes cobram, no orçamento (`hwOf`), 2 ou 4 "Dobradiça 35 mm (caneco)", mas com a porta fechada o 3D não desenhava nenhuma. Aberta, desenhava também compasso/pistão, que não estão nas ferragens nem no orçamento.
+- **Causa raiz:** no `build` do 3D, a porta basculante pulava o `hinges3` (`!vD_.bas`), e o `basHw3` só era chamado com a porta aberta (`th_ > 0.05`). O `basHw3_` desenhava o compasso/pistão sempre que abria.
+- **Correção (só o 3D):**
+  - porta basculante fechada: `basHw3(…, 0, …)` desenha as dobradiças (calço, caneco e braço) no lugar, metálicas (`ferr`, item 3); aberta, continua como antes, abrindo com a porta;
+  - o compasso/pistão só aparece se estiver no `hwOf` do módulo (`__BASPIS`). Hoje nenhum basculante tem, então nada inventado aparece.
+- **Teste:** `testBASDOB_BasculanteDesenhaAsDobradicasQueOOrcamentoCobra` (3 modelos: aéreo basculante e os 2 racks). No HEAD anterior a porta fechada tinha 0 dobradiças; agora 2, 4 e 4, igual ao orçamento. A família de basculante, dobradiça, ferragem, aéreo e rack: 38/38.
 ## PLANTA-TAMP (achado do Code 1, CRUZA-PROJETO, Chefe 28/11): a planta desenhava o módulo sem o tamponamento — Claude 4
 - **Antes:** na planta o módulo terminava em 2705, e no 3D, na lista, no corte e na pedra em 2735 (tamponamento de 30). Medi pelas caixas do 3D (`__boxes`): o tamponamento esquerdo ocupa x 1475..1505 e vai do fundo até 25 mm à frente do corpo (z 6..591).
 - **Correção (`plantaSvg` e o desenho do móvel livre):** a planta desenha, vista de cima, a união das caixas do 3D de cada "Tamponamento esquerdo/direito" (o engrosso entra no mesmo nome).
@@ -3282,3 +3293,28 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Passa depois a 1366 e a 430.
 - **Evidência:** `engenharia/evidencias/etapa2/pacote_claude4/i34_1366.jpg` (quadros 3 e 4).
 - **Regressão achada na bateria e corrigida antes da entrega:** na primeira versão do ponto 3, a posição digitada encostada na PAREDE também mantinha o tamponamento (`testPosicaoDigitadaPertoDaParede…`: x=35 em vez de 25). O ponto 3 vale só para a junta com OUTRO módulo (`tampNbOf`); encostado na parede, o automático sai como sempre.
+## CORRER-TRILHO · folhas de correr abertas entrando uma na outra no mesmo trilho — Claude 3 (varredura visual 3D, Chefe 28/11)
+- **Módulo:** 3D (desenho das portas de correr). Família investigada: todos os 8 itens do catálogo com 2+ folhas de correr (guarda-roupas, armário da sala, portas de correr avulsas).
+- **Reproduzir:** Guarda-roupa correr 3 folhas → abrir todas → 3D. Folhas 1 e 3 (trilho da frente) iam as duas para x 828..1642 (uma dentro da outra).
+- **Causa raiz:** o 3D corria toda folha aberta (largura − 30) para o seu lado sem olhar as outras folhas do mesmo trilho. Com 2 folhas (trilhos diferentes) não aparece; com 3 folhas, a 1 e a 3 dividem o trilho da frente.
+- **Correção (só 3D, sem caixa nem medida):** em editor.html, no desenho de 'Porta de correr': folha cujo caminho cruza uma folha de número menor já aberta no mesmo trilho fica fechada; e a folha que corre para até encostar na folha parada do mesmo trilho (antes entrava 30 mm nela). partsOf, lista, corte e orçamento não mudam.
+- **Teste:** testCORRERTRILHO_FolhasAbertasNaoEntramUmaNaOutraNoMesmoTrilho (catálogo inteiro; também confere que as peças não mudam). Falha antes (HEAD 949e3f0c: "cruzando: Guarda-roupa correr 3 folhas 1"), passa depois. Nos outros 7 itens com correr, posição das folhas idêntica antes/depois.
+- **Evidência:** tools/sondas/etapa2_c3/correr_trilho_antes_depois.png (1366 e 430). Render 8–12 ms.
+
+## MEDOBJ · objeto do catálogo desenhado no 3D com medida diferente da cadastrada — Claude 3 (varredura visual 3D; decisão do Chefe 28/11)
+- **Regra (Chefe, pela regra do Adauto "o número mostrado corresponde ao real"):** a medida cadastrada (a que aparece no campo e no catálogo) é a verdade; o 3D desenha o objeto nela, sem deformar o desenho. O que passa de propósito (cabo do pendente, alças, pedal, manivela, tampa aberta, torneira, puxador/botões da frente) fica como detalhe, com nota no quadro do objeto.
+- **Módulo:** 3D dos objetos soltos (S.fr): mobília, decoração, lixeiras, luminárias, cadeiras de escritório, sofás, eletros, churrasqueiras, elétrica. Família: todos os 234 itens do APM.
+- **Reproduzir:** pôr no projeto "Banqueta de madeira com encosto" (950) → 3D desenha 1210; "Roupas no cabide" (1000) → 390; banquetas 380 → 340; giratórias 1000/1050 → 940; panela Ø240 → 158; frigideira 400 → 252; copos 170 → 146; vaso 350 → 252; lixeira basculante 700 → 730; cadeira fixa 560 → 500; longarinas 600 → 550; sofá orgânico 1000 → 939; registro de gás 55 → 38. Ao todo 41 itens fora (± 4% ou 12 mm).
+- **Causas (cada desenho):**
+  - banqueta3: raio do assento w/2−20;
+  - banqueta com encosto: encosto em cima da altura cadastrada;
+  - cad3: rodízios fora da base e encosto limitado a 940;
+  - decoObj3: roupas com comprimentos fixos de 150 a 390 mm, folhas do vaso em 0,6 do Ø, copos em 0,76, armação do escorredor baixa;
+  - panelas: raio −40 e cabo da frigideira na largura;
+  - lixeira basculante: tampa acima da altura;
+  - airfryer: puxador 40 mm fora;
+  - sofOrg: as pontas do arco não chegavam à profundidade;
+  - el3 (registro): profundidade fixa.
+- **Correção:** cada desenho passa a usar a medida cadastrada. Detalhes reais marcados na caixa 3D (b.det) e listados em window.apDetNota(f), que o quadro do objeto mostra ("A medida não inclui: …"). Nenhuma medida cadastrada mudou; nenhum projeto muda (só o desenho).
+- **Teste:** testMEDOBJ_ObjetoDoCatalogoNaMedidaCadastradaNo3D, no catálogo inteiro. Confere três coisas: corpo = medida cadastrada; todo detalhe marcado está na nota; a nota aparece no quadro. Falha antes (HEAD fb78ca4d: "fora da medida 41") e passa depois.
+- **Evidência:** tools/sondas/etapa2_c3/medobj_objetos_antes_depois.png. Render 4–6 ms.

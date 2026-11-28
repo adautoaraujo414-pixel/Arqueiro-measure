@@ -2980,3 +2980,4 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Testes:**
   - novo: `testEtapa2MovidoMantemTamponamentoDaJuntaSugestaoTirarComPreviaEDesfazer` (digitar, arrastar, aplicar, desfazer, projeto antigo);
   - `testB24…` v5 atualizado com comentário: antes "tr0", agora "tra".
+- **Regressão achada na bateria e corrigida antes da entrega:** na primeira versão do ponto 3, a posição digitada encostada na PAREDE também mantinha o tamponamento (`testPosicaoDigitadaPertoDaParede…`: x=35 em vez de 25). O ponto 3 vale só para a junta com OUTRO módulo (`tampNbOf`); encostado na parede, o automático sai como sempre.

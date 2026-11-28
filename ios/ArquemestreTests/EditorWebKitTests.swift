@@ -14477,6 +14477,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
     }
 
+    // ETAPA 2 · item 2, canto L (Chefe 28/11; parte do Code 2, a geometria da base atravessada é do Claude 5): o "Unir" vale no canto — com o
+    // vizinho da fileira do fundo e com o 1º módulo da parede lateral (asa). Unir, separar cada junta e desfazer, pelos botões da Estrutura.
+    func testEtapa2UnirNoCantoLComOFundoEComAAsaSepararEDesfazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};window.FITENCOLHE=1;var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.RD=3000;S.mods=[];draw();
+newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.tab=0;draw();panel();await W(100);document.querySelector('#bd [data-corner="e"]').click();await W(200);var c=S.mods[0];
+newTpl(T('Balcão 2 portas'));var b=S.m;b.x=c.x+c.w;b.tl=b.tr=false;b.tlM=b.trM=1;draw();await W(100);
+newTpl(T('Balcão 2 portas'));var a=S.m;S.tab=0;draw();panel();await W(100);document.querySelector('#bd [data-wing="e"]').click();await W(200);a.x=wingStart('e');a.tl=a.tr=false;a.tlM=a.trM=1;draw();await W(900);
+var o=['canto x'+c.x+' w'+c.w+' d'+c.d+' · fundo x'+b.x+' · asa x'+a.x+' ws '+wingStart('e')+' · lt/rt c '+lt(c)+'/'+rt(c)];
+var bt=async function(mod){S.m=mod;S.tab=0;draw();panel();await W(100);return [].map.call(document.querySelectorAll('#bd [data-une],#bd [data-unsep]'),function(x){return (x.dataset.une!==undefined?'une':'sep')+'='+(x.dataset.une||x.dataset.unsep)}).join(',')};
+o.push('botões canto: '+await bt(c)+' · fundo: '+await bt(b)+' · asa: '+await bt(a));
+S.m=c;draw();panel();await W(100);document.querySelector('#bd [data-une="w"]').click();await W(200);o.push('unir canto×asa: '+(c.une&&c.une===a.une)+' fundo '+!!b.une+' · unPode base '+unPode(c,a,'base')+' rod '+unPode(c,a,'rod'));
+await W(900);S.m=c;draw();panel();await W(100);document.querySelector('#bd [data-une="1"]').click();await W(200);o.push('unir canto×fundo: '+[c.une===b.une,c.une===a.une].join('/')+' · botões '+await bt(c));
+await W(900);S.m=c;draw();panel();await W(100);document.querySelector('#bd [data-unsep="w"]').click();await W(200);o.push('separar asa: canto=fundo '+(c.une===b.une)+' canto=asa '+(c.une===a.une));
+await W(900);document.getElementById('und').click();await W(300);c=S.mods[0];b=S.mods[1];a=S.mods[2];o.push('desfaz: canto=asa '+(c.une===a.une)+' canto=fundo '+(c.une===b.une));
+await W(900);S.m=b;draw();panel();await W(100);document.querySelector('#bd [data-unsep="-1"]').click();await W(200);o.push('separar canto×fundo pelo fundo: canto=fundo '+(c.une===b.une)+' canto=asa '+(c.une===a.une));
+return JSON.stringify({r:o.join(' | '),errs:__errs.length-e0});
+        """#)
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+        XCTAssertEqual(o["r"] as? String, "canto x5 w900 d560 · fundo x905 · asa x900 ws 900 · lt/rt c 0/0 | botões canto: une=1,une=w · fundo: une=-1 · asa: une=w | unir canto×asa: true fundo false · unPode base true rod true | unir canto×fundo: true/true · botões sep=1,sep=w | separar asa: canto=fundo true canto=asa false | desfaz: canto=asa true canto=fundo true | separar canto×fundo pelo fundo: canto=fundo false canto=asa true", "canto: Unir com o fundo e com a asa, separar cada junta só ela, desfazer")
+    }
+
     // ETAPA 2 · item 21/2 (Chefe 28/11, §0 nenhuma função some): o "Unir" manual une tudo o que antes se unia sozinho — base, rodapé, travessa
     // (régua corrida) e moldura corrida — com escolha por peça, até 2700 (passou, divide na junta), separar e desfazer. Montado pelos botões da Estrutura.
     func testEtapa2UnirManualTravessaEMolduraCorridaPeloBotaoComCorte() async throws {

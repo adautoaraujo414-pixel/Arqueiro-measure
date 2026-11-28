@@ -17494,6 +17494,30 @@ return JSON.stringify({out:nomes.length+' com correr · cruzando: '+(ruins.join(
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /// LED-TOQUE (Etapa 3 · 3.3/3.5, Chefe 28/11): o "💡 Toque na peça" usa a MESMA escolha do toque (window.pecaNoToque, do Claude 4): a superfície da frente
+    /// no ponto, sem atravessar. O ponto tocado decide o trecho do LED (vão tocado da estante), o destino acende em laranja, e quando o dedo cai entre 2+ peças
+    /// (ambig) aparece uma escolha simples — nada é criado até escolher. Precisa do pecaNoToque (claude/etapa2-claude4 @b3029da7) — vale na integração.
+    func testLEDTOQUE_LedNaPecaENoVaoTocadosComEscolhaSimplesNaAmbiguidade() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;var MS=[];window.toast=function(t){MS.push(t)};window.ambMsg=function(t){MS.push(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length;
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+loadState(initLimpo());S.env='livre';S.W=4000;S.mods=[];newTpl(achar('Estante aberta'));var m=S.mods[0];m.x=1500;draw();open3D();await W(400);out.push('pecaNoToque '+(typeof window.pecaNoToque==='function'?'ok':'FALTA (vem do Claude 4)'));
+var cv=document.getElementById('cv3'),rc=cv.getBoundingClientRect();__build();var Lb=__boxes().filter(function(b){return b.pk==='Lateral esquerda#1'&&/^0:/.test(String(b.nm))})[0],prs=__boxes().filter(function(b){return /^0:Prateleira/.test(String(b.nm))}).map(function(b){return Math.round(b.y0)}).filter(function(v,i,a){return a.indexOf(v)===i}).sort(function(a,b){return a-b});
+var yv=(prs[0]+prs[1])/2,zc=(Lb.z0+Lb.z1)/2,tap=function(x,y){var o={bubbles:true,cancelable:true,pointerId:7,isPrimary:true,clientX:rc.left+x,clientY:rc.top+y,pointerType:'touch',button:0};cv.dispatchEvent(new PointerEvent('pointerdown',Object.assign({buttons:1},o)));cv.dispatchEvent(new PointerEvent('pointerup',Object.assign({buttons:0},o)))};
+/* 1) toque na quina (várias peças a poucos px): escolha simples, nada criado, o destino acende */
+var sp=__p3(Lb.x1+0.5,yv,zc),pq=pecaNoToque(sp[0],sp[1]);window.LEDPICK=1;MS=[];tap(sp[0],sp[1]);await W(250);var E=document.getElementById('ledesc'),nb=E?E.querySelectorAll('[data-ledesc]:not([data-ledesc="x"])').length:0;
+out.push('ambíguo: '+(pq.ambig||[]).length+' outras · escolha '+(E?nb+' botões':'NÃO apareceu')+' · LED criado '+(m.leds||[]).length+' · aceso '+(window.SEL3?SEL3.pk:'-'));
+if(E){var b1=E.querySelector('[data-ledesc="1"]');b1.click();await W(150);var L1=(m.leds||[])[0];out.push('escolheu 2ª: LED na '+(L1?L1.pk:'nada')+' · escolha fechada '+!document.getElementById('ledesc'));m.leds=[]}
+/* 2) toque claro na face de dentro da lateral, no 2º vão: o LED nasce nesse vão e a lateral acende */
+try{__cam(-0.55,0.12,0.9)}catch(_){}await W(200);rc=cv.getBoundingClientRect();__build();sp=__p3(Lb.x1+0.5,yv,zc);pq=pecaNoToque(sp[0],sp[1]);window.LEDPICK=1;MS=[];tap(sp[0],sp[1]);await W(250);var L=(m.leds||[])[0];
+out.push('claro: '+pq.pk+' '+pq.face+' · LED '+(L?L.pk+' y '+Math.round(Lb.y0+L.u)+'..'+Math.round(Lb.y0+L.u+L.L):'nenhum')+' (2º vão '+(prs[0]+15)+'..'+prs[1]+') · aceso '+(window.SEL3?SEL3.pk:'-'));
+document.getElementById('v3x').click();return JSON.stringify({out:out.join(' | '),errs:__errs.length-e0});
+          """#)
+        XCTAssertEqual(o["out"] as? String, "pecaNoToque ok | ambíguo: 3 outras · escolha 4 botões · LED criado 0 · aceso Tamponamento esquerdo · engrosso 80#1 | escolheu 2ª: LED na Fundo#1 · escolha fechada true | claro: Lateral esquerda#1 dir · LED Lateral esquerda#1 y 436..729 (2º vão 434..731) · aceso Lateral esquerda#1")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /// LED-CAIXA (Etapa 3 · 3.3, Adauto 28/11): o LED nasce só no trecho livre da face escolhida — não entra no módulo vizinho, não atravessa outra peça do
     /// próprio módulo e não fica maior que a face; o trecho é o do ponto tocado (intenção da pessoa). Antes: na face encostada entrava na lateral do vizinho,
     /// na lateral de dentro atravessava as 5 prateleiras e na borda de 6 mm do fundo o perfil de 12 mm passava da face.

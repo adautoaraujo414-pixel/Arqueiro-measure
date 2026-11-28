@@ -3424,3 +3424,19 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Antes: trocar de vão pelo toque não dizia nada, e a mensagem do vão anterior ficava na tela ("Vão 8" com o vão 10 aberto, ou com o vão 1).
   - Correção: cada troca de vão mostra "💡 Vão N" do vão atual.
   - Teste: LedNoRipadoDoisToques confere msgOutroVao e msgVao0. Falha antes e passa depois, a 375 e a 1366.
+
+## LED-TOQUE · "💡 Toque na peça" com a escolha comum do toque, ponto tocado, destino aceso e escolha simples — Claude 3 (Etapa 3 · 3.3/3.5, Chefe 28/11)
+- **Antes:**
+  - O toque do LED usava a escolha própria do LED (lvlPickFace), diferente da seleção.
+  - O LED pegava a face inteira, sem olhar o ponto tocado.
+  - Nada mostrava o destino.
+- **Agora:**
+  - Usa window.pecaNoToque (Claude 4, claude/etapa2-claude4 @b3029da7), a mesma escolha do toque: superfície da frente, sem atravessar.
+  - O ponto tocado (ponto[x,y,z]; desgirado no móvel girado) vai para o lvlFit e decide o trecho do LED (o vão tocado).
+  - O destino acende (SEL3) e a mensagem diz a peça e a face.
+  - Com ambig (2+ peças a até 8 px), aparece uma escolha simples ("Em qual peça vai o LED?", um botão por peça; o destino acende ao passar). Nada é criado até escolher.
+  - Sem pecaNoToque (ramo sozinho), segue o lvlPickFace antigo.
+- **Teste:** testLEDTOQUE, estante aberta.
+  - Toque na quina: 4 opções, nenhum LED, destino aceso; escolher a 2ª cria o LED no fundo.
+  - Toque claro na face de dentro da lateral, no 2º vão: LED em y 436..729 (vão 434..731) e a lateral acesa.
+  - Passa no editor juntado (meu ramo + Claude 4). No meu ramo sozinho acusa "pecaNoToque FALTA (vem do Claude 4)": vale na integração.

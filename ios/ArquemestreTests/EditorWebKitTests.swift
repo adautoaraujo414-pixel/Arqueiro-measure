@@ -10618,7 +10618,10 @@ final class EditorWebKitTests: XCTestCase {
         var caso=async function(nome,canto,item,ladoX,fundoX,quemMexe){novo();newTpl(T(item));draw();if(window.SOLO2)soloOff();var F=S.mods[0];F.x=canto==='e'?fundoX:S.W-F.w-fundoX;draw();
          wvGo(canto);draw();newTpl(T(item));draw();if(window.SOLO2)soloOff();var Wm=S.mods[S.mods.length-1];Wm.x=ladoX;S.m=Wm;draw();await W(600);wvGo('f');draw();await W(400);
          if(quemMexe==='fundo'){S.m=S.mods[0];S.mods[0].x=canto==='e'?0:S.W-S.mods[0].w;draw();await W(600)}
-         R[nome]=await rel()};
+         /* ERRO CANTO-NASCE (Chefe 28/11, regra do Adauto 27/11 "o app não altera uma vírgula sozinho", que vem depois do PEDIDO 52): ninguém anda sozinho até encostar;
+            fica onde a pessoa deixou (entrando ou afastado) e aparece "Encostar no canto"; tocando no botão, encostam certinho como no PEDIDO 52 */
+         var bar=document.getElementById('libsug'),sg=bar&&!bar.hidden&&/Encostar no canto/.test(bar.textContent);R[nome]=(await rel())+(sg?' · sugere encostar':'');
+         if(sg){bar=document.getElementById('libsug');if(bar&&!bar.hidden){bar.querySelector('[data-libsug="ok"]').click();await W(600)}R[nome+'Botao']=await rel()}};
         await caso('esquerdaLadoNoCanto','e','Aéreo 2 portas',0,0,'lado');
         await caso('esquerdaLadoPerto','e','Aéreo 2 portas',420,0,'lado');
         await caso('esquerdaLonge','e','Aéreo 2 portas',900,0,'lado');
@@ -10628,13 +10631,20 @@ final class EditorWebKitTests: XCTestCase {
         await caso('balcoesNoCantoDireito','d','Balcão 2 portas',100,0,'lado');
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["esquerdaLadoNoCanto"] as? String, "encostados")
-        XCTAssertEqual(o["esquerdaLadoPerto"] as? String, "encostados")
+        // Expectativa mudada pelo pedido do Chefe de 28/11 (CANTO-NASCE): antes do botão fica onde a pessoa deixou e sugere; com o botão, encostados (PEDIDO 52)
+        XCTAssertEqual(o["esquerdaLadoNoCanto"] as? String, "ENTROU um no outro (376 mm) · sugere encostar")
+        XCTAssertEqual(o["esquerdaLadoNoCantoBotao"] as? String, "encostados", "o botão encosta certinho")
+        XCTAssertEqual(o["esquerdaLadoPerto"] as? String, "afastados 9 mm · sugere encostar")
+        XCTAssertEqual(o["esquerdaLadoPertoBotao"] as? String, "encostados", "o botão encosta certinho")
         XCTAssertEqual(o["esquerdaLonge"] as? String, "afastados 489 mm")
-        XCTAssertEqual(o["esquerdaFundoEntraNoCanto"] as? String, "encostados")
-        XCTAssertEqual(o["direitaLadoNoCanto"] as? String, "encostados")
-        XCTAssertEqual(o["balcoesNoCantoEsquerdo"] as? String, "afastados 9 mm")
-        XCTAssertEqual(o["balcoesNoCantoDireito"] as? String, "afastados 9 mm")
+        XCTAssertEqual(o["esquerdaFundoEntraNoCanto"] as? String, "ENTROU um no outro (376 mm) · sugere encostar")
+        XCTAssertEqual(o["esquerdaFundoEntraNoCantoBotao"] as? String, "encostados", "o botão encosta certinho")
+        XCTAssertEqual(o["direitaLadoNoCanto"] as? String, "ENTROU um no outro (346 mm) · sugere encostar")
+        XCTAssertEqual(o["direitaLadoNoCantoBotao"] as? String, "encostados", "o botão encosta certinho")
+        XCTAssertEqual(o["balcoesNoCantoEsquerdo"] as? String, "afastados 9 mm · sugere encostar")
+        XCTAssertEqual(o["balcoesNoCantoEsquerdoBotao"] as? String, "encostados", "o botão encosta certinho")
+        XCTAssertEqual(o["balcoesNoCantoDireito"] as? String, "afastados 9 mm · sugere encostar")
+        XCTAssertEqual(o["balcoesNoCantoDireitoBotao"] as? String, "encostados", "o botão encosta certinho")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 

@@ -4474,7 +4474,7 @@ final class EditorWebKitTests: XCTestCase {
     func testVisorComNumerosNoFornoMicroEGeladeira() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.stones=[];S.rp=[];S.W=2600;S.H=2700;S.mods=[];S.fr=[];var R={};
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};/* RELOGIO-APARELHO (ETAPA 2 item 4, Adauto 26/11): o visor mostra a hora do aparelho; o teste fixa 12:00 (a contagem de segmentos acesos depende dos dígitos: 12:00 = 42) */window.__RELOGIO_FIXO='2026-11-28T12:00:00';S.stones=[];S.rp=[];S.W=2600;S.H=2700;S.mods=[];S.fr=[];var R={};
           var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n)r=q})});return JSON.parse(JSON.stringify(r))};
           var cnt=function(){__build();return __boxes().filter(function(b){return b.em&&b.nol&&(b.z1-b.z0<1||b.pf||b.gp)}).length};
           open3D();await new Promise(function(r){setTimeout(r,400)});R.vazio=cnt();
@@ -9843,7 +9843,7 @@ final class EditorWebKitTests: XCTestCase {
         var n=0,ct=0,ne=0,fd=[],ds=[],so=[],se=[],er=[];
         for(var k=0;k<todos.length;k++){for(var lf=0;lf<2;lf++){try{S.mods=[];S.m=null;newTpl(JSON.parse(JSON.stringify(todos[k])));var q=S.mods[S.mods.length-1];if(!q||q.corner||q.wing)continue;q.x=600;q.latFora=!!lf;if(!lf)q.latPiso=false;S.m=q;draw();n++;if(!q.trav)continue;ct++;
           var LL=cx(q,/^Lateral (esquerda|direita)$/),zm=Math.max.apply(null,LL.map(function(b){return b.z1})),dt=LL.filter(function(b){return b.z1<zm-1}).length;
-          if(lf&&dt)fd.push(todos[k].n);if(!lf&&!dt&&LL.length)ds.push(todos[k].n);if(dentro(q))so.push((lf?'fora:':'dentro:')+todos[k].n);q.egL=1;q.egR=1;draw();ne++;if(dentro(q))se.push((lf?'fora:':'dentro:')+todos[k].n)}catch(e){er.push(todos[k].n+': '+e.message)}}}
+          if(lf&&dt)fd.push(todos[k].n);/* CEGO-ESTRUTURA (pedido do Adauto/Chefe 27/11, ETAPA 2 item 7): canto cego com travessas deitadas (cgTrav) não tem travessa em pé, então a lateral não tem rebaixo */if(!lf&&!dt&&LL.length&&!q.cgTrav)ds.push(todos[k].n);if(dentro(q))so.push((lf?'fora:':'dentro:')+todos[k].n);q.egL=1;q.egR=1;draw();ne++;if(dentro(q))se.push((lf?'fora:':'dentro:')+todos[k].n)}catch(e){er.push(todos[k].n+': '+e.message)}}}
         R.catalogo=todos.length+' modelos · '+n+' montagens · '+ct+' com travessa';
         R.catalogoPorForaComDente=fd.length+(fd.length?': '+fd.slice(0,5).join(' | '):'');
         R.catalogoPorDentroSemRebaixo=ds.length+(ds.length?': '+ds.slice(0,5).join(' | '):'');
@@ -17339,6 +17339,94 @@ final class EditorWebKitTests: XCTestCase {
 
     /// MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11 "cálculos reais e automáticos" e "Regras do módulo · organização"; checklist D21/D24): as 24
     /// combinações (balcão e aéreo × moldura × Frontal × travessão sem/externo/interno) com cada peça igual no 3D e no corte (nenhuma espessura somada
+    /// ETAPA 2 · item 9 (Chefe 28/11, mesma regra do TOQUE-ALCA do Claude 4): na perspectiva do 2D a tremida (5 px) não move o móvel, e a pinça que começa
+    /// em cima dele (1º dedo anda antes do 2º cair) devolve o móvel pro lugar, sem passo extra no desfazer.
+    func testE2ITEM9_TremidaEPincaNaoMovemOMovelNaPerspectiva() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.ambMsg=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length;
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;newTpl(achar('Balcão 2 portas'));S.m.x=1200;draw();document.getElementById('pv2db').click();await W(1500);
+var cv=document.getElementById('cv3'),pe=function(n,x,y,id){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:id,pointerType:'touch',isPrimary:id===1,button:0,buttons:n==='pointerup'?0:1}))};
+var B=__boxes().filter(function(b){return /^0:/.test(String(b.nm))&&!b.nol}),c=[(Math.min.apply(null,B.map(function(b){return b.x0}))+Math.max.apply(null,B.map(function(b){return b.x1})))/2,(Math.min.apply(null,B.map(function(b){return b.y0}))+Math.max.apply(null,B.map(function(b){return b.y1})))/2,(Math.min.apply(null,B.map(function(b){return b.z0}))+Math.max.apply(null,B.map(function(b){return b.z1})))/2],sp=__p3(c[0],c[1],c[2]),r=cv.getBoundingClientRect(),X=r.left+sp[0],Y=r.top+sp[1],m=S.mods[0],h0=hs.length;
+/* tremida de 5 px */pe('pointerdown',X,Y,1);for(var k=1;k<=6;k++){pe('pointermove',X+(k%2?5:-5),Y+(k%2?3:-2),1);await W(25)}pe('pointerup',X,Y,1);await W(100);out.push('tremida 5px: x '+m.x+(m.x===1200?' (parado)':' (MEXEU)'));
+/* pinça começando em cima do móvel: o 1º dedo anda 20 px antes do 2º cair */pe('pointerdown',X,Y,1);for(var k=1;k<=4;k++){pe('pointermove',X+k*6,Y,1);await W(25)}var xm=m.x;pe('pointerdown',X+200,Y,2);await W(30);for(var k=1;k<=5;k++){pe('pointermove',X+24-k*10,Y,1);pe('pointermove',X+200+k*10,Y,2);await W(25)}pe('pointerup',X-26,Y,1);pe('pointerup',X+250,Y,2);await W(150);
+out.push('pinça: andou '+(xm!==1200?'sim':'não')+' antes do 2º dedo · no fim x '+m.x+(m.x===1200?' (voltou)':' (FICOU FORA)')+' · desfazer extra '+(hs.length-h0));
+out.push('errs '+(__errs.length-e0)+' '+__errs.slice(e0).join('|').slice(0,200));var R={tremida:out[0],pinca:out[1],errs:__errs.length-e0};document.getElementById('pv2db').click();return JSON.stringify(R);
+
+          """#)
+        XCTAssertEqual(o["tremida"] as? String, "tremida 5px: x 1200 (parado)")
+        XCTAssertEqual(o["pinca"] as? String, "pinça: andou sim antes do 2º dedo · no fim x 1200 (voltou) · desfazer extra 0", "pinça começando no móvel não move o móvel")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// ETAPA 2 · item 9 (Adauto/Chefe 27/11, V2/V3): perspectiva livre como modo a mais do 2D — mesma cena do partsOf dentro do quadro do desenho, painel ao lado
+    /// visível; 1 dedo no vazio não mexe a câmera; 2 dedos giram sem mudar o projeto; 1 dedo no móvel arrasta na hora; 1 toque escolhe (contorno); 2 toques abrem as
+    /// configurações (pcEdOpen do Claude 4); fechar volta ao 2D.
+    func testE2ITEM9_PerspectivaLivreNo2DGestosSemACameraMoverPeca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var AM=[];window.ambMsg=function(t){AM.push(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[];
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;newTpl(achar('Balcão 2 portas'));S.m.x=600;newTpl(achar('Gaveteiro 3 gavetas'));S.m.x=1600;newTpl(achar('Aéreo 2 portas'));S.m.x=600;draw();var sv0=JSON.stringify(snapState());
+out.push('botão: '+!!document.getElementById('pv2db'));document.getElementById('pv2db').click();await W(1500);
+var v=document.getElementById('v3'),r=v.getBoundingClientRect(),c=document.getElementById('svg').parentElement.getBoundingClientRect();out.push('quadro do 2D '+Math.round(c.left)+','+Math.round(c.top)+' '+Math.round(c.width)+'×'+Math.round(c.height)+' · vista '+Math.round(r.left)+','+Math.round(r.top)+' '+Math.round(r.width)+'×'+Math.round(r.height)+' · painel visível '+(document.getElementById('bd').getBoundingClientRect().left>=r.right-1));
+var cen=function(mi){var B=__boxes().filter(function(b){return String(b.nm).indexOf(mi+':')===0&&!b.nol});return [(Math.min.apply(null,B.map(function(b){return b.x0}))+Math.max.apply(null,B.map(function(b){return b.x1})))/2,(Math.min.apply(null,B.map(function(b){return b.y0}))+Math.max.apply(null,B.map(function(b){return b.y1})))/2,(Math.min.apply(null,B.map(function(b){return b.z0}))+Math.max.apply(null,B.map(function(b){return b.z1})))/2]};
+var cv=document.getElementById('cv3'),ref=function(){return __p3(0,0,0)},pe=function(n,x,y,id,ty,bt){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:id||1,pointerType:ty||'touch',isPrimary:(id||1)===1,button:bt||0,buttons:n==='pointerup'?0:(bt===2?2:1)}))};
+/* 1 dedo no vazio: a câmera não mexe */var a0=ref();pe('pointerdown',r.left+40,r.bottom-40);for(var k=1;k<=5;k++){pe('pointermove',r.left+40+k*20,r.bottom-40);await W(20)}pe('pointerup',r.left+140,r.bottom-40);await W(100);var a1=ref();out.push('1 dedo no vazio: câmera '+(Math.hypot(a1[0]-a0[0],a1[1]-a0[1])<1?'parada':'MEXEU'));
+/* 2 dedos: giram */__build();var a2=ref();pe('pointerdown',r.left+300,r.top+300,1);pe('pointerdown',r.left+500,r.top+300,2);for(var k=1;k<=5;k++){pe('pointermove',r.left+300+k*15,r.top+300,1);pe('pointermove',r.left+500+k*15,r.top+300,2);await W(20)}pe('pointerup',r.left+375,r.top+300,1);pe('pointerup',r.left+575,r.top+300,2);await W(150);var a3=ref();out.push('2 dedos: câmera '+(Math.hypot(a3[0]-a2[0],a3[1]-a2[1])>3?'girou':'parada')+' · móveis '+(JSON.stringify(snapState())===sv0?'iguais':'MUDARAM'));
+/* 1 dedo no móvel: arrasta na hora */var m0=S.mods[0],x0=m0.x;__build();var cr=cv.getBoundingClientRect(),cc=cen(0),sp0=__p3(cc[0],cc[1],cc[2]),sp=[cr.left+sp0[0],cr.top+sp0[1]];pe('pointerdown',sp[0],sp[1]);await W(30);for(var k=1;k<=6;k++){pe('pointermove',sp[0]+k*12,sp[1]);await W(30)}pe('pointerup',sp[0]+72,sp[1]);await W(150);out.push('1 dedo no balcão: x '+x0+'→'+m0.x);
+/* toque e 2 toques */S.m=null;var cc2=cen(1),sp2=__p3(cc2[0],cc2[1],cc2[2]);org3api.one(sp2[0],sp2[1]);await W(100);out.push('1 toque: escolhido '+(S.m===S.mods[1])+' · contorno '+(window.LP3MI===1));org3api.one(sp2[0],sp2[1]);await W(150);out.push('2 toques: '+AM.slice(-1)[0]+' · aba '+S.tab);
+document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!window.PV2D)+" · 2D de volta "+!!document.querySelector("#svg #mod"));out.push("errs "+__errs.length);var tem=function(f){return out.some(f)?1:0};var R={res:[tem(function(x){return x==="botão: true"}),tem(function(x){return /vista 16,/.test(x)&&/painel visível true$/.test(x)}),tem(function(x){return x==="1 dedo no vazio: câmera parada"}),tem(function(x){return x==="2 dedos: câmera girou · móveis iguais"}),tem(function(x){return /^1 dedo no balcão: x 600→/.test(x)&&!/→600$/.test(x)}),tem(function(x){return x==="1 toque: escolhido true · contorno true"}),tem(function(x){return /^2 toques: ⚙ Configurações/.test(x)}),tem(function(x){return x==="fechou: true · 2D de volta true"}),tem(function(x){return x==="errs 0"})].join(""),out:out.join(" ‖ ")};return JSON.stringify(R);
+
+          """#)
+        /* botão · no quadro do 2D com o painel · 1 dedo no vazio parado · 2 dedos giram sem mudar · 1 dedo arrasta · 1 toque escolhe · 2 toques configura · fecha · sem erro */
+        XCTAssertEqual(o["res"] as? String, "111111111", "perspectiva livre no 2D: \(o["out"] ?? "")")
+    }
+
+    /// ETAPA 2 · item 7 (Adauto/Chefe 27/11, referências R12/R13/R15): balcão canto cego E e D com laterais inteiras, travessa da frente e de trás
+    /// deitadas (embutidas entre as laterais OU apoiadas em cima), painel cego, régua entre o cego e a porta, porta com 2 dobradiças; medidas de fora iguais;
+    /// lista = corte = 3D (cada travessa com a sua chave); projeto antigo igual, com "Atualizar estrutura" e desfazer; salvar e reabrir; aéreo não muda.
+    func testE2ITEM7_CantoCegoComTravessasDaFrenteEDeTrasEmbutidasOuApoiadas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W_=function(t){return new Promise(function(r){setTimeout(r,t)})};var R={},e0=__errs.length;
+          var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+          var resumo=function(m){return partsOf(m).filter(function(p){return /^(Lateral (esquerda|direita)|Travessa (frontal|deitada · (frente|trás))|Base superior)$/.test(p.name)}).map(function(p){return p.name.replace('Travessa deitada · ','TD ')+' '+p.cl+'×'+p.cw}).join(' | ')};
+          var cubo=async function(m){open3D();await W_(150);__build();var B=__boxes().filter(function(b){return /^0:/.test(String(b.nm))&&!b.nol&&!b.ft}),P=partsOf(m).filter(function(p){return !p.noCut&&p.pk&&!/^Fundo/.test(p.name)}),sem=P.filter(function(p){return !B.some(function(b){return b.pk===p.pk})}).map(function(p){return p.pk});
+            var L=B.filter(function(b){return /:Lateral esquerda$/.test(b.nm)}),T=B.filter(function(b){return /:Travessa deitada · (frente|trás)$/.test(b.nm)});var lx1=Math.max.apply(null,L.map(function(b){return b.x1})),ly1=Math.max.apply(null,L.map(function(b){return b.y1}));
+            var r=(sem.length?'sem 3D: '+sem.join(','):'lista = 3D')+' · laterais '+L.length+' caixa(s)'+' · travessas '+T.map(function(b){return Math.round(b.x1-b.x0)+'×'+Math.round(b.z1-b.z0)+(b.x0>=lx1-.5?' entre':' por cima')+(Math.round(b.y0)>=Math.round(ly1)?' em cima da lateral':' na altura da lateral')}).join(' / ');document.getElementById('v3x').click();return r};
+          for(const n of ['Balcão canto cego · cego na direita (porta na esquerda)','Balcão canto cego · cego na esquerda (porta na direita)']){var k=/esquerda \(porta/.test(n)?'E':'D';loadState(initLimpo());S.mods=[];newTpl(achar(n));var m=S.mods[0];m.x=500;draw();
+            var w0=[m.w,m.h,m.d].join('×');R['nasce'+k]=m.cgTrav;R['emb'+k]=resumo(m)+' · '+await cubo(m);
+            m.cgTrav='apo';draw();R['apo'+k]=resumo(m)+' · '+await cubo(m)+' · de fora '+([m.w,m.h,m.d].join('×')===w0?'igual':'MUDOU');
+            var pt=partsOf(m).filter(function(p){return p.name==='Porta'&&!p.cego})[0];R['porta'+k]=/2 furos/.test(pt.note)+' '+partsOf(m).some(function(p){return p.cego})+' '+partsOf(m).some(function(p){return /^Régua espaçadora do canto/.test(p.name)})}
+          /* divisória interna (parametrizada; decisão do Adauto pendente): padrão como era; ligada sobe até a travessa */
+          loadState(initLimpo());S.mods=[];newTpl(achar('Balcão canto cego · cego na direita (porta na esquerda)'));var md=S.mods[0];var dv=function(){return partsOf(md).filter(function(p){return /^Divisória \d+$/.test(p.name)}).map(function(p){return p.cl}).join(',')};R.div=dv();S.m=md;S.tab=0;panel();var cb=document.querySelector('#bd [data-cgdiv]');cb.checked=true;cb.dispatchEvent(new Event('change',{bubbles:true}));R.div+=' → '+dv();cb=document.querySelector('#bd [data-cgdiv]');cb.checked=false;cb.dispatchEvent(new Event('change',{bubbles:true}));R.div+=' → '+dv();
+          /* projeto antigo: sem a marca fica igual; o painel oferece Atualizar estrutura (com desfazer) */
+          loadState(initLimpo());S.mods=[];newTpl(achar('Balcão canto cego · cego na direita (porta na esquerda)'));var m=S.mods[0];delete m.cgTrav;var sv=JSON.parse(JSON.stringify(snapState()));loadState(sv);m=S.mods[0];draw();R.antigo=resumo(m);
+          S.m=m;S.tab=0;panel();var b=document.querySelector('#bd [data-cgtrav="emb"]');R.botao=b?b.textContent:'';b.click();R.atualizado=m.cgTrav+' · '+resumo(m);document.getElementById('und').click();await W_(50);m=S.mods[0];R.desfez=(m.cgTrav===undefined||!m.cgTrav)+' · '+resumo(m);
+          /* salvar e reabrir */m.cgTrav='apo';draw();var sv2=JSON.parse(JSON.stringify(snapState()));loadState(sv2);R.reabre=S.mods[0].cgTrav+' · '+resumo(S.mods[0]);
+          /* aéreo canto cego não muda */loadState(initLimpo());S.mods=[];newTpl(achar('Aéreo canto cego · cego na direita'));R.aereo=String(S.mods[0].cgTrav)+' · '+resumo(S.mods[0]);
+          R.errs=__errs.slice(e0);return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["nasceD"] as? String, "emb", "canto cego novo nasce com as travessas embutidas (R15)")
+        XCTAssertEqual(o["nasceE"] as? String, "emb")
+        XCTAssertEqual(o["embD"] as? String, "Lateral esquerda 690×560 | Lateral direita 690×560 | TD frente 970×80 | TD trás 970×80 · lista = 3D · laterais 1 caixa(s) · travessas 970×80 entre na altura da lateral / 970×80 entre na altura da lateral")
+        XCTAssertEqual(o["embE"] as? String, "Lateral esquerda 690×560 | Lateral direita 690×560 | TD frente 970×80 | TD trás 970×80 · lista = 3D · laterais 1 caixa(s) · travessas 970×80 entre na altura da lateral / 970×80 entre na altura da lateral")
+        XCTAssertEqual(o["apoD"] as? String, "Lateral esquerda 675×560 | Lateral direita 675×560 | TD frente 1000×80 | TD trás 1000×80 · lista = 3D · laterais 1 caixa(s) · travessas 1000×80 por cima em cima da lateral / 1000×80 por cima em cima da lateral · de fora igual")
+        XCTAssertEqual(o["apoE"] as? String, "Lateral esquerda 675×560 | Lateral direita 675×560 | TD frente 1000×80 | TD trás 1000×80 · lista = 3D · laterais 1 caixa(s) · travessas 1000×80 por cima em cima da lateral / 1000×80 por cima em cima da lateral · de fora igual")
+        XCTAssertEqual(o["portaD"] as? String, "true true true", "porta com 2 dobradiças, painel cego e régua entre o cego e a porta")
+        XCTAssertEqual(o["portaE"] as? String, "true true true")
+        XCTAssertEqual(o["antigo"] as? String, "Lateral esquerda 690×560 | Lateral direita 690×560 | Travessa frontal 1000×70", "projeto antigo fica igual")
+        XCTAssertEqual(o["div"] as? String, "620 → 675 → 620", "divisória: como era por padrão; opção sobe até a travessa e volta")
+        XCTAssertEqual(o["botao"] as? String, "Atualizar estrutura")
+        XCTAssertEqual(o["atualizado"] as? String, "emb · Lateral esquerda 690×560 | Lateral direita 690×560 | TD frente 970×80 | TD trás 970×80")
+        XCTAssertEqual(o["desfez"] as? String, "true · Lateral esquerda 690×560 | Lateral direita 690×560 | Travessa frontal 1000×70", "↶ volta")
+        XCTAssertEqual(o["reabre"] as? String, "apo · Lateral esquerda 675×560 | Lateral direita 675×560 | TD frente 1000×80 | TD trás 1000×80")
+        XCTAssertEqual(o["aereo"] as? String, "undefined · Lateral esquerda 720×350 | Lateral direita 720×350 | Base superior 900×350", "aéreo: base em cima e embaixo (regra)")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
     /// ETAPA 2 · item 4 (Chefe 27/11: "melhore texturas e materiais de eletros, puxadores, ferragens e vidros sem perder desempenho… sem mudar nenhuma caixa"):
     /// dobradiça, corrediça, cabideiro e o inox/painel preto do forno embutido usam o material de metal do 3D (VIS-MAT); as caixas (medidas e posições) são as mesmas.
     func testE2ITEM4_FerragensEEletroEmbutidoComMaterialDeMetalSemMudarCaixa() async throws {

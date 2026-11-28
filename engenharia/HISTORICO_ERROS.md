@@ -2973,3 +2973,42 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - `testPlanoDeCortePecaBranca…` e `testValoresCobra…` montam a união pelo "Unir", com base, rodapé, travessa e moldura marcadas, e voltaram aos valores ORIGINAIS.
   - Prova das contagens que subiram: com o "unir sozinho" antigo forçado numa cópia do editor, `testMedidaDePeca…`, `testPlanoDeCorteTodaPeca…`, `testFASE5…` e `testNOMEIPAD…` voltam exatamente a 6308, 12836, 284/142 e 281/257/271. A diferença é só a união.
   - Testes novos: `testEtapa2UnirManualTravessaEMolduraCorridaPeloBotaoComCorte` e `testEtapa2VizinhoIgualBitABitEmTodoCaminhoDeMoverCriarCopiarEncaixar`.
+
+## CEGO-ESTRUTURA (ETAPA 2 item 7, Adauto/Chefe 27/11, R12/R13/R15 descritas pelo Chefe): canto cego E e D — Claude 3
+- **Pedido:** balcão canto cego com:
+  - laterais E e D inteiras, base e fundo;
+  - travessa da frente e de trás deitadas: embutidas entre as laterais OU apoiadas em cima (regra do item 6);
+  - painel cego do lado do canto, régua vertical entre o cego e a porta, porta com 2 dobradiças, espelhamento E/D;
+  - medidas de fora iguais e lista = 3D;
+  - projeto antigo igual, com "Atualizar estrutura" e desfazer.
+- **Antes:** o canto cego tinha só a travessa frontal em pé (70, no rebaixo das laterais). Faltava a de trás e a opção embutida/apoiada.
+- **Implementação (bloco CANTO CEGO no fim do editor; embrulho do partsOf, sem mexer no núcleo; combinado com o Code 2):**
+  - marca `m.cgTrav` ('emb' | 'apo'), só no balcão com painel cego (`temCego`, !sup, !corner);
+  - 'emb': laterais inteiras e travessas `Travessa deitada · frente#1` e `· trás#1` de W − 2e × `cnTravMm` (80), entre as laterais;
+  - 'apo': laterais 1 espessura mais baixas e travessas de W × 80 por cima;
+  - a travessa em pé sai e a lateral fica sem o rebaixo dela no 3D;
+  - 3D pelo `cxz`, com a chave de cada peça;
+  - o módulo novo do catálogo nasce com 'emb' (é criação);
+  - sem a marca nada muda; a aba Estrutura mostra "Atualizar estrutura" e, com a marca, "Embutidas/Apoiadas", a largura e "Voltar à estrutura antiga". Tudo com snap/desfazer;
+  - o `ttParts` do Code 2 (item 22) já exclui `m.cgTrav`.
+- **Não muda:** aéreo canto cego (regra: base em cima e embaixo), painel cego, régua espaçadora, porta (2 dobradiças), 165° e E/D.
+- **Divisória interna, parametrizada** (decisão do Adauto pendente, Chefe 28/11): por padrão fica como era (620). A opção "Divisória interna sobe até a travessa" (`m.cgDivTopo`) leva a 675, encostada embaixo da travessa deitada. Com desfazer.
+- **Teste:** `testE2ITEM7_CantoCegoComTravessasDaFrenteEDeTrasEmbutidasOuApoiadas`. No HEAD anterior falha (sem a estrutura nem o botão); agora passa.
+
+## PV2D (ETAPA 2 item 9, Adauto/Chefe 27/11, V2/V3): perspectiva livre como modo a mais do editor 2D — Claude 3 · 1ª parte
+- **Pedido:** câmera em perspectiva livre dentro do 2D, girando em volta dos módulos (frente/cima/lado/diagonal), com a mesma geometria do partsOf.
+  - Na mesma vista: tocar seleciona, 2 toques configuram, alças, cota até a parede, pôr do catálogo ao lado.
+  - Gestos: 1 dedo edita/arrasta; 2 dedos giram; pinça dá zoom; a câmera nunca move peça; mouse meio/direito gira e a roda dá zoom; caneta com palma.
+  - Todas as vistas e ferramentas do 2D continuam.
+- **1ª parte (feita):**
+  - botão "🧊 Perspectiva" na barra do 2D: a mesma cena do 3D (as caixas do partsOf) encaixada no quadro do desenho; o painel ao lado e a barra de baixo continuam;
+  - barra própria: Frente, Cima, Lado, Diagonal e "↩ 2D";
+  - `PV2D` nos tratadores do 3D:
+    - 2 dedos giram e a pinça dá zoom; 1 dedo nunca move a câmera; mouse do meio/direito gira, a roda dá zoom (a de sempre);
+    - 1 dedo no móvel arrasta na hora (sem segurar 350 ms);
+    - 1 toque escolhe com contorno (`LP3MI`); 2 toques abrem as configurações pelo `pcEdOpen` do Claude 4;
+    - a caneta usa o `window.PALMA` do Claude 4, que já cobre o 3D.
+  - Fechar volta ao 2D. O projeto não muda por abrir, girar ou fechar.
+- **Ajuste (Chefe 28/11, mesma regra do TOQUE-ALCA do Claude 4):** o arrasto do móvel só começa depois de `SEL.mov` px, então a tremida de 5 px não move. Caindo um 2º dedo com o arrasto já começado (pinça em cima do móvel), o móvel volta para onde estava e o desfazer não ganha passo. Teste `testE2ITEM9_TremidaEPincaNaoMovemOMovelNaPerspectiva`: no a8e75134 a pinça deixava o móvel fora do lugar.
+- **2ª parte (a fazer):** alças de tamanho, cota até a parede e "pôr do catálogo ao lado" dentro da perspectiva.
+- **Teste:** `testE2ITEM9_PerspectivaLivreNo2DGestosSemACameraMoverPeca` (falha antes, passa agora). Print: `tools/sondas/etapa2_c3/item9_perspectiva_no_2d.png`.

@@ -17488,6 +17488,32 @@ return JSON.stringify({out:nomes.length+' com correr · cruzando: '+(ruins.join(
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /// DIV-CEGO-LIVRE (decisão do Adauto 28/11, DECISOES_TECNICAS @888603db): a divisória do canto cego mantém o funcionamento atual e a opção de subir até
+    /// a travessa, com liberdade total de altura, profundidade e posição, sem nada reposicionar sozinho. Antes, ligar "sobe até a travessa" jogava fora a altura
+    /// que o usuário tinha mexido. Confere: campos do editor de peça (3D), mover, opção ligada/desligada, lista = 3D, salvar/reabrir e desfazer, nos dois lados.
+    func testDIVCEGO_DivisoriaDoCantoCegoLivreComOpcaoDeSubirAteATravessa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};var out=[],e0=__errs.length;
+var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&!t.act&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+for(const n of ['Balcão canto cego · cego na direita (porta na esquerda)','Balcão canto cego · cego na esquerda (porta na direita)']){var k=/esquerda \(porta/.test(n)?'E':'D';loadState(initLimpo());S.mods=[];newTpl(achar(n));var m=S.mods[0];m.x=500;draw();
+ var D=function(){return partsOf(m).filter(function(p){return /^Divisória \d+$/.test(p.name)})[0]},pk=D().pk,x0=D().x;
+ var lin=function(){var p=D();__build();var b=__boxes().filter(function(q){return q.pk===pk&&/^0:/.test(String(q.nm))})[0],ok3=b&&Math.abs((b.y1-b.y0)-p.h)<1&&Math.abs((b.x0-m.x)-p.x)<1;return 'x'+Math.round(p.x-x0)+' alt '+p.cl+' prof '+p.cw+(ok3?' (3D igual)':' (3D DIFERENTE)')};
+ var r=[k+' padrão '+lin()];open3D();await W(250);window.SEL3={mi:0,pk:pk};re3();await W(60);
+ var campo=function(a,v){var i=document.querySelector('#e3 [data-e3d="'+a+'"]');i.value=String(v);i.dispatchEvent(new Event('change',{bubbles:true}))};
+ campo(1,500);await W(30);r.push('alt 500 '+lin());campo(2,480);await W(30);r.push('prof 480 '+lin());
+ snap();var o_=poEdges(m.po[pk]);o_.el=(o_.el||0)+30;o_.er=(o_.er||0)+30;m.po[pk]=o_;draw();r.push('anda 30 '+lin());
+ var cb=document.createElement('input');cb.type='checkbox';cb.dataset.cgdiv='1';document.body.appendChild(cb);S.m=m;cb.checked=true;cb.dispatchEvent(new Event('change',{bubbles:true}));r.push('sobe '+lin());cb.checked=false;cb.dispatchEvent(new Event('change',{bubbles:true}));cb.remove();r.push('desce '+lin());
+ var js=JSON.stringify(snapState());loadState(JSON.parse(js));draw();m=S.mods[0];r.push('reaberto '+lin());
+ await W(800);window.SEL3={mi:0,pk:pk};re3();await W(60);campo(1,300);await W(800);document.getElementById('und').click();await W(100);m=S.mods[0];r.push('300 e desfaz '+lin());document.getElementById('v3x').click();out.push(r.join(' · '))}
+return JSON.stringify({out:out.join(' | '),errs:__errs.length-e0});
+          """#)
+        /* "sobe": a base vai até a travessa (+55) e a altura que a pessoa tirou (−120) continua valendo por cima (antes voltava a 675, jogando fora a edição);
+           "prof 480": o número digitado é a medida de corte (antes 479, porque a conta partia do desenho 560,8) */
+        XCTAssertEqual(o["out"] as? String, "D padrão x0 alt 620 prof 560 (3D igual) · alt 500 x0 alt 500 prof 560 (3D igual) · prof 480 x0 alt 500 prof 480 (3D igual) · anda 30 x30 alt 500 prof 480 (3D igual) · sobe x30 alt 555 prof 480 (3D igual) · desce x30 alt 500 prof 480 (3D igual) · reaberto x30 alt 500 prof 480 (3D igual) · 300 e desfaz x30 alt 500 prof 480 (3D igual) | E padrão x0 alt 620 prof 560 (3D igual) · alt 500 x0 alt 500 prof 560 (3D igual) · prof 480 x0 alt 500 prof 480 (3D igual) · anda 30 x30 alt 500 prof 480 (3D igual) · sobe x30 alt 555 prof 480 (3D igual) · desce x30 alt 500 prof 480 (3D igual) · reaberto x30 alt 500 prof 480 (3D igual) · 300 e desfaz x30 alt 500 prof 480 (3D igual)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /// PISTAO (decisão do Adauto 28/11, DECISOES_TECNICAS @888603db): o pistão a gás (abre pra cima) / articulador (abre pra baixo) da basculante entra nas
     /// ferragens (hwOf) e no orçamento, com quantidade por porta editável no vão e preço unitário nos valores (PR.pistao), sem duplicar; o 3D desenha a mesma
     /// quantidade, fechada e aberta. Salvar/reabrir mantém; desfazer volta.

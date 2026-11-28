@@ -3373,3 +3373,15 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - testPISTAO_BasculanteListaOrcamentoE3DComQuantidadeEPrecoEditaveis: aéreo, 2 racks e editor por vãos; −, desfazer, salvar e reabrir. Falha antes (HEAD 888603db: sem linha 'pistao') e passa depois.
   - testBASDOB: expectativa mudou pelo pedido (comentário com a data).
 - **Evidência:** tools/sondas/etapa2_c3/pistao_basculante_antes_depois.png. Render 4–5 ms.
+
+## DIV-CEGO-LIVRE · divisória do canto cego: opção "sobe até a travessa" jogava fora a altura editada; medida digitada saía 1 mm menor — Claude 3 (decisão do Adauto 28/11, DECISOES_TECNICAS @888603db)
+- **Pedido:** manter o funcionamento atual com a opção de subir até a travessa, com liberdade total de dimensão e posição, sem interferência automática.
+- **Erro 1 (comprovado):**
+  - Reproduzir: editar a altura da divisória no 3D (500) e ligar "Divisória interna sobe até a travessa". A altura voltava a 675.
+  - Causa: o wrapper cgDivTopo recalculava p.y/p.h depois do poOne, por cima das bordas do usuário (m.po).
+  - Correção: a opção sobe a medida-base (p.base) e mantém as bordas por cima. Altura 500 + 55 da subida = 555; desligar volta a 500.
+- **Erro 2 (comprovado):**
+  - Reproduzir: no editor de peça, digitar 480 na profundidade da divisória dava corte 479.
+  - Causa: e3Type partia do desenho (560,8, com décimo) e não do corte (560).
+  - Correção: quando o desenho tem décimo, a conta parte de RNDC (corte). O número digitado vira a medida de corte. Vale para qualquer peça (componente compartilhado); peças com medida inteira não mudam.
+- **Teste:** testDIVCEGO_DivisoriaDoCantoCegoLivreComOpcaoDeSubirAteATravessa, cego E e D. Cobre: campos do editor (altura, profundidade), andar 30, opção ligada/desligada, lista = 3D, salvar/reabrir e desfazer. Falha antes (prof 479; sobe 675) e passa depois.

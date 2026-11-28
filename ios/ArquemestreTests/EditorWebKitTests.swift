@@ -19951,7 +19951,7 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
         loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});
         var m=S.mods[0],mi=0,P=partsOf(m).filter(function(p){return p.pk&&edgeSides(p.name)==='B'&&+p.cl>0})[0],pk=P.pk;R.peca=!!P;
-        var mt=function(){var c=mCost(m);return r3(c.tB+c.tC+c.tT)},st0=JSON.stringify(snapState()),m0=mt(),b0=JSON.stringify(budget().L||budget());
+        var mt=function(){var c=mCost(m);return r3(c.tB+c.tC+c.tT)},st0=JSON.stringify(snapState()),m0=mt(),b0=JSON.stringify(budget().L||budget()),B0=budget(),cent=function(v){return Math.round(v*100)},tm=function(B){return B.T.tB+B.T.tC+(B.T.tT||0)};
         var verdes=function(root){var n=0;[].forEach.call(root.querySelectorAll('g[data-cp]'),function(g){if(String(g.dataset.src||'').split(';').indexOf(mi+'|'+pk)>=0)n+=(g.innerHTML.match(/stroke="#1f9d55" stroke-width="9"/g)||[]).length});return n};
         openCut();await W(300);var cb=document.getElementById('cutbody');R.antes=verdes(cb)+' · '+!!cb.querySelector('[data-ftman]');R.mesmoProjeto=JSON.stringify(snapState())===st0;
         var bt=[].filter.call(cb.querySelectorAll('[data-fted]'),function(b){return String(b.dataset.ftsrc).split(';').indexOf(mi+'|'+pk)>=0})[0];R.botao=!!bt;bt.click();await W(50);
@@ -19961,11 +19961,11 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         M.querySelector('[data-fta="ok"]').click();await W(300);cb=document.getElementById('cutbody');
         R.guardado=JSON.stringify(m.fitaMan);R.depois=verdes(cb)+' · '+!!cb.querySelector('[data-ftman="LTB"]');
         R.metros=r3(mt()-m0)===r3((+P.cl+ +P.cl+ +P.cw)/1000-(+P.cl)/1000)?'certo':(mt()-m0)+'';
-        R.orcamento=JSON.stringify(budget().L||budget())!==b0;R.quadro3D=fitaAcab(P,m).s+' · '+fitaAcab(P).s;
+        R.orcamento=JSON.stringify(budget().L||budget())!==b0;/* Code 1 (auditoria do item 20, via Chefe 28/11): o orçamento confere o VALOR, ao centavo: metros a mais de cada fita × preço dela × perda da fita (a base inferior deste balcão leva fita da cor: regra capot do mCost) */var B1=budget(),dM=(+P.cl+ +P.cw)/1000,dB=B1.T.tB-B0.T.tB,dC=B1.T.tC-B0.T.tC,dT=(B1.T.tT||0)-(B0.T.tT||0),dE=(dB*(+PR.fitaB)+dC*(+PR.fitaC)+dT*(+PR.fitaT))*fK();R.orcTipo=r3(dC)===r3(dM)&&r3(dB)===0&&r3(dT)===0?'fita da cor':'B '+r3(dB)+' C '+r3(dC)+' T '+r3(dT);R.orcCentavo=cent(B1.tot-B0.tot)===cent(dE)?'certo':'Δ '+(B1.tot-B0.tot)+' ≠ '+dE;R.orcValor=(cent(B1.tot-B0.tot)/100).toFixed(2);R.orcMetrosLista=r3(tm(B1)-tm(B0))===r3(mt()-m0)&&r3(mt()-m0)===r3(dM);R.orcVenda=cent(B1.sale-B0.sale)===cent((B1.tot-B0.tot)*PR.mult);R.orcSoFita=cent(B1.cB+B1.cC+B1.cF)===cent(B0.cB+B0.cC+B0.cF);R.quadro3D=fitaAcab(P,m).s+' · '+fitaAcab(P).s;
         var outros=partsOf(m).filter(function(p){return p.pk&&p.pk!==pk}).every(function(p){return edgeSidesOf(m,p)===edgeSides(p.name)});R.soEssa=outros;
         var st1=JSON.stringify(snapState());loadState(JSON.parse(st1));draw();var mR=mt();R.reabre=JSON.stringify(S.mods[0].fitaMan)===R.guardado&&r3(mCost(S.mods[0]).tB+mCost(S.mods[0]).tC+mCost(S.mods[0]).tT)===mR;
         m=S.mods[0];await W(800);openCut();await W(300);bt=[].filter.call(document.querySelectorAll('#cutbody [data-fted]'),function(b){return String(b.dataset.ftsrc).split(';').indexOf(mi+'|'+pk)>=0})[0];bt.click();await W(50);M=document.getElementById('ftedm');[].forEach.call(M.querySelectorAll('[data-ftp]'),function(c,i){var s=bt.dataset.ftsrc.split(';').filter(Boolean)[i];if(s!==mi+'|'+pk&&c.checked)c.click()});M.querySelector('[data-fta="auto"]').click();await W(300);
-        R.automatico=(S.mods[0].fitaMan===undefined)+' · '+(r3(mt())===m0);
+        R.automatico=(S.mods[0].fitaMan===undefined)+' · '+(r3(mt())===m0);R.autoCentavo=cent(budget().tot)===cent(B0.tot)&&cent(budget().sale)===cent(B0.sale);
         await W(800);document.getElementById('und').click();await W(200);R.desfaz=JSON.stringify(S.mods[0].fitaMan)===R.guardado;R.guardado=/"LTB"/.test(R.guardado);
         document.getElementById('cutx')&&document.getElementById('cutx').click();
         /* ArqueCut avulso */
@@ -19987,6 +19987,14 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["desfaz"] as? Bool, true, "↶ desfaz volta a escolha")
         XCTAssertEqual(o["metros"] as? String, "certo", "metros de fita: + 1 comprimento + 1 largura")
         XCTAssertEqual(o["orcamento"] as? Bool, true, "o orçamento muda junto (fita)")
+        // Code 1 / Chefe 28/11 (fortalecido, não afrouxado): o valor ao centavo
+        XCTAssertEqual(o["orcCentavo"] as? String, "certo", "orçamento: diferença = metros a mais × preço da fita × perda da fita, ao centavo")
+        XCTAssertEqual(o["orcTipo"] as? String, "fita da cor", "os metros a mais entram na fita certa (da cor), sem ir pra outra")
+        XCTAssertEqual(o["orcValor"] as? String, "1.77", "diferença em R$ com os preços de referência (PRAVG): 1,46 m × R$ 1,10 × 1,10 de perda = R$ 1,77")
+        XCTAssertEqual(o["orcMetrosLista"] as? Bool, true, "metros de fita: orçamento = lista do módulo = lados escolhidos (sem duplicar)")
+        XCTAssertEqual(o["orcVenda"] as? Bool, true, "preço de venda acompanha (custo × multiplicador), ao centavo")
+        XCTAssertEqual(o["orcSoFita"] as? Bool, true, "chapas não mudam: só a fita entra na diferença")
+        XCTAssertEqual(o["autoCentavo"] as? Bool, true, "automático: o orçamento volta exatamente ao valor de antes")
         XCTAssertEqual(o["quadro3D"] as? String, "LTB · B", "o quadro da peça no 3D mostra a mesma fita")
         XCTAssertEqual(o["soEssa"] as? Bool, true, "só a peça escolhida muda")
         XCTAssertEqual(o["automatico"] as? String, "true · true", "Automático volta à regra de sempre")

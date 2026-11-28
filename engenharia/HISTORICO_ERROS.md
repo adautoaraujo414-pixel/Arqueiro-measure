@@ -2817,3 +2817,18 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Falha na 53344a39 e passa a 430, a 1366 e no iPad simulado.
   - TOQUEPECA, TOQUEALCA e TOQUEJANELA continuam passando.
 - **Não verificado:** aparelho real com Apple Pencil, S Pen e caneta do Windows. O WebKit do iPad entrega `pointerType 'pen'` para o Pencil; vale conferir no aparelho.
+
+## CAMPO-NUM (ETAPA 2 item 37, Adauto 27/11): campo numérico sem Cancelar; espessuras trocadas caladas — Claude 4
+- **Auditoria com toque real (CDP, 430):** em cada campo `data-calc` das abas Estrutura, Portas, Tamponamentos, Fundos e Ripado: tocar, digitar 123 nas teclas do app, OK, conferir o projeto e o desfazer.
+  - 12 de 15 certos: abre, não fecha digitando, valor exato, 1 desfazer, desfaz volta. Em cm, 123 virou 1230 mm e 12,5 virou 125 mm.
+- **Erros comprovados:**
+  1. Não havia **Cancelar**: sair do campo aplicava o digitado.
+  2. **Espessura das chapas** 123 virava 50 calado, e o campo mostrava 123. Causa: `def()` faz `c('esp',3,50,15)` em toda passada.
+  3. **Espessura do fundo** 123 virava 6 calado, e o campo mostrava 123. Causa: `def()` volta `fundoMm` fora de 2–30 para 6.
+- **Correção:**
+  - Tecla "✕ Cancelar" no teclado do app: volta o valor de antes (`data-kpv`), fecha e não aplica nada.
+  - Na entrada dos campos `data-r` (esp, fundoMm, rasgoP, rasgoR) e `data-k` (w, d), fora da faixa do `def()` sai o aviso "⚠ … não pode: o mínimo/máximo é … mm. Nada foi alterado.", nada muda e o campo volta. É o mesmo jeito que a Altura já tinha.
+  - O `def()` não mudou: ele também abre projetos antigos (§3).
+- **Teste novo:** `testCAMPONUM_TecladoOkCancelarValorExatoEForaDaFaixaAvisa`, com toque nas teclas. Falha na 53344a39 e passa a 430, a 1366 e no iPad simulado. Os outros 13 testes de digitação continuam passando.
+- **Achado sem correção (decidir):** "Desconto na altura (mm)" da aba Portas grava nos Ajustes gerais (`STD().cvDesc`), vale para o projeto todo e **não tem desfazer**, porque os Ajustes não entram no `snapState`. Colocar os Ajustes no desfazer mexe no formato do histórico.
+- **Botões "⬚ Fechar Vão"** (espaço até a parede, o teto e o chão, e atrás quando afastado): todos testados no balcão e no aéreo. Fazem a peça do tamanho do vão, e o desfazer volta. Comportamento correto.

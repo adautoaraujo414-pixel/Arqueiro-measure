@@ -19607,6 +19607,39 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // CAMPO-NUM (Adauto 27/11, ETAPA 2 item 37): campos numéricos do módulo com o teclado do app (toque de dedo nas teclas). Tocar abre, digitar não fecha,
+    // OK aplica o valor exato com 1 desfazer, Cancelar (tecla nova) volta o valor de antes sem aplicar, cm vira mm certo. Antes, a espessura das chapas
+    // fora de 3–50 e a do fundo fora de 2–30 eram trocadas caladas pelo def() (123 virava 50 / 6 com o campo mostrando 123): agora avisa e nada muda.
+    func testCAMPONUM_TecladoOkCancelarValorExatoEForaDaFaixaAvisa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length,T0=window.toast,ult='';window.MINI3OFF=1;PR.setupDone=1;window.toast=function(t){ult=String(t)};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var pid=150,kp=function(){return document.getElementById('calcbar')},aberto=function(){return !!(kp()&&!kp().hidden)};
+        var tecla=async function(c){var b=kp().querySelector('button[data-c="'+c+'"]'),r=b.getBoundingClientRect();pid++;b.dispatchEvent(new PointerEvent('pointerdown',{clientX:r.x+5,clientY:r.y+5,pointerId:pid,bubbles:true,cancelable:true,isPrimary:true,pointerType:'touch'}));b.dispatchEvent(new PointerEvent('pointerup',{clientX:r.x+5,clientY:r.y+5,pointerId:pid,bubbles:true,cancelable:true,isPrimary:true,pointerType:'touch'}));await W(60)};
+        var ini=async function(tab){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.mods=[];S.fr=[];S.rp=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.m=S.mods[0];S.m.x=700;S.tab=tab;draw();panel();await W(800);ult=''};
+        var campo=function(sel){return document.querySelector('#bd input[data-calc]'+sel)};
+        var digita=async function(sel,teclas,fim){var e=campo(sel);e.focus();await W(150);var abriu=aberto(),fic=true;for(var i=0;i<teclas.length;i++){await tecla(teclas[i]);if(!aberto())fic=false}var h=HIST.length;await tecla(fim);await W(400);return {abriu:abriu,ficou:fic,fechou:!aberto(),hist:HIST.length-h}};
+        await ini(0);var r=await digita('[data-k="w"]','1100','ok');R.largura='abriu '+r.abriu+' · digitando ficou aberto '+r.ficou+' · OK fechou '+r.fechou+' · larg '+S.m.w+' · campo '+campo('[data-k="w"]').value+' · desfazer +'+r.hist;await W(800);$('und').click();await W(300);R.larguraDesfeita='larg '+S.m.w;
+        await ini(0);r=await digita('[data-k="w"]','99','x');R.cancelar='fechou '+r.fechou+' · larg '+S.m.w+' · campo '+campo('[data-k="w"]').value+' · desfazer +'+r.hist;
+        await ini(0);r=await digita('[data-r="esp"]','123','ok');await W(200);R.espForaDaFaixa='esp '+S.m.esp+' · campo '+campo('[data-r="esp"]').value+' · '+ult;
+        await ini(0);r=await digita('[data-r="esp"]','18','ok');R.espNaFaixa='esp '+S.m.esp+' · desfazer +'+r.hist;
+        await ini(5);r=await digita('[data-r="fundoMm"]','123','ok');await W(200);R.fundoForaDaFaixa='fundo '+S.m.fundoMm+' · campo '+campo('[data-r="fundoMm"]').value+' · '+ult;
+        await ini(5);r=await digita('[data-r="fundoMm"]','3','ok');R.fundoNaFaixa='fundo '+S.m.fundoMm;
+        await ini(0);r=await digita('[data-emzo]','12,5','ok');R.afastamentoCm='zo '+S.m.zo+' mm · campo '+campo('[data-emzo]').value;
+        window.toast=T0;S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["largura"] as? String, "abriu true · digitando ficou aberto true · OK fechou true · larg 1100 · campo 1100 · desfazer +1")
+        XCTAssertEqual(o["larguraDesfeita"] as? String, "larg 1200")
+        XCTAssertEqual(o["cancelar"] as? String, "fechou true · larg 1200 · campo 1200 · desfazer +0", "Cancelar volta o valor de antes sem aplicar")
+        XCTAssertEqual(o["espForaDaFaixa"] as? String, "esp 15 · campo 15 · ⚠ Espessura das chapas 123 mm não pode: o máximo é 50 mm. Nada foi alterado.")
+        XCTAssertEqual(o["espNaFaixa"] as? String, "esp 18 · desfazer +1")
+        XCTAssertEqual(o["fundoForaDaFaixa"] as? String, "fundo 6 · campo 6 · ⚠ Espessura do fundo 123 mm não pode: o máximo é 30 mm. Nada foi alterado.")
+        XCTAssertEqual(o["fundoNaFaixa"] as? String, "fundo 3")
+        XCTAssertEqual(o["afastamentoCm"] as? String, "zo 125 mm · campo 12,5", "cm vira mm certo")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // PALMA-CANETA (Adauto 27/11, ETAPA 2 item 36): rejeição de palma com caneta (Apple Pencil, S Pen, caneta do Windows). Enquanto a caneta está em uso
     // (encostada ou mexida há menos de PALMA.ms), toque de dedo/palma não seleciona, não abre menu, não move, não dá zoom e não chega na câmera 3D.
     // A palma que já arrastava antes da caneta encostar volta pro lugar. A caneta funciona como sempre, o mouse nunca é bloqueado e, depois, o dedo volta.

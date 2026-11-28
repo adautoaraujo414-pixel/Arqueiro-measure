@@ -19607,6 +19607,46 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // MEDIDA-OPC (Adauto 27/11, ETAPA 2 item 38): distância digitada no 2D (até a esquerda, a direita, o teto, da pedra) dá pra entender de 2 jeitos.
+    // Antes o app escolhia sozinho (sempre movia). Agora mostra "Mover o módulo" (só o espaçamento: a medida fica) e "Redimensionar" (só a peça: o outro
+    // lado fica parado, ex. 1200 → 1290) com o resultado de cada um; Cancelar não muda nada; a escolha grava 1 desfazer. Peças (partsOf): mover não muda
+    // nenhuma peça; redimensionar muda base, travessa e portas junto (mesmo caminho da largura digitada). modGapSet direto continua aplicando na hora.
+    func testMEDIDAOPC_DistanciaDigitadaMostraMoverOuRedimensionar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length,T0=window.toast;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var pid=190,kp=function(){return document.getElementById('calcbar')},ob=function(){return document.getElementById('medopc')};
+        var tecla=async function(c){var b=kp().querySelector('button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',pointerId:++pid}));await W(50)};
+        var ini=async function(){try{kp().hidden=true;if(ob())ob().hidden=true}catch(_){}loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;S.Wm=1;S.Hm=1;S.mods=[];S.fr=[];S.rp=[];S.stones=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));S.mods[0].x=300;newTpl(T('Balcão 2 portas + 4 gavetas'));S.m=S.mods[1];S.m.x=1900;S.tab=0;draw();panel();await W(900)};
+        var pecas=function(m){return partsOf(m).map(function(p){return p.name+' '+Math.round(p.w)+'x'+Math.round(p.h)}).sort().join('|')};
+        var digita=async function(q,num){openQ(q);await W(200);for(var i=0;i<num.length;i++)await tecla(num[i]);await tecla('ok');await W(300);var b=ob();return b&&!b.hidden?[].map.call(b.querySelectorAll('[data-medopc]'),function(x){return x.querySelector('b')?x.querySelector('b').textContent:x.textContent.trim()}).join(' / '):'sem opções'};
+        var escolhe=async function(i){ob().querySelector('[data-medopc="'+i+'"]').click();await W(300)};
+        var est=function(){var m=S.m;return 'x '+m.x+' · larg '+m.w+' · esq '+Math.round(modGaps(m).esq)};
+        await ini();R.inicio=est();var P0=pecas(S.m),H0=HIST.length;
+        R.opcoes=await digita('ml','250');R.antesDeEscolher=est();await escolhe('x');R.cancelar=est()+' · desfazer +'+(HIST.length-H0);
+        await ini();P0=pecas(S.m);H0=HIST.length;await digita('ml','250');await escolhe('0');R.mover=est()+' · desfazer +'+(HIST.length-H0)+' · peças '+(pecas(S.m)===P0?'iguais':'MUDARAM');
+        await W(800);$('und').click();await W(300);R.moverDesfeito=est();
+        await ini();H0=HIST.length;await digita('ml','250');await escolhe('1');var base=partsOf(S.m).filter(function(p){return /^Base inferior/.test(p.name)})[0],port=partsOf(S.m).filter(function(p){return /^Porta/.test(p.name)}).map(function(p){return Math.round(p.w)}).join('+');
+        var ref=JSON.parse(JSON.stringify(S.m));ref.x=1810;ref.w=1290;var Pr=pecas(ref);R.redim=est()+' · desfazer +'+(HIST.length-H0)+' · base '+Math.round(base.w)+' · peças '+(pecas(S.m)===Pr?'= módulo de 1290 digitado':'DIFERENTES do módulo de 1290');await W(800);$('und').click();await W(300);R.redimDesfeito=est();
+        await ini();R.redimImpossivel=await digita('mr','2000');var off=ob()&&ob().querySelector('[data-medopc="1"]');R.redimDesligado=off&&off.disabled?'desligado: '+off.textContent.split('não dá:')[1].trim().slice(0,40):'LIGADO';try{ob().hidden=true}catch(_){}
+        await ini();modGapSet(S.m,'ml',250);R.apiDireta=est()+(ob()&&!ob().hidden?' · ABRIU OPÇÕES':'');
+        window.toast=T0;try{kp().hidden=true;ob().hidden=true}catch(_){}S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["inicio"] as? String, "x 1900 · larg 1200 · esq 340")
+        XCTAssertEqual(o["opcoes"] as? String, "↔ Mover o módulo (só o espaçamento) / ⇔ Redimensionar (só a peça) / ✕ Cancelar (nada muda)", "mostra as opções e não escolhe sozinho")
+        XCTAssertEqual(o["antesDeEscolher"] as? String, "x 1900 · larg 1200 · esq 340", "nada muda antes da escolha")
+        XCTAssertEqual(o["cancelar"] as? String, "x 1900 · larg 1200 · esq 340 · desfazer +0")
+        XCTAssertEqual(o["mover"] as? String, "x 1810 · larg 1200 · esq 250 · desfazer +1 · peças iguais", "mover: a medida do módulo fica, nenhuma peça muda")
+        XCTAssertEqual(o["moverDesfeito"] as? String, "x 1900 · larg 1200 · esq 340")
+        XCTAssertEqual(o["redim"] as? String, "x 1810 · larg 1290 · esq 250 · desfazer +1 · base 1290 · peças = módulo de 1290 digitado", "redimensionar: o lado direito fica, as peças (portas, base, travessas, gavetas) são as de um módulo de 1290")
+        XCTAssertEqual(o["redimDesfeito"] as? String, "x 1900 · larg 1200 · esq 340")
+        XCTAssertEqual(o["redimImpossivel"] as? String, "↔ Mover o módulo (só o espaçamento) / ⇔ Redimensionar (só a peça) / ✕ Cancelar (nada muda)")
+        XCTAssertEqual((o["redimDesligado"] as? String)?.hasPrefix("desligado: a largura ficaria"), true, "opção impossível aparece desligada com o motivo")
+        XCTAssertEqual(o["apiDireta"] as? String, "x 1810 · larg 1200 · esq 250", "modGapSet direto continua aplicando (testes e outras telas)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // CAMPO-NUM (Adauto 27/11, ETAPA 2 item 37): campos numéricos do módulo com o teclado do app (toque de dedo nas teclas). Tocar abre, digitar não fecha,
     // OK aplica o valor exato com 1 desfazer, Cancelar (tecla nova) volta o valor de antes sem aplicar, cm vira mm certo. Antes, a espessura das chapas
     // fora de 3–50 e a do fundo fora de 2–30 eram trocadas caladas pelo def() (123 virava 50 / 6 com o campo mostrando 123): agora avisa e nada muda.
@@ -19657,7 +19697,7 @@ final class EditorWebKitTests: XCTestCase {
         var abre=async function(q){var e=document.querySelector('#svg text[data-q="'+q+'"]');if(!e)return 'sem medida '+q;var r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,emb=document.elementFromPoint(x,y);var alca=!!(emb&&emb.dataset&&emb.dataset.h!==undefined);await tap(x,y);await W(300);return (!kp().hidden?'abriu '+document.getElementById('kplab').textContent:'não abriu')+(alca?' (pela alça)':'')};
         await ini();R.largura=(await abre('mw')).replace(' (pela alça)','');await tecla('1');await tecla('1');await tecla('0');await tecla('0');await tecla('ok');await W(400);R.larguraAplicada='larg '+S.m.w;
         await ini();R.altura=(await abre('mh')).replace(' (pela alça)','');await tecla('x');await W(200);
-        await ini();R.esquerda=(await abre('ml')).replace(' (pela alça)','');await tecla('2');await tecla('5');await tecla('0');await tecla('ok');await W(400);R.esquerdaAplicada='até o vizinho '+Math.round(modGaps(S.m).esq);
+        await ini();R.esquerda=(await abre('ml')).replace(' (pela alça)','');await tecla('2');await tecla('5');await tecla('0');await tecla('ok');await W(400);/* MEDIDA-OPC (item 38, Adauto 27/11, 28/11): a distância agora pergunta mover ou redimensionar; aqui escolhe mover (o de antes) */var mo_=document.querySelector('#medopc [data-medopc="0"]');if(mo_){mo_.click();await W(300)}R.esquerdaAplicada='até o vizinho '+Math.round(modGaps(S.m).esq);
         await ini();var h=document.querySelector('#svg circle[data-h="r"]').getBoundingClientRect();var w0=S.m.w;await arr(h.x+h.width/2,h.y+h.height/2,40);await W(300);R.arrastoAlca=S.m.w!==w0?'mudou a largura':'parada';R.arrastoNaoAbriu=kp().hidden?'sem teclado':'TECLADO ABRIU';
         await ini('Aéreo 2 portas');var v=document.querySelector('#svg text[data-q="vao|0"]');if(v){var rv=v.getBoundingClientRect();await tap(rv.x+rv.width/2,rv.y+rv.height/2);await W(300)}R.vaoUnico=/^Vão único/.test(ult)?'avisa':'calado: '+ult;
         window.toast=T0;try{kp().hidden=true}catch(_){}S.tab=0;panel();R.errs=__errs.length-e0;return JSON.stringify(R)

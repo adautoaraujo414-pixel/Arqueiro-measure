@@ -81,3 +81,7 @@ Só entra aqui o que o Adauto aprovou. Sugestões ficam em `PLANO_EVOLUCAO.md`.
 - O giro do engrosso saiu do gesto de 2 toques na lateral e foi para o botão "Girar engrosso" no painel da lateral. Nada foi removido.
 - Alça de medida na borda de fora do módulo.
 - Pinça e arrasto nunca contam como toque.
+
+## Distância digitada no 2D (ETAPA 2 item 38, Adauto 27/11)
+- Ao digitar a distância (esquerda, direita, teto, pedra), o app pergunta: mover o módulo (só o espaçamento) ou redimensionar (só a peça, com o outro lado parado). Cancelar não muda nada.
+- Largura e altura digitadas seguem a convenção de antes (esquerda e chão parados) até o Adauto decidir.

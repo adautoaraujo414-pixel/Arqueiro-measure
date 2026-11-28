@@ -2839,3 +2839,16 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - **Erro comprovado:** tocar no vão único não fazia nada (`if(!S.m.div.length)return`). Agora avisa de onde vem a largura.
   - **Comportamento correto:** até o teto, do chão, distância à esquerda (exata: 250), largura, altura e vão 1/2 aplicam com desfazer. Valor fora do possível avisa e não aplica. Parede menor que 500 avisa "ficou 500".
   - **Teste novo:** `testCAMPONUM_MedidaEmbaixoDaAlcaAbreComToqueEArrastoContinua`. Passa a 430, a 1366 e no iPad simulado. Os 46 testes de medida, toque e alça passam.
+
+## MEDIDA-OPC (ETAPA 2 item 38, Adauto 27/11): distância digitada no 2D — o app escolhia sozinho mover o módulo — Claude 4
+- **Antes:** ao digitar a distância até a esquerda, a direita, o teto ou da pedra (`#qebox`, `data-mq`), o `modGapSet` sempre **movia** o módulo. O pedido: "separe redimensionar, reposicionar, só o espaçamento e só a peça; quando der pra entender de mais de um jeito, mostre as opções e não escolha sozinho".
+- **Correção (`editor.html`, bloco MEDIDA-OPC):** no campo da tela, antes de aplicar, abre o quadro `#medopc` com o resultado de cada opção:
+  - "Mover o módulo (só o espaçamento)": a medida fica, mostra quanto anda e pra onde. É o `modGapSet` de sempre.
+  - "Redimensionar (só a peça)": o outro lado fica parado (ex.: 1200 → 1290). Passa pelo `medLim`; se não dá, aparece desligado com o motivo.
+  - "Cancelar": nada muda.
+  - A escolha grava 1 desfazer. O `modGapSet` direto (testes, outras telas) continua aplicando na hora.
+- **Peças:** mover não muda nenhuma peça (`partsOf` igual). Redimensionar dá as mesmas peças de um módulo com a largura digitada (base, travessas, portas e gavetas).
+- **Teste novo:** `testMEDIDAOPC_DistanciaDigitadaMostraMoverOuRedimensionar`. Falha na 53344a39 e passa a 430, a 1366 e no iPad simulado.
+- **Teste atualizado:** `testCAMPONUM_MedidaEmbaixoDaAlca…` escolhe "mover" no quadro, com comentário do pedido (38, 28/11).
+- **Evidência:** `engenharia/evidencias/etapa2/item38_opcoes_da_medida.png`.
+- **Não feito (perguntar):** largura e altura digitadas (mw/mh e o campo do painel) seguem a convenção de sempre (esquerda e chão parados). Também dá para perguntar de que lado cresce.

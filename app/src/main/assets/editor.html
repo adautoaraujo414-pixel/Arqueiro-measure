@@ -16028,5 +16028,30 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-pcgira]');if(!b||window.RO)return;e.stopPropagation();var P=window.PCED,m=P&&S.mods[P.mi];if(!m)return;if(m.lock){try{toast('🔒 Módulo travado')}catch(_){}return}egGira(m,b.dataset.pcgira)},true);
 })();
 </script>
+<script>
+/* ===== MEDIDA-OPC (Adauto 27/11, ETAPA 2 item 38): medida digitada no 2D que dá pra entender de mais de um jeito. Distância até a esquerda/direita,
+   até o teto ou da pedra: "Mover o módulo" (só o espaçamento: a medida dele fica) ou "Redimensionar" (só a peça: o outro lado fica parado, ex. 800 − 50 = 750).
+   O app mostra as opções com o resultado de cada uma e não escolhe sozinho. Cancelar não muda nada; a escolha grava 1 desfazer.
+   Só no campo da tela (#qebox): modGapSet direto continua igual. ===== */
+(function(){
+ var BOX=null;function box(){if(BOX)return BOX;BOX=document.createElement('div');BOX.id='medopc';BOX.hidden=true;BOX.style.cssText='position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:100000;width:min(400px,calc(100vw - 24px));background:#fff;color:#1b1f27;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.35);padding:10px 12px;font:14px system-ui,sans-serif';document.body.appendChild(BOX);return BOX}
+ var mmT=function(v){return (window.UN&&UN.len)?UN.len(v):Math.round(v)+' mm'},r1=function(v){return Math.round(v*10)/10};
+ function opcoes(m,k,v){if(!m||!window.modGaps)return null;var G=modGaps(m),old={ml:G.esq,mr:G.dir,mt:G.teto,mp:G.pedra}[k];if(old===null||old===undefined||!isFinite(v))return null;var d=r1(v-old);if(Math.abs(d)<0.5)return null;
+  var hz=k==='ml'||k==='mr',L=[],ad=Math.abs(d);
+  var dir=k==='ml'?(d>0?'pra direita':'pra esquerda'):k==='mr'?(d>0?'pra esquerda':'pra direita'):k==='mt'?(d>0?'pra baixo':'pra cima'):(d>0?'pra cima':'pra baixo');
+  L.push({id:'mover',t:(hz?'↔':'↕')+' Mover o módulo (só o espaçamento)',s:(hz?'largura fica '+mmT(m.w):'altura fica '+mmT(m.h))+' · anda '+mmT(ad)+' '+dir,fn:function(){modGapSet(m,k,v)}});
+  var kk=hz?'w':'h',n0=+m[kk],n1=r1(n0-d),lim=null;try{lim=typeof medLim==='function'?medLim(m,kk,n1):null}catch(_){}
+  var fica={ml:'o lado direito fica parado',mr:'o lado esquerdo fica parado',mt:'embaixo fica parado',mp:'em cima fica parado'}[k];
+  L.push({id:'redim',t:(hz?'⇔':'⇕')+' Redimensionar (só a peça)',s:(hz?'largura ':'altura ')+mmT(n0)+' → '+mmT(n1)+' · '+fica,no:(n1<=0||lim)?('não dá: '+(hz?'a largura':'a altura')+' ficaria '+mmT(n1)+(lim&&isFinite(lim.v)?' (o módulo aceita '+(lim.v>n1?'no mínimo ':'no máximo ')+mmT(lim.v)+')':'')):'',fn:function(){try{snap()}catch(_){}if(k==='ml'){m.x=r1(m.x+d);m.w=n1}else if(k==='mr'){m.w=n1}else if(k==='mt'){m.h=n1}else{m.b=r1(m.b+d);m.h=n1}try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}}});
+  return {k:k,v:v,old:old,L:L}}
+ function mostra(m,o){var b=box(),lab={ml:'Distância da esquerda',mr:'Distância da direita',mt:'Até o teto',mp:'Da pedra até embaixo'}[o.k];
+  b.innerHTML='<div style="font-weight:700;margin-bottom:6px">'+lab+': '+mmT(o.old)+' → '+mmT(o.v)+' · como aplicar?</div>'+o.L.map(function(q,i){return '<button data-medopc="'+i+'"'+(q.no?' disabled':'')+' style="display:block;width:100%;text-align:left;margin:4px 0;padding:8px 10px;border-radius:10px;border:2px solid '+(q.no?'#d6dbe3':'#1f6feb')+';background:'+(q.no?'#f3f4f6':'#eaf2ff')+';color:#1b1f27;min-height:44px"><b>'+q.t+'</b><br><span style="font-size:12px">'+(q.no||q.s)+'</span></button>'}).join('')+'<button data-medopc="x" style="display:block;width:100%;margin-top:6px;min-height:40px;border-radius:10px">✕ Cancelar (nada muda)</button>';
+  b._o=o;b._m=m;b.hidden=false}
+ window.medOpcAberta=function(){return !!(BOX&&!BOX.hidden)};
+ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-medopc]');if(!t||!BOX||!BOX.contains(t))return;e.stopPropagation();e.preventDefault();var o=BOX._o,m=BOX._m;BOX.hidden=true;if(t.dataset.medopc==='x'||!o){try{toast('Nada foi alterado')}catch(_){}return}var q=o.L[+t.dataset.medopc];if(!q||q.no)return;if(m&&m.lock){try{toast('🔒 Módulo travado')}catch(_){}return}q.fn();try{toast('✓ '+q.t.replace(/^\S+\s/,'')+' · '+q.s+' · ↶ desfaz')}catch(_){}},true);
+ /* o campo da medida (#qebox) aplica no 'input': aqui, antes dele, vira a escolha */
+ document.addEventListener('input',function(e){var t=e.target;if(!t||!t.dataset||!/^(ml|mr|mt|mp)$/.test(t.dataset.mq||'')||!t.closest||!t.closest('#qebox')||!S.m||window.RO)return;var raw=String(t.value).trim();if(raw===''||/[+\-−]\s*$/.test(raw))return;var v=+raw.replace(',','.');if(!isFinite(v))return;var o=opcoes(S.m,t.dataset.mq,v);e.stopImmediatePropagation();if(!o)return;if(S.m.lock){try{toast('🔒 Módulo travado')}catch(_){}return}setTimeout(function(){mostra(S.m,o)},0)},true);
+})();
+</script>
 </body></html>
 

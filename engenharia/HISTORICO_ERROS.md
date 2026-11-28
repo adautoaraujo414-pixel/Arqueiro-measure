@@ -3399,3 +3399,20 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Os testes tocavam ou arrastavam num ponto fora da tela, onde `elementFromPoint` dá nulo.
 - **Ajuste dos testes (comentário ALTURA-667 em cada um):** rolar até o alvo antes de tocar ou arrastar, como a pessoa faria. Nenhuma expectativa mudou.
 - **Prova:** os 3 passam a 375×667, 430 e 1366.
+
+## PASSO-375 (tela de 375, Chefe 28/11) — Claude 4
+- **Teste:** `testLiberdadeDeComposicaoMoverNo3DECanto…`. A 375 "ao soltar sem pergunta": o módulo nem andava.
+- **Conferência (comportamento correto do app):** o mesmo arrasto (1400 mm, começando na porta do módulo 1) com toque real (CDP `dispatchTouchEvent`) anda e pergunta ao soltar:
+  - 375: passos de 9,1 e 2,3 px;
+  - 430: passos de 10,4 e 2,6 px;
+  - 1366: passos de 16,3 e 4,1 px;
+  - com mouse (CDP), a 1366: passos de 16,3 e 4,1 px.
+  - Só os eventos de ponteiro sintéticos do teste, sem o toque por trás, precisam do 1º passo acima de `SEL.mov` (10 px). A 375 os 1400 mm são 91 px, e 10 passos de 9,1 px não engatavam.
+- **Ajuste do teste (comentário PASSO-375):** nos arrastos longos o passo fica com pelo menos 11 px. O destino é o mesmo e nenhuma expectativa mudou.
+- **Prova:** passa a 375, 430 e 1366.
+
+## LED no ripado a 375 e vão de cima embaixo do 🔓 (Chefe 28/11) — Claude 4 · pendente de decisão
+- `testLedNoRipado…` ("toque fora"): a 375, de perto, o ponto do teste (x 20, 45% da altura) cai na peça lateral do ripado (o raio acerta uma caixa dele). Não é "fora do ripado", então o app trata certo e escolhe o vão mais perto. O teste supõe parede nesse ponto, o que só vale a partir de 430. Ajuste proposto: o teste procurar um ponto onde o raio acerte a parede fora do ripado.
+- `testDoisToquesNoVaoDeCimaAteOTeto…` (aéreo encostado na direita): a 375 o meio do vão de cima (7 px de altura) fica embaixo do 🔓 `#lockAll`. O resto da faixa continua alcançável.
+  - Opção A: diminuir a escala do 2D a 375 pra parede sair de baixo dos botões. Testada e desfeita: quebra `testRebaixoDoTetoEPainelAcompanha`, porque o rótulo do rebaixo encurta.
+  - Opção B: o teste tocar na parte livre da faixa.

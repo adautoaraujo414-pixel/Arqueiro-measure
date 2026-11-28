@@ -3450,3 +3450,12 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Toda resposta é igual à escolha do `__sel3` no mesmo ponto, com formato completo, e não muda o projeto.
   - Passa a 1366, 430 e 375.
 - Os 159 testes de 3D, seleção e tamponamento a 1366: 158 passam. A única falha é a `PosicaoDigitadaPertoDaParede…`, já conhecida e vinda do Code 2.
+
+## TOQUE-FINA, ajuste (achado do Claude 3, 28/11) — Claude 4
+- **Erro comprovado (regressão do e8b5de4e):** `testPuxadorBolaNaoEngoleOToqueNemOsDoisToquesDoMovel` falhava a 1366. Os 2 toques no puxador bola do "Rack suspenso basculante" (módulo não escolhido) não abriam o menu do vão.
+  - Busca por commits: c1cc2616 passa, e8b5de4e falha. A causa não foi a `peca3` do 3D.
+- **Causa raiz:** a faixa de 12 px da peça fina (`finaBorda`) pegava os 2 toques no puxador, que fica perto de uma peça fina. Além disso, ela percorria as peças de todos os módulos e lia pelo índice do `partsOf` do módulo tocado.
+- **Correção:**
+  - a faixa só vale quando o dedo cai num retângulo de peça (a porta que cobre a base de 3 px); puxador e outros elementos seguem a regra deles;
+  - só as peças do próprio módulo entram.
+- **Prova:** os 18 testes de puxador e TOQUEPECA passam a 1366, 430 e 375.

@@ -14521,6 +14521,181 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antigo"] as? String, "8.800 2.610", "projeto antigo: fita igual")
     }
 
+    // AUDITORIA 3.9 (Adauto 28/11, liderada pelo Code 2): trocar a parede vista ou a câmera NUNCA altera o projeto. Ambiente completo com
+    // canto em L esquerdo e direito, módulos no fundo, aéreos, asa esquerda (espelhada) e direita, torre: 11 trocas f/e/d nos dois sentidos,
+    // as 4 câmeras do 3D (2 voltas), salvar/fechar/reabrir e trocar de novo — estado, peças de cada módulo, corte e orçamento iguais bit a bit
+    func testETAPA3_TrocarParedeECameraNaoMudaOProjetoCantoLEDComAsas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        /* constrói o ambiente como um projeto salvo (cada módulo nasce sozinho, depois parede/posição) */
+        window.__mkCena=async function(A){var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&(t.n===n||(n instanceof RegExp&&n.test(t.n))))r=t})});if(!r)throw new Error('sem modelo '+n);return JSON.parse(JSON.stringify(r))};
+        var um=async function(nome,o,corner){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.mods=[];draw();newTpl(T(nome));var m=S.mods[0];if(corner){S.m=m;S.tab=0;draw();panel();await W(50);document.querySelector('#bd [data-corner="'+corner+'"]').click();await W(150);m=S.mods[0]}var j=JSON.parse(JSON.stringify(m));Object.assign(j,o||{});return j};
+        var mods=[];
+        if(A==='L'){mods.push(await um('Balcão 2 portas',{x:5},'e'));mods.push(await um('Balcão 2 portas',{x:905}));mods.push(await um('Balcão porta + gavetas',{x:1805}));
+         var cd=await um('Balcão 2 portas',{},'d');cd.x=4195-cd.w;mods.push(cd);mods.push(await um('Aéreo 2 portas',{x:1200}));mods.push(await um('Aéreo 2 portas',{x:2300}));
+         mods.push(await um('Balcão 2 portas',{wing:'e',x:905,espE:1}));mods.push(await um('Balcão 1 porta',{wing:'e',x:1805,espE:1}));mods.push(await um('Aéreo 2 portas',{wing:'e',x:1000,espE:1}));
+         mods.push(await um('Balcão porta + gavetas',{wing:'d',x:905}));mods.push(await um('Armário alto 2 portas',{wing:'d',x:2000}))}
+        else{var c1=await um(/^Balcão canto cego · cego na esquerda/,{x:5});var c2=await um(/^Balcão canto cego · cego na direita/,{});c2.x=4195-c2.w;mods.push(c1,c2);mods.push(await um('Balcão 2 portas',{x:5+c1.w}));
+         mods.push(await um('Balcão 2 portas',{wing:'e',x:566,espE:1}));mods.push(await um('Balcão porta + gavetas',{wing:'d',x:566}));mods.push(await um('Aéreo 2 portas',{wing:'d',x:600}))}
+        var st=JSON.parse(JSON.stringify(initLimpo()));st.env='cozinha';st.room='cozinha';st.W=4200;st.H=2700;st.RD=3200;st.wl={L:'p',R:'p'};st.mods=mods;st.mi=-1;loadState(st);draw();await W(400);return S.mods.length};
+        var r=await (async function(){window.__CENA='L';window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});if(!r)throw new Error('sem modelo '+n);return JSON.parse(JSON.stringify(r))};
+        var can=function(o){return JSON.stringify(o,function(k,v){return v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce(function(a,x){a[x]=v[x];return a},{}):v})};
+        var sug=async function(){for(var i=0;i<3;i++){var b=document.querySelector('#libsug:not([hidden]) [data-libsug="ok"]');if(!b)break;b.click();await W(120)}};
+        var mk=async function(nome,wing,x,extra){atArm();newTpl(T(nome));var m=S.m;draw();await W(80);await sug();if(wing){S.m=m;S.tab=0;draw();panel();await W(60);var b=document.querySelector('#bd [data-wing="'+wing+'"]');if(b){b.click();await W(150)}await sug()}if(x!==undefined)m.x=x;if(extra)Object.assign(m,extra);draw();await W(80);return m};
+        var corner=async function(lado){var m=await mk('Balcão 2 portas');S.m=m;S.tab=0;draw();panel();await W(60);document.querySelector('#bd [data-corner="'+lado+'"]').click();await W(200);await sug();return S.m};
+        var A=window.__CENA||'L';await __mkCena(A);draw();await W(900);
+        /* assinatura canônica: estado + peças de cada módulo + corte + orçamento */
+        var sig=function(){var st=JSON.parse(JSON.stringify(snapState()));var mods=st.mods.map(can);var P=[];var real=S.mods;
+        /* peças sempre do estado canônico (fora da vista) */var wv=window.wvCur&&wvCur();if(wv)__wvCanon();try{S.mods.forEach(function(m,i){P.push(i+':'+partsOf(m).map(function(p){return p.pk+' '+Math.round(p.x)+','+Math.round(p.y)+' '+Math.round(p.w)+'x'+Math.round(p.h)+' c'+Math.round(p.cl)+'x'+Math.round(p.cw)}).sort().join(';'))});var G=cutGroups(),cg=G.ord.map(function(k){var g=G.map[k];return (g.names||[]).join('+')+' '+g.L+'x'+g.W+'x'+g.qty}).sort().join('|');var b=budget();var bud=Math.round(b.tot*100)}finally{if(wv)__wvTo(wv)}
+        return {mods:mods,P:P,cut:cg,bud:bud,ord:st.mods.map(function(m){return (m.wing||'f')+(m.corner?'C'+m.corner:'')+':'+m.x}).join(' ')}};
+        var dif=function(a,b){var r=[];if(a.mods.length!==b.mods.length)r.push('nº módulos '+a.mods.length+'→'+b.mods.length);a.mods.forEach(function(x,i){if(x!==b.mods[i]){var A_=JSON.parse(x),B_=JSON.parse(b.mods[i]||'{}');r.push('mod '+i+' ('+(A_.wing||'f')+(A_.corner?' canto':'')+'): '+Object.keys(Object.assign({},A_,B_)).filter(function(k){return JSON.stringify(A_[k])!==JSON.stringify(B_[k])}).map(function(k){return k+' '+String(JSON.stringify(A_[k])).slice(0,30)+'→'+String(JSON.stringify(B_[k])).slice(0,30)}).join(', '))}});a.P.forEach(function(x,i){if(x!==b.P[i]){var a1=x.split(';'),b1=(b.P[i]||'').split(';');r.push('peças '+i+': −['+a1.filter(function(q){return b1.indexOf(q)<0}).slice(0,3).join(' | ')+'] +['+b1.filter(function(q){return a1.indexOf(q)<0}).slice(0,3).join(' | ')+']')}});if(a.cut!==b.cut)r.push('corte mudou');if(a.bud!==b.bud)r.push('orçamento '+a.bud+'→'+b.bud);return r};
+        var s0=sig();var out=['cena '+A+': '+S.mods.length+' módulos · '+s0.ord+' · erros '+__errs.length];
+        /* na vista: cada módulo da parede tem as mesmas peças que no canônico? */
+        var vista=function(w){var r=[];var vis=S.mods.slice();var base={};__wvCanon();S.mods.forEach(function(m,i){base[i]=m});var P0=new Map();S.mods.forEach(function(m){P0.set(m,partsOf(m).map(function(p){return p.pk+' '+Math.round(p.w)+'x'+Math.round(p.h)+' c'+Math.round(p.cl)+'x'+Math.round(p.cw)}).sort().join(';'))});__wvTo(w);S.mods.forEach(function(m){var pv=partsOf(m).map(function(p){return p.pk+' '+Math.round(p.w)+'x'+Math.round(p.h)+' c'+Math.round(p.cl)+'x'+Math.round(p.cw)}).sort().join(';'),p0=P0.get(m);if(p0!==undefined&&pv!==p0){var a1=p0.split(';'),b1=pv.split(';');r.push('na vista '+w+' o módulo '+(m.n||m.myN||'')+' x'+m.x+': só no canônico ['+a1.filter(function(q){return b1.indexOf(q)<0}).slice(0,4).join(' | ')+'] só na vista ['+b1.filter(function(q){return a1.indexOf(q)<0}).slice(0,4).join(' | ')+']')}});return r};
+
+        /* câmera do 3D: todas as vistas prontas, ida e volta */
+        open3D();await W(400);var vb=[].slice.call(document.querySelectorAll('#v3row2 [data-v],[data-v3v],[data-cam]'));out.push('botões de câmera '+vb.map(function(b){return b.dataset.v||b.dataset.v3v||b.dataset.cam}).join(','));for(var r_=0;r_<2;r_++)for(const b of vb){b.click();await W(120);var d=dif(s0,sig());if(d.length)out.push('câmera '+(b.dataset.v||b.dataset.v3v||b.dataset.cam)+': '+d.slice(0,4).join(' ; '))}try{close3D()}catch(_){document.getElementById('v3x').click()}await W(200);
+        /* vistas do 2D (Frente/Esquerda/Direita/Superior/Posterior) com cada módulo escolhido */
+        var vbt=[].slice.call(document.querySelectorAll('[data-vw],[data-vista],#vbar button')).filter(function(b){return b.offsetParent});out.push('botões de vista 2D '+vbt.map(function(b){return (b.textContent||'').trim()}).join(','));for(var mi_=0;mi_<S.mods.length;mi_++){S.m=S.mods[mi_];draw();panel();for(const b of vbt){b.click();await W(60)}}var dv=dif(s0,sig());if(dv.length)out.push('vistas 2D: '+dv.slice(0,4).join(' ; '));
+        var seq=['e','f','d','f','e','d','e','f','d','e','f'];var prev=s0;
+        for(var k=0;k<seq.length;k++){var w=seq[k];wvGo(w);await W(150);var d=dif(s0,sig());if(d.length)out.push('troca '+k+' → '+w+': '+d.slice(0,6).join(' ; '));if(w!=='f'){var v=vista(w);if(v.length)out.push(v.slice(0,4).join(' ; '))}}
+        /* salvar, fechar, reabrir e trocar de novo */
+        wvGo('f');var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();await W(300);var d2=dif(s0,sig());if(d2.length)out.push('reabriu: '+d2.slice(0,6).join(' ; '));
+        for(var k=0;k<seq.length;k++){wvGo(seq[k]);await W(120);var d=dif(s0,sig());if(d.length)out.push('reaberto troca '+k+' → '+seq[k]+': '+d.slice(0,6).join(' ; '))}
+        wvGo('f');out.push('fim · erros '+__errs.length+(__errs.length?' '+__errs.slice(0,3).join(' | '):''));return out.join('\n')})();return JSON.stringify({r:r});
+        """#)
+        let r = o["r"] as? String ?? ""
+        XCTAssertTrue(r.hasPrefix("cena L: 11 módulos"), r)
+        XCTAssertFalse(r.contains("troca"), "trocar de parede mudou o projeto: \(r)")
+        XCTAssertFalse(r.contains("reabriu"), "reabrir mudou o projeto: \(r)")
+        XCTAssertFalse(r.contains("câmera iso:") || r.contains("câmera front:") || r.contains("câmera top:") || r.contains("câmera left:"), "câmera mudou o projeto: \(r)")
+        XCTAssertFalse(r.contains("na vista"), "módulo com peças diferentes na vista da parede: \(r)")
+        XCTAssertTrue(r.contains("botões de câmera iso,front,top,left"), r)
+        XCTAssertTrue(r.hasSuffix("fim · erros 0"), r)
+    }
+
+    // AUDITORIA 3.9: o mesmo, com os cantos CEGOS esquerdo e direito e os módulos da parede lateral que cruzam na frente deles
+    func testETAPA3_TrocarParedeECameraNaoMudaOProjetoCantosCegos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        /* constrói o ambiente como um projeto salvo (cada módulo nasce sozinho, depois parede/posição) */
+        window.__mkCena=async function(A){var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&(t.n===n||(n instanceof RegExp&&n.test(t.n))))r=t})});if(!r)throw new Error('sem modelo '+n);return JSON.parse(JSON.stringify(r))};
+        var um=async function(nome,o,corner){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.mods=[];draw();newTpl(T(nome));var m=S.mods[0];if(corner){S.m=m;S.tab=0;draw();panel();await W(50);document.querySelector('#bd [data-corner="'+corner+'"]').click();await W(150);m=S.mods[0]}var j=JSON.parse(JSON.stringify(m));Object.assign(j,o||{});return j};
+        var mods=[];
+        if(A==='L'){mods.push(await um('Balcão 2 portas',{x:5},'e'));mods.push(await um('Balcão 2 portas',{x:905}));mods.push(await um('Balcão porta + gavetas',{x:1805}));
+         var cd=await um('Balcão 2 portas',{},'d');cd.x=4195-cd.w;mods.push(cd);mods.push(await um('Aéreo 2 portas',{x:1200}));mods.push(await um('Aéreo 2 portas',{x:2300}));
+         mods.push(await um('Balcão 2 portas',{wing:'e',x:905,espE:1}));mods.push(await um('Balcão 1 porta',{wing:'e',x:1805,espE:1}));mods.push(await um('Aéreo 2 portas',{wing:'e',x:1000,espE:1}));
+         mods.push(await um('Balcão porta + gavetas',{wing:'d',x:905}));mods.push(await um('Armário alto 2 portas',{wing:'d',x:2000}))}
+        else{var c1=await um(/^Balcão canto cego · cego na esquerda/,{x:5});var c2=await um(/^Balcão canto cego · cego na direita/,{});c2.x=4195-c2.w;mods.push(c1,c2);mods.push(await um('Balcão 2 portas',{x:5+c1.w}));
+         mods.push(await um('Balcão 2 portas',{wing:'e',x:566,espE:1}));mods.push(await um('Balcão porta + gavetas',{wing:'d',x:566}));mods.push(await um('Aéreo 2 portas',{wing:'d',x:600}))}
+        var st=JSON.parse(JSON.stringify(initLimpo()));st.env='cozinha';st.room='cozinha';st.W=4200;st.H=2700;st.RD=3200;st.wl={L:'p',R:'p'};st.mods=mods;st.mi=-1;loadState(st);draw();await W(400);return S.mods.length};
+        var r=await (async function(){window.__CENA='C';window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});if(!r)throw new Error('sem modelo '+n);return JSON.parse(JSON.stringify(r))};
+        var can=function(o){return JSON.stringify(o,function(k,v){return v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce(function(a,x){a[x]=v[x];return a},{}):v})};
+        var sug=async function(){for(var i=0;i<3;i++){var b=document.querySelector('#libsug:not([hidden]) [data-libsug="ok"]');if(!b)break;b.click();await W(120)}};
+        var mk=async function(nome,wing,x,extra){atArm();newTpl(T(nome));var m=S.m;draw();await W(80);await sug();if(wing){S.m=m;S.tab=0;draw();panel();await W(60);var b=document.querySelector('#bd [data-wing="'+wing+'"]');if(b){b.click();await W(150)}await sug()}if(x!==undefined)m.x=x;if(extra)Object.assign(m,extra);draw();await W(80);return m};
+        var corner=async function(lado){var m=await mk('Balcão 2 portas');S.m=m;S.tab=0;draw();panel();await W(60);document.querySelector('#bd [data-corner="'+lado+'"]').click();await W(200);await sug();return S.m};
+        var A=window.__CENA||'L';await __mkCena(A);draw();await W(900);
+        /* assinatura canônica: estado + peças de cada módulo + corte + orçamento */
+        var sig=function(){var st=JSON.parse(JSON.stringify(snapState()));var mods=st.mods.map(can);var P=[];var real=S.mods;
+        /* peças sempre do estado canônico (fora da vista) */var wv=window.wvCur&&wvCur();if(wv)__wvCanon();try{S.mods.forEach(function(m,i){P.push(i+':'+partsOf(m).map(function(p){return p.pk+' '+Math.round(p.x)+','+Math.round(p.y)+' '+Math.round(p.w)+'x'+Math.round(p.h)+' c'+Math.round(p.cl)+'x'+Math.round(p.cw)}).sort().join(';'))});var G=cutGroups(),cg=G.ord.map(function(k){var g=G.map[k];return (g.names||[]).join('+')+' '+g.L+'x'+g.W+'x'+g.qty}).sort().join('|');var b=budget();var bud=Math.round(b.tot*100)}finally{if(wv)__wvTo(wv)}
+        return {mods:mods,P:P,cut:cg,bud:bud,ord:st.mods.map(function(m){return (m.wing||'f')+(m.corner?'C'+m.corner:'')+':'+m.x}).join(' ')}};
+        var dif=function(a,b){var r=[];if(a.mods.length!==b.mods.length)r.push('nº módulos '+a.mods.length+'→'+b.mods.length);a.mods.forEach(function(x,i){if(x!==b.mods[i]){var A_=JSON.parse(x),B_=JSON.parse(b.mods[i]||'{}');r.push('mod '+i+' ('+(A_.wing||'f')+(A_.corner?' canto':'')+'): '+Object.keys(Object.assign({},A_,B_)).filter(function(k){return JSON.stringify(A_[k])!==JSON.stringify(B_[k])}).map(function(k){return k+' '+String(JSON.stringify(A_[k])).slice(0,30)+'→'+String(JSON.stringify(B_[k])).slice(0,30)}).join(', '))}});a.P.forEach(function(x,i){if(x!==b.P[i]){var a1=x.split(';'),b1=(b.P[i]||'').split(';');r.push('peças '+i+': −['+a1.filter(function(q){return b1.indexOf(q)<0}).slice(0,3).join(' | ')+'] +['+b1.filter(function(q){return a1.indexOf(q)<0}).slice(0,3).join(' | ')+']')}});if(a.cut!==b.cut)r.push('corte mudou');if(a.bud!==b.bud)r.push('orçamento '+a.bud+'→'+b.bud);return r};
+        var s0=sig();var out=['cena '+A+': '+S.mods.length+' módulos · '+s0.ord+' · erros '+__errs.length];
+        /* na vista: cada módulo da parede tem as mesmas peças que no canônico? */
+        var vista=function(w){var r=[];var vis=S.mods.slice();var base={};__wvCanon();S.mods.forEach(function(m,i){base[i]=m});var P0=new Map();S.mods.forEach(function(m){P0.set(m,partsOf(m).map(function(p){return p.pk+' '+Math.round(p.w)+'x'+Math.round(p.h)+' c'+Math.round(p.cl)+'x'+Math.round(p.cw)}).sort().join(';'))});__wvTo(w);S.mods.forEach(function(m){var pv=partsOf(m).map(function(p){return p.pk+' '+Math.round(p.w)+'x'+Math.round(p.h)+' c'+Math.round(p.cl)+'x'+Math.round(p.cw)}).sort().join(';'),p0=P0.get(m);if(p0!==undefined&&pv!==p0){var a1=p0.split(';'),b1=pv.split(';');r.push('na vista '+w+' o módulo '+(m.n||m.myN||'')+' x'+m.x+': só no canônico ['+a1.filter(function(q){return b1.indexOf(q)<0}).slice(0,4).join(' | ')+'] só na vista ['+b1.filter(function(q){return a1.indexOf(q)<0}).slice(0,4).join(' | ')+']')}});return r};
+
+        /* câmera do 3D: todas as vistas prontas, ida e volta */
+        open3D();await W(400);var vb=[].slice.call(document.querySelectorAll('#v3row2 [data-v],[data-v3v],[data-cam]'));out.push('botões de câmera '+vb.map(function(b){return b.dataset.v||b.dataset.v3v||b.dataset.cam}).join(','));for(var r_=0;r_<2;r_++)for(const b of vb){b.click();await W(120);var d=dif(s0,sig());if(d.length)out.push('câmera '+(b.dataset.v||b.dataset.v3v||b.dataset.cam)+': '+d.slice(0,4).join(' ; '))}try{close3D()}catch(_){document.getElementById('v3x').click()}await W(200);
+        /* vistas do 2D (Frente/Esquerda/Direita/Superior/Posterior) com cada módulo escolhido */
+        var vbt=[].slice.call(document.querySelectorAll('[data-vw],[data-vista],#vbar button')).filter(function(b){return b.offsetParent});out.push('botões de vista 2D '+vbt.map(function(b){return (b.textContent||'').trim()}).join(','));for(var mi_=0;mi_<S.mods.length;mi_++){S.m=S.mods[mi_];draw();panel();for(const b of vbt){b.click();await W(60)}}var dv=dif(s0,sig());if(dv.length)out.push('vistas 2D: '+dv.slice(0,4).join(' ; '));
+        var seq=['e','f','d','f','e','d','e','f','d','e','f'];var prev=s0;
+        for(var k=0;k<seq.length;k++){var w=seq[k];wvGo(w);await W(150);var d=dif(s0,sig());if(d.length)out.push('troca '+k+' → '+w+': '+d.slice(0,6).join(' ; '));if(w!=='f'){var v=vista(w);if(v.length)out.push(v.slice(0,4).join(' ; '))}}
+        /* salvar, fechar, reabrir e trocar de novo */
+        wvGo('f');var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();await W(300);var d2=dif(s0,sig());if(d2.length)out.push('reabriu: '+d2.slice(0,6).join(' ; '));
+        for(var k=0;k<seq.length;k++){wvGo(seq[k]);await W(120);var d=dif(s0,sig());if(d.length)out.push('reaberto troca '+k+' → '+seq[k]+': '+d.slice(0,6).join(' ; '))}
+        wvGo('f');out.push('fim · erros '+__errs.length+(__errs.length?' '+__errs.slice(0,3).join(' | '):''));return out.join('\n')})();return JSON.stringify({r:r});
+        """#)
+        let r = o["r"] as? String ?? ""
+        XCTAssertTrue(r.hasPrefix("cena C: 6 módulos"), r)
+        XCTAssertFalse(r.contains("troca"), "trocar de parede mudou o projeto: \(r)")
+        XCTAssertFalse(r.contains("reabriu"), "reabrir mudou o projeto: \(r)")
+        XCTAssertFalse(r.contains("na vista"), "módulo com peças diferentes na vista da parede: \(r)")
+        XCTAssertTrue(r.hasSuffix("fim · erros 0"), r)
+    }
+
+    // AUDITORIA 3.9 · "régua na parede errada" (decisão 5 do Adauto): criar a régua segurando 2 s no desenho de CADA parede. A peça nasce
+    // onde o dedo tocou (na esquerda, espelhada: 25% da tela = 75% do módulo), a capa/alça dela aparece no mesmo lugar do toque (antes, na
+    // parede esquerda, ia por fora do espelho e ficava fora do módulo: −55%), continua lá depois de trocar de parede, e no 3D fica no módulo certo
+    func testETAPA3_ReguaCriadaEmCadaParedeNasceEFicaOndeTocou() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        /* constrói o ambiente como um projeto salvo (cada módulo nasce sozinho, depois parede/posição) */
+        window.__mkCena=async function(A){var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&(t.n===n||(n instanceof RegExp&&n.test(t.n))))r=t})});if(!r)throw new Error('sem modelo '+n);return JSON.parse(JSON.stringify(r))};
+        var um=async function(nome,o,corner){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.mods=[];draw();newTpl(T(nome));var m=S.mods[0];if(corner){S.m=m;S.tab=0;draw();panel();await W(50);document.querySelector('#bd [data-corner="'+corner+'"]').click();await W(150);m=S.mods[0]}var j=JSON.parse(JSON.stringify(m));Object.assign(j,o||{});return j};
+        var mods=[];
+        if(A==='L'){mods.push(await um('Balcão 2 portas',{x:5},'e'));mods.push(await um('Balcão 2 portas',{x:905}));mods.push(await um('Balcão porta + gavetas',{x:1805}));
+         var cd=await um('Balcão 2 portas',{},'d');cd.x=4195-cd.w;mods.push(cd);mods.push(await um('Aéreo 2 portas',{x:1200}));mods.push(await um('Aéreo 2 portas',{x:2300}));
+         mods.push(await um('Balcão 2 portas',{wing:'e',x:905,espE:1}));mods.push(await um('Balcão 1 porta',{wing:'e',x:1805,espE:1}));mods.push(await um('Aéreo 2 portas',{wing:'e',x:1000,espE:1}));
+         mods.push(await um('Balcão porta + gavetas',{wing:'d',x:905}));mods.push(await um('Armário alto 2 portas',{wing:'d',x:2000}))}
+        else{var c1=await um(/^Balcão canto cego · cego na esquerda/,{x:5});var c2=await um(/^Balcão canto cego · cego na direita/,{});c2.x=4195-c2.w;mods.push(c1,c2);mods.push(await um('Balcão 2 portas',{x:5+c1.w}));
+         mods.push(await um('Balcão 2 portas',{wing:'e',x:566,espE:1}));mods.push(await um('Balcão porta + gavetas',{wing:'d',x:566}));mods.push(await um('Aéreo 2 portas',{wing:'d',x:600}))}
+        var st=JSON.parse(JSON.stringify(initLimpo()));st.env='cozinha';st.room='cozinha';st.W=4200;st.H=2700;st.RD=3200;st.wl={L:'p',R:'p'};st.mods=mods;st.mi=-1;loadState(st);draw();await W(400);return S.mods.length};
+        var r=await (async function(){window.__CENA='C';window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        await __mkCena(window.__CENA||'L');var o=[];
+        var pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:3,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var alvo={f:function(m){return !m.wing&&!m.corner&&!m.sup},e:function(m){return m.wing==='e'&&!m.sup},d:function(m){return m.wing==='d'&&!m.sup}};
+        for(const w of ['f','e','d']){wvGo('f');var real=S.mods.filter(alvo[w])[0];if(!real){o.push(w+': sem módulo');continue}var npl0=(real.pl||[]).length;wvGo(w);S.m=real;S.tab=0;draw();panel();await W(200);
+        var mi=S.mods.indexOf(real),rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');if(!rc){o.push(w+': sem desenho do módulo');continue}var R=rc.getBoundingClientRect(),X=R.left+R.width*.25,Y=R.top+R.height*.5;
+        EM.st.modo='rv';EM.st.rg=1;var sv_=document.getElementById('svg'),el=null;[.5,.35,.65,.25,.75,.15,.85].some(function(f){var y_=R.top+R.height*f,e_=document.elementFromPoint(X,y_);if(e_&&sv_.contains(e_)){el=e_;Y=y_;return true}return false});if(!el){o.push(w+': ponto coberto');continue}pe('pointerdown',el,X,Y);await W(2200);pe('pointerup',el,X,Y);await W(300);
+        var q=(real.pl||[])[npl0];if(!q){o.push(w+': nada criado · toasts '+TL.slice(-3).join(' | ')+' · alvo '+(el.tagName+'#'+el.id)+' · modo '+EM.st.modo+' · S.m é o módulo '+(S.m===real)+' · mv '+(EM.mv&&EM.mv.v)+' · solo '+window.SOLO2D+' · pl '+JSON.stringify(real.pl||null).slice(0,80));continue}var fr=(q.x+q.w/2)/real.w;
+        draw();await W(100);var pr=document.querySelector('[data-empl="'+q.id+'"]');var px_=pr?pr.getBoundingClientRect():null;var tela=px_?Math.round((px_.left+px_.width/2-R.left)/R.width*100):null;
+        wvGo('f');wvGo(w);draw();await W(100);var pr2=document.querySelector('[data-empl="'+q.id+'"]'),R2=document.querySelector('#mod[data-mi="'+S.mods.indexOf(real)+'"] rect[data-mi]').getBoundingClientRect(),tela2=pr2?Math.round((pr2.getBoundingClientRect().left+pr2.getBoundingClientRect().width/2-R2.left)/R2.width*100):null;
+        wvGo('f');__build();var bx=__boxes(),mI=S.mods.indexOf(real),mb=null,qb=null;bx.forEach(function(b){if(parseInt(String(b.nm),10)!==mI||!(b.a>=.95))return;if(b.pk===EM.pkDe(q))qb=b;else if(String(b.pk||'').indexOf(' · livre#')<0)mb=mb?{x0:Math.min(mb.x0,b.x0),x1:Math.max(mb.x1,b.x1),z0:Math.min(mb.z0,b.z0),z1:Math.max(mb.z1,b.z1)}:{x0:b.x0,x1:b.x1,z0:b.z0,z1:b.z1}});
+        var ao=w==='f'?'x':'z',lo=mb[ao+'0'],hi=mb[ao+'1'],c=qb?((qb[ao+'0']+qb[ao+'1'])/2-lo)/(hi-lo):null;
+        o.push('parede '+w+': tocou a 25% da esquerda da tela · peça local '+Math.round(fr*100)+'% do módulo · na tela '+tela+'% → depois de trocar de parede '+tela2+'% · 3D na parede do módulo '+(qb?(qb[ao+'0']>=lo-1&&qb[ao+'1']<=hi+1):'sem caixa')+' ('+(c===null?'-':Math.round(c*100)+'% ao longo')+')')}
+        return o.join('\n')+'\nerros '+__errs.length})();return JSON.stringify({r:r});
+        """#)
+        let r = o["r"] as? String ?? ""
+        XCTAssertTrue(r.contains("parede f: tocou a 25% da esquerda da tela · peça local 25% do módulo · na tela 25% → depois de trocar de parede 25% · 3D na parede do módulo true"), r)
+        XCTAssertTrue(r.contains("parede e: tocou a 25% da esquerda da tela · peça local 75% do módulo · na tela 25% → depois de trocar de parede 25% · 3D na parede do módulo true"), r)
+        XCTAssertTrue(r.contains("parede d: tocou a 25% da esquerda da tela · peça local 25% do módulo · na tela 25%"), r)
+        XCTAssertTrue(r.contains("3D na parede do módulo true (24% ao longo)") && r.contains("(73% ao longo)"), r)
+        XCTAssertTrue(r.hasSuffix("erros 0"), r)
+    }
+
+    // AUDITORIA 3.9: virar canto pelo botão da Estrutura aplica a regra do balcão de canto (sem moldura deitada) já na hora, igual ao mkCorner e
+    // à abertura do projeto. Antes o canto saía com 2 molduras que sumiam ao reabrir (abrir mudava o projeto)
+    func testETAPA3_VirarCantoNaoDeixaMolduraQueSomeAoReabrir() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        /* constrói o ambiente como um projeto salvo (cada módulo nasce sozinho, depois parede/posição) */
+        window.__mkCena=async function(A){var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&(t.n===n||(n instanceof RegExp&&n.test(t.n))))r=t})});if(!r)throw new Error('sem modelo '+n);return JSON.parse(JSON.stringify(r))};
+        var um=async function(nome,o,corner){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.mods=[];draw();newTpl(T(nome));var m=S.mods[0];if(corner){S.m=m;S.tab=0;draw();panel();await W(50);document.querySelector('#bd [data-corner="'+corner+'"]').click();await W(150);m=S.mods[0]}var j=JSON.parse(JSON.stringify(m));Object.assign(j,o||{});return j};
+        var mods=[];
+        if(A==='L'){mods.push(await um('Balcão 2 portas',{x:5},'e'));mods.push(await um('Balcão 2 portas',{x:905}));mods.push(await um('Balcão porta + gavetas',{x:1805}));
+         var cd=await um('Balcão 2 portas',{},'d');cd.x=4195-cd.w;mods.push(cd);mods.push(await um('Aéreo 2 portas',{x:1200}));mods.push(await um('Aéreo 2 portas',{x:2300}));
+         mods.push(await um('Balcão 2 portas',{wing:'e',x:905,espE:1}));mods.push(await um('Balcão 1 porta',{wing:'e',x:1805,espE:1}));mods.push(await um('Aéreo 2 portas',{wing:'e',x:1000,espE:1}));
+         mods.push(await um('Balcão porta + gavetas',{wing:'d',x:905}));mods.push(await um('Armário alto 2 portas',{wing:'d',x:2000}))}
+        else{var c1=await um(/^Balcão canto cego · cego na esquerda/,{x:5});var c2=await um(/^Balcão canto cego · cego na direita/,{});c2.x=4195-c2.w;mods.push(c1,c2);mods.push(await um('Balcão 2 portas',{x:5+c1.w}));
+         mods.push(await um('Balcão 2 portas',{wing:'e',x:566,espE:1}));mods.push(await um('Balcão porta + gavetas',{wing:'d',x:566}));mods.push(await um('Aéreo 2 portas',{wing:'d',x:600}))}
+        var st=JSON.parse(JSON.stringify(initLimpo()));st.env='cozinha';st.room='cozinha';st.W=4200;st.H=2700;st.RD=3200;st.wl={L:'p',R:'p'};st.mods=mods;st.mi=-1;loadState(st);draw();await W(400);return S.mods.length};
+        var r=await (async function(){window.__CENA='L';window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];S.m=m;S.tab=0;draw();panel();await W(50);document.querySelector('#bd [data-corner="e"]').click();await W(200);m=S.mods[0];
+        var o=['depois do botão canto: mold '+m.mold+' moldOn '+m.moldOn+' moldEff '+moldEff(m)+' peças moldura '+partsOf(m).filter(function(p){return /Moldura/.test(p.name)}).length];
+        var st=JSON.parse(JSON.stringify(snapState()));o.push('no arquivo: mold '+st.mods[0].mold);
+        var setter=[];var c=JSON.parse(JSON.stringify(st));var _m=c.mods[0];var v=_m.mold;Object.defineProperty(_m,'mold',{get:function(){return v},set:function(x){if(x!==v)setter.push(x+' '+new Error().stack.split('\n').slice(2,5).join(' / ').replace(/file:[^)]*editor.html\?lang=pt:/g,'L').slice(0,250));v=x},configurable:true,enumerable:true});
+        loadState(c);draw();await W(100);o.push('reabriu: mold '+S.mods[0].mold+' · quem mudou: '+setter.join(' || '));return o.join('\n')})();return JSON.stringify({r:r});
+        """#)
+        XCTAssertEqual(o["r"] as? String, "depois do botão canto: mold false moldOn undefined moldEff false peças moldura 0\nno arquivo: mold false\nreabriu: mold false · quem mudou: ")
+    }
+
     // Chefe 28/11 (matriz do Code 1): abrir e fechar painéis não muda o projeto. Antes, só trocar de aba no 🧱 Ambiente gravava S.teto={} no
     // projeto (snapState mudava). Agora o S.teto só nasce quando um valor do teto é escolhido. Confere o 🧱 Ambiente e as abas, as abas do
     // módulo, Ajustes, Valores, Plano de corte, Preços e todos os botões do cabeçalho: snapState igual.

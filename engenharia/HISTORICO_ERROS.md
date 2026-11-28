@@ -3425,3 +3425,10 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - **A (false, padrão hoje):** nada encosta sozinho, nem no arrasto; tudo vira "Encostar no canto".
   - **B (true, leitura do Chefe):** o ímã vale só no ARRASTO da própria pessoa. O gesto é detectado assim: o x ou a parede do módulo escolhido mudou entre encostar e soltar o dedo (`pointerdown`/`pointerup` em captura). Ele encosta e o ↶ desfaz o gesto inteiro. Criar, trocar tamponamento, mudar largura e digitar continuam só sugerindo, com o x igual bit a bit.
 - **Teste:** `testCantoImaDuasVersoesArrastoDaPessoaEncostaSoNaVersaoBORestoSoSugere` cobre as duas versões. Se o Adauto escolher B: basta pôr a chave em `true` e acrescentar ao teste do PEDIDO 52 os casos com gesto ("encostados", como era).
+
+## AUDITORIA 3.9 (Adauto 28/11): trocar de parede/câmera — Code 2
+- Detalhe completo em `engenharia/AUDITORIA_3_9_TROCA_DE_PAREDE.md`. Dois defeitos corrigidos:
+  - régua/peça da parede esquerda desenhada fora do espelho (`#emov`/`#emlp` por fora do `#wvmir`);
+  - virar canto deixava molduras que sumiam ao reabrir (`cnVira` sem a regra do canto).
+- Troca de parede, câmera e reabrir: iguais bit a bit nos ambientes L e cantos cegos.
+- Para decisão: a perna do canto não aparece na vista lateral (igual no publicado).

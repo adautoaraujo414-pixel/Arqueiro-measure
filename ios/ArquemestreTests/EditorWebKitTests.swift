@@ -20663,6 +20663,48 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // REGUA-PAREDE (item 39, Adauto 28/11: "reproduza a criação de réguas em todas as paredes… corrija a causa"): com o 2D na parede do lado o móvel
+    // ficava sem a parede só durante a vista; o tamponamento automático (com as réguas de 80) ligava sozinho no 2D da lateral e desligava ao voltar
+    // pro fundo (o 2D da lateral mostrava peça que o 3D e o corte não tinham, e trocar de vista mudava o projeto). E o que era mandado pra outra parede
+    // com a vista aberta (catálogo "Módulo na lateral direita/esquerda", botões Fundo/Esquerda/Direita/Livre do módulo) ficava na parede da vista.
+    func testREGUAPAREDE_PecasIguaisEmToda2DE3DEParedeEscolhidaNaVistaDoLado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={},e0=__errs.length;window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var novo=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.ops=[];S.stones=[];draw()};
+        var sig=function(m){return partsOf(m).map(function(p){return p.name.replace(/#\d+$/,'')+' '+Math.round(p.x||0)+','+Math.round(p.y||0)+' '+Math.round(p.w||0)+'x'+Math.round(p.h||0)}).sort().join('|')};
+        var nomes=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n&&!t.act&&nomes.indexOf(t.n)<0)nomes.push(t.n)})});
+        /* 1. todo o catálogo criado no 2D da parede do lado (sozinho e com canto em L): as peças da vista = as do projeto (3D, corte) e nada muda ao voltar */
+        for(const cen of ['sozinho','canto']){for(const v of ['e','d']){var n=0,dif=[];for(const nm of nomes){novo();if(cen==='canto'){mkCorner(v);newTpl(T('Balcão 2 portas'))}wvGo(v);try{newTpl(T(nm))}catch(_){continue}var m=S.mods[S.mods.length-1];if(!m)continue;draw();
+          var a=sig(m),c0=JSON.stringify([m.tl,m.tr,m.x]);wvGo('f');var b=sig(m),c1=JSON.stringify([m.tl,m.tr,m.x]);n++;if(a!==b||c0!==c1)dif.push(nm)}
+          R[cen+'_'+v]=(n>60?'catálogo inteiro':'só '+n)+' · diferentes '+dif.length+(dif.length?' ('+dif.slice(0,3).join(', ')+')':'')}}
+        /* 2. olhar as paredes não muda o projeto (tamponamento, réguas, posição) */
+        novo();mkCorner('e');newTpl(T('Balcão 2 portas + 4 gavetas'));wvGo('e');newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));wvGo('d');newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Balcão canto cego · cego na direita (porta na esquerda)'));wvGo('f');draw();
+        var J0=JSON.stringify(snapState().mods);for(const v of ['e','d','f','d','e','f'])wvGo(v);R.olharAsParedes=JSON.stringify(snapState().mods)===J0?'projeto igual':'PROJETO MUDOU';
+        /* 3. botões da parede do módulo com o 2D na parede do lado */
+        var bt=[];for(const v of ['e','d']){for(const to of ['0','e','d','L']){if(to===v)continue;novo();newTpl(T('Balcão 2 portas'));S.mods[0].x=1500;wvGo(v);newTpl(T('Balcão 2 portas'));var mm=S.mods[S.mods.length-1];mm.__t=1;S.m=mm;S.tab=0;draw();panel();await W(20);
+          var b_=document.querySelector('#bd [data-wing="'+to+'"]');if(b_)b_.click();await W(20);var fica=S.mods.indexOf(mm)>=0?'fica na vista':'sai da vista';wvGo('f');var x=S.mods.filter(function(q){return q.__t})[0];bt.push(v+'→'+to+': '+(x?(x.wing||'f'):'sumiu')+' '+fica)}}
+        R.botoes=bt.join(' · ');
+        /* 4. catálogo "Módulo na lateral …" com o 2D na outra lateral */
+        var ct=[];for(const v of ['e','d']){novo();wvGo(v);var it=null,cid='';CATS.forEach(function(c){(c.it||[]).forEach(function(q,i){var t=typeof q==='number'?TPL[q]:q;if(t&&t.act===(v==='e'?'wd':'we')){it=t;cid=c.id+'|'+i}})});catOpen();var bb=document.createElement('button');bb.dataset.cati=cid;$('catm').appendChild(bb);bb.click();bb.remove();$('catm').hidden=true;await W(20);wvGo('f');ct.push('vista '+v+' → '+S.mods.map(function(q){return q.wing||'f'}).join(','))}
+        R.catalogo=ct.join(' · ');
+        /* 5. salvar e reabrir com a vista do lado aberta */
+        /* (wing vazio, undefined ou 0 = parede do fundo: o loadState grava 0) */var J=function(L){return JSON.stringify(L,function(k,v){return k==='wing'&&!v?undefined:v})};
+        novo();newTpl(T('Balcão 2 portas'));wvGo('d');newTpl(T('Balcão 2 portas'));var s1=J(snapState().mods);var re_=JSON.parse(JSON.stringify(snapState()));wvGo('f');loadState(re_);draw();R.reabrir=J(snapState().mods)===s1?'igual':'MUDOU';
+        R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["sozinho_e"] as? String, "catálogo inteiro · diferentes 0", "2D da parede esquerda = projeto (3D, corte) e voltar pro fundo não muda tamponamento/régua")
+        XCTAssertEqual(o["sozinho_d"] as? String, "catálogo inteiro · diferentes 0")
+        XCTAssertEqual(o["canto_e"] as? String, "catálogo inteiro · diferentes 0", "com canto em L")
+        XCTAssertEqual(o["canto_d"] as? String, "catálogo inteiro · diferentes 0")
+        XCTAssertEqual(o["olharAsParedes"] as? String, "projeto igual", "trocar a parede do 2D não muda nada no projeto")
+        XCTAssertEqual(o["botoes"] as? String, "e→0: f sai da vista · e→d: d sai da vista · e→L: L sai da vista · d→0: f sai da vista · d→e: e sai da vista · d→L: L sai da vista")
+        XCTAssertEqual(o["catalogo"] as? String, "vista e → d · vista d → e", "o módulo da outra lateral vai pra ela")
+        XCTAssertEqual(o["reabrir"] as? String, "igual")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // ITEM 41 (Chefe 28/11, achados da auditoria de toques): (1) a dica do 3D dizia "arraste pra mover", mas arrastar gira a vista (move segurando o dedo
     // ou com 2 toques no lugar novo); (2) 2 toques num ponto sem chão/parede levavam o módulo pra "a NaN mm" (depois 0); (3) a bolinha da alça da geladeira
     // tinha raio 7 do desenho (6 px na tela); (4) a alça de medida do escolhido fica em cima da lateral do vizinho encostado: toque parado nela escolhe o

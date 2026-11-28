@@ -102,3 +102,8 @@ O usuário decide; o app executa corretamente. Nenhum botão vazio, nenhuma alte
 - O módulo de antes, numa parede lateral, segue como era. O painel avisa e oferece "Igualar ao fundo" (prévia e desfazer).
 - Abrir um projeto não grava nada.
 | 28/11/2026 | **TAMP-JUNTA · ponto 3 (decisão do Chefe 28/11):** o módulo ARRASTADO ou com POSIÇÃO DIGITADA mantém o tamponamento da junta. Tirar vira a sugestão "Tirar tamponamento da junta", com prévia ("módulo N: tamponamento direito sai · encosta (x …)"), aplicada num toque e com desfazer. O vizinho continua igual. Projeto antigo aberto: nada muda, nenhuma sugestão. Antes, na posição digitada, o automático do próprio módulo saía sozinho. |
+
+## REGUA-PAREDE (item 39, 28/11) — Claude 4
+- A vista do 2D na parede do lado é só uma forma de olhar: as regras automáticas (tamponamento da ponta) usam a parede real do módulo, como o 3D e o corte. Olhar uma parede não muda o projeto.
+- Módulo criado com o 2D na parede do lado, junto do canto, segue a regra que o projeto inteiro já tinha: a ponta do canto não ganha tamponamento automático. O manual (escolhido pela pessoa) continua mandando.
+- Mandar um módulo pra outra parede com a vista do lado aberta (catálogo ou botões de parede) agora vale; antes ficava na parede da vista sem aviso.

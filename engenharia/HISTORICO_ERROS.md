@@ -3281,3 +3281,37 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Falha antes ("⌂ CALADO" só com a página rolada).
   - Passa depois a 1366 e a 430.
 - **Evidência:** `engenharia/evidencias/etapa2/pacote_claude4/i34_1366.jpg` (quadros 3 e 4).
+
+## REGUA-PAREDE (item 39, Adauto 28/11: "a régua aparece na parede errada") — Claude 4
+- **Pedido:** reproduzir a criação de réguas em todas as paredes e por todos os caminhos, corrigir a causa e provar com prints.
+- **Varredura feita (sondas no navegador, todas as paredes):**
+  - todo o catálogo criado com o 2D em cada parede, sozinho e com canto em L;
+  - réguas, tamponamentos e engrossos ligados em todos os modelos, inclusive no ambiente livre; no 3D, cada peça fica no corpo do próprio módulo;
+  - régua livre ("+ Criar Régua"): mesmo lado no 2D e no 3D no fundo, na direita e na esquerda guardada virada (espE);
+  - módulo de outra parede com x encostado não muda as peças do vizinho;
+  - desfazer, salvar e reabrir com a vista do lado aberta;
+  - catálogo e botões de parede com o 2D na parede do lado.
+  - Não reproduzi régua de uma parede desenhada em outra. Achei dois defeitos do mesmo mecanismo:
+- **Erro 1 (comprovado): tamponamento automático com as réguas mudava sozinho conforme a parede aberta no 2D.**
+  - Reproduzir: abra o 2D na parede direita (ou esquerda) e crie um "Balcão 2 portas". No começo da asa, junto do canto, ele ganha o tamponamento esquerdo (5 peças no 3D: o tamponamento e as réguas de 80). Na conta do projeto inteiro essa ponta não é exposta.
+  - Volte pro fundo: dependendo do caso, o tamponamento some sozinho (o 2D da lateral mostrava uma peça que o 3D e o corte não tinham) ou fica fora da regra do projeto.
+  - Sonda: catálogo inteiro, 490 casos. Antes: 256 com peças diferentes entre o 2D da lateral e o projeto (sempre o "Tamponamento esquerdo").
+  - Causa raiz: a vista da parede do lado (`toView`) apaga o campo `wing` dos módulos dela enquanto está aberta. O `autoTamp`, que roda a cada desenho, chama `tampExposed`, e ele usa `m.wing||'F'`: o módulo virava "do fundo", a ponta do canto parecia exposta e o app ligava o tamponamento sozinho.
+  - Correção (`tampExposed`): na vista do lado usa a parede real (`wvCur()`) e o começo da asa do projeto inteiro (`__wvSt().ws`), igual ao 3D.
+- **Erro 2 (comprovado): o que era mandado pra outra parede com a vista do lado aberta não ia.**
+  - Casos: catálogo "Módulo na lateral direita/esquerda" e os botões Fundo/Esquerda/Direita/Livre do módulo.
+  - Causa raiz: ao voltar, `toCanon` carimbava a parede da vista em tudo que estava na lista dela.
+  - Correção:
+    - `toCanon` mantém a parede escolhida de propósito durante a vista. Cópia ou peça nova sem parede continua na parede da vista, como antes.
+    - `wvMandados()`, depois de cada toque, tira na hora do desenho da vista o que foi pra outra parede.
+- **Arquivos:** `app/src/main/assets/editor.html` (`tampExposed`, `toCanon`, `wvMandados`).
+- **Teste:** `testREGUAPAREDE_PecasIguaisEmToda2DE3DEParedeEscolhidaNaVistaDoLado`. Confere:
+  - catálogo inteiro na esquerda e na direita, sozinho e com canto L: 2D da vista = projeto;
+  - olhar as paredes não muda o projeto;
+  - botões de parede e catálogo da outra lateral;
+  - salvar e reabrir.
+  - Falha no 154591e0 (67/61 diferentes, botões e catálogo ficam na parede da vista) e passa depois, a 1366 e a 430.
+- **Evidência:** `engenharia/evidencias/etapa2/item39_regua_parede/` (ANTES 154591e0 × DEPOIS, parede direita a 1366 e 430, parede esquerda a 1366).
+- **Não verificado:**
+  - paredes criadas no 3D: módulo não encosta nelas; painéis em outra parede já saem da vista antes de mudar;
+  - "Unir" (régua corrida) entre módulos de paredes diferentes: a união só existe no fundo (`unViz` ignora asa e canto).

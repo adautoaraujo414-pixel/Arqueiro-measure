@@ -19261,6 +19261,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* Item 30 / risco N11 (27/11): o plano de corte não depende do relógio. "Estante torre aberta com gavetas embaixo" dava outro HTML com a máquina
+       carregada (o otimizador parava por tempo). Agora para por trabalho (peças arrumadas): relógio normal, parado e "carregado" (cada leitura anda 40 ms)
+       dão o mesmo plano, no plano direto, no rápido (ao abrir) e no "melhor aproveitamento" (segundo plano). Sonda dos 142 modelos: tools/sondas/s49. */
+    func testPlanoDeCorteNaoDependeDoRelogioMaquinaCarregadaMesmoPlanoN11() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var DN=Date.now,PN=performance.now.bind(performance),modo='n',falso=0;
+        Date.now=function(){if(modo==='p')return 1e12;if(modo==='c'){falso+=40;return DN()+falso}return DN()};
+        performance.now=function(){if(modo==='p')return 1e6;if(modo==='c'){falso+=40;return PN()+falso}return PN()};
+        var LAY=function(pl){return JSON.stringify(pl.groups.map(function(g){return g.sheets.map(function(s){return s.used.map(function(u){return [u.p.lab,u.x,u.y,u.w,u.h,u.r?1:0]})})}))};
+        var plano=function(m_){modo=m_;falso=0;try{SPC={};var pl=sheetPlan();var a=LAY(pl);SPC={};window.CUTFAST=1;window.CUTJOBS=[];var pf=sheetPlan();window.CUTFAST=0;var J=window.CUTJOBS.slice();window.CUTJOBS=[];
+          var D=J.map(function(j){var st=deepInit(j);while(!deepStep(st,j,1e12)){}var r=packTight(deepRes(st),j.SW,j.SH,j.kf,j.rot,st.mt);return r.sheets.map(function(s){return s.used.map(function(u){return [u.x,u.y,u.w,u.h,u.r?1:0]})})});
+          return {d:a,r:LAY(pf),f:JSON.stringify(D),h:planHtml(pl).length}}finally{modo='n';window.CUTFAST=0;window.CUTJOBS=[];SPC={}}};
+        try{['Estante torre aberta com gavetas embaixo','Guarda-roupa casal 3 vãos com gaveteiro (caixote)','Balcão 2 portas'].forEach(function(n){loadState(initLimpo());S.W=6000;S.mods=[];draw();newTpl(T(n));draw();
+          var a=plano('n'),b=plano('p'),c=plano('c');R[n]=['direto','rapido','fundo'].map(function(k,i){var x=['d','r','f'][i];return k+':'+(a[x]===b[x]?'=':'≠')+(a[x]===c[x]?'=':'≠')}).join(' ')+' html:'+(a.h===c.h?'=':'≠')})}
+        finally{Date.now=DN;performance.now=PN}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        /* "=" "=": normal = relógio parado (só o limite de tentativas, o resultado de sempre) e normal = máquina carregada */
+        XCTAssertEqual(o["Estante torre aberta com gavetas embaixo"] as? String, "direto:== rapido:== fundo:== html:=", "N11: o mesmo plano com a máquina carregada")
+        XCTAssertEqual(o["Guarda-roupa casal 3 vãos com gaveteiro (caixote)"] as? String, "direto:== rapido:== fundo:== html:=")
+        XCTAssertEqual(o["Balcão 2 portas"] as? String, "direto:== rapido:== fundo:== html:=")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto, via Chefe 24/11): cada módulo (m.uid) e peça (m.uid|pk) com a mesma chave no editor (partsOf), no 3D,
     // na lista, no corte e no DXF; cópia ganha id novo (módulo e peças); salvar/reabrir e desfazer/refazer mantêm; Meus modelos ganha id novo; id que existe
     // nunca é trocado; id repetido ao abrir: avisa e só muda se a pessoa mandar

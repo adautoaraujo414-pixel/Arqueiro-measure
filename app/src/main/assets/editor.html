@@ -790,7 +790,7 @@ function packG(P,SW,SH,kf,rot,MT){var SO=[function(a,b){return Math.max(b.w,b.h)
  var better=function(r){return !best||r.sheets.length<best.sheets.length||(r.sheets.length===best.sheets.length&&(r.last>best.last+1||(Math.abs(r.last-best.last)<=1&&r.cut<best.cut)))};
  MS.forEach(function(ms){SO.forEach(function(f){var r=packOnce(P.slice().sort(f),SW,SH,kf,rot,ms);if(better(r))best=r})});
  /* otimizado: continua procurando (ordens embaralhadas) por até ~250 ms pra apertar mais as peças e deixar a sobra num pedaço só */
- if(mt==='opt'&&P.length>2){var LB_=packLB(P,SW,SH,kf),TM_=window.CUTFAST?0:window.CUTDEEP?900:120,t0=Date.now(),sd=P.length*7919+Math.round(SW),rnd=function(){sd=(sd*16807)%2147483647;return sd/2147483647},it=0;while(Date.now()-t0<(best.sheets.length>LB_?TM_:Math.min(TM_,200))&&it<(window.CUTDEEP?3000:400)){it++;var Q=P.slice().sort(SO[it%SO.length]);for(var k=0;k<Q.length-1;k++)if(rnd()<0.3){var j=k+1+Math.floor(rnd()*Math.min(4,Q.length-k-1)),tq=Q[k];Q[k]=Q[j];Q[j]=tq}var r=packOnce(Q,SW,SH,kf,rot,MS[it%MS.length]);if(better(r))best=r}}
+ if(mt==='opt'&&P.length>2){var LB_=packLB(P,SW,SH,kf),TM_=window.CUTFAST?0:window.CUTDEEP?900:120,t0=Date.now(),sd=P.length*7919+Math.round(SW),rnd=function(){sd=(sd*16807)%2147483647;return sd/2147483647},it=0,wk=0;while(wk<CUTK*(best.sheets.length>LB_?TM_:Math.min(TM_,200))&&it<(window.CUTDEEP?3000:400)){it++;wk+=P.length;var Q=P.slice().sort(SO[it%SO.length]);for(var k=0;k<Q.length-1;k++)if(rnd()<0.3){var j=k+1+Math.floor(rnd()*Math.min(4,Q.length-k-1)),tq=Q[k];Q[k]=Q[j];Q[j]=tq}var r=packOnce(Q,SW,SH,kf,rot,MS[it%MS.length]);if(better(r))best=r}}
  return best}
 /* Máximo aproveitamento: testa os cortes retos e o encaixe livre (MaxRects) e fica com o que gasta menos chapa.
    Empate: fica com os cortes retos (dá pra cortar na esquadrejadeira). */
@@ -798,7 +798,7 @@ function packSheets(P,SW,SH,kf,rot){return packTight(packSheets0(P,SW,SH,kf,rot)
  function packSheets0(P,SW,SH,kf,rot){var mt=PR.metodo||'max';if(mt!=='max')return packG(P,SW,SH,kf,rot,mt);
  var g=packG(P,SW,SH,kf,rot,'opt'),SO=[function(a,b){return Math.max(b.w,b.h)-Math.max(a.w,a.h)||b.w*b.h-a.w*a.h},function(a,b){return b.w*b.h-a.w*a.h},function(a,b){return b.w-a.w||b.h-a.h},function(a,b){return b.h-a.h||b.w-a.w},function(a,b){return Math.min(b.w,b.h)-Math.min(a.w,a.h)||b.w*b.h-a.w*a.h},function(a,b){return (b.w+b.h)-(a.w+a.h)}],mb=null,bt=function(r){return !mb||r.sheets.length<mb.sheets.length||(r.sheets.length===mb.sheets.length&&r.last>mb.last+1)};
  if(P.length<2)return g;[0,1,2,3].forEach(function(hh){SO.forEach(function(f){var r=packMax(P.slice().sort(f),SW,SH,kf,rot,hh);if(bt(r))mb=r})});
- var LB2=packLB(P,SW,SH,kf),t0=Date.now(),sd=P.length*104729+Math.round(SH),rnd=function(){sd=(sd*16807)%2147483647;return sd/2147483647},it=0;while(Date.now()-t0<(window.CUTFAST?0:(mb&&mb.sheets.length>LB2&&g.sheets.length>LB2)?(window.CUTDEEP?700:80):40)&&it<(window.CUTDEEP?1500:120)){it++;var Q=P.slice().sort(SO[it%SO.length]);for(var k=0;k<Q.length-1;k++)if(rnd()<0.3){var j=k+1+Math.floor(rnd()*Math.min(4,Q.length-k-1)),tq=Q[k];Q[k]=Q[j];Q[j]=tq}var r=packMax(Q,SW,SH,kf,rot,it%4);if(bt(r))mb=r}
+ var LB2=packLB(P,SW,SH,kf),t0=Date.now(),sd=P.length*104729+Math.round(SH),rnd=function(){sd=(sd*16807)%2147483647;return sd/2147483647},it=0,wk=0;while(wk<CUTK2*(window.CUTFAST?0:(mb&&mb.sheets.length>LB2&&g.sheets.length>LB2)?(window.CUTDEEP?700:80):40)&&it<(window.CUTDEEP?1500:120)){it++;wk+=P.length;var Q=P.slice().sort(SO[it%SO.length]);for(var k=0;k<Q.length-1;k++)if(rnd()<0.3){var j=k+1+Math.floor(rnd()*Math.min(4,Q.length-k-1)),tq=Q[k];Q[k]=Q[j];Q[j]=tq}var r=packMax(Q,SW,SH,kf,rot,it%4);if(bt(r))mb=r}
  return (mb&&mb.sheets.length<g.sheets.length)?mb:g}
 /* ===== Aproveitamento máximo da chapa: depois de escolher o encaixe, cada chapa é "apertada". As peças dela são reencaixadas
    (com os mesmos cortes retos e o mesmo veio) de todos os jeitos e também na menor largura e na menor altura em que cabem, pra
@@ -811,16 +811,16 @@ function packTight(r,SW,SH,kf,rot,mt){try{
  var MIN=+(PR.sobraMin||100),MS=mt==='comp'?['comp']:mt==='larg'?['larg']:['opt','comp','larg','opt2'],
   SO=[function(a,b){return Math.max(b.w,b.h)-Math.max(a.w,a.h)||b.w*b.h-a.w*a.h},function(a,b){return b.w*b.h-a.w*a.h},function(a,b){return b.w-a.w||b.h-a.h},function(a,b){return b.h-a.h||b.w-a.w},function(a,b){return Math.min(b.w,b.h)-Math.min(a.w,a.h)||b.w*b.h-a.w*a.h},function(a,b){return (b.w+b.h)-(a.w+a.h)}],
   met=function(F){var a=0,b=0,q=0;F.forEach(function(f){var w=f.w-kf,h=f.h-kf;if(w>=MIN&&h>=MIN){var A=w*h;a+=A;q+=A*A;if(A>b)b=A}});return {a:a,b:b,q:q}},
-  t0=Date.now(),TM=window.CUTFAST?60:window.CUTDEEP?700:220,EPS=0.002*SW*SH,chg=false,
+  wk=0,TM=window.CUTFAST?60:window.CUTDEEP?700:220,EPS=0.002*SW*SH,chg=false,
   ord=r.sheets.map(function(s){var u=0;(s.used||[]).forEach(function(q){u+=q.w*q.h});return {s:s,u:u}}).sort(function(a,b){return a.u-b.u});
- ord.forEach(function(o){var s=o.s;if(s.sob||!s.used||!s.used.length||o.u>0.93*SW*SH||Date.now()-t0>TM)return;
+ ord.forEach(function(o){var s=o.s;if(s.sob||!s.used||!s.used.length||o.u>0.93*SW*SH||wk>CUTK*TM)return;
   var P=s.used.map(function(u){return u.p}),cur=met(s.free),best=null,area=0,lbW=0,lbH=0;
   P.forEach(function(p){var d=p.fx===2?[[p.h,p.w]]:(rot&&!p.fx)?[[p.w,p.h],[p.h,p.w]]:[[p.w,p.h]];lbW=Math.max(lbW,Math.min.apply(null,d.map(function(q){return q[0]})));lbH=Math.max(lbH,Math.min.apply(null,d.map(function(q){return q[1]})));area+=(p.w+kf)*(p.h+kf)});
   lbW=Math.max(lbW,Math.ceil(area/(SH+kf))-kf);lbH=Math.max(lbH,Math.ceil(area/(SW+kf))-kf);
   var take=function(q,ex,cx){var F=q.sheets[0].free.concat(ex?[ex]:[]),m=met(F);/* nem a sobra maior nem o total aproveitável diminuem, e um dos dois aumenta */if(!(m.b>=cur.b-EPS&&m.a>=cur.a-EPS&&(m.b>cur.b+EPS||m.a>cur.a+EPS)))return;if(!best||m.q>best.m.q)best={q:q,F:F,cut:q.sheets[0].cut+(cx||0),m:m}},
-   one=function(w,h,all,ex,cx){var ok=null;for(var a=0;a<MS.length;a++)for(var b=0;b<SO.length;b++){var q=packOnce(P.slice().sort(SO[b]),w,h,kf,rot,MS[a]);if(q.sheets.length===1&&!q.big.length){if(!all)return q;ok=q;take(q,ex,cx)}}return ok},
+   one=function(w,h,all,ex,cx){var ok=null;for(var a=0;a<MS.length;a++)for(var b=0;b<SO.length;b++){var q=packOnce(P.slice().sort(SO[b]),w,h,kf,rot,MS[a]);wk+=P.length;if(q.sheets.length===1&&!q.big.length){if(!all)return q;ok=q;take(q,ex,cx)}}return ok},
    shrink=function(vert){var hi=Math.ceil(s.used.reduce(function(m,u){return Math.max(m,vert?u.x+u.w:u.y+u.h)},0)),lo=Math.floor(vert?lbW:lbH),g=0;if(lo>hi)lo=hi;
-    while(lo<hi&&g++<16&&Date.now()-t0<=TM){var mid=Math.floor((lo+hi)/2);if(one(vert?mid:SW,vert?SH:mid,0))hi=mid;else lo=mid+1}
+    while(lo<hi&&g++<16&&wk<=CUTK*TM){var mid=Math.floor((lo+hi)/2);if(one(vert?mid:SW,vert?SH:mid,0))hi=mid;else lo=mid+1}
     var rest=(vert?SW:SH)-hi;one(vert?hi:SW,vert?SH:hi,1,rest>0?(vert?{x:hi+kf,y:0,w:rest,h:SH+kf}:{x:0,y:hi+kf,w:SW+kf,h:rest}):null,rest>0?(vert?SH:SW):0)};
   one(SW,SH,1,null,0);/* a faixa de sobra segue o jeito de cortar escolhido */if(mt!=='comp')shrink(true);if(mt!=='larg')shrink(false);
   if(!best)return;
@@ -1168,6 +1168,11 @@ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&
 function openCut(){window.CUTFAST=1;window.CUTJOBS=[];try{openCut1()}finally{window.CUTFAST=0}try{var sb_=$('cutsend'),A_=window.ArqueApp;if(sb_){sb_.hidden=!(A_&&(window.CUTMODE||(A_.shareCut&&!window.RO)));sb_.textContent=window.CUTMODE?'📤 Avisar quem mandou':'📤 Enviar projeto'}}catch(_){}if(window.CUTJOBS.length)cutDeepRun();else window.CUTGEN=(window.CUTGEN||0)+1}
 /* procura do melhor aproveitamento em pedacinhos de ~30 ms: não trava a rolagem */
 var CUTSO=[function(a,b){return Math.max(b.w,b.h)-Math.max(a.w,a.h)||b.w*b.h-a.w*a.h},function(a,b){return b.w*b.h-a.w*a.h},function(a,b){return b.w-a.w||b.h-a.h},function(a,b){return b.h-a.h||b.w-a.w},function(a,b){return Math.min(b.w,b.h)-Math.min(a.w,a.h)||b.w*b.h-a.w*a.h},function(a,b){return (b.w+b.h)-(a.w+a.h)}];
+/* N11 (item 30, 27/11): o otimizador não para mais pelo relógio (máquina carregada = menos tentativas = outro plano). O limite é de TRABALHO:
+   cada tentativa conta as peças que ela arruma; CUTK (CUTK2 no packMax) peças valem "1 ms" dos limites de antes (120, 40, 220, 900… ms). Mesma máquina, mesmo projeto =
+   mesmo plano, carregada ou não, em qualquer aparelho. CUTK foi escolhido para nunca cortar antes do limite de tentativas nos 142 modelos (sonda s49:
+   relógio parado = normal); em obra muito grande o corte cai no mesmo tanto de trabalho em qualquer máquina. O relógio só reparte a busca em fatias (tela). */
+var CUTK=4000,CUTK2=1500;/* tentativas com packOnce · com packMax (mais pesado) */
 function cutNow(){return (window.performance&&performance.now)?performance.now():Date.now()}
 function deepInit(j){var mt=PR.metodo||'max',P=j.P;window.CUTFAST=1;var g;try{g=packG(P,j.SW,j.SH,j.kf,j.rot,mt==='max'?'opt':mt)}finally{window.CUTFAST=0}
  var st={g:g,mb:null,mt:mt,LB:packLB(P,j.SW,j.SH,j.kf),it1:0,it2:0,t1:0,t2:0,sd1:P.length*7919+Math.round(j.SW),sd2:P.length*104729+Math.round(j.SH),ph:1};
@@ -1176,8 +1181,8 @@ function cutBtG(b,r){return !b||r.sheets.length<b.sheets.length||(r.sheets.lengt
 function cutBtM(st,r){var m=st.mb;return !m||r.sheets.length<m.sheets.length||(r.sheets.length===m.sheets.length&&r.last>m.last+1)}
 function cutShuf(Q,st,k){var rnd=function(){st[k]=(st[k]*16807)%2147483647;return st[k]/2147483647};for(var i=0;i<Q.length-1;i++)if(rnd()<0.3){var j=i+1+Math.floor(rnd()*Math.min(4,Q.length-i-1)),t=Q[i];Q[i]=Q[j];Q[j]=t}return Q}
 function deepStep(st,j,slice){var t0=cutNow(),P=j.P,MS=['opt','comp','larg','opt2'];
- while(st.ph===1){if(!(st.mt==='opt'||st.mt==='max')||P.length<=2){st.ph=2;break}var lim=st.g.sheets.length>st.LB?900:200;if(st.t1>=lim||st.it1>=3000){st.ph=2;break}if(cutNow()-t0>=slice)return false;var ts=cutNow();st.it1++;var Q=cutShuf(P.slice().sort(CUTSO[st.it1%CUTSO.length]),st,'sd1'),r=packOnce(Q,j.SW,j.SH,j.kf,j.rot,MS[st.it1%MS.length]);if(cutBtG(st.g,r))st.g=r;st.t1+=cutNow()-ts}
- while(st.ph===2){if(st.mt!=='max'||P.length<2){st.ph=3;break}var lim2=(st.mb&&st.mb.sheets.length>st.LB&&st.g.sheets.length>st.LB)?700:60;if(st.t2>=lim2||st.it2>=1500){st.ph=3;break}if(cutNow()-t0>=slice)return false;var ts2=cutNow();st.it2++;var Q2=cutShuf(P.slice().sort(CUTSO[st.it2%CUTSO.length]),st,'sd2'),r2=packMax(Q2,j.SW,j.SH,j.kf,j.rot,st.it2%4);if(cutBtM(st,r2))st.mb=r2;st.t2+=cutNow()-ts2}
+ while(st.ph===1){if(!(st.mt==='opt'||st.mt==='max')||P.length<=2){st.ph=2;break}var lim=st.g.sheets.length>st.LB?900:200;if(st.t1>=CUTK*lim||st.it1>=3000){st.ph=2;break}if(cutNow()-t0>=slice)return false;st.it1++;st.t1+=P.length;var Q=cutShuf(P.slice().sort(CUTSO[st.it1%CUTSO.length]),st,'sd1'),r=packOnce(Q,j.SW,j.SH,j.kf,j.rot,MS[st.it1%MS.length]);if(cutBtG(st.g,r))st.g=r}
+ while(st.ph===2){if(st.mt!=='max'||P.length<2){st.ph=3;break}var lim2=(st.mb&&st.mb.sheets.length>st.LB&&st.g.sheets.length>st.LB)?700:60;if(st.t2>=CUTK2*lim2||st.it2>=1500){st.ph=3;break}if(cutNow()-t0>=slice)return false;st.it2++;st.t2+=P.length;var Q2=cutShuf(P.slice().sort(CUTSO[st.it2%CUTSO.length]),st,'sd2'),r2=packMax(Q2,j.SW,j.SH,j.kf,j.rot,st.it2%4);if(cutBtM(st,r2))st.mb=r2}
  return true}
 function deepRes(st){return st.mt==='max'?((st.mb&&st.mb.sheets.length<st.g.sheets.length)?st.mb:st.g):st.g}
 function cutBadge(t){var b=document.getElementById('cutopt');if(b)b.innerHTML=t}

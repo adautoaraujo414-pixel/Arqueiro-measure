@@ -9680,6 +9680,7 @@ final class EditorWebKitTests: XCTestCase {
         /* LED-FORA (Chefe 28/11, matriz do Code 1 a 375): a 375 o x=20 fica em cima da 1ª ripa (o ripado chega na borda da tela) e o app troca pro vão tocado, que é o certo.
            O toque "fora" agora procura um ponto da tela sem ripado embaixo (rled3api.at nulo), a mesma regra de antes em qualquer largura. */
         var fx_=20,fy_=rc.height*.45;(function(){for(var yy=.45;yy<=.95;yy+=.05)for(var xx=4;xx<rc.width;xx+=6){if(rled3api.at(xx,rc.height*yy,a.id)===null){fx_=xx;fy_=rc.height*yy;return}}})();
+        /* LED-FORA (Chefe/Adauto 28/11): depois de cada toque a mensagem diz o vão aberto agora (nada de informação desatualizada) */var msgV_=function(){var g_=rled3api.st().g;return amsg().indexOf('Vão '+(g_+1)+':')>=0?'mensagem do vão atual':'DESATUALIZADA ('+amsg().slice(0,24)+' com o vão '+(g_+1)+' aberto)'};R.msgOutroVao=msgV_();var p0_=rled3api.pt(a.id,0,.5);tap(p0_[0],p0_[1]);await W(650);R.msgVao0=rled3api.st().g+' · '+msgV_();
         var n0=S.rp.length+S.mods.length+S.fr.length;tap(fx_,fy_);await W(200);R.toqueFora=aberta()+' · '+amsg().slice(0,44)+' · criou '+(S.rp.length+S.mods.length+S.fr.length-n0);
         /* os botões da barra não ficam um em cima do outro nem em cima dos botões de cima do 3D, e cabem na tela */
         var bs=[].slice.call(bar().querySelectorAll('button')).map(function(b){return b.getBoundingClientRect()}),sob=0;for(var i=0;i<bs.length;i++)for(var j=i+1;j<bs.length;j++){var A=bs[i],B=bs[j];if(A.left<B.right-1&&A.right>B.left+1&&A.top<B.bottom-1&&A.bottom>B.top+1)sob++}
@@ -9727,6 +9728,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["salaLonge"] as? String, "false → não abriu")
         XCTAssertEqual(o["salaPerto"] as? String, "true → vão 7 · Vão 8")
         XCTAssertEqual(o["abertoOutroVao"] as? String, "9 · quadro do painel fechado · peça em edição não · quadro de item fechado")
+        XCTAssertEqual(o["msgOutroVao"] as? String, "mensagem do vão atual", "trocou de vão: a mensagem diz o vão novo")
+        XCTAssertEqual(o["msgVao0"] as? String, "0 · mensagem do vão atual", "toque no vão 0: a mensagem diz Vão 1")
         XCTAssertEqual(o["toqueFora"] as? String, "true · Toque num vão do ripado · OK fecha o LED · criou 0")
         XCTAssertEqual(o["barraLayout"] as? String, "23 botões · sobrepostos 0 · em cima de outros botões do 3D 0 · dentro da tela true · menor botão 32 px")
         XCTAssertEqual(o["minimizar"] as? String, "▁ · vira faixa true · botões ▢ OK · toque com ela minimizada: Vão 12, 0 desenhos · aberta de novo: 7 desenhos ▁")

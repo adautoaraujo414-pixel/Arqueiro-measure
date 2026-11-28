@@ -3420,3 +3420,7 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Comportamento do app: correto** (regra do LED no ripado: o dedo não precisa acertar os 15 mm do vão; troca para o vão tocado). O vão foi de 9 para 0. A mensagem "Vão 8" era a anterior, que continuou na tela. O LED não foi para outro lugar: foi para onde o dedo tocou.
 - **Teste:** o toque "fora" agora procura um ponto da tela sem ripado embaixo (rled3api.at nulo). A expectativa é a mesma de antes ("Toque num vão do ripado", nada criado), em qualquer largura. Comentário no teste com pedido e data.
 - **Validação:** os 3 testes LedNoRipado passam a 375 e a 1366.
+- **Mensagem desatualizada (Chefe/Adauto 28/11; comprovado):**
+  - Antes: trocar de vão pelo toque não dizia nada, e a mensagem do vão anterior ficava na tela ("Vão 8" com o vão 10 aberto, ou com o vão 1).
+  - Correção: cada troca de vão mostra "💡 Vão N" do vão atual.
+  - Teste: LedNoRipadoDoisToques confere msgOutroVao e msgVao0. Falha antes e passa depois, a 375 e a 1366.

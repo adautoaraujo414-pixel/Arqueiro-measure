@@ -3364,3 +3364,22 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Uma fonte só para lista, plano e orçamento.
 - **Teste:** `testEtapa2FitaNaReguaDeEngrosso80BordaPorBordaListaPlanoEOrcamentoIguais` (padrão, marcar a frente de UMA régua = +0,720 m, orçamento igual, desfazer, projeto antigo).
 - **E1 (430):** o controle tocado no fim do painel pulava 44 px, porque a rolagem batia no fim. Um espaço temporário no fim do painel corrige. Conferido em `testEtapa2TravessaETeto…` (`telaNoFim`), a 1366 e a 430.
+## ITEM2-ATRAVESSADA (28/11): base atravessada no canto L e no canto cego (qual passa inteira, A ou B) — Claude 5
+- **Pedido:** Adauto 28/11 (DECISOES "5 pendências", nº 1). No canto cego vale a leitura do Chefe de 28/11, a opção (c). O botão é do Code 2.
+- **Contrato com o Code 2:** `m.cnPassa = {base:'A'|'B', rod:'A'|'B'}`, gravado no módulo do canto (canto L ou cego). Sem o campo, tudo fica como sempre foi. Leitura: `cnPassa(m,key)`. Par do cego: `cnPassaCego(m)`, nos dois sentidos. Motivo de não aplicar: `cnPassaInfo(m)`.
+- **Canto L (`m.corner`, `partsOf0` + `BX` do 3D):** antes, a parte do fundo passava sempre inteira. Agora o B é o espelho exato das contas do A, trocando fundo ↔ lado. Base e rodapé têm escolhas separadas.
+  - Medidas com 900/900/560, chapa 15, fundo 6, nesta ordem: base fundo/lado · rodapé frente fundo/lado · rodapé trás fundo/lado.
+    - A: 894/334 · 364/349 · 864/834;
+    - B: 334/894 · 349/364 · 834/864.
+- **Canto cego:** são 2 módulos retos (o cego e o 1º da parede lateral). Hoje não se encostam. Só funciona com o "Unir" (as duas marcas `m.une` iguais).
+  - **Rodapé, pelo recuo do lado (`rodLados`):** frente, trás, fechamento, divisória e travessas do pedestal acompanham.
+    - A: o do cego passa inteiro e o da asa vai até encostar no rodapé da frente dele (+84 mm, ou +105 depois de a asa encostar na régua espaçadora).
+    - B: o da asa passa inteiro até o rodapé traseiro do cego (fica no recuo de trás, como todo rodapé) e o do cego encurta onde ela cruza.
+  - **Base: não aplicada.** O painel cego e a porta descem na frente da base, cobrindo 5 mm da borda, e a régua espaçadora sai 40 mm para a frente. A base da asa só passaria entrando neles (a sonda mostrou a sobreposição). Fica como está e `cnPassaInfo` diz o porquê. Perguntado ao Chefe/Adauto.
+  - **Tamponamento da asa entre os dois, ou laterais até o piso:** não mexe e avisa.
+- **Erro encontrado ao fazer (corrigido):** o encaixe automático do canto (CANTO-SOZINHO: o módulo mexido anda até encostar, medido pelo contorno no 3D) passou a ver o rodapé atravessado. Com o B, mexer 10 mm no módulo da parede lateral fazia ele pular sozinho para 1216. Correção: o rodapé atravessado por escolha não entra nesse contorno (`ext()`). Provado: sem a correção, 1216; com ela, 621.
+- **Risco identificado (anterior, não mexido):** o 1º módulo da parede lateral criado junto de um canto cego anda sozinho de 600 para 621 ~1 s depois (CANTO-SOZINHO encostando na régua espaçadora de 40 mm). Isso também acontece no código de antes. Se está certo é decisão do Chefe (§12: é criação, não alteração).
+- **Testes** (os dois falham no código de antes e passam depois):
+  - `testCantoLBaseAtravessadaLadoAouBBaseERodapeEspelhadoSemSobreposicao`: E/D × A/B, base e rodapé separados, partsOf = 3D = corte, mesma área no orçamento, 0 sobreposição, laterais por fora, salvar/reabrir, desfazer.
+  - `testCantoCegoRodapeAtravessadoLadoAouBEncostaOuPassaInteiroSemSobreposicao`: E/D × sem escolha/A/B, 0 sobreposição entre TODAS as peças dos dois (portas, régua, laterais, fundo), partsOf = 3D = corte, base fica e avisa, não anda sozinho, tamponamento, sem Unir, salvar/reabrir, desfazer.
+- **Outros módulos:** o aéreo não tem base nem rodapé. O canto do guarda-roupa usa o mesmo bloco do canto L. Os pés de metal ficam de fora porque não têm peça corrida. As corridas (`moldRuns`/`lrRows`) leem `cl`/`rodLados`, então acompanham.

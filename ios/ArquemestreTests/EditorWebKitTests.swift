@@ -20011,6 +20011,37 @@ document.getElementById("pv2db").click();await W(200);out.push("fechou: "+(!wind
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* Auditoria do Code 2 (Claude 5, 28/11), E2 (já existia antes; Chefe 28/11 · §12 e §4: "vizinho igual em todo caminho"; medida é do marceneiro):
+       a profundidade digitada num módulo mudava a de TODOS os módulos de baixo. Agora muda só ele; os outros viram sugestão "Aplicar aos vizinhos"
+       (prévia de cada um e desfazer). Proteção do E3 (posição digitada em cima de outro): o app já pergunta "Aplicar mesmo assim / Cancelar" e não
+       move nada (o "x 100 → 5095" da auditoria era a sonda passando texto; a tela passa número). */
+    func testVizinhoIgualProfundidadeDigitadaSoNoModuloEPosicaoDigitadaPerguntaSemMoverCalado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var fila=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.mods=[];draw();var x=0;for(var i=0;i<3;i++){newTpl(T('Balcão 2 portas'));var m=S.mods[S.mods.length-1];m.x=x;x+=m.w}draw();var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();try{libSugLimpa()}catch(_){}};
+        var X=function(){return S.mods.map(function(m){return m.x}).join('/')},D=function(){return S.mods.map(function(m){return m.d}).join('/')};
+        /* E2 */fila();await W(800);S.m=S.mods[1];setv('d',600);draw();await W(50);R.prof=D();var bar=document.getElementById('libsug');R.sugestao=!!bar&&!bar.hidden&&/Profundidade/.test(bar.textContent)&&/560 → 600/.test(bar.textContent);
+        if(bar){await W(800);bar.querySelector('[data-libsug="ok"]').click();await W(50)}R.aplicar=D();await W(800);document.getElementById('und').click();await W(80);R.desfaz=D();
+        /* E3 (proteção) */fila();await W(800);S.m=S.mods[1];var x0=X();setv('x',100);draw();await W(80);var q=document.getElementById('fitq');R.pergunta=!!q&&!q.hidden&&/entra dentro do vizinho/.test(q.textContent);R.enquantoPergunta=X()===x0;
+        if(q){q.querySelector('[data-fitqs="1"]').click();await W(80)}R.mesmoAssim=X();
+        fila();await W(800);S.m=S.mods[1];setv('x',100);draw();await W(80);var c=document.querySelector('#fitq [data-fitq="nao"]');if(c)c.click();await W(80);R.cancelar=X()===x0;
+        fila();await W(800);S.m=S.mods[2];setv('x',2000);draw();await W(80);var q2=document.getElementById('fitq');R.livre=S.mods[2].x+' · '+(!q2||q2.hidden);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["prof"] as? String, "560/600/560", "E2: só o módulo digitado muda de profundidade")
+        XCTAssertEqual(o["sugestao"] as? Bool, true, "os vizinhos viram sugestão com a prévia (560 → 600)")
+        XCTAssertEqual(o["aplicar"] as? String, "600/600/600", "o botão aplica aos vizinhos")
+        XCTAssertEqual(o["desfaz"] as? String, "560/600/560", "↶ desfaz só o que o botão fez")
+        XCTAssertEqual(o["pergunta"] as? Bool, true, "E3: em cima de outro, pergunta uma vez")
+        XCTAssertEqual(o["enquantoPergunta"] as? Bool, true, "enquanto pergunta, nada se mexe")
+        XCTAssertEqual(o["mesmoAssim"] as? String, "5/100/1805", "Aplicar mesmo assim: fica no x digitado, os outros não mudam")
+        XCTAssertEqual(o["cancelar"] as? Bool, true, "Cancelar fica como era")
+        XCTAssertEqual(o["livre"] as? String, "2000 · true", "posição livre: fica no x digitado e não pergunta")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto, via Chefe 24/11): cada módulo (m.uid) e peça (m.uid|pk) com a mesma chave no editor (partsOf), no 3D,
     // na lista, no corte e no DXF; cópia ganha id novo (módulo e peças); salvar/reabrir e desfazer/refazer mantêm; Meus modelos ganha id novo; id que existe
     // nunca é trocado; id repetido ao abrir: avisa e só muda se a pessoa mandar

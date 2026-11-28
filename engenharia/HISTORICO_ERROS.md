@@ -3232,3 +3232,12 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 | 430 | grande | 322 / 361 / 163 | 74 / 59 / 63 | 1262 / 2642 / 812 |
 
 - **Leitura:** direto e rápido iguais ou mais rápidos; segundo plano igual ou mais rápido, menos a obra pequena a 1366 (+60 ms em segundo plano, a tela não espera). Em aparelho real: não medido.
+
+## AUDITORIA DO CODE 2 · E2, E3 e R1 (Chefe 28/11) — Claude 5
+- **E2 · erro comprovado, já existia (corrigido):** a profundidade digitada num módulo de baixo mudava a de TODOS os módulos de baixo (`propagate('d')` copiava pra `baixoComum`), sem aviso.
+  - Reproduzido: 3 balcões de 560, digitar 600 no do meio → 600/600/600, igual no c38c9ba.
+  - **Correção:** só o módulo digitado muda. Os outros de baixo com outra profundidade viram sugestão na barra que já existia (`libSugere`, tipo `prof`): "Profundidade: N módulos de baixo têm outra medida (560 → 600). Aplicar aos vizinhos", com prévia de cada um. O botão aplica; ↶ desfaz.
+  - A pedra (stD) continua como era: regra aprovada antes (stAdapta).
+  - **Teste:** `testVizinhoIgualProfundidadeDigitadaSoNoModuloEPosicaoDigitadaPerguntaSemMoverCalado`. No código de antes: 600/600/600 e sem sugestão; depois: 560/600/560, sugestão, aplicar e desfazer (1366 e 430).
+- **E3 · NÃO era erro (falso positivo da sonda s53):** a sonda chamava `setv('x','100')` com TEXTO; `"100"+900` vira texto e o `confine` levava o móvel para o fim da parede. A tela passa número (`+t.value`) e, com número, o app já pergunta "Assim o módulo entra dentro do vizinho · Aplicar mesmo assim / Cancelar" sem mover nada. O mesmo teste ficou de proteção desse comportamento (passa antes e depois).
+- **R1 · risco (sem correção):** o desenho grava `m.wing=0` na memória (campo padrão); medido: o arquivo NÃO é regravado, a data não muda, o projeto não fica "alterado" e o histórico não ganha passo. Só o estado do desfazer guarda `wing:0` (dado igual). Igual no c38c9ba.

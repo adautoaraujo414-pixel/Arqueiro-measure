@@ -19746,6 +19746,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* Item 34 (28/11), achados da sonda em Clientes e Ajustes: (1) "📥 Colar o link e abrir" fechava a tela de Clientes ANTES de perguntar o link;
+       quem cancelava ficava fora da tela. Agora só fecha quando a pessoa cola um link. (2) Paredes (modo fácil): o formato que já está escolhido não dava retorno. */
+    func testItem34ColarLinkCanceladoNaoFechaClientesEFormatoDaParedeJaEscolhidoResponde() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length;
+        var pr0=window.prompt,cf0=window.confirm,pedidos=0,abriu=[],pl0=window.arquePasteLink;window.confirm=function(){return false};window.arquePasteLink=function(v){abriu.push(v)};
+        newProjFor({nome:'Cliente Link',end:'',cidade:'',tel:''});draw();
+        try{window.prompt=function(){pedidos++;return null};document.getElementById('clb').click();await W(150);document.querySelector('#clm [data-cpaste]').click();await W(150);
+         R.cancelar=pedidos+' · '+(!document.getElementById('clm').hidden)+' · '+abriu.length;
+         window.prompt=function(){pedidos++;return 'https://exemplo/p.html#x'};document.querySelector('#clm [data-cpaste]').click();await W(150);
+         R.colar=pedidos+' · '+document.getElementById('clm').hidden+' · '+abriu.length}
+        finally{window.prompt=pr0;window.confirm=cf0;window.arquePasteLink=pl0}
+        document.getElementById('clm').hidden=true;
+        document.getElementById('prb').click();await W(200);var B=function(k){return document.querySelector('#stdm [data-pfo="'+k+'"]')};B('u').click();await W(80);var st=JSON.stringify(snapState()),n0=TS.length;B('u').click();await W(80);
+        R.formato=/^Já está escolhido: /.test(TS.slice(n0).join())+' · '+(JSON.stringify(snapState())===st);B('reta').click();await W(80);R.trocou=!(S.wl&&S.wl.L===undefined&&S.wl.R===undefined)?'reta':'?';
+        document.getElementById('stdm').hidden=true;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cancelar"] as? String, "1 · true · 0", "cancelar o link não fecha a tela de Clientes")
+        XCTAssertEqual(o["colar"] as? String, "2 · true · 1", "colando o link, fecha e abre o projeto")
+        XCTAssertEqual(o["formato"] as? String, "true · true", "formato já escolhido: avisa e não muda nada")
+        XCTAssertEqual(o["trocou"] as? String, "reta", "o outro formato continua mudando")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto, via Chefe 24/11): cada módulo (m.uid) e peça (m.uid|pk) com a mesma chave no editor (partsOf), no 3D,
     // na lista, no corte e no DXF; cópia ganha id novo (módulo e peças); salvar/reabrir e desfazer/refazer mantêm; Meus modelos ganha id novo; id que existe
     // nunca é trocado; id repetido ao abrir: avisa e só muda se a pessoa mandar
